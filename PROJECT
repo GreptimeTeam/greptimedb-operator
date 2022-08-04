@@ -1,0 +1,6 @@
+domain: greptime.cloud
+layout:
+- go.kubebuilder.io/v3
+projectName: greptimedb-operator
+repo: github.com/greptime/greptimedb-operator
+version: "3"
