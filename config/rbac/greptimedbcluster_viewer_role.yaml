@@ -1,0 +1,20 @@
+# permissions for end users to view greptimedbclusters.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: greptimedbcluster-viewer-role
+rules:
+- apiGroups:
+  - greptime.cloud
+  resources:
+  - greptimedbclusters
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - greptime.cloud
+  resources:
+  - greptimedbclusters/status
+  verbs:
+  - get
