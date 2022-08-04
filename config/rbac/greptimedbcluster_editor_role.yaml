@@ -1,0 +1,24 @@
+# permissions for end users to edit greptimedbclusters.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: greptimedbcluster-editor-role
+rules:
+- apiGroups:
+  - greptime.cloud
+  resources:
+  - greptimedbclusters
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - greptime.cloud
+  resources:
+  - greptimedbclusters/status
+  verbs:
+  - get

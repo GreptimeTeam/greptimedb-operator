@@ -1,0 +1,6 @@
+apiVersion: greptime.cloud/v1alpha1
+kind: GreptimeDBCluster
+metadata:
+  name: greptimedbcluster-sample
+spec:
+  # TODO(user): Add fields here
