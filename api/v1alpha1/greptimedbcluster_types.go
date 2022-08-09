@@ -21,29 +21,13 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// SlimPodTemplateSpec is a slimmed down version of corev1.PodTemplate.
-// Most of the SlimPodTemplateSpec fields are copied from corev1.PodTemplateSpec.
-type SlimPodTemplateSpec struct {
-	// Annotations is an unstructured key value map stored with a resource that may be
-	// set by external tools to store and retrieve arbitrary metadata. They are not
-	// queryable and should be preserved when modifying objects.
-	// More info: http://kubernetes.io/docs/user-guide/annotations
-	// Annotations field is from 'corev1.PodTemplateSpec.ObjectMeta.Annotations'.
-	// +optional
-	Annotations map[string]string `json:"annotations,omitempty"`
-
-	// Map of string keys and values that can be used to organize and categorize
-	// (scope and select) objects. May match selectors of replication controllers
-	// and services.
-	// More info: http://kubernetes.io/docs/user-guide/labels
-	// Labels field is from 'corev1.PodTemplateSpec.ObjectMeta.Labels'.
-	// +optional
-	Labels map[string]string `json:"labels,omitempty"`
-
+// SlimPodSpec is a slimmed down version of corev1.PodSpec.
+// Most of the fields in SlimPodSpec are copied from corev1.PodSpec.
+type SlimPodSpec struct {
 	// NodeSelector is a selector which must be true for the pod to fit on a node.
 	// Selector which must match a node's labels for the pod to be scheduled on that node.
 	// More info: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
-	// NodeSelector field is from 'corev1.PodTemplateSpec.PodSpec.NodeSelector'.
+	// NodeSelector field is from 'corev1.PodSpec.NodeSelector'.
 	// +optional
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
 
@@ -60,7 +44,7 @@ type SlimPodTemplateSpec struct {
 	// Init containers cannot currently be added or removed.
 	// Cannot be updated.
 	// More info: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
-	// InitContainers field is from 'corev1.PodTemplateSpec.Spec.InitContainers'.
+	// InitContainers field is from 'corev1.PodSpec.InitContainers'.
 	// +optional
 	InitContainers []corev1.Container `json:"initContainers,omitempty"`
 
@@ -68,7 +52,7 @@ type SlimPodTemplateSpec struct {
 	// One of Always, OnFailure, Never.
 	// Default to Always.
 	// More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#restart-policy
-	// RestartPolicy field is from 'corev1.PodTemplateSpec.Spec.RestartPolicy'.
+	// RestartPolicy field is from 'corev1.PodSpec.RestartPolicy'.
 	// +optional
 	RestartPolicy corev1.RestartPolicy `json:"restartPolicy,omitempty"`
 
@@ -80,14 +64,14 @@ type SlimPodTemplateSpec struct {
 	// a termination signal and the time when the processes are forcibly halted with a kill signal.
 	// Set this value longer than the expected cleanup time for your process.
 	// Defaults to 30 seconds.
-	// TerminationGracePeriodSeconds field is from 'corev1.PodTemplateSpec.Spec.TerminationGracePeriodSeconds'.
+	// TerminationGracePeriodSeconds field is from 'corev1.PodSpec.TerminationGracePeriodSeconds'.
 	// +optional
 	TerminationGracePeriodSeconds *int64 `json:"terminationGracePeriodSeconds,omitempty"`
 
 	// Optional duration in seconds the pod may be active on the node relative to
 	// StartTime before the system will actively try to mark it failed and kill associated containers.
 	// Value must be a positive integer.
-	// ActiveDeadlineSeconds field is from 'corev1.PodTemplateSpec.Spec.ActiveDeadlineSeconds'.
+	// ActiveDeadlineSeconds field is from 'corev1.PodSpec.ActiveDeadlineSeconds'.
 	// +optional
 	ActiveDeadlineSeconds *int64 `json:"activeDeadlineSeconds,omitempty"`
 
@@ -97,82 +81,164 @@ type SlimPodTemplateSpec struct {
 	// DNS parameters given in DNSConfig will be merged with the policy selected with DNSPolicy.
 	// To have DNS options set along with hostNetwork, you have to specify DNS policy
 	// explicitly to 'ClusterFirstWithHostNet'.
-	// DNSPolicy field is from 'corev1.PodTemplateSpec.Spec.DNSPolicy'.
+	// DNSPolicy field is from 'corev1.PodSpec.DNSPolicy'.
 	// +optional
 	DNSPolicy corev1.DNSPolicy `json:"dnsPolicy,omitempty"`
 
 	// ServiceAccountName is the name of the ServiceAccount to use to run this pod.
 	// More info: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
-	// ServiceAccountName field is from 'corev1.PodTemplateSpec.Spec.ServiceAccountName'.
+	// ServiceAccountName field is from 'corev1.PodSpec.ServiceAccountName'.
 	// +optional
 	ServiceAccountName string `json:"serviceAccountName,omitempty"`
 
 	// Host networking requested for this pod. Use the host's network namespace.
 	// If this option is set, the ports that will be used must be specified.
 	// Default to false.
-	// HostNetwork field is from 'corev1.PodTemplateSpec.Spec.HostNetwork'.
+	// HostNetwork field is from 'corev1.PodSpec.HostNetwork'.
 	// +optional
 	HostNetwork bool `json:"hostNetwork,omitempty"`
 
 	// ImagePullSecrets is an optional list of references to secrets in the same namespace to use for pulling any of the images used by this PodSpec.
 	// If specified, these secrets will be passed to individual puller implementations for them to use.
 	// More info: https://kubernetes.io/docs/concepts/containers/images#specifying-imagepullsecrets-on-a-pod
-	// ImagePullSecrets field is from 'corev1.PodTemplateSpec.Spec.ImagePullSecrets'.
+	// ImagePullSecrets field is from 'corev1.PodSpec.ImagePullSecrets'.
 	// +optional
 	ImagePullSecrets []corev1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
 
 	// If specified, the pod's scheduling constraints
+	// Affinity field is from 'corev1.PodSpec.Affinity'.
 	// +optional
 	Affinity *corev1.Affinity `json:"affinity,omitempty"`
 
 	// If specified, the pod will be dispatched by specified scheduler.
 	// If not specified, the pod will be dispatched by default scheduler.
-	// SchedulerName field is from 'corev1.PodTemplateSpec.Spec.SchedulerName'.
+	// SchedulerName field is from 'corev1.PodSpec.SchedulerName'.
 	// +optional
 	SchedulerName string `json:"schedulerName,omitempty"`
+
+	// For most time, there is one main container in a pod(frontend/meta/datanode).
+	// If specified, addtional containers will be added to the pod as sidecar containers.
+	// +optional
+	AddtionalContainers []corev1.Container `json:"addtionalContainers,omitempty"`
+}
+
+// MainContainerSpec describes the specification of the main container of a pod.
+// Most of the fields of MainContainerSpec are from 'corev1.Container'.
+type MainContainerSpec struct {
+	// Entrypoint array. Not executed within a shell.
+	// The container image's ENTRYPOINT is used if this is not provided.
+	// Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
+	// cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
+	// to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
+	// produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
+	// of whether the variable exists or not. Cannot be updated.
+	// More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell
+	// Command field is from 'corev1.Container.Command'.
+	// +optional
+	Command []string `json:"command,omitempty"`
+
+	// Arguments to the entrypoint.
+	// The container image's CMD is used if this is not provided.
+	// Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
+	// cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
+	// to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
+	// produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
+	// of whether the variable exists or not. Cannot be updated.
+	// More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell
+	// Args field is from 'corev1.Container.Args'.
+	// +optional
+	Args []string `json:"args,omitempty"`
+
+	// Container's working directory.
+	// If not specified, the container runtime's default will be used, which
+	// might be configured in the container image.
+	// Cannot be updated.
+	// WorkingDir field is from 'corev1.Container.WorkingDir'.
+	// +optional
+	WorkingDir string `json:"workingDir,omitempty"`
+
+	// Pod volumes to mount into the container's filesystem.
+	// VolumeMounts field is from 'corev1.Container.VolumeMounts'.
+	// +optional
+	VolumeMounts []corev1.VolumeMount `json:"volumeMounts,omitempty"`
+
+	// List of environment variables to set in the container.
+	// Cannot be updated.
+	// Env field is from 'corev1.Container.Env'.
+	// +optional
+	Env []corev1.EnvVar `json:"env,omitempty"`
+
+	// Periodic probe of container liveness.
+	// Container will be restarted if the probe fails.
+	// More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
+	// LivenessProbe field is from 'corev1.Container.LivenessProbe'.
+	// +optional
+	LivenessProbe *corev1.Probe `json:"livenessProbe,omitempty"`
+
+	// Periodic probe of container service readiness.
+	// Container will be removed from service endpoints if the probe fails.
+	// ReadinessProbe field is from 'corev1.Container.LivenessProbe'.
+	// More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
+	// +optional
+	ReadinessProbe *corev1.Probe `json:"readinessProbe,omitempty"`
+
+	// Actions that the management system should take in response to container lifecycle events.
+	// Cannot be updated.
+	// Lifecycle field is from 'corev1.Container.Lifecycle'.
+	// +optional
+	Lifecycle *corev1.Lifecycle `json:"lifecycle,omitempty"`
 
 	// Image pull policy.
 	// One of Always, Never, IfNotPresent.
 	// Defaults to Always if :latest tag is specified, or IfNotPresent otherwise.
 	// Cannot be updated.
 	// More info: https://kubernetes.io/docs/concepts/containers/images#updating-images
-	// ImagePullPolicy field is from 'corev1.PodTemplateSpec.Spec.Containers[_].ImagePullSecrets'.
+	// ImagePullPolicy field is from 'corev1.Container.ImagePullPolicy'.
 	// +optional
 	ImagePullPolicy *corev1.PullPolicy `json:"imagePullPolicy,omitempty"`
+}
 
-	// List of environment variables to set in the container.
-	// Cannot be updated.
-	// Env field is from 'corev1.PodTemplateSpec.Spec.Containers[_].Env'.
+// PodTemplateSpec defines the template for a pod of cluster.
+type PodTemplateSpec struct {
+	// The annotations to be created to the pod.
 	// +optional
-	Env []corev1.EnvVar `json:"env,omitempty"`
+	Annotations map[string]string `json:"annotations,omitempty"`
 
-	// Arguments to the entrypoint of primary container.
+	// The labels to be created to the pod.
 	// +optional
-	AddtionalArgs []string `json:"addtionalArgs,omitempty"`
+	Labels map[string]string `json:"labels,omitempty"`
 
-	// For most time, there is one primary container in a pod(frontend/meta/datanode).
-	// If specified, addtional containers will be added to the pod.
+	// SlimPodSpec defines the desired behavior of the pod.
 	// +optional
-	AddtionalContainers []corev1.Container `json:"addtionalContainers,omitempty"`
+	SlimPodSpec `json:",inline"`
+
+	// MainContainerSpec defines the specification of the main container of the pod.
+	// +optional
+	MainContainerSpec `json:",inline"`
+}
+
+// MainContainer defines the specification of the main container of a pod.
+type MainContainer struct {
+	// The main container image name of the component.
+	// +required
+	Image string `json:"image,omitempty"`
+
+	// The resource requirements of the main container.
+	// +optional
+	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
 }
 
 // ComponentSpec is the common specification for all components(frontend/meta/datanode).
 type ComponentSpec struct {
-	// The primary container image name of the component.
-	// +required
-	Image string `json:"image,omitempty"`
+	MainContainer `json:",inline"`
 
 	// The number of replicas of the components.
 	// +required
-	Replicas int `json:"replicas,omitempty"`
+	Replicas int32 `json:"replicas,omitempty"`
 
-	// Resources describes the compute resource requirements of the primary container.
+	// Template defines the pod template for the component, if not specified, the pod template will use the default value.
 	// +optional
-	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
-
-	// Template defines the pod template for the component, if not specified, the pod template will use the base pod template.
-	// +optional
-	Template *SlimPodTemplateSpec `json:"template,omitempty"`
+	Template *PodTemplateSpec `json:"template,omitempty"`
 }
 
 // MetaSpec is the specification for meta component.
@@ -200,7 +266,7 @@ type DatanodeSpec struct {
 type GreptimeDBClusterSpec struct {
 	// Base is the base pod template for all components and can be overridden by template of invidual component.
 	// +optional
-	Base *SlimPodTemplateSpec `json:"base,omitempty"`
+	Base *PodTemplateSpec `json:"base,omitempty"`
 
 	// Frontend is the specification of frontend node.
 	// +required
