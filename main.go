@@ -31,7 +31,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	greptimecloudv1alpha1 "github.com/greptime/greptimedb-operator/api/v1alpha1"
+	greptimecloudv1alpha1 "github.com/greptime/greptimedb-operator/apis/v1alpha1"
 	"github.com/greptime/greptimedb-operator/controllers"
 	//+kubebuilder:scaffold:imports
 )
