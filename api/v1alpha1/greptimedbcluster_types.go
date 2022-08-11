@@ -300,7 +300,7 @@ type GreptimeDBClusterStatus struct {
 // GreptimeDBCluster is the Schema for the greptimedbclusters API
 type GreptimeDBCluster struct {
 	metav1.TypeMeta   `json:",inline"`
-	metav1.ObjectMeta `json:"meta data,omitempty"`
+	metav1.ObjectMeta `json:"metadata,omitempty"`
 
 	Spec   GreptimeDBClusterSpec   `json:"spec,omitempty"`
 	Status GreptimeDBClusterStatus `json:"status,omitempty"`
