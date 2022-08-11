@@ -11,6 +11,8 @@ else
 GOBIN=$(shell go env GOBIN)
 endif
 
+LDFLAGS = $(shell ./hack/version.sh)
+
 # Setting SHELL to bash allows bash commands to be executed by recipes.
 # This is a requirement for 'setup-envtest.sh' in the test target.
 # Options are set to exit when a recipe line exits non-zero or a piped command fails.
@@ -63,11 +65,11 @@ test: manifests generate fmt vet envtest ## Run tests.
 
 .PHONY: build
 build: generate fmt vet ## Build manager binary.
-	go build -o bin/greptimedb-operator ./cmd/operator/main.go
+	go build -ldflags '${LDFLAGS}' -o bin/greptimedb-operator ./cmd/operator/main.go
 
 .PHONY: run
 run: manifests generate fmt vet ## Run a controller from your host.
-	go run ./cmd/operator/main.go
+	go run -ldflags '${LDFLAGS}' ./cmd/operator/main.go
 
 .PHONY: docker-build
 docker-build: test ## Build docker image with the manager.
