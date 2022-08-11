@@ -14,28 +14,41 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controllers
+package greptimedbcluster
 
 import (
 	"context"
 
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/tools/record"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
-	greptimecloudv1alpha1 "github.com/greptime/greptimedb-operator/apis/v1alpha1"
+	"github.com/greptime/greptimedb-operator/apis/v1alpha1"
+	"github.com/greptime/greptimedb-operator/cmd/operator/app/options"
 )
 
-// GreptimeDBClusterReconciler reconciles a GreptimeDBCluster object
-type GreptimeDBClusterReconciler struct {
+// Reconciler reconciles a GreptimeDBCluster object
+type Reconciler struct {
 	client.Client
-	Scheme *runtime.Scheme
+	Scheme   *runtime.Scheme
+	Recorder record.EventRecorder
 }
 
-//+kubebuilder:rbac:groups=greptime.cloud,resources=greptimedbclusters,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=greptime.cloud,resources=greptimedbclusters/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=greptime.cloud,resources=greptimedbclusters/finalizers,verbs=update
+func Setup(mgr ctrl.Manager, option *options.Options) error {
+	reconciler := &Reconciler{
+		Client:   mgr.GetClient(),
+		Scheme:   mgr.GetScheme(),
+		Recorder: mgr.GetEventRecorderFor("greptimedbcluster-controller"),
+	}
+
+	return reconciler.SetupWithManager(mgr)
+}
+
+// +kubebuilder:rbac:groups=greptime.cloud,resources=greptimedbclusters,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=greptime.cloud,resources=greptimedbclusters/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=greptime.cloud,resources=greptimedbclusters/finalizers,verbs=update
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -46,7 +59,7 @@ type GreptimeDBClusterReconciler struct {
 //
 // For more details, check Reconcile and its Result here:
 // - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.12.1/pkg/reconcile
-func (r *GreptimeDBClusterReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	_ = log.FromContext(ctx)
 
 	// TODO(user): your logic here
@@ -55,8 +68,8 @@ func (r *GreptimeDBClusterReconciler) Reconcile(ctx context.Context, req ctrl.Re
 }
 
 // SetupWithManager sets up the controller with the Manager.
-func (r *GreptimeDBClusterReconciler) SetupWithManager(mgr ctrl.Manager) error {
+func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&greptimecloudv1alpha1.GreptimeDBCluster{}).
+		For(&v1alpha1.GreptimeDBCluster{}).
 		Complete(r)
 }
