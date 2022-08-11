@@ -23,7 +23,7 @@ spec:
             type: string
           kind:
             type: string
-          meta data:
+          metadata:
             type: object
           spec:
             properties:
