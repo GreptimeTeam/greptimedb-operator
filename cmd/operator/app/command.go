@@ -15,6 +15,7 @@ import (
 
 	"github.com/greptime/greptimedb-operator/apis/v1alpha1"
 	"github.com/greptime/greptimedb-operator/cmd/operator/app/options"
+	"github.com/greptime/greptimedb-operator/cmd/operator/app/version"
 	"github.com/greptime/greptimedb-operator/controllers/greptimedbcluster"
 )
 
@@ -84,6 +85,8 @@ func NewOperatorCommand() *cobra.Command {
 	o.AddFlags(command.Flags())
 	klog.InitFlags(nil)
 	command.Flags().AddGoFlagSet(flag.CommandLine)
+
+	command.AddCommand(version.NewVersionCommand())
 
 	return command
 }
