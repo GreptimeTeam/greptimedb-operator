@@ -125,6 +125,14 @@ type SlimPodSpec struct {
 // MainContainerSpec describes the specification of the main container of a pod.
 // Most of the fields of MainContainerSpec are from 'corev1.Container'.
 type MainContainerSpec struct {
+	// The main container image name of the component.
+	// +required
+	Image string `json:"image,omitempty"`
+
+	// The resource requirements of the main container.
+	// +optional
+	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
+
 	// Entrypoint array. Not executed within a shell.
 	// The container image's ENTRYPOINT is used if this is not provided.
 	// Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
@@ -208,30 +216,17 @@ type PodTemplateSpec struct {
 	// +optional
 	Labels map[string]string `json:"labels,omitempty"`
 
+	// MainContainer defines the specification of the main container of the pod.
+	// +optional
+	MainContainer *MainContainerSpec `json:"main,omitempty"`
+
 	// SlimPodSpec defines the desired behavior of the pod.
 	// +optional
 	SlimPodSpec `json:",inline"`
-
-	// MainContainerSpec defines the specification of the main container of the pod.
-	// +optional
-	MainContainerSpec `json:",inline"`
-}
-
-// MainContainer defines the specification of the main container of a pod.
-type MainContainer struct {
-	// The main container image name of the component.
-	// +required
-	Image string `json:"image,omitempty"`
-
-	// The resource requirements of the main container.
-	// +optional
-	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
 }
 
 // ComponentSpec is the common specification for all components(frontend/meta/datanode).
 type ComponentSpec struct {
-	MainContainer `json:",inline"`
-
 	// The number of replicas of the components.
 	// +required
 	Replicas int32 `json:"replicas,omitempty"`
@@ -264,7 +259,7 @@ type DatanodeSpec struct {
 
 // GreptimeDBClusterSpec defines the desired state of GreptimeDBCluster
 type GreptimeDBClusterSpec struct {
-	// Base is the base pod template for all components and can be overridden by template of invidual component.
+	// Base is the base pod template for all components and can be overridden by template of individual component.
 	// +optional
 	Base *PodTemplateSpec `json:"base,omitempty"`
 

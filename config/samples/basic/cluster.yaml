@@ -4,35 +4,12 @@ metadata:
   name: basic-gt-cluster
   namespace: default
 spec:
-  httpServicePort: 8080
-  grpcServicePort: 9090
+  base:
+    main:
+      image: greptime/greptimedb:latest
   frontend:
-    image: greptime/frontend:v0.1-alpha
     replicas: 1
-    resources:
-      requests:
-        memory: "64Mi"
-        cpu: "250m"
-      limits:
-        memory: "128Mi"
-        cpu: "500m"
   meta:
-    image: greptime/meta:v0.1-alpha
     replicas: 3
-    resources:
-      requests:
-        memory: "64Mi"
-        cpu: "250m"
-      limits:
-        memory: "128Mi"
-        cpu: "500m"
   datanode:
-    image: greptime/datanode:v0.1-alpha
     replicas: 1
-    resources:
-      requests:
-        memory: "64Mi"
-        cpu: "250m"
-      limits:
-        memory: "128Mi"
-        cpu: "500m"
