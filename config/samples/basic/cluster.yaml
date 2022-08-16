@@ -1,12 +1,12 @@
 apiVersion: greptime.cloud/v1alpha1
 kind: GreptimeDBCluster
 metadata:
-  name: basic-gt-cluster
+  name: basic
   namespace: default
 spec:
   base:
     main:
-      image: greptime/greptimedb:latest
+      image: localhost:5001/nginx:1.14.2
   frontend:
     replicas: 1
   meta:
