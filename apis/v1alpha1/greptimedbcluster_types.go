@@ -96,7 +96,7 @@ type SlimPodSpec struct {
 	// Default to false.
 	// HostNetwork field is from 'corev1.PodSpec.HostNetwork'.
 	// +optional
-	HostNetwork bool `json:"hostNetwork,omitempty"`
+	HostNetwork *bool `json:"hostNetwork,omitempty"`
 
 	// ImagePullSecrets is an optional list of references to secrets in the same namespace to use for pulling any of the images used by this PodSpec.
 	// If specified, these secrets will be passed to individual puller implementations for them to use.
@@ -131,7 +131,7 @@ type MainContainerSpec struct {
 
 	// The resource requirements of the main container.
 	// +optional
-	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
+	Resources *corev1.ResourceRequirements `json:"resources,omitempty"`
 
 	// Entrypoint array. Not executed within a shell.
 	// The container image's ENTRYPOINT is used if this is not provided.
@@ -228,8 +228,8 @@ type PodTemplateSpec struct {
 // ComponentSpec is the common specification for all components(frontend/meta/datanode).
 type ComponentSpec struct {
 	// The number of replicas of the components.
-	// +required
-	Replicas int32 `json:"replicas,omitempty"`
+	// +reqiured
+	Replicas int32 `json:"replicas"`
 
 	// Template defines the pod template for the component, if not specified, the pod template will use the default value.
 	// +optional
@@ -240,13 +240,62 @@ type ComponentSpec struct {
 type MetaSpec struct {
 	ComponentSpec `json:",inline"`
 
+	// +optional
+	Service corev1.ServiceSpec `json:"service,omitempty"`
+
+	// +optional
+	Etcd EtcdSpec `json:"etcd,omitempty"`
+
 	// More meta settings can be added here...
+}
+
+// EtcdSpec is the specification for etcd component that used for meta service.
+type EtcdSpec struct {
+	// The image name of the etcd.
+	// +optinal
+	Image string `json:"image,omitempty"`
+
+	// The size of etcd cluster.
+	// +optional
+	ClusterSize int32 `json:"clusterSize,omitempty"`
+
+	// The client port of etcd.
+	// +optional
+	ClientPort int32 `json:"clientPort"`
+
+	// The peer port of etcd.
+	// +optional
+	PeerPort int32 `json:"peerPort,omitempty"`
+
+	// The storage configuration of etcd.
+	// +optinal
+	Storage StorageSpec `json:"storage,omitempty"`
+}
+
+// StorageSpec will generate PVC.
+type StorageSpec struct {
+	// The name of the storage.
+	// +optional
+	Name string `json:"name,omitempty"`
+
+	// The name of the storage class to use for the volume.
+	// +optional
+	StorageClassName *string `json:"storageClassName,omitempty"`
+
+	// The size of the storage.
+	// +optional
+	StorageSize string `json:"storageSize,,omitempty"`
+
+	// The mount path of the storage in etcd container.
+	// +optional
+	MountPath string `json:"mountPath,omitempty"`
 }
 
 // FrontendSpec is the specification for frontend component.
 type FrontendSpec struct {
 	ComponentSpec `json:",inline"`
 
+	Service corev1.ServiceSpec `json:"service,omitempty"`
 	// More frontend settings can be added here...
 }
 
@@ -265,21 +314,21 @@ type GreptimeDBClusterSpec struct {
 
 	// Frontend is the specification of frontend node.
 	// +required
-	Frontend FrontendSpec `json:"frontend,omitempty"`
+	Frontend FrontendSpec `json:"frontend"`
 
 	// Meta is the specification of meta node.
 	// +required
-	Meta MetaSpec `json:"meta,omitempty"`
+	Meta MetaSpec `json:"meta"`
 
 	// Datanode is the specification of datanode node.
 	// +required
-	Datanode DatanodeSpec `json:"datanode,omitempty"`
+	Datanode DatanodeSpec `json:"datanode"`
+
+	// +optinal
+	HTTPServicePort int32 `json:"httpServicePort,omitempty"`
 
 	// +optional
-	HTTPServicePort *int32 `json:"httpServicePort,omitempty"`
-
-	// +optional
-	GRPCServicePort *int32 `json:"grpcServicePort,omitempty"`
+	GRPCServicePort int32 `json:"grpcServicePort,omitempty"`
 
 	// More cluster settings can be added here...
 }
@@ -291,6 +340,7 @@ type GreptimeDBClusterStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:resource:shortName=gtc
 
 // GreptimeDBCluster is the Schema for the greptimedbclusters API
 type GreptimeDBCluster struct {

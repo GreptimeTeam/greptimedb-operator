@@ -12,6 +12,8 @@ spec:
     kind: GreptimeDBCluster
     listKind: GreptimeDBClusterList
     plural: greptimedbclusters
+    shortNames:
+    - gtc
     singular: greptimedbcluster
   scope: Namespaced
   versions:
@@ -3914,12 +3916,103 @@ spec:
                         format: int64
                         type: integer
                     type: object
+                required:
+                - replicas
                 type: object
               frontend:
                 properties:
                   replicas:
                     format: int32
                     type: integer
+                  service:
+                    properties:
+                      allocateLoadBalancerNodePorts:
+                        type: boolean
+                      clusterIP:
+                        type: string
+                      clusterIPs:
+                        items:
+                          type: string
+                        type: array
+                        x-kubernetes-list-type: atomic
+                      externalIPs:
+                        items:
+                          type: string
+                        type: array
+                      externalName:
+                        type: string
+                      externalTrafficPolicy:
+                        type: string
+                      healthCheckNodePort:
+                        format: int32
+                        type: integer
+                      internalTrafficPolicy:
+                        type: string
+                      ipFamilies:
+                        items:
+                          type: string
+                        type: array
+                        x-kubernetes-list-type: atomic
+                      ipFamilyPolicy:
+                        type: string
+                      loadBalancerClass:
+                        type: string
+                      loadBalancerIP:
+                        type: string
+                      loadBalancerSourceRanges:
+                        items:
+                          type: string
+                        type: array
+                      ports:
+                        items:
+                          properties:
+                            appProtocol:
+                              type: string
+                            name:
+                              type: string
+                            nodePort:
+                              format: int32
+                              type: integer
+                            port:
+                              format: int32
+                              type: integer
+                            protocol:
+                              default: TCP
+                              type: string
+                            targetPort:
+                              anyOf:
+                              - type: integer
+                              - type: string
+                              x-kubernetes-int-or-string: true
+                          required:
+                          - port
+                          type: object
+                        type: array
+                        x-kubernetes-list-map-keys:
+                        - port
+                        - protocol
+                        x-kubernetes-list-type: map
+                      publishNotReadyAddresses:
+                        type: boolean
+                      selector:
+                        additionalProperties:
+                          type: string
+                        type: object
+                        x-kubernetes-map-type: atomic
+                      sessionAffinity:
+                        type: string
+                      sessionAffinityConfig:
+                        properties:
+                          clientIP:
+                            properties:
+                              timeoutSeconds:
+                                format: int32
+                                type: integer
+                            type: object
+                        type: object
+                      type:
+                        type: string
+                    type: object
                   template:
                     properties:
                       activeDeadlineSeconds:
@@ -5861,6 +5954,8 @@ spec:
                         format: int64
                         type: integer
                     type: object
+                required:
+                - replicas
                 type: object
               grpcServicePort:
                 format: int32
@@ -5870,9 +5965,123 @@ spec:
                 type: integer
               meta:
                 properties:
+                  etcd:
+                    properties:
+                      clientPort:
+                        format: int32
+                        type: integer
+                      clusterSize:
+                        format: int32
+                        type: integer
+                      image:
+                        type: string
+                      peerPort:
+                        format: int32
+                        type: integer
+                      storage:
+                        properties:
+                          mountPath:
+                            type: string
+                          name:
+                            type: string
+                          storageClassName:
+                            type: string
+                          storageSize:
+                            type: string
+                        type: object
+                    type: object
                   replicas:
                     format: int32
                     type: integer
+                  service:
+                    properties:
+                      allocateLoadBalancerNodePorts:
+                        type: boolean
+                      clusterIP:
+                        type: string
+                      clusterIPs:
+                        items:
+                          type: string
+                        type: array
+                        x-kubernetes-list-type: atomic
+                      externalIPs:
+                        items:
+                          type: string
+                        type: array
+                      externalName:
+                        type: string
+                      externalTrafficPolicy:
+                        type: string
+                      healthCheckNodePort:
+                        format: int32
+                        type: integer
+                      internalTrafficPolicy:
+                        type: string
+                      ipFamilies:
+                        items:
+                          type: string
+                        type: array
+                        x-kubernetes-list-type: atomic
+                      ipFamilyPolicy:
+                        type: string
+                      loadBalancerClass:
+                        type: string
+                      loadBalancerIP:
+                        type: string
+                      loadBalancerSourceRanges:
+                        items:
+                          type: string
+                        type: array
+                      ports:
+                        items:
+                          properties:
+                            appProtocol:
+                              type: string
+                            name:
+                              type: string
+                            nodePort:
+                              format: int32
+                              type: integer
+                            port:
+                              format: int32
+                              type: integer
+                            protocol:
+                              default: TCP
+                              type: string
+                            targetPort:
+                              anyOf:
+                              - type: integer
+                              - type: string
+                              x-kubernetes-int-or-string: true
+                          required:
+                          - port
+                          type: object
+                        type: array
+                        x-kubernetes-list-map-keys:
+                        - port
+                        - protocol
+                        x-kubernetes-list-type: map
+                      publishNotReadyAddresses:
+                        type: boolean
+                      selector:
+                        additionalProperties:
+                          type: string
+                        type: object
+                        x-kubernetes-map-type: atomic
+                      sessionAffinity:
+                        type: string
+                      sessionAffinityConfig:
+                        properties:
+                          clientIP:
+                            properties:
+                              timeoutSeconds:
+                                format: int32
+                                type: integer
+                            type: object
+                        type: object
+                      type:
+                        type: string
+                    type: object
                   template:
                     properties:
                       activeDeadlineSeconds:
@@ -7814,7 +8023,13 @@ spec:
                         format: int64
                         type: integer
                     type: object
+                required:
+                - replicas
                 type: object
+            required:
+            - datanode
+            - frontend
+            - meta
             type: object
           status:
             type: object
