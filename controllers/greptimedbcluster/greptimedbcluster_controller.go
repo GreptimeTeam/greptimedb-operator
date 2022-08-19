@@ -18,12 +18,14 @@ package greptimedbcluster
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"strings"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -42,6 +44,7 @@ import (
 const (
 	greptimeDBApplication      = "greptime.cloud/application"
 	greptimedbClusterFinalizer = "greptimedbcluster.greptime.cloud/finalizer"
+	lastAppliedResourceSpec    = "greptimedbcluster.greptime.cloud/last-applied-resource-spec"
 )
 
 type SyncFunc func(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster) (ready bool, err error)
@@ -174,7 +177,22 @@ func (r *Reconciler) syncMeta(ctx context.Context, cluster *v1alpha1.GreptimeDBC
 	}
 
 	if deployment, ok := metaDeployment.(*appsv1.Deployment); ok {
-		return r.isDeploymentReady(deployment), nil
+		needToUpdate, err := r.isNeedToUpdate(deployment, new(appsv1.DeploymentSpec), &newMetaDeployment.Spec)
+		if err != nil {
+			return false, err
+		}
+
+		if r.isDeploymentReady(deployment) && !needToUpdate {
+			return true, nil
+		}
+
+		if needToUpdate {
+			if err := r.Update(ctx, metaDeployment); err != nil {
+				return false, err
+			}
+		}
+
+		return false, nil
 	}
 
 	return false, nil
@@ -203,7 +221,22 @@ func (r *Reconciler) syncFrontend(ctx context.Context, cluster *v1alpha1.Greptim
 	}
 
 	if deployment, ok := frontendDeployment.(*appsv1.Deployment); ok {
-		return r.isDeploymentReady(deployment), nil
+		needToUpdate, err := r.isNeedToUpdate(deployment, new(appsv1.DeploymentSpec), &newFrontendDeployment.Spec)
+		if err != nil {
+			return false, err
+		}
+
+		if r.isDeploymentReady(deployment) && !needToUpdate {
+			return true, nil
+		}
+
+		if needToUpdate {
+			if err := r.Update(ctx, newFrontendDeployment); err != nil {
+				return false, err
+			}
+		}
+
+		return false, nil
 	}
 
 	return false, nil
@@ -232,7 +265,22 @@ func (r *Reconciler) syncDatanode(ctx context.Context, cluster *v1alpha1.Greptim
 	}
 
 	if deployment, ok := datanodeDeployment.(*appsv1.Deployment); ok {
-		return r.isDeploymentReady(deployment), nil
+		needToUpdate, err := r.isNeedToUpdate(deployment, new(appsv1.DeploymentSpec), &newDatanodeDeployment.Spec)
+		if err != nil {
+			return false, err
+		}
+
+		if r.isDeploymentReady(deployment) && !needToUpdate {
+			return true, nil
+		}
+
+		if needToUpdate {
+			if err := r.Update(ctx, newDatanodeDeployment); err != nil {
+				return false, err
+			}
+		}
+
+		return false, nil
 	}
 
 	return false, nil
@@ -461,6 +509,10 @@ func (r *Reconciler) buildFrontendDeployment(cluster *v1alpha1.GreptimeDBCluster
 		return nil, err
 	}
 
+	if err := r.setLastAppliedResourceSpecAnnotation(deployment, deployment.Spec); err != nil {
+		return nil, err
+	}
+
 	return deployment, nil
 }
 
@@ -499,7 +551,7 @@ func (r *Reconciler) buildMetaDeployment(cluster *v1alpha1.GreptimeDBCluster) (*
 			Namespace: cluster.Namespace,
 		},
 		Spec: appsv1.DeploymentSpec{
-			Replicas: &cluster.Spec.Frontend.Replicas,
+			Replicas: &cluster.Spec.Meta.Replicas,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					greptimeDBApplication: cluster.Name + "-meta",
@@ -510,16 +562,16 @@ func (r *Reconciler) buildMetaDeployment(cluster *v1alpha1.GreptimeDBCluster) (*
 					Labels: map[string]string{
 						greptimeDBApplication: cluster.Name + "-meta",
 					},
-					Annotations: cluster.Spec.Frontend.Template.Annotations,
+					Annotations: cluster.Spec.Meta.Template.Annotations,
 				},
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
 						{
 							Name:      "meta",
-							Image:     cluster.Spec.Frontend.Template.MainContainer.Image,
-							Resources: *cluster.Spec.Frontend.Template.MainContainer.Resources,
-							Command:   cluster.Spec.Frontend.Template.MainContainer.Command,
-							Args:      cluster.Spec.Frontend.Template.MainContainer.Args,
+							Image:     cluster.Spec.Meta.Template.MainContainer.Image,
+							Resources: *cluster.Spec.Meta.Template.MainContainer.Resources,
+							Command:   cluster.Spec.Meta.Template.MainContainer.Command,
+							Args:      cluster.Spec.Meta.Template.MainContainer.Args,
 							Ports: []corev1.ContainerPort{
 								{
 									Name:          "grpc",
@@ -534,11 +586,15 @@ func (r *Reconciler) buildMetaDeployment(cluster *v1alpha1.GreptimeDBCluster) (*
 		},
 	}
 
-	for k, v := range cluster.Spec.Frontend.Template.Labels {
+	for k, v := range cluster.Spec.Meta.Template.Labels {
 		deployment.Labels[k] = v
 	}
 
 	if err := controllerutil.SetControllerReference(cluster, deployment, r.Scheme); err != nil {
+		return nil, err
+	}
+
+	if err := r.setLastAppliedResourceSpecAnnotation(deployment, deployment.Spec); err != nil {
 		return nil, err
 	}
 
@@ -580,7 +636,7 @@ func (r *Reconciler) buildDatanodeDeployment(cluster *v1alpha1.GreptimeDBCluster
 			Name:      cluster.Name + "-datanode",
 		},
 		Spec: appsv1.DeploymentSpec{
-			Replicas: &cluster.Spec.Frontend.Replicas,
+			Replicas: &cluster.Spec.Datanode.Replicas,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					greptimeDBApplication: cluster.Name + "-datanode",
@@ -591,7 +647,7 @@ func (r *Reconciler) buildDatanodeDeployment(cluster *v1alpha1.GreptimeDBCluster
 					Labels: map[string]string{
 						greptimeDBApplication: cluster.Name + "-datanode",
 					},
-					Annotations: cluster.Spec.Frontend.Template.Annotations,
+					Annotations: cluster.Spec.Datanode.Template.Annotations,
 				},
 
 				// TODO(zyy17): Fill more arguments.
@@ -617,11 +673,15 @@ func (r *Reconciler) buildDatanodeDeployment(cluster *v1alpha1.GreptimeDBCluster
 		},
 	}
 
-	for k, v := range cluster.Spec.Frontend.Template.Labels {
+	for k, v := range cluster.Spec.Datanode.Template.Labels {
 		deployment.Labels[k] = v
 	}
 
 	if err := controllerutil.SetControllerReference(cluster, deployment, r.Scheme); err != nil {
+		return nil, err
+	}
+
+	if err := r.setLastAppliedResourceSpecAnnotation(deployment, deployment.Spec); err != nil {
 		return nil, err
 	}
 
@@ -671,6 +731,24 @@ func (r *Reconciler) isDeploymentReady(deployment *appsv1.Deployment) bool {
 	return false
 }
 
+func (r *Reconciler) isNeedToUpdate(source client.Object, oldSpec interface{}, newSpec interface{}) (bool, error) {
+	annotations := source.GetAnnotations()
+	if annotations == nil {
+		return false, fmt.Errorf("resource annotations is nil")
+	}
+
+	lastAppliedDeploymentSpec, ok := annotations[lastAppliedResourceSpec]
+	if !ok {
+		return false, fmt.Errorf("last applied source spec is not found")
+	}
+
+	if err := json.Unmarshal([]byte(lastAppliedDeploymentSpec), oldSpec); err != nil {
+		return false, err
+	}
+
+	return !apiequality.Semantic.DeepEqual(oldSpec, newSpec), nil
+}
+
 func (r *Reconciler) handleFinalizers(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster) error {
 	// Determine if the object is under deletion.
 	if cluster.ObjectMeta.DeletionTimestamp.IsZero() {
@@ -692,6 +770,17 @@ func (r *Reconciler) handleFinalizers(ctx context.Context, cluster *v1alpha1.Gre
 
 	// remove our finalizer from the list.
 	controllerutil.RemoveFinalizer(cluster, greptimedbClusterFinalizer)
+
+	return nil
+}
+
+func (r *Reconciler) setLastAppliedResourceSpecAnnotation(object client.Object, spec interface{}) error {
+	data, err := json.Marshal(spec)
+	if err != nil {
+		return err
+	}
+
+	object.SetAnnotations(map[string]string{lastAppliedResourceSpec: string(data)})
 
 	return nil
 }
