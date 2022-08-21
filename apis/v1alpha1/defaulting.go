@@ -39,25 +39,31 @@ func (in *GreptimeDBCluster) SetDefaults() {
 		}
 	}
 
-	if in.Spec.Frontend.Template == nil {
-		in.Spec.Frontend.Template = in.Spec.Base
-	} else {
-		in.Spec.Frontend.Template.overlay(in.Spec.Base)
+	if in.Spec.Frontend != nil {
+		if in.Spec.Frontend.Template == nil {
+			in.Spec.Frontend.Template = in.Spec.Base
+		} else {
+			in.Spec.Frontend.Template.overlay(in.Spec.Base)
+		}
 	}
 
-	if in.Spec.Meta.Template == nil {
-		in.Spec.Meta.Template = in.Spec.Base
-	} else {
-		in.Spec.Meta.Template.overlay(in.Spec.Base)
+	if in.Spec.Meta != nil {
+		if in.Spec.Meta.Template == nil {
+			in.Spec.Meta.Template = in.Spec.Base
+		} else {
+			in.Spec.Meta.Template.overlay(in.Spec.Base)
+		}
+
+		in.Spec.Meta.Etcd.setDefaults()
 	}
 
-	if in.Spec.Datanode.Template == nil {
-		in.Spec.Datanode.Template = in.Spec.Base
-	} else {
-		in.Spec.Datanode.Template.overlay(in.Spec.Base)
+	if in.Spec.Datanode != nil {
+		if in.Spec.Datanode.Template == nil {
+			in.Spec.Datanode.Template = in.Spec.Base
+		} else {
+			in.Spec.Datanode.Template.overlay(in.Spec.Base)
+		}
 	}
-
-	in.Spec.Meta.Etcd.setDefaults()
 
 	if in.Spec.HTTPServicePort == 0 {
 		in.Spec.HTTPServicePort = int32(defaultHTTPServicePort)
@@ -65,6 +71,10 @@ func (in *GreptimeDBCluster) SetDefaults() {
 
 	if in.Spec.GRPCServicePort == 0 {
 		in.Spec.GRPCServicePort = int32(defaultGRPCServicePort)
+	}
+
+	if in.Spec.MySQLServicePort == 0 {
+		in.Spec.MySQLServicePort = int32(defaultMySQLServicePort)
 	}
 }
 

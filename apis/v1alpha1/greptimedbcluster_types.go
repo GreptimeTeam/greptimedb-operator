@@ -313,22 +313,25 @@ type GreptimeDBClusterSpec struct {
 	Base *PodTemplateSpec `json:"base,omitempty"`
 
 	// Frontend is the specification of frontend node.
-	// +required
-	Frontend FrontendSpec `json:"frontend"`
+	// +optional
+	Frontend *FrontendSpec `json:"frontend"`
 
 	// Meta is the specification of meta node.
-	// +required
-	Meta MetaSpec `json:"meta"`
+	// +optional
+	Meta *MetaSpec `json:"meta"`
 
 	// Datanode is the specification of datanode node.
-	// +required
-	Datanode DatanodeSpec `json:"datanode"`
+	// +optional
+	Datanode *DatanodeSpec `json:"datanode"`
 
 	// +optinal
 	HTTPServicePort int32 `json:"httpServicePort,omitempty"`
 
 	// +optional
 	GRPCServicePort int32 `json:"grpcServicePort,omitempty"`
+
+	// +optional
+	MySQLServicePort int32 `json:"mysqlServicePort,omitempty"`
 
 	// More cluster settings can be added here...
 }

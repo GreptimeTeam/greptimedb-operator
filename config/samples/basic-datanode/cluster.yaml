@@ -1,15 +1,11 @@
 apiVersion: greptime.cloud/v1alpha1
 kind: GreptimeDBCluster
 metadata:
-  name: basic
+  name: basic-datanode
   namespace: default
 spec:
   base:
     main:
       image: localhost:5001/greptimedb:latest
-  frontend:
-    replicas: 1
-  meta:
-    replicas: 3
   datanode:
     replicas: 1
