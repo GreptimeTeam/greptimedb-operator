@@ -24,8 +24,9 @@ const (
 	defaultLimitMemory   = "128Mi"
 
 	// The default settings for GreptimeDBClusterSpec.
-	defaultHTTPServicePort = 18080
-	defaultGRPCServicePort = 19090
+	defaultHTTPServicePort  = 3000
+	defaultGRPCServicePort  = 3001
+	defaultMySQLServicePort = 3306
 
 	// The default settings for EtcdSpec.
 	defaultEtcdImage            = "localhost:5001/etcd:latest"

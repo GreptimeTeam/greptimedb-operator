@@ -8026,10 +8026,9 @@ spec:
                 required:
                 - replicas
                 type: object
-            required:
-            - datanode
-            - frontend
-            - meta
+              mysqlServicePort:
+                format: int32
+                type: integer
             type: object
           status:
             type: object

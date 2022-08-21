@@ -100,11 +100,15 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	}
 
 	// The controller will execute the following actions in order and the next action will begin to execute when the previous one is finished.
-	actions := []SyncFunc{
-		r.syncEtcd,
-		r.syncMeta,
-		r.syncFrontend,
-		r.syncDatanode,
+	var actions []SyncFunc
+	if cluster.Spec.Meta != nil {
+		actions = append(actions, r.syncEtcd, r.syncMeta)
+	}
+	if cluster.Spec.Frontend != nil {
+		actions = append(actions, r.syncFrontend)
+	}
+	if cluster.Spec.Datanode != nil {
+		actions = append(actions, r.syncDatanode)
 	}
 
 	for _, action := range actions {
@@ -443,6 +447,11 @@ func (r *Reconciler) buildFrontendService(cluster *v1alpha1.GreptimeDBCluster) (
 					Protocol: corev1.ProtocolTCP,
 					Port:     cluster.Spec.HTTPServicePort,
 				},
+				{
+					Name:     "mysql",
+					Protocol: corev1.ProtocolTCP,
+					Port:     cluster.Spec.MySQLServicePort,
+				},
 			},
 		},
 	}
@@ -492,6 +501,11 @@ func (r *Reconciler) buildFrontendDeployment(cluster *v1alpha1.GreptimeDBCluster
 									Name:          "http",
 									Protocol:      corev1.ProtocolTCP,
 									ContainerPort: cluster.Spec.HTTPServicePort,
+								},
+								{
+									Name:          "mysql",
+									Protocol:      corev1.ProtocolTCP,
+									ContainerPort: cluster.Spec.MySQLServicePort,
 								},
 							},
 						},
@@ -616,7 +630,17 @@ func (r *Reconciler) buildDatanodeService(cluster *v1alpha1.GreptimeDBCluster) (
 				{
 					Name:     "grpc",
 					Protocol: corev1.ProtocolTCP,
-					Port:     80,
+					Port:     cluster.Spec.GRPCServicePort,
+				},
+				{
+					Name:     "http",
+					Protocol: corev1.ProtocolTCP,
+					Port:     cluster.Spec.HTTPServicePort,
+				},
+				{
+					Name:     "mysql",
+					Protocol: corev1.ProtocolTCP,
+					Port:     cluster.Spec.MySQLServicePort,
 				},
 			},
 		},
@@ -664,6 +688,16 @@ func (r *Reconciler) buildDatanodeDeployment(cluster *v1alpha1.GreptimeDBCluster
 									Name:          "grpc",
 									Protocol:      corev1.ProtocolTCP,
 									ContainerPort: cluster.Spec.GRPCServicePort,
+								},
+								{
+									Name:          "http",
+									Protocol:      corev1.ProtocolTCP,
+									ContainerPort: cluster.Spec.HTTPServicePort,
+								},
+								{
+									Name:          "mysql",
+									Protocol:      corev1.ProtocolTCP,
+									ContainerPort: cluster.Spec.MySQLServicePort,
 								},
 							},
 						},
@@ -755,8 +789,10 @@ func (r *Reconciler) handleFinalizers(ctx context.Context, cluster *v1alpha1.Gre
 		// The object is not being deleted, so if it does not have our finalizer,
 		// then lets add the finalizer and update the object. This is equivalent
 		// registering our finalizer.
-		if !controllerutil.ContainsFinalizer(cluster, greptimedbClusterFinalizer) {
-			controllerutil.AddFinalizer(cluster, greptimedbClusterFinalizer)
+		if cluster.Spec.Meta != nil {
+			if !controllerutil.ContainsFinalizer(cluster, greptimedbClusterFinalizer) {
+				controllerutil.AddFinalizer(cluster, greptimedbClusterFinalizer)
+			}
 		}
 		return nil
 	}
@@ -766,10 +802,10 @@ func (r *Reconciler) handleFinalizers(ctx context.Context, cluster *v1alpha1.Gre
 		if err := r.deleteEtcdStorage(ctx, cluster); err != nil {
 			return err
 		}
-	}
 
-	// remove our finalizer from the list.
-	controllerutil.RemoveFinalizer(cluster, greptimedbClusterFinalizer)
+		// remove our finalizer from the list.
+		controllerutil.RemoveFinalizer(cluster, greptimedbClusterFinalizer)
+	}
 
 	return nil
 }
