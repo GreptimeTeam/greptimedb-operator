@@ -26,16 +26,18 @@ func (in *GreptimeDBCluster) SetDefaults() {
 		return
 	}
 
-	if in.Spec.Base.MainContainer.Resources == nil {
-		in.Spec.Base.MainContainer.Resources = &corev1.ResourceRequirements{
-			Requests: map[corev1.ResourceName]resource.Quantity{
-				"cpu":    resource.MustParse(defaultRequestCPU),
-				"memory": resource.MustParse(defaultRequestMemory),
-			},
-			Limits: map[corev1.ResourceName]resource.Quantity{
-				"cpu":    resource.MustParse(defaultLimitCPU),
-				"memory": resource.MustParse(defaultLimitMemory),
-			},
+	if in.Spec.Base != nil {
+		if in.Spec.Base.MainContainer.Resources == nil {
+			in.Spec.Base.MainContainer.Resources = &corev1.ResourceRequirements{
+				Requests: map[corev1.ResourceName]resource.Quantity{
+					"cpu":    resource.MustParse(defaultRequestCPU),
+					"memory": resource.MustParse(defaultRequestMemory),
+				},
+				Limits: map[corev1.ResourceName]resource.Quantity{
+					"cpu":    resource.MustParse(defaultLimitCPU),
+					"memory": resource.MustParse(defaultLimitMemory),
+				},
+			}
 		}
 	}
 
