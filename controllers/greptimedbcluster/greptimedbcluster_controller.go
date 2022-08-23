@@ -104,11 +104,11 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	if cluster.Spec.Meta != nil {
 		actions = append(actions, r.syncEtcd, r.syncMeta)
 	}
-	if cluster.Spec.Frontend != nil {
-		actions = append(actions, r.syncFrontend)
-	}
 	if cluster.Spec.Datanode != nil {
 		actions = append(actions, r.syncDatanode)
+	}
+	if cluster.Spec.Frontend != nil {
+		actions = append(actions, r.syncFrontend)
 	}
 
 	for _, action := range actions {
