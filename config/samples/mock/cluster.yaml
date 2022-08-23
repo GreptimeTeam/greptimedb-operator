@@ -1,0 +1,40 @@
+apiVersion: greptime.cloud/v1alpha1
+kind: GreptimeDBCluster
+metadata:
+  name: mock
+  namespace: default
+spec:
+  base:
+    main:
+      resources:
+        requests:
+          memory: "64Mi"
+          cpu: "250m"
+        limits:
+          memory: "128Mi"
+          cpu: "500m"
+  frontend:
+    replicas: 1
+    template:
+      main:
+        image: localhost:5001/frontend:latest
+        args:
+          - "-meta-endpoint"
+          - "http://mock-meta.default:3001"
+          - "-l"
+          - "0.0.0.0:3306"
+          - "-r"
+          - "mock-datanode.default:3306"
+  meta:
+    replicas: 1
+    template:
+      main:
+        image: localhost:5001/meta:latest
+        args:
+          - "--etcd-endpoint"
+          - "mock-etcd.default:2379"
+  datanode:
+    replicas: 1
+    template:
+      main:
+        image: localhost:5001/greptimedb:latest
