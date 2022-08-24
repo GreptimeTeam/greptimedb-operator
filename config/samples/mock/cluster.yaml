@@ -17,7 +17,7 @@ spec:
     replicas: 1
     template:
       main:
-        image: localhost:5001/frontend:latest
+        image: localhost:5001/greptime/frontend:latest
         args:
           - "-meta-endpoint"
           - "http://mock-meta.default:3001"
@@ -29,7 +29,7 @@ spec:
     replicas: 1
     template:
       main:
-        image: localhost:5001/meta:latest
+        image: localhost:5001/greptime/meta:latest
         args:
           - "--etcd-endpoint"
           - "mock-etcd.default:2379"
@@ -37,4 +37,4 @@ spec:
     replicas: 1
     template:
       main:
-        image: localhost:5001/greptimedb:latest
+        image: localhost:5001/greptime/greptimedb:latest
