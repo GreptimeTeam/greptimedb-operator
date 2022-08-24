@@ -29,7 +29,7 @@ const (
 	defaultMySQLServicePort = 3306
 
 	// The default settings for EtcdSpec.
-	defaultEtcdImage            = "localhost:5001/etcd:latest"
+	defaultEtcdImage            = "localhost:5001/greptime/etcd:latest"
 	defaultClusterSize          = 3
 	defaultEtcdClientPort       = 2379
 	defaultEtcdPeerPort         = 2380
