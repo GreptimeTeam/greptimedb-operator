@@ -79,6 +79,10 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 // +kubebuilder:rbac:groups=greptime.cloud,resources=greptimedbclusters,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=greptime.cloud,resources=greptimedbclusters/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=greptime.cloud,resources=greptimedbclusters/finalizers,verbs=update
+// +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;watch;create;
+// +kubebuilder:rbac:groups=core,resources=services,verbs=get;list;watch;create;update;delete;
+// +kubebuilder:rbac:groups=apps,resources=statefulsets,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
 
 // Reconcile is reconciliation loop for GreptimeDBCluster.
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
