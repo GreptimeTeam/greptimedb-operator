@@ -11,7 +11,7 @@ if [ "$(docker inspect -f '{{.State.Running}}' "${reg_name}" 2>/dev/null || true
 fi
 
 # create a cluster with the local registry enabled in containerd
-cat <<EOF | kind create cluster --config=-
+cat <<EOF | kind create cluster --name greptimedb-playground --config=-
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 containerdConfigPatches:
