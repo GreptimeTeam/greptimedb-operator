@@ -1,6 +1,11 @@
+# Build the container image of greptimedb-operator.
+IMAGE_REGISTRY ?= localhost:5001
+IMAGE_REPO ?= ${IMAGE_REGISTRY}/greptime
+IMAGE_TAG ?= latest
+DOCKER_BUILD_OPTIONS ?= --network host
 
-# Image URL to use all building/pushing image targets
-IMG ?= controller:latest
+MANIFEST_DIR = ./manifest
+
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION = 1.24.1
 
@@ -45,6 +50,11 @@ help: ## Display this help.
 manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
 	$(CONTROLLER_GEN) rbac:roleName=manager-role crd:maxDescLen=0 webhook paths="./..." output:crd:artifacts:config=config/crd/bases
 
+.PHONY: generate-deployment-yaml
+generate-deployment-yaml: kustomize manifests ## Generate greptimedb-operator deployment YAML contents to manifest directory.
+	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMAGE_REPO}/greptimedb-operator:${IMAGE_TAG}
+	$(KUSTOMIZE) build config/default > ${MANIFEST_DIR}/greptime-operator-deployment.yaml
+
 .PHONY: generate
 generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
@@ -72,12 +82,12 @@ run: manifests generate fmt vet ## Run a controller from your host.
 	go run -ldflags '${LDFLAGS}' ./cmd/operator/main.go
 
 .PHONY: docker-build
-docker-build: test ## Build docker image with the manager.
-	docker build -t ${IMG} .
+docker-build: ## Build docker image with the greptimedb-operator.
+	docker build ${DOCKER_BUILD_OPTIONS} -t ${IMAGE_REPO}/greptimedb-operator:${IMAGE_TAG} .
 
 .PHONY: docker-push
-docker-push: ## Push docker image with the manager.
-	docker push ${IMG}
+docker-push: ## Push docker image with the greptimedb-operator.
+	docker push ${IMAGE_REPO}/greptimedb-operator:${IMAGE_TAG}
 
 ##@ Deployment
 
@@ -95,7 +105,7 @@ uninstall: manifests kustomize ## Uninstall CRDs from the K8s cluster specified 
 
 .PHONY: deploy
 deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in ~/.kube/config.
-	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMG}
+	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMAGE_REPO}/greptimedb-operator:${IMAGE_TAG}
 	$(KUSTOMIZE) build config/default | kubectl apply -f -
 
 .PHONY: undeploy
