@@ -32,6 +32,7 @@ import (
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
+	"k8s.io/client-go/util/retry"
 	"k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -116,7 +117,8 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		actions = append(actions, r.syncFrontend)
 	}
 
-	for _, action := range actions {
+	clusterIsReady := false
+	for index, action := range actions {
 		ready, err := action(ctx, cluster)
 		if err != nil {
 			return ctrl.Result{}, err
@@ -124,6 +126,18 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		if !ready {
 			return ctrl.Result{}, nil
 		}
+		if index == len(actions)-1 {
+			clusterIsReady = true
+		}
+	}
+
+	if clusterIsReady {
+		klog.Infof("The cluster '%s/%s' is ready", cluster.Namespace, cluster.Name)
+		setGreptimeDBClusterCondition(&cluster.Status, newCondition(v1alpha1.GreptimeDBClusterReady, corev1.ConditionTrue, "", "GreptimeDB cluster is ready"))
+		if err := r.updateStatus(ctx, cluster); err != nil {
+			return ctrl.Result{}, err
+		}
+		return ctrl.Result{}, nil
 	}
 
 	if err := r.Update(ctx, cluster); err != nil {
@@ -858,6 +872,67 @@ func (r *Reconciler) deleteEtcdStorage(ctx context.Context, cluster *v1alpha1.Gr
 	}
 
 	return nil
+}
+
+func newCondition(conditionType v1alpha1.GreptimeDBConditionType, conditionStatus corev1.ConditionStatus, reason, message string) v1alpha1.GreptimeDBClusterCondition {
+	return v1alpha1.GreptimeDBClusterCondition{
+		Type:               conditionType,
+		Status:             conditionStatus,
+		LastTransitionTime: metav1.Now(),
+		Reason:             reason,
+		Message:            message,
+	}
+}
+
+func getGreptimeDBClusterConditition(status v1alpha1.GreptimeDBClusterStatus, conditionType v1alpha1.GreptimeDBConditionType) *v1alpha1.GreptimeDBClusterCondition {
+	for i := range status.Conditions {
+		c := status.Conditions[i]
+		if c.Type == conditionType {
+			return &c
+		}
+	}
+	return nil
+}
+
+func setGreptimeDBClusterCondition(status *v1alpha1.GreptimeDBClusterStatus, condition v1alpha1.GreptimeDBClusterCondition) {
+	currentCondition := getGreptimeDBClusterConditition(*status, condition.Type)
+	if currentCondition != nil &&
+		currentCondition.Status == condition.Status &&
+		currentCondition.Reason == condition.Reason {
+		return
+	}
+
+	if currentCondition != nil && currentCondition.Status == condition.Status {
+		condition.LastTransitionTime = currentCondition.LastTransitionTime
+	}
+
+	newConditions := filterOutCondition(status.Conditions, condition.Type)
+	status.Conditions = append(newConditions, condition)
+}
+
+func filterOutCondition(conditions []v1alpha1.GreptimeDBClusterCondition, conditionType v1alpha1.GreptimeDBConditionType) []v1alpha1.GreptimeDBClusterCondition {
+	var newCondititions []v1alpha1.GreptimeDBClusterCondition
+	for _, c := range conditions {
+		if c.Type == conditionType {
+			continue
+		}
+		newCondititions = append(newCondititions, c)
+	}
+	return newCondititions
+}
+
+func (r *Reconciler) updateStatus(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster, opts ...client.UpdateOption) error {
+	status := cluster.DeepCopy().Status
+	return retry.RetryOnConflict(retry.DefaultBackoff, func() (err error) {
+		if err = r.Client.Get(ctx, client.ObjectKey{
+			Namespace: cluster.Namespace,
+			Name:      cluster.Name,
+		}, cluster); err != nil {
+			return
+		}
+		cluster.Status = status
+		return r.Status().Update(ctx, cluster, opts...)
+	})
 }
 
 // generateInitCluster will generare the init cluster string like 'etcd-0=http://etcd-0.etcd.default:2380,etcd-1=http://etcd-1.etcd.default:2380,etcd-2=http://etcd-2.etcd.default:2380'.

@@ -338,8 +338,73 @@ type GreptimeDBClusterSpec struct {
 
 // GreptimeDBClusterStatus defines the observed state of GreptimeDBCluster
 type GreptimeDBClusterStatus struct {
-	// TODO(zyy17): add status for each component.
+	Frontend FrontendStatus `json:"frontend,omitempty"`
+	Meta     MetaStatus     `json:"meta,omitempty"`
+	Datanode DatanodeStatus `json:"datanode,omitempty"`
+
+	// +optional
+	Conditions []GreptimeDBClusterCondition `json:"conditions,omitempty"`
 }
+
+// GreptimeDBClusterCondition describes the state of a deployment at a certain point.
+type GreptimeDBClusterCondition struct {
+	// Type of deployment condition.
+	Type GreptimeDBConditionType `json:"type"`
+
+	// Status of the condition, one of True, False, Unknown.
+	Status corev1.ConditionStatus `json:"status"`
+
+	// The last time this condition was updated.
+	LastUpdateTime metav1.Time `json:"lastUpdateTime,omitempty"`
+
+	// Last time the condition transitioned from one status to another.
+	// +optional
+	LastTransitionTime metav1.Time `json:"lastTransitionTime,omitempty"`
+
+	// The reason for the condition's last transition.
+	// +optional
+	Reason string `json:"reason,omitempty"`
+
+	// A human readable message indicating details about the transition.
+	// +optional
+	Message string `json:"message,omitempty"`
+}
+
+type FrontendStatus struct {
+	// +optional
+	Replicas int32 `json:"replicas,omitempty"`
+
+	// +optional
+	ReadyReplicas int32 `json:"readyReplicas,omitempty"`
+}
+
+type MetaStatus struct {
+	// +optional
+	Replicas int32 `json:"replicas,omitempty"`
+
+	// +optional
+	ReadyReplicas int32 `json:"readyReplicas,omitempty"`
+}
+
+type DatanodeStatus struct {
+	// +optional
+	Replicas int32 `json:"replicas,omitempty"`
+
+	// +optional
+	ReadyReplicas int32 `json:"readyReplicas,omitempty"`
+}
+
+type GreptimeDBConditionType string
+
+// These are valid conditions of a GreptimeDBCluster.
+const (
+	// GreptimeDBClusterReady indicates that the GreptimeDB cluster is ready to serve requests.
+	// Every component in the cluster are all ready.
+	GreptimeDBClusterReady GreptimeDBConditionType = "Ready"
+
+	// GreptimeDBClusterProgressing indicates that the GreptimeDB cluster is progressing.
+	GreptimeDBClusterProgressing GreptimeDBConditionType = "Progressing"
+)
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
