@@ -6,6 +6,6 @@ metadata:
 spec:
   base:
     main:
-      image: localhost:5001/greptimedb:latest
+      image: localhost:5001/greptime/greptimedb:latest
   datanode:
     replicas: 1
