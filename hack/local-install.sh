@@ -85,8 +85,10 @@ function deploy_greptime_operator() {
 function deploy_greptimedb_cluster() {
     kubectl apply -f ./config/samples/mock/cluster.yaml
 
-    # FIXME(zyy17): Will add status field in CRD. For now, just use the ugly sleep...
-    sleep 80
+    if ! kubectl wait greptimedbclusters.greptime.cloud -n default mock --for condition=Ready=True --timeout=90s; then
+       echo "❌ Deploy greptimedb cluster failed, please check your system."
+       exit
+    fi
 }
 
 function forward_mysql_request() {
