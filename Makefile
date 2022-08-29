@@ -53,7 +53,7 @@ manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and Cust
 .PHONY: generate-deployment-yaml
 generate-deployment-yaml: kustomize manifests ## Generate greptimedb-operator deployment YAML contents to manifest directory.
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMAGE_REPO}/greptimedb-operator:${IMAGE_TAG}
-	$(KUSTOMIZE) build config/default > ${MANIFESTS_DIR}/greptime-operator-deployment.yaml
+	$(KUSTOMIZE) build config/default > ${MANIFESTS_DIR}/greptimedb-operator-deployment.yaml
 
 .PHONY: generate
 generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
