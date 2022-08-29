@@ -91,6 +91,22 @@ The GreptimeDB Operator manages GreptimeDB clusters on [Kubernetes](https://kube
   $ docker push localhost:5001/greptimedb
   ```
 
+- **Run Tests**
+
+  - **Run Unit Test**
+
+    ```
+    $ make test
+    ```
+
+  - **Run e2e Test**
+
+    Prerequisites: docker / kind / kubectl
+
+    ```
+    $ make e2e
+    ```
+
 ### Run your local GreptimeDB cluster
 
 - **Prerequisites**

@@ -3,6 +3,7 @@ module github.com/greptime/greptimedb-operator
 go 1.18
 
 require (
+	github.com/go-sql-driver/mysql v1.6.0
 	github.com/onsi/ginkgo/v2 v2.1.4
 	github.com/onsi/gomega v1.20.1
 	github.com/spf13/cobra v1.4.0
