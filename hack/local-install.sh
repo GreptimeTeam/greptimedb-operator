@@ -75,7 +75,7 @@ function process_images() {
 }
 
 function deploy_greptime_operator() {
-    kubectl apply -f ./manifest/greptime-operator-deployment.yaml
+    kubectl apply -f ./manifests/greptime-operator-deployment.yaml
     if ! kubectl wait deployment -n greptimedb-operator-system greptimedb-operator --for condition=Available=True --timeout=90s; then
        echo "❌ Deploy greptimedb-operator failed, please check your system."
        exit

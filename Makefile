@@ -4,7 +4,7 @@ IMAGE_REPO ?= ${IMAGE_REGISTRY}/greptime
 IMAGE_TAG ?= latest
 DOCKER_BUILD_OPTIONS ?= --network host
 
-MANIFEST_DIR = ./manifest
+MANIFESTS_DIR = ./manifests
 
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION = 1.24.1
@@ -53,7 +53,7 @@ manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and Cust
 .PHONY: generate-deployment-yaml
 generate-deployment-yaml: kustomize manifests ## Generate greptimedb-operator deployment YAML contents to manifest directory.
 	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMAGE_REPO}/greptimedb-operator:${IMAGE_TAG}
-	$(KUSTOMIZE) build config/default > ${MANIFEST_DIR}/greptime-operator-deployment.yaml
+	$(KUSTOMIZE) build config/default > ${MANIFESTS_DIR}/greptime-operator-deployment.yaml
 
 .PHONY: generate
 generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
