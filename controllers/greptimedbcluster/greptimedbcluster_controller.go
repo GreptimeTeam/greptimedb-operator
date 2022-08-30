@@ -874,6 +874,20 @@ func (r *Reconciler) deleteEtcdStorage(ctx context.Context, cluster *v1alpha1.Gr
 	return nil
 }
 
+func (r *Reconciler) updateStatus(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster, opts ...client.UpdateOption) error {
+	status := cluster.DeepCopy().Status
+	return retry.RetryOnConflict(retry.DefaultBackoff, func() (err error) {
+		if err = r.Client.Get(ctx, client.ObjectKey{
+			Namespace: cluster.Namespace,
+			Name:      cluster.Name,
+		}, cluster); err != nil {
+			return
+		}
+		cluster.Status = status
+		return r.Status().Update(ctx, cluster, opts...)
+	})
+}
+
 func newCondition(conditionType v1alpha1.GreptimeDBConditionType, conditionStatus corev1.ConditionStatus, reason, message string) v1alpha1.GreptimeDBClusterCondition {
 	return v1alpha1.GreptimeDBClusterCondition{
 		Type:               conditionType,
@@ -919,20 +933,6 @@ func filterOutCondition(conditions []v1alpha1.GreptimeDBClusterCondition, condit
 		newCondititions = append(newCondititions, c)
 	}
 	return newCondititions
-}
-
-func (r *Reconciler) updateStatus(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster, opts ...client.UpdateOption) error {
-	status := cluster.DeepCopy().Status
-	return retry.RetryOnConflict(retry.DefaultBackoff, func() (err error) {
-		if err = r.Client.Get(ctx, client.ObjectKey{
-			Namespace: cluster.Namespace,
-			Name:      cluster.Name,
-		}, cluster); err != nil {
-			return
-		}
-		cluster.Status = status
-		return r.Status().Update(ctx, cluster, opts...)
-	})
 }
 
 // generateInitCluster will generare the init cluster string like 'etcd-0=http://etcd-0.etcd.default:2380,etcd-1=http://etcd-1.etcd.default:2380,etcd-2=http://etcd-2.etcd.default:2380'.
