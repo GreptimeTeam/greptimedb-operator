@@ -210,7 +210,7 @@ func (r *Reconciler) syncMeta(ctx context.Context, cluster *v1alpha1.GreptimeDBC
 		}
 
 		if needToUpdate {
-			if err := r.Update(ctx, metaDeployment); err != nil {
+			if err := r.Update(ctx, newMetaDeployment); err != nil {
 				return false, err
 			}
 		}
