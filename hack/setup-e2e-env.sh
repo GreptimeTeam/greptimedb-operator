@@ -8,10 +8,10 @@ CLUSTER=greptimedb-operator-e2e
 REGISTRY_NAME=kind-registry
 REGISTRY_PORT=5001
 
-TEST_ETCD_IMAGE=grygt/etcd:latest
-TEST_META_IMAGE=grygt/meta:latest
-TEST_FRONTEND_IMAGE=grygt/frontend:latest
-TEST_GREPTIMEDB_IMAGE=grygt/db:latest
+TEST_ETCD_IMAGE=ghcr.io/greptimeteam/etcd:latest
+TEST_META_IMAGE=ghcr.io/greptimeteam/meta-mock:latest
+TEST_FRONTEND_IMAGE=ghcr.io/greptimeteam/frontend-mock:latest
+TEST_GREPTIMEDB_IMAGE=ghcr.io/greptimeteam/db-test:latest
 
 function check_prerequisites() {
     if ! hash docker 2>/dev/null; then
