@@ -1,0 +1,46 @@
+{{- if .Values.greptimedbOperator.create }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.greptimedbOperator.name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    control-plane: controller-manager
+spec:
+  replicas: {{ .Values.greptimedbOperator.replicas }}
+  selector:
+    matchLabels:
+      control-plane: controller-manager
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/default-container: manager
+      labels:
+        control-plane: controller-manager
+    spec:
+      serviceAccountName: {{ .Values.greptimedbOperator.serviceAccount }}
+      terminationGracePeriodSeconds: {{ .Values.greptimedbOperator.terminationGracePeriodSeconds }}
+      containers:
+      - name: manager
+        image: {{ .Values.greptimedbOperator.image }}
+        imagePullPolicy: {{ .Values.greptimedbOperator.imagePullPolicy | default "IfNotPresent" }}
+        livenessProbe:
+          httpGet:
+            path: /healthz
+            port: {{ .Values.greptimedbOperator.livenessProbePort }}
+          initialDelaySeconds: 15
+          periodSeconds: 20
+        name: manager
+        readinessProbe:
+          httpGet:
+            path: /readyz
+            port: {{ .Values.greptimedbOperator.readinessProbePort }}
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        args:
+        - --enable-leader-election
+        command:
+        - greptimedb-operator
+        resources:
+{{ toYaml .Values.greptimedbOperator.resources | indent 12 }}
+{{- end }}

@@ -1,0 +1,44 @@
+# Default values for grepptimedb-operator
+
+greptimedbOperatorRBAC:
+  create: true
+  serviceAccountName: greptimedb-operator
+  clusterRoleName: manager-role
+  clusterRoleBindingName: manager-rolebinding
+  roleName: leader-election-role
+  roleBindingName: leader-election-rolebinding
+
+greptimedbOperator:
+  create: true
+  name: greptimedb-operator
+  image: localhost:5001/greptime/greptimedb-operator:latest
+  imagePullPolicy: IfNotPresent
+  serviceAccount: greptimedb-operator
+  terminationGracePeriodSeconds: 10
+  replicas: 1
+  livenessProbePort: 9494
+  readinessProbePort: 9494
+  resources:
+    limits:
+      cpu: 500m
+      memory: 128Mi
+    requests:
+      cpu: 10m
+      memory: 64Mi
+
+greptimedbCluster:
+  create: true
+  name: mock
+  resources:
+    limits:
+      cpu: 500m
+      memory: 128Mi
+    requests:
+      cpu: 250m
+      memory: 64Mi
+  frontendReplicas: 1
+  frontendImage: localhost:5001/greptime/frontend:latest
+  metaReplicas: 1
+  metaImage: localhost:5001/greptime/meta:latest
+  dataNodeReplicas: 1
+  dataNodeImage: localhost:5001/greptime/greptimedb:latest

@@ -1,0 +1,37 @@
+{{- if .Values.greptimedbCluster.create }}
+apiVersion: greptime.cloud/v1alpha1
+kind: GreptimeDBCluster
+metadata:
+  name: {{ .Values.greptimedbCluster.name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  base:
+    main:
+      resources:
+{{ toYaml .Values.greptimedbCluster.resources | indent 12 }}
+    {{- end}}
+  frontend:
+    replicas: {{ .Values.greptimedbCluster.frontendReplicas }}
+    template:
+      main:
+        image: {{ .Values.greptimedbCluster.frontendImage }}
+        args:
+          - "-meta-endpoint"
+          - "http://mock-meta.default:3001"
+          - "-l"
+          - "0.0.0.0:3306"
+          - "-r"
+          - "mock-datanode.default:3306"
+  meta:
+    replicas: {{ .Values.greptimedbCluster.metaReplicas }}
+    template:
+      main:
+        image: {{ .Values.greptimedbCluster.metaImage }}
+        args:
+          - "--etcd-endpoint"
+          - "mock-etcd.default:2379"
+  datanode:
+    replicas: {{ .Values.greptimedbCluster.dataNodeReplicas }}
+    template:
+      main:
+        image: {{ .Values.greptimedbCluster.dataNodeImage }}

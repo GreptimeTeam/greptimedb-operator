@@ -1,0 +1,14 @@
+apiVersion: v1
+description: greptime-operator Helm chart for Kubernetes
+name: greptime-operator
+appVersion: v1.0.0
+keywords:
+  - operator
+  - database
+maintainers:
+- name: davider.li
+  email: liyang@greptime.com
+- name: zyy17
+  email: zyy@greptime.com
+version: v1.0.0
+
