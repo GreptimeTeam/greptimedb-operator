@@ -1,18 +1,15 @@
 ## Getting Started
 
-## prerequisites
-- Installing helm
-  - [helm](https://helm.sh/zh/docs/intro/install/)
+## Prerequisites
+  - [Helm](https://helm.sh/zh/docs/intro/install/)
 
 #### Install
 ```
 $ cd charts
-```
-```
 $ helm install greptimedb-operator greptimedb-operator -n namespace 
 ```
 
-#### unInstall
+#### Uninstall
 ```
 $ helm uninstall greptimedb-operator -n namespace
 ```
