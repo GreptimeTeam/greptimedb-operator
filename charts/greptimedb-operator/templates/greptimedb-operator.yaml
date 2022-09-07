@@ -2,7 +2,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Values.greptimedbOperator.name }}
+  name: {{ include "greptimedb-operator.fullname" . }}
   namespace: {{ .Release.Namespace }}
   labels:
     control-plane: {{ .Values.greptimedbOperator.labels }}
@@ -18,7 +18,7 @@ spec:
       labels:
         control-plane: {{ .Values.greptimedbOperator.labels }}
     spec:
-      serviceAccountName: {{ .Values.greptimedbOperator.serviceAccount }}
+      serviceAccountName: {{ include "greptimedb-operator.serviceAccountName" . }}
       terminationGracePeriodSeconds: {{ .Values.greptimedbOperator.terminationGracePeriodSeconds }}
       containers:
       - name: manager

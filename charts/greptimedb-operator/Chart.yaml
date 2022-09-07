@@ -1,7 +1,7 @@
 apiVersion: v2
 kubeVersion: ">=1.19.0-0"
 description: Greptimedb Operator Helm chart for Kubernetes
-name: greptime-operator
+name: greptimedb-operator
 appVersion: v0.1.0
 type: application
 home: https://github.com/GreptimeTeam/greptimedb-operator

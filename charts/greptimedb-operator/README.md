@@ -14,5 +14,5 @@ $ helm install greptimedb-operator greptimedb-operator -n namespace
 
 #### unInstall
 ```
-$ helm uninstall greptimedb-operator
+$ helm uninstall greptimedb-operator -n namespace
 ```

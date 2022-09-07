@@ -1,22 +1,23 @@
-# Default values for grepptimedb-operator
+# Default values for greptimedb-operator
 
-greptimedbOperatorRBAC:
+serviceAccount:
+  # Specifies whether a service account should be created
   create: true
-  serviceAccountName: greptimedb-operator
-  clusterRoleName: manager-role
-  clusterRoleBindingName: manager-rolebinding
-  roleName: leader-election-role
-  roleBindingName: leader-election-rolebinding
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
 
 greptimedbOperator:
   create: true
-  name: greptimedb-operator
   image: localhost:5001/greptime/greptimedb-operator:latest
   labels: controller-manager
   imagePullPolicy: IfNotPresent
-  serviceAccount: greptimedb-operator
   terminationGracePeriodSeconds: 10
   replicas: 1
+
+  # default resources for greptimedb operator
   resources:
     limits:
       cpu: 500m
@@ -24,26 +25,40 @@ greptimedbOperator:
     requests:
       cpu: 10m
       memory: 64Mi
+
   livenessProbe:
     httpGet:
       path: /healthz
       port: 9494
     initialDelaySeconds: 15
     periodSeconds: 20
+
   readinessProbe:
     httpGet:
       path: /readyz
       port: 9494
     initialDelaySeconds: 5
     periodSeconds: 10
+
   args:
     - --enable-leader-election
+
   command:
     - greptimedb-operator
+
+  rbac:
+    clusterRoleName: manager-role
+    clusterRoleBindingName: manager-rolebinding
+    roleName: leader-election-role
+    roleBindingName: leader-election-rolebinding
+
+nameOverride: ""
+fullnameOverride: ""
 
 greptimedbCluster:
   create: true
   name: mock
+  # Define resources requests and limits for single Pods.
   resources:
     limits:
       cpu: 500m
@@ -51,6 +66,7 @@ greptimedbCluster:
     requests:
       cpu: 250m
       memory: 64Mi
+
   frontend:
     replicas: 1
     image: localhost:5001/greptime/frontend:latest
@@ -61,12 +77,14 @@ greptimedbCluster:
       - 0.0.0.0:3306
       - -r
       - mock-datanode.default:3306
+
   meta:
     replicas: 1
     image: localhost:5001/greptime/meta:latest
     args:
       - --etcd-endpoint
       - mock-etcd.default:2379
+
   datanode:
     replicas: 1
     image: localhost:5001/greptime/greptimedb:latest

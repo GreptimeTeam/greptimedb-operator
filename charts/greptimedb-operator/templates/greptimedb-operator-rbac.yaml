@@ -1,14 +1,14 @@
-{{- if .Values.greptimedbOperatorRBAC.create }}
+{{- if .Values.greptimedbOperator.create }}
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: {{ .Values.greptimedbOperatorRBAC.serviceAccountName }}
+  name: {{ template "greptimedb-operator.fullname" . }}
   namespace: {{ .Release.Namespace }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: {{ .Values.greptimedbOperatorRBAC.clusterRoleName }}
+  name: {{ .Values.greptimedbOperator.rbac.clusterRoleName }}
 rules:
 - apiGroups:
   - apps
@@ -95,20 +95,20 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: {{ .Values.greptimedbOperatorRBAC.clusterRoleBindingName }}
+  name: {{ .Values.greptimedbOperator.rbac.clusterRoleBindingName }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: {{ .Values.greptimedbOperatorRBAC.clusterRoleName }}
+  name: {{ .Values.greptimedbOperator.rbac.clusterRoleName }}
 subjects:
 - kind: ServiceAccount
-  name: {{ .Values.greptimedbOperatorRBAC.serviceAccountName }}
+  name: {{ template "greptimedb-operator.fullname" . }}
   namespace: {{ .Release.Namespace }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: {{ .Values.greptimedbOperatorRBAC.roleName }}
+  name: {{ .Values.greptimedbOperator.rbac.roleName }}
   namespace: {{ .Release.Namespace }}
 rules:
 - apiGroups:
@@ -146,14 +146,14 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: {{ .Values.greptimedbOperatorRBAC.roleBindingName }}
+  name: {{ .Values.greptimedbOperator.rbac.roleBindingName }}
   namespace: {{ .Release.Namespace }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: {{ .Values.greptimedbOperatorRBAC.roleName }}
+  name: {{ .Values.greptimedbOperator.rbac.roleName }}
 subjects:
 - kind: ServiceAccount
-  name: {{ .Values.greptimedbOperatorRBAC.serviceAccountName }}
+  name: {{ template "greptimedb-operator.fullname" . }}
   namespace: {{ .Release.Namespace }}
 {{- end }}
