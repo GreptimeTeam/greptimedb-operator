@@ -13,7 +13,6 @@ greptimedbOperator:
   ## Deploy greptimedb operator
   create: true
   image: localhost:5001/greptime/greptimedb-operator:latest
-  labels: controller-manager
   imagePullPolicy: IfNotPresent
   terminationGracePeriodSeconds: 10
   replicas: 1
