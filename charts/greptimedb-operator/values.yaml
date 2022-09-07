@@ -10,6 +10,7 @@ serviceAccount:
   name: ""
 
 greptimedbOperator:
+  ## Deploy greptimedb operator
   create: true
   image: localhost:5001/greptime/greptimedb-operator:latest
   labels: controller-manager
@@ -17,7 +18,7 @@ greptimedbOperator:
   terminationGracePeriodSeconds: 10
   replicas: 1
 
-  # default resources for greptimedb operator
+  # Default resources for greptimedb operator
   resources:
     limits:
       cpu: 500m
@@ -53,6 +54,8 @@ greptimedbOperator:
     roleBindingName: leader-election-rolebinding
 
 nameOverride: ""
+
+## Provide a name to substitute for the full names of resources
 fullnameOverride: ""
 
 greptimedbCluster:

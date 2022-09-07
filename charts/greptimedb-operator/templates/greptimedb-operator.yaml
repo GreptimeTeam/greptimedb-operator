@@ -5,18 +5,18 @@ metadata:
   name: {{ include "greptimedb-operator.fullname" . }}
   namespace: {{ .Release.Namespace }}
   labels:
-    control-plane: {{ .Values.greptimedbOperator.labels }}
+    {{- include "greptimedb-operator.labels" . | nindent 4 }}
 spec:
   replicas: {{ .Values.greptimedbOperator.replicas }}
   selector:
     matchLabels:
-      control-plane: {{ .Values.greptimedbOperator.labels }}
+      {{- include "greptimedb-operator.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       annotations:
         kubectl.kubernetes.io/default-container: manager
       labels:
-        control-plane: {{ .Values.greptimedbOperator.labels }}
+        {{- include "greptimedb-operator.selectorLabels" . | nindent 8 }}
     spec:
       serviceAccountName: {{ include "greptimedb-operator.serviceAccountName" . }}
       terminationGracePeriodSeconds: {{ .Values.greptimedbOperator.terminationGracePeriodSeconds }}
