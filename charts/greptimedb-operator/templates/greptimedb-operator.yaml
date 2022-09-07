@@ -5,18 +5,18 @@ metadata:
   name: {{ .Values.greptimedbOperator.name }}
   namespace: {{ .Release.Namespace }}
   labels:
-    control-plane: controller-manager
+    control-plane: {{ .Values.greptimedbOperator.labels }}
 spec:
   replicas: {{ .Values.greptimedbOperator.replicas }}
   selector:
     matchLabels:
-      control-plane: controller-manager
+      control-plane: {{ .Values.greptimedbOperator.labels }}
   template:
     metadata:
       annotations:
         kubectl.kubernetes.io/default-container: manager
       labels:
-        control-plane: controller-manager
+        control-plane: {{ .Values.greptimedbOperator.labels }}
     spec:
       serviceAccountName: {{ .Values.greptimedbOperator.serviceAccount }}
       terminationGracePeriodSeconds: {{ .Values.greptimedbOperator.terminationGracePeriodSeconds }}
@@ -25,22 +25,17 @@ spec:
         image: {{ .Values.greptimedbOperator.image }}
         imagePullPolicy: {{ .Values.greptimedbOperator.imagePullPolicy | default "IfNotPresent" }}
         livenessProbe:
-          httpGet:
-            path: /healthz
-            port: {{ .Values.greptimedbOperator.livenessProbePort }}
-          initialDelaySeconds: 15
-          periodSeconds: 20
-        name: manager
+{{ toYaml .Values.greptimedbOperator.livenessProbe | indent 10 }}
         readinessProbe:
-          httpGet:
-            path: /readyz
-            port: {{ .Values.greptimedbOperator.readinessProbePort }}
-          initialDelaySeconds: 5
-          periodSeconds: 10
+{{ toYaml .Values.greptimedbOperator.readinessProbe | indent 10 }}
         args:
-        - --enable-leader-election
+          {{- range $.Values.greptimedbOperator.args }}
+          - {{ . | quote }}
+          {{- end }}
         command:
-        - greptimedb-operator
+          {{- range $.Values.greptimedbOperator.command }}
+          - {{ . | quote }}
+          {{- end }}
         resources:
 {{ toYaml .Values.greptimedbOperator.resources | indent 12 }}
 {{- end }}

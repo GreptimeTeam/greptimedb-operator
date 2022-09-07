@@ -11,27 +11,25 @@ spec:
 {{ toYaml .Values.greptimedbCluster.resources | indent 12 }}
     {{- end}}
   frontend:
-    replicas: {{ .Values.greptimedbCluster.frontendReplicas }}
+    replicas: {{ .Values.greptimedbCluster.frontend.replicas }}
     template:
       main:
-        image: {{ .Values.greptimedbCluster.frontendImage }}
+        image: {{ .Values.greptimedbCluster.frontend.image }}
         args:
-          - "-meta-endpoint"
-          - "http://mock-meta.default:3001"
-          - "-l"
-          - "0.0.0.0:3306"
-          - "-r"
-          - "mock-datanode.default:3306"
+          {{- range $.Values.greptimedbCluster.frontend.args }}
+          - {{ . | quote }}
+          {{- end }}
   meta:
-    replicas: {{ .Values.greptimedbCluster.metaReplicas }}
+    replicas: {{ .Values.greptimedbCluster.meta.replicas }}
     template:
       main:
-        image: {{ .Values.greptimedbCluster.metaImage }}
+        image: {{ .Values.greptimedbCluster.meta.image }}
         args:
-          - "--etcd-endpoint"
-          - "mock-etcd.default:2379"
+          {{- range $.Values.greptimedbCluster.meta.args }}
+          - {{ . | quote }}
+          {{- end }}
   datanode:
-    replicas: {{ .Values.greptimedbCluster.dataNodeReplicas }}
+    replicas: {{ .Values.greptimedbCluster.datanode.replicas }}
     template:
       main:
-        image: {{ .Values.greptimedbCluster.dataNodeImage }}
+        image: {{ .Values.greptimedbCluster.datanode.image }}

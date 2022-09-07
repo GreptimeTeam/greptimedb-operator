@@ -12,12 +12,11 @@ greptimedbOperator:
   create: true
   name: greptimedb-operator
   image: localhost:5001/greptime/greptimedb-operator:latest
+  labels: controller-manager
   imagePullPolicy: IfNotPresent
   serviceAccount: greptimedb-operator
   terminationGracePeriodSeconds: 10
   replicas: 1
-  livenessProbePort: 9494
-  readinessProbePort: 9494
   resources:
     limits:
       cpu: 500m
@@ -25,6 +24,22 @@ greptimedbOperator:
     requests:
       cpu: 10m
       memory: 64Mi
+  livenessProbe:
+    httpGet:
+      path: /healthz
+      port: 9494
+    initialDelaySeconds: 15
+    periodSeconds: 20
+  readinessProbe:
+    httpGet:
+      path: /readyz
+      port: 9494
+    initialDelaySeconds: 5
+    periodSeconds: 10
+  args:
+    - --enable-leader-election
+  command:
+    - greptimedb-operator
 
 greptimedbCluster:
   create: true
@@ -36,9 +51,22 @@ greptimedbCluster:
     requests:
       cpu: 250m
       memory: 64Mi
-  frontendReplicas: 1
-  frontendImage: localhost:5001/greptime/frontend:latest
-  metaReplicas: 1
-  metaImage: localhost:5001/greptime/meta:latest
-  dataNodeReplicas: 1
-  dataNodeImage: localhost:5001/greptime/greptimedb:latest
+  frontend:
+    replicas: 1
+    image: localhost:5001/greptime/frontend:latest
+    args:
+      - -meta-endpoint
+      - http://mock-meta.default:3001
+      - -l
+      - 0.0.0.0:3306
+      - -r
+      - mock-datanode.default:3306
+  meta:
+    replicas: 1
+    image: localhost:5001/greptime/meta:latest
+    args:
+      - --etcd-endpoint
+      - mock-etcd.default:2379
+  datanode:
+    replicas: 1
+    image: localhost:5001/greptime/greptimedb:latest
