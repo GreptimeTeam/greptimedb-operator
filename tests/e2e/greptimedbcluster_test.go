@@ -112,13 +112,13 @@ var _ = Describe("Basic test greptimedbcluster controller", func() {
 		}
 		Expect(len(metrics) == 1).Should(BeTrue(), "get the wrong data from db")
 
-		By("Delete cluster")
-		err = k8sClient.Delete(ctx, testCluster)
-		Expect(err).NotTo(HaveOccurred(), "failed to delete cluster")
-		Eventually(func() error {
-			// The cluster will be deleted eventually.
-			return k8sClient.Get(ctx, client.ObjectKey{Name: testCluster.Namespace, Namespace: testCluster.Namespace}, testCluster)
-		}, 30*time.Second, time.Second).Should(HaveOccurred())
+		//By("Delete cluster")
+		//err = k8sClient.Delete(ctx, testCluster)
+		//Expect(err).NotTo(HaveOccurred(), "failed to delete cluster")
+		//Eventually(func() error {
+		//	// The cluster will be deleted eventually.
+		//	return k8sClient.Get(ctx, client.ObjectKey{Name: testCluster.Namespace, Namespace: testCluster.Namespace}, testCluster)
+		//}, 30*time.Second, time.Second).Should(HaveOccurred())
 	})
 })
 

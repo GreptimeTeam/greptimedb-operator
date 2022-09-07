@@ -49,6 +49,7 @@ func (in *GreptimeDBCluster) SetDefaults() {
 		} else {
 			in.Spec.Datanode.Template.overlay(in.Spec.Base)
 		}
+		in.Spec.Datanode.Storage.setDefaults()
 	}
 
 	if in.Spec.HTTPServicePort == 0 {
@@ -61,6 +62,29 @@ func (in *GreptimeDBCluster) SetDefaults() {
 
 	if in.Spec.MySQLServicePort == 0 {
 		in.Spec.MySQLServicePort = int32(defaultMySQLServicePort)
+	}
+}
+
+func (in *StorageSpec) setDefaults() {
+	if in == nil {
+		return
+	}
+
+	if in.Name == "" {
+		in.Name = defaultDataNodeStorageName
+	}
+
+	if in.MountPath == "" {
+		in.MountPath = defaultDataNodeStorageMountPath
+	}
+
+	if in.StorageClassName == nil {
+		storageClassName := defaultDataNodeStorageClassName
+		in.StorageClassName = &storageClassName
+	}
+
+	if in.StorageSize == "" {
+		in.StorageSize = defaultDataNodeStorageSize
 	}
 }
 

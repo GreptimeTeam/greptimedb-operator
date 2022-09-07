@@ -64,11 +64,11 @@ var _ = Describe("Test greptimedbcluster controller", func() {
 		By("Check datanode resource")
 		svc = &corev1.Service{}
 		checkResource(testNamespace, testClusterName+"-datanode", svc, req)
-		deployment = &appsv1.Deployment{}
-		checkResource(testNamespace, testClusterName+"-datanode", deployment, req)
+		statefulSet = &appsv1.StatefulSet{}
+		checkResource(testNamespace, testClusterName+"-datanode", statefulSet, req)
 
 		// Move forward to sync frontend.
-		Expect(makeDeploymentReady(deployment, cluster.Spec.Datanode.Replicas)).NotTo(HaveOccurred(), "failed to update datanode deploylemt status")
+		Expect(makeStatefulSetReady(statefulSet, cluster.Spec.Datanode.Replicas)).NotTo(HaveOccurred(), "failed to update datanode statefulset status")
 
 		By("Check frontend resource")
 		svc = &corev1.Service{}

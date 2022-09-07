@@ -21,4 +21,10 @@ const (
 	defaultEtcdStorageClassName = "standard" // 'standard' is the default local storage class of kind.
 	defaultEtcdStorageSize      = "10Gi"
 	defaultEtcdStorageMountPath = "/var/run/etcd"
+
+	// The default storage settings for datanode.
+	defaultDataNodeStorageName      = "datanode"
+	defaultDataNodeStorageClassName = "standard" // 'standard' is the default local storage class of kind.
+	defaultDataNodeStorageSize      = "10Gi"
+	defaultDataNodeStorageMountPath = "/greptimedb/data"
 )
