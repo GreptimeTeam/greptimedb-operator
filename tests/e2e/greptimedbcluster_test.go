@@ -62,7 +62,7 @@ var _ = Describe("Basic test greptimedbcluster controller", func() {
 				}
 			}
 			return false
-		}, 60*time.Second, time.Second).Should(BeTrue())
+		}, 120*time.Second, time.Second).Should(BeTrue())
 
 		go func() {
 			forwardRequest(testCluster.Name)
