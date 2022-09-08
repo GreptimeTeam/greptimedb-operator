@@ -10,7 +10,7 @@ serviceAccount:
   name: ""
 
 greptimedbOperator:
-  ## Deploy greptimedb operator
+  # Deploy greptimedb operator
   create: true
   image: localhost:5001/greptime/greptimedb-operator:latest
   imagePullPolicy: IfNotPresent
@@ -54,39 +54,5 @@ greptimedbOperator:
 
 nameOverride: ""
 
-## Provide a name to substitute for the full names of resources
+# Provide a name to substitute for the full names of resources
 fullnameOverride: ""
-
-greptimedbCluster:
-  create: true
-  name: mock
-  # Define resources requests and limits for single Pods.
-  resources:
-    limits:
-      cpu: 500m
-      memory: 128Mi
-    requests:
-      cpu: 250m
-      memory: 64Mi
-
-  frontend:
-    replicas: 1
-    image: localhost:5001/greptime/frontend:latest
-    args:
-      - -meta-endpoint
-      - http://mock-meta.default:3001
-      - -l
-      - 0.0.0.0:3306
-      - -r
-      - mock-datanode.default:3306
-
-  meta:
-    replicas: 1
-    image: localhost:5001/greptime/meta:latest
-    args:
-      - --etcd-endpoint
-      - mock-etcd.default:2379
-
-  datanode:
-    replicas: 1
-    image: localhost:5001/greptime/greptimedb:latest
