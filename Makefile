@@ -63,6 +63,11 @@ generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and
 fmt: ## Run go fmt against code.
 	go fmt ./...
 
+.PHONY: check-format
+fmt-check:
+	echo "Checking files format ..."
+	go fmt ./... | grep . && { echo "Unformatted files found"; exit 1; } || echo "No file to format"
+
 .PHONY: vet
 vet: ## Run go vet against code.
 	go vet ./...
