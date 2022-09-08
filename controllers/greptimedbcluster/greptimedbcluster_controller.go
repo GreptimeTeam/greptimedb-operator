@@ -272,7 +272,7 @@ func (r *Reconciler) syncDatanode(ctx context.Context, cluster *v1alpha1.Greptim
 	}
 
 	if statefulSet, ok := datanodeStatefulSet.(*appsv1.StatefulSet); ok {
-		needToUpdate, err := r.isNeedToUpdate(statefulSet, new(appsv1.StatefulSet), &newDatanodeStatefulSet.Spec)
+		needToUpdate, err := r.isNeedToUpdate(statefulSet, new(appsv1.StatefulSetSpec), &newDatanodeStatefulSet.Spec)
 		if err != nil {
 			return false, err
 		}
