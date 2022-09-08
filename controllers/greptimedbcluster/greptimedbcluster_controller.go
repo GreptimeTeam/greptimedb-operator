@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"k8s.io/klog/v2"
 	"strconv"
 	"strings"
 
@@ -18,6 +17,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/retry"
+	"k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
@@ -272,7 +272,21 @@ func (r *Reconciler) syncDatanode(ctx context.Context, cluster *v1alpha1.Greptim
 	}
 
 	if statefulSet, ok := datanodeStatefulSet.(*appsv1.StatefulSet); ok {
-		return r.isStatefulSetReady(statefulSet), nil
+		needToUpdate, err := r.isNeedToUpdate(statefulSet, new(appsv1.StatefulSet), &newDatanodeStatefulSet.Spec)
+		if err != nil {
+			return false, err
+		}
+
+		if r.isStatefulSetReady(statefulSet) && !needToUpdate {
+			return true, nil
+		}
+
+		if needToUpdate {
+			if err := r.Update(ctx, newDatanodeStatefulSet); err != nil {
+				return false, err
+			}
+		}
+		return false, nil
 	}
 
 	return false, nil
