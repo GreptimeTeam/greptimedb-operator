@@ -37,32 +37,32 @@ function create_local_kubernetes() {
 }
 
 function process_meta_image() {
-    docker pull grygt/meta:latest
-    docker tag grygt/meta:latest localhost:5001/greptime/meta:latest
+    docker pull ghcr.io/greptimeteam/meta-mock:latest
+    docker tag ghcr.io/greptimeteam/meta-mock:latest localhost:5001/greptime/meta:latest
     docker push localhost:5001/greptime/meta:latest
 }
 
 function process_etcd_image() {
-    docker pull grygt/etcd:latest
-    docker tag grygt/etcd:latest localhost:5001/greptime/etcd:latest
+    docker pull ghcr.io/greptimeteam/etcd:latest
+    docker tag ghcr.io/greptimeteam/etcd:latest localhost:5001/greptime/etcd:latest
     docker push localhost:5001/greptime/etcd:latest
 }
 
 function process_frontend_image() {
-    docker pull grygt/frontend:latest
-    docker tag grygt/frontend:latest localhost:5001/greptime/frontend:latest
+    docker pull ghcr.io/greptimeteam/frontend-mock:latest
+    docker tag ghcr.io/greptimeteam/frontend-mock:latest localhost:5001/greptime/frontend:latest
     docker push localhost:5001/greptime/frontend:latest
 }
 
 function process_db_image() {
-    docker pull grygt/db:latest
-    docker tag grygt/db:latest localhost:5001/greptime/greptimedb:latest
+    docker pull ghcr.io/greptimeteam/db-test:latest
+    docker tag ghcr.io/greptimeteam/db-test:latest localhost:5001/greptime/greptimedb:latest
     docker push localhost:5001/greptime/greptimedb:latest
 }
 
 function process_operator_image() {
-    docker pull grygt/operator:latest
-    docker tag grygt/operator:latest localhost:5001/greptime/greptimedb-operator:latest
+    docker pull ghcr.io/greptimeteam/operator-test:latest
+    docker tag ghcr.io/greptimeteam/operator-test:latest localhost:5001/greptime/greptimedb-operator:latest
     docker push localhost:5001/greptime/greptimedb-operator:latest
 }
 
