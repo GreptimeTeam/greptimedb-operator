@@ -27,9 +27,9 @@ import (
 )
 
 const (
-	greptimeDBApplication      = "greptime.cloud/application"
-	greptimedbClusterFinalizer = "greptimedbcluster.greptime.cloud/finalizer"
-	lastAppliedResourceSpec    = "greptimedbcluster.greptime.cloud/last-applied-resource-spec"
+	greptimeDBApplication      = "greptime.io/application"
+	greptimedbClusterFinalizer = "greptimedbcluster.greptime.io/finalizer"
+	lastAppliedResourceSpec    = "greptimedbcluster.greptime.io/last-applied-resource-spec"
 )
 
 type SyncFunc func(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster) (ready bool, err error)
@@ -61,9 +61,9 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-// +kubebuilder:rbac:groups=greptime.cloud,resources=greptimedbclusters,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=greptime.cloud,resources=greptimedbclusters/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=greptime.cloud,resources=greptimedbclusters/finalizers,verbs=update
+// +kubebuilder:rbac:groups=greptime.io,resources=greptimedbclusters,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=greptime.io,resources=greptimedbclusters/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=greptime.io,resources=greptimedbclusters/finalizers,verbs=update
 // +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;watch;create;
 // +kubebuilder:rbac:groups=core,resources=services,verbs=get;list;watch;create;update;delete;
 // +kubebuilder:rbac:groups=core,resources=persistentvolumeclaims,verbs=get;list;watch;create;update;delete;

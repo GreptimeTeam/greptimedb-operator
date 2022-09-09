@@ -4,9 +4,9 @@ metadata:
   annotations:
     controller-gen.kubebuilder.io/version: v0.9.0
   creationTimestamp: null
-  name: greptimedbclusters.greptime.cloud
+  name: greptimedbclusters.greptime.io
 spec:
-  group: greptime.cloud
+  group: greptime.io
   names:
     kind: GreptimeDBCluster
     listKind: GreptimeDBClusterList
