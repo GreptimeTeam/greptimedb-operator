@@ -13,10 +13,10 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 
-	"github.com/greptime/greptimedb-operator/apis/v1alpha1"
-	"github.com/greptime/greptimedb-operator/cmd/operator/app/options"
-	"github.com/greptime/greptimedb-operator/cmd/operator/app/version"
-	"github.com/greptime/greptimedb-operator/controllers/greptimedbcluster"
+	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
+	"github.com/GreptimeTeam/greptimedb-operator/cmd/operator/app/options"
+	"github.com/GreptimeTeam/greptimedb-operator/cmd/operator/app/version"
+	"github.com/GreptimeTeam/greptimedb-operator/controllers/greptimedbcluster"
 )
 
 const (

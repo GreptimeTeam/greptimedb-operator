@@ -22,8 +22,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
-	"github.com/greptime/greptimedb-operator/apis/v1alpha1"
-	"github.com/greptime/greptimedb-operator/cmd/operator/app/options"
+	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
+	"github.com/GreptimeTeam/greptimedb-operator/cmd/operator/app/options"
 )
 
 const (

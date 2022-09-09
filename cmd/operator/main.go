@@ -6,7 +6,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/greptime/greptimedb-operator/cmd/operator/app"
+	"github.com/GreptimeTeam/greptimedb-operator/cmd/operator/app"
 )
 
 func main() {
