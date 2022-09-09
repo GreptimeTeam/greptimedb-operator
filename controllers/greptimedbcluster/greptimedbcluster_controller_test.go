@@ -59,16 +59,16 @@ var _ = Describe("Test greptimedbcluster controller", func() {
 		checkResource(testNamespace, testClusterName+"-meta", deployment, req)
 
 		// Move forward to sync datanode.
-		Expect(makeDeploymentReady(deployment, cluster.Spec.Meta.Replicas)).NotTo(HaveOccurred(), "failed to update meta deploylemt status")
+		Expect(makeDeploymentReady(deployment, cluster.Spec.Meta.Replicas)).NotTo(HaveOccurred(), "failed to update meta deployment status")
 
 		By("Check datanode resource")
 		svc = &corev1.Service{}
 		checkResource(testNamespace, testClusterName+"-datanode", svc, req)
-		deployment = &appsv1.Deployment{}
-		checkResource(testNamespace, testClusterName+"-datanode", deployment, req)
+		statefulSet = &appsv1.StatefulSet{}
+		checkResource(testNamespace, testClusterName+"-datanode", statefulSet, req)
 
 		// Move forward to sync frontend.
-		Expect(makeDeploymentReady(deployment, cluster.Spec.Datanode.Replicas)).NotTo(HaveOccurred(), "failed to update datanode deploylemt status")
+		Expect(makeStatefulSetReady(statefulSet, cluster.Spec.Datanode.Replicas)).NotTo(HaveOccurred(), "failed to update datanode statefulset status")
 
 		By("Check frontend resource")
 		svc = &corev1.Service{}
@@ -77,7 +77,7 @@ var _ = Describe("Test greptimedbcluster controller", func() {
 		checkResource(testNamespace, testClusterName+"-frontend", deployment, req)
 
 		// Move forward to complete status.
-		Expect(makeDeploymentReady(deployment, cluster.Spec.Frontend.Replicas)).NotTo(HaveOccurred(), "failed to update frontend deploylemt status")
+		Expect(makeDeploymentReady(deployment, cluster.Spec.Frontend.Replicas)).NotTo(HaveOccurred(), "failed to update frontend deployment status")
 
 		By("Check status of cluster")
 		Eventually(func() bool {
