@@ -49,10 +49,7 @@ help: ## Display this help.
 .PHONY: manifests
 manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
 	$(CONTROLLER_GEN) rbac:roleName=manager-role crd:maxDescLen=0 webhook paths="./..." output:crd:artifacts:config=config/crd/bases
-
-.PHONY: generate-deployment-yaml
-generate-deployment-yaml: kustomize manifests ## Generate greptimedb-operator deployment YAML contents to manifest directory.
-	cd config/manager && $(KUSTOMIZE) edit set image controller=${IMAGE_REPO}/greptimedb-operator:${IMAGE_TAG}
+	$(KUSTOMIZE) build config/crd > ${MANIFESTS_DIR}/greptimedb-operator-crd.yaml
 	$(KUSTOMIZE) build config/default > ${MANIFESTS_DIR}/greptimedb-operator-deployment.yaml
 
 .PHONY: generate
