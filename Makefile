@@ -81,6 +81,10 @@ e2e: setup-e2e ## Run e2e tests.
 test: manifests generate fmt vet envtest ## Run tests.
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./controllers/... -coverprofile cover.out
 
+.PHONY: kind-up
+kind-up: ## Create the kind cluster for developing.
+	./hack/kind/3-nodes-with-local-registry.sh
+
 ##@ Build
 
 .PHONY: build
