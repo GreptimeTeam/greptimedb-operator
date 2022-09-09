@@ -4,7 +4,7 @@ function ldflag() {
     local key=${1}
     local val=${2}
 
-    echo "-X 'github.com/greptime/greptimedb-operator/pkg/version.${key}=${val}'"
+    echo "-X 'github.com/GreptimeTeam/greptimedb-operator/pkg/version.${key}=${val}'"
 }
 
 # parse the current git commit hash
