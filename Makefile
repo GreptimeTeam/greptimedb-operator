@@ -47,13 +47,13 @@ help: ## Display this help.
 ##@ Development
 
 .PHONY: manifests
-manifests: controller-gen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
+manifests: kustomize controller-gen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
 	$(CONTROLLER_GEN) rbac:roleName=manager-role crd:maxDescLen=0 webhook paths="./..." output:crd:artifacts:config=config/crd/bases
 	$(KUSTOMIZE) build config/crd > ${MANIFESTS_DIR}/greptimedb-operator-crd.yaml
 	$(KUSTOMIZE) build config/default > ${MANIFESTS_DIR}/greptimedb-operator-deployment.yaml
 
 .PHONY: generate
-generate: controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
+generate: kustomize controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
 	$(CONTROLLER_GEN) object:headerFile="hack/boilerplate.go.txt" paths="./..."
 
 .PHONY: fmt
@@ -61,9 +61,14 @@ fmt: ## Run go fmt against code.
 	go fmt ./...
 
 .PHONY: check-format
-fmt-check:
+fmt-check: ## Check files format.
 	echo "Checking files format ..."
 	go fmt ./... | grep . && { echo "Unformatted files found"; exit 1; } || echo "No file to format"
+
+.PHONY: check-code-generation
+check-code-generation: ## Check code generation.
+	echo "Checking code generation"
+	./hack/check-code-generation.sh
 
 .PHONY: vet
 vet: ## Run go vet against code.
