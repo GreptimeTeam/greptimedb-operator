@@ -1,4 +1,4 @@
-apiVersion: greptime.cloud/v1alpha1
+apiVersion: greptime.io/v1alpha1
 kind: GreptimeDBCluster
 metadata:
   name: e2e-cluster

@@ -5,7 +5,7 @@ metadata:
   name: greptimedbcluster-viewer-role
 rules:
 - apiGroups:
-  - greptime.cloud
+  - greptime.io
   resources:
   - greptimedbclusters
   verbs:
@@ -13,7 +13,7 @@ rules:
   - list
   - watch
 - apiGroups:
-  - greptime.cloud
+  - greptime.io
   resources:
   - greptimedbclusters/status
   verbs:
