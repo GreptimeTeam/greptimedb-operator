@@ -2,7 +2,7 @@ domain: greptime.io
 layout:
 - go.kubebuilder.io/v3
 projectName: greptimedb-operator
-repo: github.com/greptime/greptimedb-operator
+repo: github.com/GreptimeTeam/greptimedb-operator
 resources:
 - api:
     crdVersion: v1
@@ -10,6 +10,6 @@ resources:
   controller: true
   domain: greptime.io
   kind: GreptimeDBCluster
-  path: github.com/greptime/greptimedb-operator/api/v1alpha1
+  path: github.com/GreptimeTeam/greptimedb-operator/api/v1alpha1
   version: v1alpha1
 version: "3"

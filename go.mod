@@ -1,4 +1,4 @@
-module github.com/greptime/greptimedb-operator
+module github.com/GreptimeTeam/greptimedb-operator
 
 go 1.18
 
