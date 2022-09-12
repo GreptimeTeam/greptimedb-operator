@@ -287,6 +287,7 @@ type FrontendSpec struct {
 type DatanodeSpec struct {
 	ComponentSpec `json:",inline"`
 
+	Storage StorageSpec `json:"storage,omitempty"`
 	// More datanode settings can be added here...
 }
 

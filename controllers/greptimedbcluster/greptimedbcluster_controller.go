@@ -22,14 +22,14 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
-	"github.com/greptime/greptimedb-operator/apis/v1alpha1"
-	"github.com/greptime/greptimedb-operator/cmd/operator/app/options"
+	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
+	"github.com/GreptimeTeam/greptimedb-operator/cmd/operator/app/options"
 )
 
 const (
-	greptimeDBApplication      = "greptime.cloud/application"
-	greptimedbClusterFinalizer = "greptimedbcluster.greptime.cloud/finalizer"
-	lastAppliedResourceSpec    = "greptimedbcluster.greptime.cloud/last-applied-resource-spec"
+	greptimeDBApplication      = "greptime.io/application"
+	greptimedbClusterFinalizer = "greptimedbcluster.greptime.io/finalizer"
+	lastAppliedResourceSpec    = "greptimedbcluster.greptime.io/last-applied-resource-spec"
 )
 
 type SyncFunc func(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster) (ready bool, err error)
@@ -61,9 +61,9 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-// +kubebuilder:rbac:groups=greptime.cloud,resources=greptimedbclusters,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=greptime.cloud,resources=greptimedbclusters/status,verbs=get;update;patch
-// +kubebuilder:rbac:groups=greptime.cloud,resources=greptimedbclusters/finalizers,verbs=update
+// +kubebuilder:rbac:groups=greptime.io,resources=greptimedbclusters,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=greptime.io,resources=greptimedbclusters/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=greptime.io,resources=greptimedbclusters/finalizers,verbs=update
 // +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;watch;create;
 // +kubebuilder:rbac:groups=core,resources=services,verbs=get;list;watch;create;update;delete;
 // +kubebuilder:rbac:groups=core,resources=persistentvolumeclaims,verbs=get;list;watch;create;update;delete;
@@ -261,32 +261,31 @@ func (r *Reconciler) syncDatanode(ctx context.Context, cluster *v1alpha1.Greptim
 		return false, err
 	}
 
-	newDatanodeDeployment, err := r.buildDatanodeDeployment(cluster)
+	newDatanodeStatefulSet, err := r.buildDatanodeStatefulSet(cluster)
 	if err != nil {
 		return false, err
 	}
 
-	datanodeDeployment, err := r.createIfNotExist(ctx, new(appsv1.Deployment), newDatanodeDeployment)
+	datanodeStatefulSet, err := r.createIfNotExist(ctx, new(appsv1.StatefulSet), newDatanodeStatefulSet)
 	if err != nil {
 		return false, err
 	}
 
-	if deployment, ok := datanodeDeployment.(*appsv1.Deployment); ok {
-		needToUpdate, err := r.isNeedToUpdate(deployment, new(appsv1.DeploymentSpec), &newDatanodeDeployment.Spec)
+	if statefulSet, ok := datanodeStatefulSet.(*appsv1.StatefulSet); ok {
+		needToUpdate, err := r.isNeedToUpdate(statefulSet, new(appsv1.StatefulSetSpec), &newDatanodeStatefulSet.Spec)
 		if err != nil {
 			return false, err
 		}
 
-		if r.isDeploymentReady(deployment) && !needToUpdate {
+		if r.isStatefulSetReady(statefulSet) && !needToUpdate {
 			return true, nil
 		}
 
 		if needToUpdate {
-			if err := r.Update(ctx, newDatanodeDeployment); err != nil {
+			if err := r.Update(ctx, newDatanodeStatefulSet); err != nil {
 				return false, err
 			}
 		}
-
 		return false, nil
 	}
 
@@ -656,13 +655,13 @@ func (r *Reconciler) buildDatanodeService(cluster *v1alpha1.GreptimeDBCluster) (
 	return service, nil
 }
 
-func (r *Reconciler) buildDatanodeDeployment(cluster *v1alpha1.GreptimeDBCluster) (*appsv1.Deployment, error) {
-	deployment := &appsv1.Deployment{
+func (r *Reconciler) buildDatanodeStatefulSet(cluster *v1alpha1.GreptimeDBCluster) (*appsv1.StatefulSet, error) {
+	statefulset := &appsv1.StatefulSet{
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace: cluster.Namespace,
 			Name:      cluster.Name + "-datanode",
+			Namespace: cluster.Namespace,
 		},
-		Spec: appsv1.DeploymentSpec{
+		Spec: appsv1.StatefulSetSpec{
 			Replicas: &cluster.Spec.Datanode.Replicas,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
@@ -676,8 +675,6 @@ func (r *Reconciler) buildDatanodeDeployment(cluster *v1alpha1.GreptimeDBCluster
 					},
 					Annotations: cluster.Spec.Datanode.Template.Annotations,
 				},
-
-				// TODO(zyy17): Fill more arguments.
 				Spec: corev1.PodSpec{
 					Containers: []corev1.Container{
 						{
@@ -686,6 +683,12 @@ func (r *Reconciler) buildDatanodeDeployment(cluster *v1alpha1.GreptimeDBCluster
 							Resources: *cluster.Spec.Datanode.Template.MainContainer.Resources,
 							Command:   cluster.Spec.Datanode.Template.MainContainer.Command,
 							Args:      cluster.Spec.Datanode.Template.MainContainer.Args,
+							VolumeMounts: []corev1.VolumeMount{
+								{
+									Name:      cluster.Spec.Datanode.Storage.Name,
+									MountPath: cluster.Spec.Datanode.Storage.MountPath,
+								},
+							},
 							Ports: []corev1.ContainerPort{
 								{
 									Name:          "grpc",
@@ -707,22 +710,39 @@ func (r *Reconciler) buildDatanodeDeployment(cluster *v1alpha1.GreptimeDBCluster
 					},
 				},
 			},
+			VolumeClaimTemplates: []corev1.PersistentVolumeClaim{
+				{
+					ObjectMeta: metav1.ObjectMeta{
+						Name: cluster.Spec.Datanode.Storage.Name,
+					},
+					Spec: corev1.PersistentVolumeClaimSpec{
+						StorageClassName: cluster.Spec.Datanode.Storage.StorageClassName,
+						AccessModes: []corev1.PersistentVolumeAccessMode{
+							corev1.ReadWriteOnce,
+						},
+						Resources: corev1.ResourceRequirements{
+							Requests: corev1.ResourceList{
+								corev1.ResourceStorage: resource.MustParse(cluster.Spec.Datanode.Storage.StorageSize),
+							},
+						},
+					},
+				},
+			},
 		},
 	}
-
 	for k, v := range cluster.Spec.Datanode.Template.Labels {
-		deployment.Labels[k] = v
+		statefulset.Labels[k] = v
 	}
 
-	if err := controllerutil.SetControllerReference(cluster, deployment, r.Scheme); err != nil {
+	if err := controllerutil.SetControllerReference(cluster, statefulset, r.Scheme); err != nil {
 		return nil, err
 	}
 
-	if err := r.setLastAppliedResourceSpecAnnotation(deployment, deployment.Spec); err != nil {
+	if err := r.setLastAppliedResourceSpecAnnotation(statefulset, statefulset.Spec); err != nil {
 		return nil, err
 	}
 
-	return deployment, nil
+	return statefulset, nil
 }
 
 func (r *Reconciler) createIfNotExist(ctx context.Context, source, newObject client.Object) (client.Object, error) {

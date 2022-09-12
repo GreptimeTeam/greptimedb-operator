@@ -16,6 +16,10 @@ jobs:
         run: |
           make fmt-check
 
+      - name: Check code generation
+        run: |
+          make check-code-generation
+
       - name: Build the project
         run: |
           make

@@ -5,7 +5,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/greptime/greptimedb-operator/pkg/version"
+	"github.com/GreptimeTeam/greptimedb-operator/pkg/version"
 )
 
 func NewVersionCommand() *cobra.Command {
