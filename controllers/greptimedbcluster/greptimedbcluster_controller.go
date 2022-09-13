@@ -89,6 +89,10 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, err
 	}
 
+	if cluster.DeletionTimestamp != nil {
+		return ctrl.Result{}, nil
+	}
+
 	// The controller will execute the following actions in order and the next action will begin to execute when the previous one is finished.
 	var actions []SyncFunc
 	if cluster.Spec.Meta != nil {
@@ -813,8 +817,9 @@ func (r *Reconciler) handleFinalizers(ctx context.Context, cluster *v1alpha1.Gre
 		// then lets add the finalizer and update the object. This is equivalent
 		// registering our finalizer.
 		if cluster.Spec.Meta != nil {
-			if !controllerutil.ContainsFinalizer(cluster, greptimedbClusterFinalizer) {
-				controllerutil.AddFinalizer(cluster, greptimedbClusterFinalizer)
+			controllerutil.AddFinalizer(cluster, greptimedbClusterFinalizer)
+			if err := r.Update(ctx, cluster); err != nil {
+				return err
 			}
 		}
 		return nil
@@ -825,9 +830,11 @@ func (r *Reconciler) handleFinalizers(ctx context.Context, cluster *v1alpha1.Gre
 		if err := r.deleteEtcdStorage(ctx, cluster); err != nil {
 			return err
 		}
-
 		// remove our finalizer from the list.
 		controllerutil.RemoveFinalizer(cluster, greptimedbClusterFinalizer)
+		if err := r.Update(ctx, cluster); err != nil {
+			return err
+		}
 	}
 
 	return nil
