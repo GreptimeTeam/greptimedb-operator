@@ -1,0 +1,59 @@
+# Default values for greptimedb-operator
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # Annotations to add to the service account
+  annotations: {}
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name: ""
+
+greptimedbOperator:
+  # Deploy greptimedb operator
+  create: true
+  image: localhost:5001/greptime/greptimedb-operator:latest
+  imagePullPolicy: IfNotPresent
+  terminationGracePeriodSeconds: 10
+  replicas: 1
+
+  # Default resources for greptimedb operator
+  resources:
+    limits:
+      cpu: 500m
+      memory: 128Mi
+    requests:
+      cpu: 10m
+      memory: 64Mi
+
+  livenessProbe:
+    httpGet:
+      path: /healthz
+      port: 9494
+    initialDelaySeconds: 15
+    periodSeconds: 20
+
+  readinessProbe:
+    httpGet:
+      path: /readyz
+      port: 9494
+    initialDelaySeconds: 5
+    periodSeconds: 10
+
+  args:
+    - --enable-leader-election
+
+  command:
+    - greptimedb-operator
+
+rbac:
+  create: true
+  clusterRoleName: manager-role
+  clusterRoleBindingName: manager-rolebinding
+  roleName: leader-election-role
+  roleBindingName: leader-election-rolebinding
+
+nameOverride: ""
+
+# Provide a name to substitute for the full names of resources
+fullnameOverride: ""
