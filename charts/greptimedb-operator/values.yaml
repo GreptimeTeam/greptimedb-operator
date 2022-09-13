@@ -46,11 +46,12 @@ greptimedbOperator:
   command:
     - greptimedb-operator
 
-  rbac:
-    clusterRoleName: manager-role
-    clusterRoleBindingName: manager-rolebinding
-    roleName: leader-election-role
-    roleBindingName: leader-election-rolebinding
+rbac:
+  create: true
+  clusterRoleName: manager-role
+  clusterRoleBindingName: manager-rolebinding
+  roleName: leader-election-role
+  roleBindingName: leader-election-rolebinding
 
 nameOverride: ""
 

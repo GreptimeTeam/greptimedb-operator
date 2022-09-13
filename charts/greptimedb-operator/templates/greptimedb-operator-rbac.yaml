@@ -1,4 +1,4 @@
-{{- if .Values.greptimedbOperator.create }}
+{{- if .Values.rbac.create }}
 apiVersion: v1
 kind: ServiceAccount
 metadata:
@@ -8,7 +8,7 @@ metadata:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: {{ .Values.greptimedbOperator.rbac.clusterRoleName }}
+  name: {{ .Values.rbac.clusterRoleName }}
 rules:
 - apiGroups:
   - apps
@@ -66,7 +66,7 @@ rules:
   - update
   - watch
 - apiGroups:
-  - greptime.cloud
+  - greptime.io
   resources:
   - greptimedbclusters
   verbs:
@@ -78,13 +78,13 @@ rules:
   - update
   - watch
 - apiGroups:
-  - greptime.cloud
+  - greptime.io
   resources:
   - greptimedbclusters/finalizers
   verbs:
   - update
 - apiGroups:
-  - greptime.cloud
+  - greptime.io
   resources:
   - greptimedbclusters/status
   verbs:
@@ -95,11 +95,11 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: {{ .Values.greptimedbOperator.rbac.clusterRoleBindingName }}
+  name: {{ .Values.rbac.clusterRoleBindingName }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: {{ .Values.greptimedbOperator.rbac.clusterRoleName }}
+  name: {{ .Values.rbac.clusterRoleName }}
 subjects:
 - kind: ServiceAccount
   name: {{ template "greptimedb-operator.fullname" . }}
@@ -108,7 +108,7 @@ subjects:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: {{ .Values.greptimedbOperator.rbac.roleName }}
+  name: {{ .Values.rbac.roleName }}
   namespace: {{ .Release.Namespace }}
 rules:
 - apiGroups:
@@ -146,12 +146,12 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: {{ .Values.greptimedbOperator.rbac.roleBindingName }}
+  name: {{ .Values.rbac.roleBindingName }}
   namespace: {{ .Release.Namespace }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: {{ .Values.greptimedbOperator.rbac.roleName }}
+  name: {{ .Values.rbac.roleName }}
 subjects:
 - kind: ServiceAccount
   name: {{ template "greptimedb-operator.fullname" . }}
