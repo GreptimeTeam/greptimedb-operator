@@ -41,8 +41,6 @@ func (in *GreptimeDBCluster) SetDefaults() {
 		} else {
 			in.Spec.Meta.Template.overlay(in.Spec.Base)
 		}
-
-		in.Spec.Meta.Etcd.setDefaults()
 	}
 
 	if in.Spec.Datanode != nil {
@@ -87,45 +85,6 @@ func (in *StorageSpec) setDefaults() {
 
 	if in.StorageSize == "" {
 		in.StorageSize = defaultDataNodeStorageSize
-	}
-}
-
-func (in *EtcdSpec) setDefaults() {
-	if in == nil {
-		return
-	}
-
-	if in.Image == "" {
-		in.Image = defaultEtcdImage
-	}
-
-	if in.ClusterSize == 0 {
-		in.ClusterSize = defaultClusterSize
-	}
-
-	if in.ClientPort == 0 {
-		in.ClientPort = int32(defaultEtcdClientPort)
-	}
-
-	if in.PeerPort == 0 {
-		in.PeerPort = int32(defaultEtcdPeerPort)
-	}
-
-	if in.Storage.Name == "" {
-		in.Storage.Name = defaultEtcdStorageName
-	}
-
-	if in.Storage.StorageSize == "" {
-		in.Storage.StorageSize = defaultEtcdStorageSize
-	}
-
-	if in.Storage.StorageClassName == nil {
-		storageClassName := defaultEtcdStorageClassName
-		in.Storage.StorageClassName = &storageClassName
-	}
-
-	if in.Storage.MountPath == "" {
-		in.Storage.MountPath = defaultEtcdStorageMountPath
 	}
 }
 

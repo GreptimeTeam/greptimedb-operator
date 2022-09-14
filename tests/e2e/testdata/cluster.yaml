@@ -27,12 +27,15 @@ spec:
           - "e2e-cluster-datanode.default:3306"
   meta:
     replicas: 1
+    # FIXME(zyy17): 'etcdEndpoints' should be same as the args in meta. We can fix it when we startup operator as the Pod.
+    etcdEndpoints:
+      - "127.0.0.1:2379"
     template:
       main:
         image: localhost:5001/greptime/meta:latest
         args:
           - "--etcd-endpoint"
-          - "e2e-cluster-etcd.default:2379"
+          - "etcd.default:2379"
   datanode:
     replicas: 1
     template:

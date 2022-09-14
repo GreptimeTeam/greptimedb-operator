@@ -43,15 +43,6 @@ var _ = Describe("Test greptimedbcluster controller", func() {
 		err = k8sClient.Get(ctx, client.ObjectKey{Name: testClusterName, Namespace: testNamespace}, cluster)
 		Expect(err).NotTo(HaveOccurred(), "failed to get cluster")
 
-		By("Check etcd resourcd")
-		svc = &corev1.Service{}
-		checkResource(testNamespace, testClusterName+"-etcd", svc, req)
-		statefulSet = &appsv1.StatefulSet{}
-		checkResource(testNamespace, testClusterName+"-etcd", statefulSet, req)
-
-		// Move forward to sync meta.
-		Expect(makeStatefulSetReady(statefulSet, 3)).NotTo(HaveOccurred(), "failed to update etcd statefulset status")
-
 		By("Check meta resource")
 		svc = &corev1.Service{}
 		checkResource(testNamespace, testClusterName+"-meta", svc, req)

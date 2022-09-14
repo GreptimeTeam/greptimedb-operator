@@ -5975,31 +5975,10 @@ spec:
                 type: integer
               meta:
                 properties:
-                  etcd:
-                    properties:
-                      clientPort:
-                        format: int32
-                        type: integer
-                      clusterSize:
-                        format: int32
-                        type: integer
-                      image:
-                        type: string
-                      peerPort:
-                        format: int32
-                        type: integer
-                      storage:
-                        properties:
-                          mountPath:
-                            type: string
-                          name:
-                            type: string
-                          storageClassName:
-                            type: string
-                          storageSize:
-                            type: string
-                        type: object
-                    type: object
+                  etcdEndpoints:
+                    items:
+                      type: string
+                    type: array
                   replicas:
                     format: int32
                     type: integer

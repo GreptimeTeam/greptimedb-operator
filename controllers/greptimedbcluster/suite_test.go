@@ -2,12 +2,14 @@ package greptimedbcluster
 
 import (
 	"context"
+	"io"
 	"path/filepath"
 	"testing"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
+	"go.etcd.io/etcd/client/v3"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -68,9 +70,10 @@ var _ = BeforeSuite(func() {
 
 	ctx, cancel = context.WithCancel(context.TODO())
 	reconciler = &Reconciler{
-		Client:   manager.GetClient(),
-		Scheme:   manager.GetScheme(),
-		Recorder: manager.GetEventRecorderFor("greptimedbcluster-controller"),
+		Client:                 manager.GetClient(),
+		Scheme:                 manager.GetScheme(),
+		Recorder:               manager.GetEventRecorderFor("greptimedbcluster-controller"),
+		etcdMaintenanceBuilder: buildMockEtcdMaintenance,
 	}
 	err = reconciler.SetupWithManager(manager)
 	Expect(err).ToNot(HaveOccurred())
@@ -88,3 +91,40 @@ var _ = AfterSuite(func() {
 	err := testEnv.Stop()
 	Expect(err).NotTo(HaveOccurred())
 })
+
+func buildMockEtcdMaintenance(etcdEndpoints []string) (clientv3.Maintenance, error) {
+	return &mockEtcdMaintenance{}, nil
+}
+
+// TODO(zyy17): Maybe can use testify.
+var _ clientv3.Maintenance = &mockEtcdMaintenance{}
+
+type mockEtcdMaintenance struct{}
+
+func (_ *mockEtcdMaintenance) AlarmList(ctx context.Context) (*clientv3.AlarmResponse, error) {
+	return &clientv3.AlarmResponse{}, nil
+}
+
+func (_ *mockEtcdMaintenance) AlarmDisarm(ctx context.Context, m *clientv3.AlarmMember) (*clientv3.AlarmResponse, error) {
+	return &clientv3.AlarmResponse{}, nil
+}
+
+func (_ *mockEtcdMaintenance) Defragment(ctx context.Context, endpoint string) (*clientv3.DefragmentResponse, error) {
+	return &clientv3.DefragmentResponse{}, nil
+}
+
+func (_ *mockEtcdMaintenance) Status(ctx context.Context, endpoint string) (*clientv3.StatusResponse, error) {
+	return &clientv3.StatusResponse{}, nil
+}
+
+func (_ *mockEtcdMaintenance) HashKV(ctx context.Context, endpoint string, rev int64) (*clientv3.HashKVResponse, error) {
+	return &clientv3.HashKVResponse{}, nil
+}
+
+func (_ *mockEtcdMaintenance) Snapshot(ctx context.Context) (io.ReadCloser, error) {
+	return nil, nil
+}
+
+func (_ *mockEtcdMaintenance) MoveLeader(ctx context.Context, transfereeID uint64) (*clientv3.MoveLeaderResponse, error) {
+	return &clientv3.MoveLeaderResponse{}, nil
+}
