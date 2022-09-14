@@ -85,13 +85,11 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 	cluster.SetDefaults()
 
-	if err := r.handleFinalizers(ctx, cluster); err != nil {
-		return ctrl.Result{}, err
+	if r.isClusterDelete(cluster) {
+		return ctrl.Result{}, r.removeFinalizer(ctx, cluster)
 	}
 
-	if cluster.DeletionTimestamp != nil {
-		return ctrl.Result{}, nil
-	}
+	r.addFinalizer(ctx, cluster)
 
 	// The controller will execute the following actions in order and the next action will begin to execute when the previous one is finished.
 	var actions []SyncFunc
@@ -810,34 +808,30 @@ func (r *Reconciler) isNeedToUpdate(source client.Object, oldSpec interface{}, n
 	return !apiequality.Semantic.DeepEqual(oldSpec, newSpec), nil
 }
 
-func (r *Reconciler) handleFinalizers(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster) error {
-	// Determine if the object is under deletion.
-	if cluster.ObjectMeta.DeletionTimestamp.IsZero() {
-		// The object is not being deleted, so if it does not have our finalizer,
-		// then lets add the finalizer and update the object. This is equivalent
-		// registering our finalizer.
-		if cluster.Spec.Meta != nil {
-			controllerutil.AddFinalizer(cluster, greptimedbClusterFinalizer)
-			if err := r.Update(ctx, cluster); err != nil {
-				return err
-			}
-		}
-		return nil
-	}
-
-	// The object is being deleted.
-	if controllerutil.ContainsFinalizer(cluster, greptimedbClusterFinalizer) {
-		if err := r.deleteEtcdStorage(ctx, cluster); err != nil {
-			return err
-		}
-		// remove our finalizer from the list.
-		controllerutil.RemoveFinalizer(cluster, greptimedbClusterFinalizer)
-		if err := r.Update(ctx, cluster); err != nil {
-			return err
+func (r *Reconciler) addFinalizer(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster) error {
+	if !r.hasFinalizer(cluster) {
+		if controllerutil.AddFinalizer(cluster, greptimedbClusterFinalizer) {
+			return r.Update(ctx, cluster)
 		}
 	}
 
 	return nil
+}
+
+func (r *Reconciler) removeFinalizer(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster) error {
+	if controllerutil.RemoveFinalizer(cluster, greptimedbClusterFinalizer) {
+		return r.Update(ctx, cluster)
+	}
+
+	return nil
+}
+
+func (r *Reconciler) hasFinalizer(cluster *v1alpha1.GreptimeDBCluster) bool {
+	return controllerutil.ContainsFinalizer(cluster, greptimedbClusterFinalizer)
+}
+
+func (r *Reconciler) isClusterDelete(cluster *v1alpha1.GreptimeDBCluster) bool {
+	return cluster != nil && !cluster.GetDeletionTimestamp().IsZero()
 }
 
 func (r *Reconciler) setLastAppliedResourceSpecAnnotation(object client.Object, spec interface{}) error {
