@@ -27,12 +27,14 @@ spec:
           - "mock-datanode.default:3306"
   meta:
     replicas: 1
+    etcdEndpoints:
+      - "127.0.0.1:2379"
     template:
       main:
         image: localhost:5001/greptime/meta:latest
         args:
           - "--etcd-endpoint"
-          - "mock-etcd.default:2379"
+          - "etcd.default:2379"
   datanode:
     replicas: 1
     template:

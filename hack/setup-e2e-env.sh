@@ -83,6 +83,15 @@ data:
 EOF
 }
 
+function deploy_etcd() {
+    kubectl apply -f ./hack/etcd/etcd-basic.yaml
+    if ! kubectl rollout status --watch --timeout=180s statefulset/etcd; then
+       echo "Deploy etcd failed"
+       exit
+    fi
+    kubectl port-forward svc/etcd 2379:2379 &
+}
+
 function pull_images_and_push_to_local_registry() {
     docker pull "${TEST_ETCD_IMAGE}"
     docker tag "${TEST_ETCD_IMAGE}" localhost:5001/greptime/etcd:latest
@@ -104,4 +113,5 @@ function pull_images_and_push_to_local_registry() {
 check_prerequisites
 start_local_registry
 create_kind_cluster
+deploy_etcd
 pull_images_and_push_to_local_registry

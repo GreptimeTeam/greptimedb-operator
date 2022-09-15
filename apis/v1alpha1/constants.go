@@ -12,16 +12,6 @@ const (
 	defaultGRPCServicePort  = 3001
 	defaultMySQLServicePort = 3306
 
-	// The default settings for EtcdSpec.
-	defaultEtcdImage            = "localhost:5001/greptime/etcd:latest"
-	defaultClusterSize          = 3
-	defaultEtcdClientPort       = 2379
-	defaultEtcdPeerPort         = 2380
-	defaultEtcdStorageName      = "etcd"
-	defaultEtcdStorageClassName = "standard" // 'standard' is the default local storage class of kind.
-	defaultEtcdStorageSize      = "10Gi"
-	defaultEtcdStorageMountPath = "/var/run/etcd"
-
 	// The default storage settings for datanode.
 	defaultDataNodeStorageName      = "datanode"
 	defaultDataNodeStorageClassName = "standard" // 'standard' is the default local storage class of kind.

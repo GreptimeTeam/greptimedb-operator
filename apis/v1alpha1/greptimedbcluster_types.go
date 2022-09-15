@@ -228,32 +228,9 @@ type MetaSpec struct {
 	Service corev1.ServiceSpec `json:"service,omitempty"`
 
 	// +optional
-	Etcd EtcdSpec `json:"etcd,omitempty"`
+	EtcdEndpoints []string `json:"etcdEndpoints,omitempty"`
 
 	// More meta settings can be added here...
-}
-
-// EtcdSpec is the specification for etcd component that used for meta service.
-type EtcdSpec struct {
-	// The image name of the etcd.
-	// +optinal
-	Image string `json:"image,omitempty"`
-
-	// The size of etcd cluster.
-	// +optional
-	ClusterSize int32 `json:"clusterSize,omitempty"`
-
-	// The client port of etcd.
-	// +optional
-	ClientPort int32 `json:"clientPort"`
-
-	// The peer port of etcd.
-	// +optional
-	PeerPort int32 `json:"peerPort,omitempty"`
-
-	// The storage configuration of etcd.
-	// +optinal
-	Storage StorageSpec `json:"storage,omitempty"`
 }
 
 // StorageSpec will generate PVC.

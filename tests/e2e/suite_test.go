@@ -15,6 +15,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
+	"github.com/GreptimeTeam/greptimedb-operator/cmd/operator/app/options"
 	"github.com/GreptimeTeam/greptimedb-operator/controllers/greptimedbcluster"
 )
 
@@ -61,12 +62,7 @@ var _ = BeforeSuite(func() {
 	Expect(err).ToNot(HaveOccurred())
 
 	ctx, cancel = context.WithCancel(context.TODO())
-	reconciler = &greptimedbcluster.Reconciler{
-		Client:   manager.GetClient(),
-		Scheme:   manager.GetScheme(),
-		Recorder: manager.GetEventRecorderFor("greptimedbcluster-controller"),
-	}
-	err = reconciler.SetupWithManager(manager)
+	err = greptimedbcluster.Setup(manager, options.NewDefaultOptions())
 	Expect(err).ToNot(HaveOccurred())
 
 	go func() {

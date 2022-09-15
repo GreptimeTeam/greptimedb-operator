@@ -4,16 +4,16 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"strconv"
 	"strings"
+	"time"
 
+	"go.etcd.io/etcd/client/v3"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/retry"
@@ -39,6 +39,8 @@ type Reconciler struct {
 	client.Client
 	Scheme   *runtime.Scheme
 	Recorder record.EventRecorder
+
+	etcdMaintenanceBuilder func(etcdEndpoints []string) (clientv3.Maintenance, error)
 }
 
 func Setup(mgr ctrl.Manager, option *options.Options) error {
@@ -46,6 +48,8 @@ func Setup(mgr ctrl.Manager, option *options.Options) error {
 		Client:   mgr.GetClient(),
 		Scheme:   mgr.GetScheme(),
 		Recorder: mgr.GetEventRecorderFor("greptimedbcluster-controller"),
+
+		etcdMaintenanceBuilder: buildEtcdMaintenance,
 	}
 
 	return reconciler.SetupWithManager(mgr)
@@ -97,7 +101,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	// The controller will execute the following actions in order and the next action will begin to execute when the previous one is finished.
 	var actions []SyncFunc
 	if cluster.Spec.Meta != nil {
-		actions = append(actions, r.syncEtcd, r.syncMeta)
+		actions = append(actions, r.syncMeta)
 	}
 	if cluster.Spec.Datanode != nil {
 		actions = append(actions, r.syncDatanode)
@@ -132,38 +136,25 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	return ctrl.Result{}, nil
 }
 
-func (r *Reconciler) syncEtcd(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster) (bool, error) {
-	klog.Infof("Syncing etcd...")
-
-	newEtcdService, err := r.buildEtcdService(cluster)
-	if err != nil {
-		return false, err
-	}
-
-	_, err = r.createIfNotExist(ctx, new(corev1.Service), newEtcdService)
-	if err != nil {
-		return false, err
-	}
-
-	newEtcdStatefulSet, err := r.buildEtcdStatefulSet(cluster)
-	if err != nil {
-		return false, err
-	}
-
-	etcdStatefulSet, err := r.createIfNotExist(ctx, new(appsv1.StatefulSet), newEtcdStatefulSet)
-	if err != nil {
-		return false, err
-	}
-
-	if statefulSet, ok := etcdStatefulSet.(*appsv1.StatefulSet); ok {
-		return r.isStatefulSetReady(statefulSet), nil
-	}
-
-	return false, nil
-}
-
 func (r *Reconciler) syncMeta(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster) (bool, error) {
 	klog.Infof("Syncing meta...")
+
+	// TODO(zyy17): Add etcd status in cluster status field to avoid multiple checks.
+	maintainer, err := r.etcdMaintenanceBuilder(cluster.Spec.Meta.EtcdEndpoints)
+	if err != nil {
+		return false, err
+	}
+	if err := checkEtcdService(ctx, cluster.Spec.Meta.EtcdEndpoints, maintainer); err != nil {
+		return false, err
+	}
+
+	defer func() {
+		etcdClient, ok := maintainer.(*clientv3.Client)
+		if ok {
+			etcdClient.Close()
+		}
+	}()
+
 	newMetaService, err := r.buildMetaService(cluster)
 	if err != nil {
 		return false, err
@@ -291,141 +282,6 @@ func (r *Reconciler) syncDatanode(ctx context.Context, cluster *v1alpha1.Greptim
 	}
 
 	return false, nil
-}
-
-// buildEtcdService create the etcd headless service.
-func (r *Reconciler) buildEtcdService(cluster *v1alpha1.GreptimeDBCluster) (*corev1.Service, error) {
-	service := &corev1.Service{
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: cluster.Namespace,
-			Name:      cluster.Name + "-etcd",
-		},
-		Spec: corev1.ServiceSpec{
-			Type: "",
-			Selector: map[string]string{
-				greptimeDBApplication: cluster.Name + "-etcd",
-			},
-			Ports: []corev1.ServicePort{
-				{
-					Name:     "client",
-					Protocol: corev1.ProtocolTCP,
-					Port:     cluster.Spec.Meta.Etcd.ClientPort,
-				},
-				{
-					Name:     "peer",
-					Protocol: corev1.ProtocolTCP,
-					Port:     cluster.Spec.Meta.Etcd.PeerPort,
-				},
-			},
-		},
-	}
-
-	if err := controllerutil.SetControllerReference(cluster, service, r.Scheme); err != nil {
-		return nil, err
-	}
-
-	return service, nil
-}
-
-func (r *Reconciler) buildEtcdStatefulSet(cluster *v1alpha1.GreptimeDBCluster) (*appsv1.StatefulSet, error) {
-	statefulset := &appsv1.StatefulSet{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      cluster.Name + "-etcd",
-			Namespace: cluster.Namespace,
-		},
-		Spec: appsv1.StatefulSetSpec{
-			Replicas:    &cluster.Spec.Meta.Etcd.ClusterSize,
-			ServiceName: cluster.Name + "-etcd",
-			Selector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					greptimeDBApplication: cluster.Name + "-etcd",
-				},
-			},
-			VolumeClaimTemplates: []corev1.PersistentVolumeClaim{
-				{
-					ObjectMeta: metav1.ObjectMeta{
-						Name: cluster.Spec.Meta.Etcd.Storage.Name,
-					},
-					Spec: corev1.PersistentVolumeClaimSpec{
-						StorageClassName: cluster.Spec.Meta.Etcd.Storage.StorageClassName,
-						AccessModes: []corev1.PersistentVolumeAccessMode{
-							corev1.ReadWriteOnce,
-						},
-						Resources: corev1.ResourceRequirements{
-							Requests: corev1.ResourceList{
-								corev1.ResourceStorage: resource.MustParse(cluster.Spec.Meta.Etcd.Storage.StorageSize),
-							},
-						},
-					},
-				},
-			},
-			Template: corev1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{
-						greptimeDBApplication: cluster.Name + "-etcd",
-					},
-				},
-				Spec: corev1.PodSpec{
-					Containers: []corev1.Container{
-						{
-							Name:  "etcd",
-							Image: cluster.Spec.Meta.Etcd.Image,
-							VolumeMounts: []corev1.VolumeMount{
-								{
-									Name:      cluster.Spec.Meta.Etcd.Storage.Name,
-									MountPath: cluster.Spec.Meta.Etcd.Storage.MountPath,
-								},
-							},
-							Ports: []corev1.ContainerPort{
-								{
-									Name:          "client",
-									ContainerPort: cluster.Spec.Meta.Etcd.ClientPort,
-									Protocol:      corev1.ProtocolTCP,
-								},
-								{
-									Name:          "peer",
-									ContainerPort: cluster.Spec.Meta.Etcd.PeerPort,
-									Protocol:      corev1.ProtocolTCP,
-								},
-							},
-							Command: []string{
-								"etcd",
-							},
-							Args: []string{
-								"--name", "$(HOSTNAME)",
-								"--data-dir", cluster.Spec.Meta.Etcd.Storage.MountPath,
-								"--initial-advertise-peer-urls", "http://$(HOSTNAME):" + strconv.Itoa(int(cluster.Spec.Meta.Etcd.PeerPort)),
-								"--listen-peer-urls", "http://0.0.0.0:2380",
-								"--advertise-client-urls", "http://$(HOSTNAME):" + strconv.Itoa(int(cluster.Spec.Meta.Etcd.ClientPort)),
-								"--listen-client-urls", "http://0.0.0.0:2379",
-								"--initial-cluster",
-								generateInitCluster(cluster.Name+"-etcd", cluster.Name+"-etcd", cluster.Namespace,
-									int(cluster.Spec.Meta.Etcd.PeerPort), int(cluster.Spec.Meta.Etcd.ClusterSize)),
-								"--initial-cluster-state", "new",
-								"--initial-cluster-token", cluster.Name,
-							},
-							Env: []corev1.EnvVar{
-								{
-									Name: "HOSTNAME",
-									ValueFrom: &corev1.EnvVarSource{
-										FieldRef: &corev1.ObjectFieldSelector{
-											FieldPath: "metadata.name",
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-	}
-
-	if err := controllerutil.SetControllerReference(cluster, statefulset, r.Scheme); err != nil {
-		return nil, err
-	}
-
-	return statefulset, nil
 }
 
 func (r *Reconciler) buildFrontendService(cluster *v1alpha1.GreptimeDBCluster) (*corev1.Service, error) {
@@ -826,10 +682,6 @@ func (r *Reconciler) delete(ctx context.Context, cluster *v1alpha1.GreptimeDBClu
 		return ctrl.Result{}, nil
 	}
 
-	if err := r.deleteEtcdStorage(ctx, cluster); err != nil {
-		return ctrl.Result{}, err
-	}
-
 	// remove our finalizer from the list.
 	controllerutil.RemoveFinalizer(cluster, greptimedbClusterFinalizer)
 
@@ -847,40 +699,6 @@ func (r *Reconciler) setLastAppliedResourceSpecAnnotation(object client.Object, 
 	}
 
 	object.SetAnnotations(map[string]string{lastAppliedResourceSpec: string(data)})
-
-	return nil
-}
-
-// TODO(zyy17): Should use the more elegant way to manage etcd storage.
-func (r *Reconciler) deleteEtcdStorage(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster) error {
-	klog.Infof("Deleting etcd storage...")
-
-	var (
-		etcdStoragePVC = new(corev1.PersistentVolumeClaimList)
-		listOptions    []client.ListOption
-		selector       labels.Selector
-	)
-
-	selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
-		MatchLabels: map[string]string{
-			greptimeDBApplication: cluster.Name + "-etcd",
-		},
-	})
-	if err != nil {
-		return err
-	}
-
-	listOptions = append(listOptions, client.MatchingLabelsSelector{Selector: selector})
-	if err := r.List(ctx, etcdStoragePVC, listOptions...); err != nil {
-		return err
-	}
-
-	for _, pvc := range etcdStoragePVC.Items {
-		klog.Infof("Deleting etcd PVC: %s", pvc.Name)
-		if err := r.Delete(ctx, &pvc); err != nil {
-			return err
-		}
-	}
 
 	return nil
 }
@@ -946,13 +764,27 @@ func filterOutCondition(conditions []v1alpha1.GreptimeDBClusterCondition, condit
 	return newCondititions
 }
 
-// generateInitCluster will generare the init cluster string like 'etcd-0=http://etcd-0.etcd.default:2380,etcd-1=http://etcd-1.etcd.default:2380,etcd-2=http://etcd-2.etcd.default:2380'.
-func generateInitCluster(prefix, svc, namespace string, port, clusterSize int) string {
-	var s []string
-
-	for i := 0; i < clusterSize; i++ {
-		s = append(s, fmt.Sprintf("%s-%d=http://%s-%d.%s.%s:%d", prefix, i, prefix, i, svc, namespace, port))
+func checkEtcdService(ctx context.Context, etcdEndpoints []string, etcdMaintenance clientv3.Maintenance) error {
+	rsp, err := etcdMaintenance.Status(ctx, strings.Join(etcdEndpoints, ","))
+	if err != nil {
+		return err
 	}
 
-	return strings.Join(s, ",")
+	if len(rsp.Errors) != 0 {
+		return fmt.Errorf("etcd service error: %v", rsp.Errors)
+	}
+
+	return nil
+}
+
+func buildEtcdMaintenance(etcdEndpoints []string) (clientv3.Maintenance, error) {
+	etcdClient, err := clientv3.New(clientv3.Config{
+		Endpoints:   etcdEndpoints,
+		DialTimeout: 5 * time.Second,
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return etcdClient, nil
 }
