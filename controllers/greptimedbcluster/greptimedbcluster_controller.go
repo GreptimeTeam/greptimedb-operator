@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"k8s.io/apimachinery/pkg/labels"
 	"strings"
 	"time"
 
@@ -682,6 +683,10 @@ func (r *Reconciler) delete(ctx context.Context, cluster *v1alpha1.GreptimeDBClu
 		return ctrl.Result{}, nil
 	}
 
+	if err := r.deleteDataNodeStorage(ctx, cluster); err != nil {
+		return ctrl.Result{}, err
+	}
+
 	// remove our finalizer from the list.
 	controllerutil.RemoveFinalizer(cluster, greptimedbClusterFinalizer)
 
@@ -699,6 +704,39 @@ func (r *Reconciler) setLastAppliedResourceSpecAnnotation(object client.Object, 
 	}
 
 	object.SetAnnotations(map[string]string{lastAppliedResourceSpec: string(data)})
+
+	return nil
+}
+
+func (r *Reconciler) deleteDataNodeStorage(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster) error {
+	klog.Infof("Deleting datanode storage...")
+
+	var (
+		datanodeStoragePVC = new(corev1.PersistentVolumeClaimList)
+		listOptions        []client.ListOption
+		selector           labels.Selector
+	)
+
+	selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			greptimeDBApplication: cluster.Name + "-datanode",
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	listOptions = append(listOptions, client.MatchingLabelsSelector{Selector: selector})
+	if err := r.List(ctx, datanodeStoragePVC, listOptions...); err != nil {
+		return err
+	}
+
+	for _, pvc := range datanodeStoragePVC.Items {
+		klog.Infof("Deleting datanode PVC: %s", pvc.Name)
+		if err := r.Delete(ctx, &pvc); err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
