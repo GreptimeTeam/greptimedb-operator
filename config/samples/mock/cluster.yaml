@@ -40,3 +40,6 @@ spec:
     template:
       main:
         image: localhost:5001/greptime/greptimedb:latest
+    storage:
+      storageClassName: standard
+      storageSize: 10Gi
