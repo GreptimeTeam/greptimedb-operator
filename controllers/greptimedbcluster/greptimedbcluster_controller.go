@@ -96,7 +96,9 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, err
 	}
 
-	cluster.SetDefaults()
+	if err := cluster.SetDefaults(); err != nil {
+		return ctrl.Result{}, err
+	}
 
 	// The controller will execute the following actions in order and the next action will begin to execute when the previous one is finished.
 	var actions []SyncFunc
