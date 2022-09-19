@@ -683,8 +683,10 @@ func (r *Reconciler) delete(ctx context.Context, cluster *v1alpha1.GreptimeDBClu
 		return ctrl.Result{}, nil
 	}
 
-	if err := r.deleteDataNodeStorage(ctx, cluster); err != nil {
-		return ctrl.Result{}, err
+	if cluster.Spec.Datanode.Storage.StorageReclaimPolicy == v1alpha1.PolicyDelete {
+		if err := r.deleteDataNodeStorage(ctx, cluster); err != nil {
+			return ctrl.Result{}, err
+		}
 	}
 
 	// remove our finalizer from the list.
@@ -727,8 +729,10 @@ func (r *Reconciler) deleteDataNodeStorage(ctx context.Context, cluster *v1alpha
 	}
 
 	listOptions = append(listOptions, client.MatchingLabelsSelector{Selector: selector})
-	if err := r.List(ctx, datanodeStoragePVC, listOptions...); err != nil {
+	if err := r.List(ctx, datanodeStoragePVC, listOptions...); err != nil && !errors.IsNotFound(err) {
 		return err
+	} else if errors.IsNotFound(err) {
+		return nil
 	}
 
 	for _, pvc := range datanodeStoragePVC.Items {

@@ -86,6 +86,10 @@ func (in *StorageSpec) setDefaults() {
 	if in.StorageSize == "" {
 		in.StorageSize = defaultDataNodeStorageSize
 	}
+
+	if in.StorageReclaimPolicy == "" {
+		in.StorageReclaimPolicy = PolicyRetain
+	}
 }
 
 func (in *PodTemplateSpec) overlay(base *PodTemplateSpec) {
