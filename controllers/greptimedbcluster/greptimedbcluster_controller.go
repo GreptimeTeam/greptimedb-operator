@@ -14,7 +14,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/retry"
@@ -683,7 +682,7 @@ func (r *Reconciler) delete(ctx context.Context, cluster *v1alpha1.GreptimeDBClu
 		return ctrl.Result{}, nil
 	}
 
-	if cluster.Spec.Datanode.Storage.StorageReclaimPolicy == v1alpha1.PolicyDelete {
+	if cluster.Spec.Datanode.Storage.StorageRetainPolicy == v1alpha1.PolicyDelete {
 		if err := r.deleteDataNodeStorage(ctx, cluster); err != nil {
 			return ctrl.Result{}, err
 		}
@@ -713,12 +712,6 @@ func (r *Reconciler) setLastAppliedResourceSpecAnnotation(object client.Object, 
 func (r *Reconciler) deleteDataNodeStorage(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster) error {
 	klog.Infof("Deleting datanode storage...")
 
-	var (
-		datanodeStoragePVC = new(corev1.PersistentVolumeClaimList)
-		listOptions        []client.ListOption
-		selector           labels.Selector
-	)
-
 	selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
 		MatchLabels: map[string]string{
 			greptimeDBApplication: cluster.Name + "-datanode",
@@ -728,14 +721,14 @@ func (r *Reconciler) deleteDataNodeStorage(ctx context.Context, cluster *v1alpha
 		return err
 	}
 
-	listOptions = append(listOptions, client.MatchingLabelsSelector{Selector: selector})
-	if err := r.List(ctx, datanodeStoragePVC, listOptions...); err != nil && !errors.IsNotFound(err) {
+	PVCs := new(corev1.PersistentVolumeClaimList)
+	if err := r.List(ctx, PVCs, client.InNamespace(cluster.Namespace), client.MatchingLabelsSelector{Selector: selector}); err != nil && !errors.IsNotFound(err) {
 		return err
 	} else if errors.IsNotFound(err) {
 		return nil
 	}
 
-	for _, pvc := range datanodeStoragePVC.Items {
+	for _, pvc := range PVCs.Items {
 		klog.Infof("Deleting datanode PVC: %s", pvc.Name)
 		if err := r.Delete(ctx, &pvc); err != nil {
 			return err

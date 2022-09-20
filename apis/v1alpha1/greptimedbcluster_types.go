@@ -251,9 +251,9 @@ type StorageSpec struct {
 	// +optional
 	MountPath string `json:"mountPath,omitempty"`
 
-	// The PVCs will retain or delete when the cluster is deleted, default to retain.
+	// The PVCs will retain or delete when the cluster is deleted, default to Retain.
 	// +optional
-	StorageReclaimPolicy StorageReclaimPolicyType `json:"storageReclaimPolicy,omitempty"`
+	StorageRetainPolicy StorageRetainPolicyType `json:"storageRetainPolicy,omitempty"`
 }
 
 // FrontendSpec is the specification for frontend component.

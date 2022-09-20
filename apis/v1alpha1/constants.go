@@ -18,13 +18,3 @@ const (
 	defaultDataNodeStorageSize      = "10Gi"
 	defaultDataNodeStorageMountPath = "/greptimedb/data"
 )
-
-type StorageReclaimPolicyType string
-
-const (
-	// The PVCs will still be retained when the cluster is deleted.
-	PolicyRetain StorageReclaimPolicyType = "retain"
-
-	// The PVCs will delete directly when the cluster is deleted.
-	PolicyDelete StorageReclaimPolicyType = "delete"
-)

@@ -1989,7 +1989,7 @@ spec:
                         type: string
                       storageClassName:
                         type: string
-                      storageReclaimPolicy:
+                      storageRetainPolicy:
                         type: string
                       storageSize:
                         type: string
