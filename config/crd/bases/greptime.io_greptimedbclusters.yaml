@@ -1983,6 +1983,8 @@ spec:
                         type: string
                       storageClassName:
                         type: string
+                      storageRetainPolicy:
+                        type: string
                       storageSize:
                         type: string
                     type: object

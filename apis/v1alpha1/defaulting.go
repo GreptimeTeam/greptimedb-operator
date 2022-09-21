@@ -5,6 +5,16 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
+type StorageRetainPolicyType string
+
+const (
+	// The PVCs will still be retained when the cluster is deleted.
+	PolicyRetain StorageRetainPolicyType = "Retain"
+
+	// The PVCs will delete directly when the cluster is deleted.
+	PolicyDelete StorageRetainPolicyType = "Delete"
+)
+
 func (in *GreptimeDBCluster) SetDefaults() {
 	if in == nil {
 		return
@@ -85,6 +95,10 @@ func (in *StorageSpec) setDefaults() {
 
 	if in.StorageSize == "" {
 		in.StorageSize = defaultDataNodeStorageSize
+	}
+
+	if in.StorageRetainPolicy == "" {
+		in.StorageRetainPolicy = PolicyRetain
 	}
 }
 

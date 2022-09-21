@@ -245,11 +245,15 @@ type StorageSpec struct {
 
 	// The size of the storage.
 	// +optional
-	StorageSize string `json:"storageSize,,omitempty"`
+	StorageSize string `json:"storageSize,omitempty"`
 
-	// The mount path of the storage in etcd container.
+	// The mount path of the storage in datanode container.
 	// +optional
 	MountPath string `json:"mountPath,omitempty"`
+
+	// The PVCs will retain or delete when the cluster is deleted, default to Retain.
+	// +optional
+	StorageRetainPolicy StorageRetainPolicyType `json:"storageRetainPolicy,omitempty"`
 }
 
 // FrontendSpec is the specification for frontend component.

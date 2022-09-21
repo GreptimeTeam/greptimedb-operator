@@ -44,3 +44,4 @@ spec:
     storage:
       storageClassName: standard
       storageSize: 10Gi
+      storageRetainPolicy: Retain
