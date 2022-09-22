@@ -120,7 +120,7 @@ func TestSetDefaults(t *testing.T) {
 							StorageClassName:    &defaultDataNodeStorageClassName,
 							StorageSize:         defaultDataNodeStorageSize,
 							MountPath:           defaultDataNodeStorageMountPath,
-							StorageRetainPolicy: PolicyRetain,
+							StorageRetainPolicy: defaultStorageRetainPolicyType,
 						},
 					},
 					HTTPServicePort:  int32(defaultHTTPServicePort),
@@ -284,7 +284,7 @@ func TestSetDefaults(t *testing.T) {
 							StorageClassName:    &defaultDataNodeStorageClassName,
 							StorageSize:         defaultDataNodeStorageSize,
 							MountPath:           defaultDataNodeStorageMountPath,
-							StorageRetainPolicy: PolicyRetain,
+							StorageRetainPolicy: defaultStorageRetainPolicyType,
 						},
 					},
 

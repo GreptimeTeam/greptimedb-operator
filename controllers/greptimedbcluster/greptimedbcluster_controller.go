@@ -684,7 +684,7 @@ func (r *Reconciler) delete(ctx context.Context, cluster *v1alpha1.GreptimeDBClu
 		return ctrl.Result{}, nil
 	}
 
-	if cluster.Spec.Datanode.Storage.StorageRetainPolicy == v1alpha1.PolicyDelete {
+	if cluster.Spec.Datanode.Storage.StorageRetainPolicy == v1alpha1.RetainStorageRetainPolicyTypeDelete {
 		if err := r.deleteDataNodeStorage(ctx, cluster); err != nil {
 			return ctrl.Result{}, err
 		}

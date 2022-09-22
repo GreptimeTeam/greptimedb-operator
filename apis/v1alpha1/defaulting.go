@@ -6,16 +6,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
-type StorageRetainPolicyType string
-
-const (
-	// The PVCs will still be retained when the cluster is deleted.
-	PolicyRetain StorageRetainPolicyType = "Retain"
-
-	// The PVCs will delete directly when the cluster is deleted.
-	PolicyDelete StorageRetainPolicyType = "Delete"
-)
-
 var (
 	defaultRequestCPU    = "250m"
 	defaultRequestMemory = "64Mi"
@@ -32,6 +22,7 @@ var (
 	defaultDataNodeStorageClassName = "standard" // 'standard' is the default local storage class of kind.
 	defaultDataNodeStorageSize      = "10Gi"
 	defaultDataNodeStorageMountPath = "/greptimedb/data"
+	defaultStorageRetainPolicyType  = RetainStorageRetainPolicyTypeRetain
 )
 
 func (in *GreptimeDBCluster) SetDefaults() error {
@@ -73,7 +64,7 @@ func (in *GreptimeDBCluster) SetDefaults() error {
 				StorageClassName:    &defaultDataNodeStorageClassName,
 				StorageSize:         defaultDataNodeStorageSize,
 				MountPath:           defaultDataNodeStorageMountPath,
-				StorageRetainPolicy: PolicyRetain,
+				StorageRetainPolicy: defaultStorageRetainPolicyType,
 			},
 		},
 		HTTPServicePort:  int32(defaultHTTPServicePort),
