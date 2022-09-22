@@ -1,29 +1,39 @@
 package v1alpha1
 
 import (
+	"github.com/imdario/mergo"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 )
 
-type StorageRetainPolicyType string
+var (
+	defaultRequestCPU    = "250m"
+	defaultRequestMemory = "64Mi"
+	defaultLimitCPU      = "500m"
+	defaultLimitMemory   = "128Mi"
 
-const (
-	// The PVCs will still be retained when the cluster is deleted.
-	PolicyRetain StorageRetainPolicyType = "Retain"
+	// The default settings for GreptimeDBClusterSpec.
+	defaultHTTPServicePort  = 3000
+	defaultGRPCServicePort  = 3001
+	defaultMySQLServicePort = 3306
 
-	// The PVCs will delete directly when the cluster is deleted.
-	PolicyDelete StorageRetainPolicyType = "Delete"
+	// The default storage settings for datanode.
+	defaultDataNodeStorageName      = "datanode"
+	defaultDataNodeStorageClassName = "standard" // 'standard' is the default local storage class of kind.
+	defaultDataNodeStorageSize      = "10Gi"
+	defaultDataNodeStorageMountPath = "/greptimedb/data"
+	defaultStorageRetainPolicyType  = RetainStorageRetainPolicyTypeRetain
 )
 
-func (in *GreptimeDBCluster) SetDefaults() {
+func (in *GreptimeDBCluster) SetDefaults() error {
 	if in == nil {
-		return
+		return nil
 	}
 
-	if in.Spec.Base != nil {
-		if in.Spec.Base.MainContainer != nil {
-			if in.Spec.Base.MainContainer.Resources == nil {
-				in.Spec.Base.MainContainer.Resources = &corev1.ResourceRequirements{
+	var defaultGreptimeDBClusterSpec = &GreptimeDBClusterSpec{
+		Base: &PodTemplateSpec{
+			MainContainer: &MainContainerSpec{
+				Resources: &corev1.ResourceRequirements{
 					Requests: map[corev1.ResourceName]resource.Quantity{
 						"cpu":    resource.MustParse(defaultRequestCPU),
 						"memory": resource.MustParse(defaultRequestMemory),
@@ -32,209 +42,51 @@ func (in *GreptimeDBCluster) SetDefaults() {
 						"cpu":    resource.MustParse(defaultLimitCPU),
 						"memory": resource.MustParse(defaultLimitMemory),
 					},
-				}
-			}
-		}
+				},
+			},
+		},
+		Frontend: &FrontendSpec{
+			ComponentSpec: ComponentSpec{
+				Template: &PodTemplateSpec{},
+			},
+		},
+		Meta: &MetaSpec{
+			ComponentSpec: ComponentSpec{
+				Template: &PodTemplateSpec{},
+			},
+		},
+		Datanode: &DatanodeSpec{
+			ComponentSpec: ComponentSpec{
+				Template: &PodTemplateSpec{},
+			},
+			Storage: StorageSpec{
+				Name:                defaultDataNodeStorageName,
+				StorageClassName:    &defaultDataNodeStorageClassName,
+				StorageSize:         defaultDataNodeStorageSize,
+				MountPath:           defaultDataNodeStorageMountPath,
+				StorageRetainPolicy: defaultStorageRetainPolicyType,
+			},
+		},
+		HTTPServicePort:  int32(defaultHTTPServicePort),
+		GRPCServicePort:  int32(defaultGRPCServicePort),
+		MySQLServicePort: int32(defaultMySQLServicePort),
 	}
 
-	if in.Spec.Frontend != nil {
-		if in.Spec.Frontend.Template == nil {
-			in.Spec.Frontend.Template = in.Spec.Base
-		} else {
-			in.Spec.Frontend.Template.overlay(in.Spec.Base)
-		}
+	if err := mergo.Merge(&in.Spec, defaultGreptimeDBClusterSpec); err != nil {
+		return err
 	}
 
-	if in.Spec.Meta != nil {
-		if in.Spec.Meta.Template == nil {
-			in.Spec.Meta.Template = in.Spec.Base
-		} else {
-			in.Spec.Meta.Template.overlay(in.Spec.Base)
-		}
+	if err := mergo.Merge(in.Spec.Frontend.Template, in.Spec.Base); err != nil {
+		return err
 	}
 
-	if in.Spec.Datanode != nil {
-		if in.Spec.Datanode.Template == nil {
-			in.Spec.Datanode.Template = in.Spec.Base
-		} else {
-			in.Spec.Datanode.Template.overlay(in.Spec.Base)
-		}
-		in.Spec.Datanode.Storage.setDefaults()
+	if err := mergo.Merge(in.Spec.Meta.Template, in.Spec.Base); err != nil {
+		return err
 	}
 
-	if in.Spec.HTTPServicePort == 0 {
-		in.Spec.HTTPServicePort = int32(defaultHTTPServicePort)
+	if err := mergo.Merge(in.Spec.Datanode.Template, in.Spec.Base); err != nil {
+		return err
 	}
 
-	if in.Spec.GRPCServicePort == 0 {
-		in.Spec.GRPCServicePort = int32(defaultGRPCServicePort)
-	}
-
-	if in.Spec.MySQLServicePort == 0 {
-		in.Spec.MySQLServicePort = int32(defaultMySQLServicePort)
-	}
-}
-
-func (in *StorageSpec) setDefaults() {
-	if in == nil {
-		return
-	}
-
-	if in.Name == "" {
-		in.Name = defaultDataNodeStorageName
-	}
-
-	if in.MountPath == "" {
-		in.MountPath = defaultDataNodeStorageMountPath
-	}
-
-	if in.StorageClassName == nil {
-		storageClassName := defaultDataNodeStorageClassName
-		in.StorageClassName = &storageClassName
-	}
-
-	if in.StorageSize == "" {
-		in.StorageSize = defaultDataNodeStorageSize
-	}
-
-	if in.StorageRetainPolicy == "" {
-		in.StorageRetainPolicy = PolicyRetain
-	}
-}
-
-func (in *PodTemplateSpec) overlay(base *PodTemplateSpec) {
-	if base == nil {
-		return
-	}
-
-	in.Labels = merge(base.Labels, in.Labels)
-	in.Annotations = merge(base.Annotations, in.Annotations)
-
-	if in.MainContainer == nil {
-		in.MainContainer = base.MainContainer
-	} else {
-		in.MainContainer.overlay(base.MainContainer)
-	}
-
-	if in.NodeSelector == nil {
-		in.NodeSelector = base.NodeSelector
-	}
-
-	if in.InitContainers == nil {
-		in.InitContainers = base.InitContainers
-	}
-
-	if in.RestartPolicy == "" {
-		in.RestartPolicy = base.RestartPolicy
-	}
-
-	if in.TerminationGracePeriodSeconds == nil {
-		in.TerminationGracePeriodSeconds = base.TerminationGracePeriodSeconds
-	}
-
-	if in.ActiveDeadlineSeconds == nil {
-		in.ActiveDeadlineSeconds = base.ActiveDeadlineSeconds
-	}
-
-	if in.DNSPolicy == "" {
-		in.DNSPolicy = base.DNSPolicy
-	}
-
-	if in.ServiceAccountName == "" {
-		in.ServiceAccountName = base.ServiceAccountName
-	}
-
-	if in.HostNetwork == nil {
-		in.HostNetwork = base.HostNetwork
-	}
-
-	if in.ImagePullSecrets == nil {
-		in.ImagePullSecrets = base.ImagePullSecrets
-	}
-
-	if in.Affinity == nil {
-		in.Affinity = base.Affinity
-	}
-
-	if in.SchedulerName == "" {
-		in.SchedulerName = base.SchedulerName
-	}
-
-	if in.AddtionalContainers == nil {
-		in.AddtionalContainers = base.AddtionalContainers
-	}
-}
-
-func (in *MainContainerSpec) overlay(base *MainContainerSpec) {
-	if base == nil {
-		return
-	}
-
-	if in.Image == "" {
-		in.Image = base.Image
-	}
-
-	if in.Resources == nil {
-		in.Resources = base.Resources
-	}
-
-	if in.Command == nil {
-		in.Command = base.Command
-	}
-
-	if in.Args == nil {
-		in.Args = base.Args
-	}
-
-	if in.WorkingDir == "" {
-		in.WorkingDir = base.WorkingDir
-	}
-
-	if in.VolumeMounts == nil {
-		in.VolumeMounts = base.VolumeMounts
-	}
-
-	if in.Env == nil {
-		in.Env = base.Env
-	}
-
-	if in.LivenessProbe == nil {
-		in.LivenessProbe = base.LivenessProbe
-	}
-
-	if in.ReadinessProbe == nil {
-		in.ReadinessProbe = base.ReadinessProbe
-	}
-
-	if in.Lifecycle == nil {
-		in.Lifecycle = base.Lifecycle
-	}
-
-	if in.ImagePullPolicy == nil {
-		in.ImagePullPolicy = base.ImagePullPolicy
-	}
-}
-
-func merge(base, overlay map[string]string) map[string]string {
-	if base == nil && overlay == nil {
-		return nil
-	}
-
-	if base == nil {
-		return overlay
-	}
-
-	if overlay == nil {
-		return base
-	}
-
-	output := make(map[string]string)
-	for k, v := range base {
-		output[k] = v
-	}
-	for k, v := range overlay {
-		output[k] = v
-	}
-
-	return output
+	return nil
 }

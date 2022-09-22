@@ -5,6 +5,17 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+type StorageRetainPolicyType string
+
+const (
+	// RetainStorageRetainPolicyTypeRetain is the default options.
+	// The storage(PVCs) will be retained when the cluster is deleted.
+	RetainStorageRetainPolicyTypeRetain StorageRetainPolicyType = "Retain"
+
+	// RetainStorageRetainPolicyTypeDelete specifiy that the storage will be deleted when the associated StatefulSet delete.
+	RetainStorageRetainPolicyTypeDelete StorageRetainPolicyType = "Delete"
+)
+
 // SlimPodSpec is a slimmed down version of corev1.PodSpec.
 // Most of the fields in SlimPodSpec are copied from corev1.PodSpec.
 type SlimPodSpec struct {

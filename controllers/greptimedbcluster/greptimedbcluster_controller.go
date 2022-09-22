@@ -96,7 +96,9 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, err
 	}
 
-	cluster.SetDefaults()
+	if err := cluster.SetDefaults(); err != nil {
+		return ctrl.Result{}, err
+	}
 
 	// The controller will execute the following actions in order and the next action will begin to execute when the previous one is finished.
 	var actions []SyncFunc
@@ -682,7 +684,7 @@ func (r *Reconciler) delete(ctx context.Context, cluster *v1alpha1.GreptimeDBClu
 		return ctrl.Result{}, nil
 	}
 
-	if cluster.Spec.Datanode.Storage.StorageRetainPolicy == v1alpha1.PolicyDelete {
+	if cluster.Spec.Datanode.Storage.StorageRetainPolicy == v1alpha1.RetainStorageRetainPolicyTypeDelete {
 		if err := r.deleteDataNodeStorage(ctx, cluster); err != nil {
 			return ctrl.Result{}, err
 		}
