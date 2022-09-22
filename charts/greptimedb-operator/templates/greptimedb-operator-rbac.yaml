@@ -2,13 +2,13 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: {{ template "greptimedb-operator.fullname" . }}
+  name: {{ include "greptimedb-operator.serviceAccountName" . }}
   namespace: {{ .Release.Namespace }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  name: {{ .Values.rbac.clusterRoleName }}
+  name: '{{ include "greptimedb-operator.fullname" . }}-manager-role'
 rules:
 - apiGroups:
   - apps
@@ -95,20 +95,20 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  name: {{ .Values.rbac.clusterRoleBindingName }}
+  name: '{{ include "greptimedb-operator.fullname" . }}-manager-rolebinding'
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: {{ .Values.rbac.clusterRoleName }}
+  name: '{{ include "greptimedb-operator.fullname" . }}-manager-role'
 subjects:
 - kind: ServiceAccount
-  name: {{ template "greptimedb-operator.fullname" . }}
+  name: {{ include "greptimedb-operator.serviceAccountName" . }}
   namespace: {{ .Release.Namespace }}
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: {{ .Values.rbac.roleName }}
+  name: '{{ include "greptimedb-operator.fullname" . }}-leader-election-role'
   namespace: {{ .Release.Namespace }}
 rules:
 - apiGroups:
@@ -146,14 +146,14 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: {{ .Values.rbac.roleBindingName }}
+  name: '{{ include "greptimedb-operator.fullname" . }}-leader-election-rolebinding'
   namespace: {{ .Release.Namespace }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: {{ .Values.rbac.roleName }}
+  name: '{{ include "greptimedb-operator.fullname" . }}-leader-election-role'
 subjects:
 - kind: ServiceAccount
-  name: {{ template "greptimedb-operator.fullname" . }}
+  name: {{ include "greptimedb-operator.serviceAccountName" . }}
   namespace: {{ .Release.Namespace }}
 {{- end }}
