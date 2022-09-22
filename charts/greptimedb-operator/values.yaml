@@ -6,7 +6,7 @@ image:
   # The image pull policy for the controller
   imagePullPolicy: IfNotPresent
   # The image tag
-  tag: "v1.42"
+  tag: "latest"
 
 serviceAccount:
   # Specifies whether a service account should be created
