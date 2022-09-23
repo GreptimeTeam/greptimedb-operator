@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"google.golang.org/grpc"
 	"strings"
 	"time"
 
@@ -818,6 +819,7 @@ func buildEtcdMaintenance(etcdEndpoints []string) (clientv3.Maintenance, error) 
 	etcdClient, err := clientv3.New(clientv3.Config{
 		Endpoints:   etcdEndpoints,
 		DialTimeout: 5 * time.Second,
+		DialOptions: []grpc.DialOption{grpc.WithBlock()},
 	})
 	if err != nil {
 		return nil, err
