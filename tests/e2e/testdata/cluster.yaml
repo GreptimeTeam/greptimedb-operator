@@ -29,7 +29,7 @@ spec:
     replicas: 1
     # FIXME(zyy17): 'etcdEndpoints' should be same as the args in meta. We can fix it when we startup operator as the Pod.
     etcdEndpoints:
-      - "127.0.0.1:2379"
+      - "etcd:2379"
     template:
       main:
         image: localhost:5001/greptime/meta:latest
