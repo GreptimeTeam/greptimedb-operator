@@ -17,10 +17,8 @@ serviceAccount:
   # If not set and create is true, a name is generated using the fullname template
   name: ""
 
-
 # Number of replicas for the greptimedb operator
 replicas: 1
-
 
 # Default resources for greptimedb operator
 resources:
@@ -31,9 +29,8 @@ resources:
     cpu: 10m
     memory: 64Mi
 
-
 rbac:
-# install Role Based Access Control
+  # install Role Based Access Control
   create: true
 
 nameOverride: ""

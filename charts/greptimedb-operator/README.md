@@ -1,15 +1,21 @@
+# Overview
+
+This chart deploy GreptimeDB operator.
+
 ## Getting Started
 
-## Prerequisites
-  - [Helm](https://helm.sh/zh/docs/intro/install/)
+### Install
 
-#### Install
 ```
-$ cd charts
-$ helm install greptimedb-operator greptimedb-operator -n namespace 
+# Deploy greptimedb-operator in default namespace.
+$ helm install gtcloud greptimedb-operator
+
+# Deploy greptimedb-operator in new namespace.
+$ helm install gtcloud greptimedb-operator --namespace greptimedb-operator-system --create-namespace
 ```
 
-#### Uninstall
+### Uninstall
+
 ```
-$ helm uninstall greptimedb-operator -n namespace
+$ helm uninstall greptimedb-operator
 ```

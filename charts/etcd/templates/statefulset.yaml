@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Release.Name }}-etcd
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ .Release.Name }}-etcd
+spec:
+  serviceName: {{ .Release.Name }}-etcd-svc
+  replicas: 3
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-etcd
+  volumeClaimTemplates:
+    - metadata:
+        name: etcd-storage
+      spec:
+        storageClassName:  {{ .Values.storage.storageClassName }}
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: {{ .Values.storage.volumeSize }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-etcd
+    spec:
+      containers:
+        - name: etcd
+          image:  {{ .Values.image }}
+          command:
+            - "etcd"
+            - "--name"
+            - "$(HOSTNAME)"
+            - "--data-dir"
+            - "{{ .Values.storage.dataDir }}"
+            - "--initial-advertise-peer-urls"
+            - "http://$(HOSTNAME):{{ .Values.servicePorts.peer }}"
+            - "--listen-peer-urls"
+            - "http://0.0.0.0:{{ .Values.servicePorts.peer }}"
+            - "--advertise-client-urls"
+            - "http://$(HOSTNAME):{{ .Values.servicePorts.client }}"
+            - "--listen-client-urls"
+            - "http://0.0.0.0:{{ .Values.servicePorts.client }}"
+            - "--initial-cluster"
+            - "{{ .Release.Name }}-etcd-0=http://{{ .Release.Name }}-etcd-0.{{ .Release.Name }}-etcd-svc:{{ .Values.servicePorts.peer }},{{ .Release.Name }}-etcd-1=http://{{ .Release.Name }}-etcd-1.{{ .Release.Name }}-etcd-svc:{{ .Values.servicePorts.peer }},{{ .Release.Name }}-etcd-2=http://{{ .Release.Name }}-etcd-2.{{ .Release.Name }}-etcd-svc:{{ .Values.servicePorts.peer }}"
+            - "--initial-cluster-state"
+            - "new"
+            - "--initial-cluster-token"
+            - "{{ .Release.Name }}"
+          volumeMounts:
+            - name: etcd-storage
+              mountPath: {{ .Values.storage.dataDir }}
+          ports:
+            - name: client
+              containerPort: {{ .Values.servicePorts.client }}
+            - name: peer
+              containerPort: {{ .Values.servicePorts.peer }}
+          env:
+            - name: HOSTNAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: ETCDCTL_API
+              value: "3"

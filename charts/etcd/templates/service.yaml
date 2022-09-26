@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-etcd-svc
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: {{ .Release.Name }}-etcd
+spec:
+  ports:
+    - name: client
+      port: {{ .Values.servicePorts.client }}
+    - name: peer
+      port: {{ .Values.servicePorts.peer }}
+  clusterIP: None
+  selector:
+    app: {{ .Release.Name }}-etcd
