@@ -1,0 +1,2 @@
+Greptimedb Operator Is Starting, use `kubectl get deploy {{ .Release.Name }} -n {{ .Release.Namespace }}` to check if its successfully installed
+Quick start with `kubectl apply -f ../config/samples/mock/cluster.yaml`
