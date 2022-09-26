@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"go.etcd.io/etcd/client/v3"
+	"google.golang.org/grpc"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apiequality "k8s.io/apimachinery/pkg/api/equality"
@@ -840,6 +841,7 @@ func buildEtcdMaintenance(etcdEndpoints []string) (clientv3.Maintenance, error) 
 	etcdClient, err := clientv3.New(clientv3.Config{
 		Endpoints:   etcdEndpoints,
 		DialTimeout: 5 * time.Second,
+		DialOptions: []grpc.DialOption{grpc.WithBlock()},
 	})
 	if err != nil {
 		return nil, err
