@@ -377,10 +377,13 @@ type GreptimeDBConditionType string
 const (
 	// GreptimeDBClusterReady indicates that the GreptimeDB cluster is ready to serve requests.
 	// Every component in the cluster are all ready.
-	GreptimeDBClusterReady GreptimeDBConditionType = "Ready"
+	GreptimeDBClusterReady GreptimeDBConditionType = "GreptimeDBClusterReady"
 
 	// GreptimeDBClusterProgressing indicates that the GreptimeDB cluster is progressing.
-	GreptimeDBClusterProgressing GreptimeDBConditionType = "Progressing"
+	GreptimeDBClusterProgressing GreptimeDBConditionType = "GreptimeDBClusterProgressing"
+
+	//
+	GreptimeDBClusterUnReady GreptimeDBConditionType = "GreptimeDBClusterUnReady"
 )
 
 // +kubebuilder:object:root=true

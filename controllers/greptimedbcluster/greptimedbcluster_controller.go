@@ -135,19 +135,40 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, nil
 	}
 
+	klog.Infof("The cluster '%s/%s' is unReady", cluster.Namespace, cluster.Name)
+	setGreptimeDBClusterCondition(&cluster.Status, newCondition(v1alpha1.GreptimeDBClusterUnReady, corev1.ConditionFalse, "", "GreptimeDB cluster is unReady"))
+	if err := r.updateStatus(ctx, cluster); err != nil {
+		return ctrl.Result{}, err
+	}
+
 	return ctrl.Result{}, nil
 }
 
-func (r *Reconciler) syncMeta(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster) (bool, error) {
+func (r *Reconciler) syncMeta(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster) (ready bool, err error) {
 	klog.Infof("Syncing meta...")
+
+	defer func() {
+		if ready {
+			klog.Infof("The meta is ready")
+			setGreptimeDBClusterCondition(&cluster.Status, newCondition(v1alpha1.GreptimeDBClusterReady, corev1.ConditionTrue, "", "Meta is ready"))
+			if err := r.updateStatus(ctx, cluster); err != nil {
+				return
+			}
+		} else {
+			setGreptimeDBClusterCondition(&cluster.Status, newCondition(v1alpha1.GreptimeDBClusterReady, corev1.ConditionTrue, "", "Meta is unReady"))
+			if err := r.updateStatus(ctx, cluster); err != nil {
+				return
+			}
+		}
+	}()
 
 	// TODO(zyy17): Add etcd status in cluster status field to avoid multiple checks.
 	maintainer, err := r.etcdMaintenanceBuilder(cluster.Spec.Meta.EtcdEndpoints)
 	if err != nil {
-		return false, err
+		return ready, err
 	}
 	if err := checkEtcdService(ctx, cluster.Spec.Meta.EtcdEndpoints, maintainer); err != nil {
-		return false, err
+		return ready, err
 	}
 
 	defer func() {
@@ -159,44 +180,45 @@ func (r *Reconciler) syncMeta(ctx context.Context, cluster *v1alpha1.GreptimeDBC
 
 	newMetaService, err := r.buildMetaService(cluster)
 	if err != nil {
-		return false, err
+		return ready, err
 	}
 
 	_, err = r.createIfNotExist(ctx, new(corev1.Service), newMetaService)
 	if err != nil {
-		return false, err
+		return ready, err
 	}
 
 	newMetaDeployment, err := r.buildMetaDeployment(cluster)
 	if err != nil {
-		return false, err
+		return ready, err
 	}
 
 	metaDeployment, err := r.createIfNotExist(ctx, new(appsv1.Deployment), newMetaDeployment)
 	if err != nil {
-		return false, err
+		return ready, err
 	}
 
 	if deployment, ok := metaDeployment.(*appsv1.Deployment); ok {
 		needToUpdate, err := r.isNeedToUpdate(deployment, new(appsv1.DeploymentSpec), &newMetaDeployment.Spec)
 		if err != nil {
-			return false, err
+			return ready, err
 		}
 
 		if r.isDeploymentReady(deployment) && !needToUpdate {
-			return true, nil
+			ready = true
+			return ready, nil
 		}
 
 		if needToUpdate {
 			if err := r.Update(ctx, newMetaDeployment); err != nil {
-				return false, err
+				return ready, err
 			}
 		}
 
-		return false, nil
+		return ready, nil
 	}
 
-	return false, nil
+	return ready, nil
 }
 
 func (r *Reconciler) syncFrontend(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster) (bool, error) {
@@ -764,7 +786,7 @@ func newCondition(conditionType v1alpha1.GreptimeDBConditionType, conditionStatu
 	}
 }
 
-func getGreptimeDBClusterConditition(status v1alpha1.GreptimeDBClusterStatus, conditionType v1alpha1.GreptimeDBConditionType) *v1alpha1.GreptimeDBClusterCondition {
+func getGreptimeDBClusterCondition(status v1alpha1.GreptimeDBClusterStatus, conditionType v1alpha1.GreptimeDBConditionType) *v1alpha1.GreptimeDBClusterCondition {
 	for i := range status.Conditions {
 		c := status.Conditions[i]
 		if c.Type == conditionType {
@@ -775,7 +797,7 @@ func getGreptimeDBClusterConditition(status v1alpha1.GreptimeDBClusterStatus, co
 }
 
 func setGreptimeDBClusterCondition(status *v1alpha1.GreptimeDBClusterStatus, condition v1alpha1.GreptimeDBClusterCondition) {
-	currentCondition := getGreptimeDBClusterConditition(*status, condition.Type)
+	currentCondition := getGreptimeDBClusterCondition(*status, condition.Type)
 	if currentCondition != nil &&
 		currentCondition.Status == condition.Status &&
 		currentCondition.Reason == condition.Reason {
@@ -791,14 +813,14 @@ func setGreptimeDBClusterCondition(status *v1alpha1.GreptimeDBClusterStatus, con
 }
 
 func filterOutCondition(conditions []v1alpha1.GreptimeDBClusterCondition, conditionType v1alpha1.GreptimeDBConditionType) []v1alpha1.GreptimeDBClusterCondition {
-	var newCondititions []v1alpha1.GreptimeDBClusterCondition
+	var newConditions []v1alpha1.GreptimeDBClusterCondition
 	for _, c := range conditions {
 		if c.Type == conditionType {
 			continue
 		}
-		newCondititions = append(newCondititions, c)
+		newConditions = append(newConditions, c)
 	}
-	return newCondititions
+	return newConditions
 }
 
 func checkEtcdService(ctx context.Context, etcdEndpoints []string, etcdMaintenance clientv3.Maintenance) error {
