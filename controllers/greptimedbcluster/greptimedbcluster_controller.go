@@ -129,47 +129,26 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 	if clusterIsReady {
 		klog.Infof("The cluster '%s/%s' is ready", cluster.Namespace, cluster.Name)
-		setGreptimeDBClusterCondition(&cluster.Status, newCondition(v1alpha1.GreptimeDBClusterReady, corev1.ConditionTrue, "", "GreptimeDB cluster is ready"))
+		setGreptimeDBClusterCondition(&cluster.Status, newCondition(v1alpha1.GreptimeDBClusterReady, corev1.ConditionTrue, v1alpha1.ReasonGreptimeDBClusterReady, "GreptimeDB cluster is ready"))
 		if err := r.updateStatus(ctx, cluster); err != nil {
 			return ctrl.Result{}, err
 		}
 		return ctrl.Result{}, nil
 	}
 
-	klog.Infof("The cluster '%s/%s' is unReady", cluster.Namespace, cluster.Name)
-	setGreptimeDBClusterCondition(&cluster.Status, newCondition(v1alpha1.GreptimeDBClusterUnReady, corev1.ConditionFalse, "", "GreptimeDB cluster is unReady"))
-	if err := r.updateStatus(ctx, cluster); err != nil {
-		return ctrl.Result{}, err
-	}
-
 	return ctrl.Result{}, nil
 }
 
-func (r *Reconciler) syncMeta(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster) (ready bool, err error) {
+func (r *Reconciler) syncMeta(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster) (bool, error) {
 	klog.Infof("Syncing meta...")
-
-	defer func() {
-		if ready {
-			klog.Infof("The meta is ready")
-			setGreptimeDBClusterCondition(&cluster.Status, newCondition(v1alpha1.GreptimeDBClusterReady, corev1.ConditionTrue, "", "Meta is ready"))
-			if err := r.updateStatus(ctx, cluster); err != nil {
-				return
-			}
-		} else {
-			setGreptimeDBClusterCondition(&cluster.Status, newCondition(v1alpha1.GreptimeDBClusterReady, corev1.ConditionTrue, "", "Meta is unReady"))
-			if err := r.updateStatus(ctx, cluster); err != nil {
-				return
-			}
-		}
-	}()
 
 	// TODO(zyy17): Add etcd status in cluster status field to avoid multiple checks.
 	maintainer, err := r.etcdMaintenanceBuilder(cluster.Spec.Meta.EtcdEndpoints)
 	if err != nil {
-		return ready, err
+		return false, err
 	}
 	if err := checkEtcdService(ctx, cluster.Spec.Meta.EtcdEndpoints, maintainer); err != nil {
-		return ready, err
+		return false, err
 	}
 
 	defer func() {
@@ -181,49 +160,51 @@ func (r *Reconciler) syncMeta(ctx context.Context, cluster *v1alpha1.GreptimeDBC
 
 	newMetaService, err := r.buildMetaService(cluster)
 	if err != nil {
-		return ready, err
+		return false, err
 	}
 
 	_, err = r.createIfNotExist(ctx, new(corev1.Service), newMetaService)
 	if err != nil {
-		return ready, err
+		return false, err
 	}
 
 	newMetaDeployment, err := r.buildMetaDeployment(cluster)
 	if err != nil {
-		return ready, err
+		return false, err
 	}
 
 	metaDeployment, err := r.createIfNotExist(ctx, new(appsv1.Deployment), newMetaDeployment)
 	if err != nil {
-		return ready, err
+		return false, err
 	}
 
 	if deployment, ok := metaDeployment.(*appsv1.Deployment); ok {
 		needToUpdate, err := r.isNeedToUpdate(deployment, new(appsv1.DeploymentSpec), &newMetaDeployment.Spec)
 		if err != nil {
-			return ready, err
+			return false, err
 		}
 
 		if r.isDeploymentReady(deployment) && !needToUpdate {
-			ready = true
-			return ready, nil
+			klog.Infof("The meta is ready")
+			setGreptimeDBClusterCondition(&cluster.Status, newCondition(v1alpha1.MetaReady, corev1.ConditionTrue, v1alpha1.ReasonMetaReady, "Meta is ready"))
+			return true, nil
 		}
 
 		if needToUpdate {
 			if err := r.Update(ctx, newMetaDeployment); err != nil {
-				return ready, err
+				return false, err
 			}
 		}
 
-		return ready, nil
+		return false, nil
 	}
 
-	return ready, nil
+	return false, nil
 }
 
 func (r *Reconciler) syncFrontend(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster) (bool, error) {
 	klog.Infof("Syncing frontend...")
+
 	newFrontendService, err := r.buildFrontendService(cluster)
 	if err != nil {
 		return false, err
@@ -251,6 +232,8 @@ func (r *Reconciler) syncFrontend(ctx context.Context, cluster *v1alpha1.Greptim
 		}
 
 		if r.isDeploymentReady(deployment) && !needToUpdate {
+			klog.Infof("The frontend is ready")
+			setGreptimeDBClusterCondition(&cluster.Status, newCondition(v1alpha1.FrontendReady, corev1.ConditionTrue, v1alpha1.ReasonFrontendReady, "Frontend is ready"))
 			return true, nil
 		}
 
@@ -268,6 +251,7 @@ func (r *Reconciler) syncFrontend(ctx context.Context, cluster *v1alpha1.Greptim
 
 func (r *Reconciler) syncDatanode(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster) (bool, error) {
 	klog.Infof("Syncing datanode...")
+
 	newDatanodeService, err := r.buildDatanodeService(cluster)
 	if err != nil {
 		return false, err
@@ -295,6 +279,8 @@ func (r *Reconciler) syncDatanode(ctx context.Context, cluster *v1alpha1.Greptim
 		}
 
 		if r.isStatefulSetReady(statefulSet) && !needToUpdate {
+			klog.Infof("The datanode is ready")
+			setGreptimeDBClusterCondition(&cluster.Status, newCondition(v1alpha1.DatanodeReady, corev1.ConditionTrue, v1alpha1.ReasonDatanodeReady, "Datanode is ready"))
 			return true, nil
 		}
 
@@ -777,7 +763,7 @@ func (r *Reconciler) updateStatus(ctx context.Context, cluster *v1alpha1.Greptim
 	})
 }
 
-func newCondition(conditionType v1alpha1.GreptimeDBConditionType, conditionStatus corev1.ConditionStatus, reason, message string) v1alpha1.GreptimeDBClusterCondition {
+func newCondition(conditionType v1alpha1.GreptimeDBConditionType, conditionStatus corev1.ConditionStatus, reason v1alpha1.GreptimeDBConditionReason, message string) v1alpha1.GreptimeDBClusterCondition {
 	return v1alpha1.GreptimeDBClusterCondition{
 		Type:               conditionType,
 		Status:             conditionStatus,
@@ -788,10 +774,9 @@ func newCondition(conditionType v1alpha1.GreptimeDBConditionType, conditionStatu
 }
 
 func getGreptimeDBClusterCondition(status v1alpha1.GreptimeDBClusterStatus, conditionType v1alpha1.GreptimeDBConditionType) *v1alpha1.GreptimeDBClusterCondition {
-	for i := range status.Conditions {
-		c := status.Conditions[i]
-		if c.Type == conditionType {
-			return &c
+	for _, v := range status.Conditions {
+		if v.Type == conditionType {
+			return &v
 		}
 	}
 	return nil
@@ -804,13 +789,7 @@ func setGreptimeDBClusterCondition(status *v1alpha1.GreptimeDBClusterStatus, con
 		currentCondition.Reason == condition.Reason {
 		return
 	}
-
-	if currentCondition != nil && currentCondition.Status == condition.Status {
-		condition.LastTransitionTime = currentCondition.LastTransitionTime
-	}
-
-	newConditions := filterOutCondition(status.Conditions, condition.Type)
-	status.Conditions = append(newConditions, condition)
+	status.Conditions = append(status.Conditions, condition)
 }
 
 func filterOutCondition(conditions []v1alpha1.GreptimeDBClusterCondition, conditionType v1alpha1.GreptimeDBConditionType) []v1alpha1.GreptimeDBClusterCondition {
