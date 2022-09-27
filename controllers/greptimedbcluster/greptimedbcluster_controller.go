@@ -140,7 +140,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 }
 
 func (r *Reconciler) syncMeta(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster) (bool, error) {
-	klog.Infof("Syncing meta...")
+	klog.Info("Syncing meta...")
 
 	// TODO(zyy17): Add etcd status in cluster status field to avoid multiple checks.
 	maintainer, err := r.etcdMaintenanceBuilder(cluster.Spec.Meta.EtcdEndpoints)
@@ -185,7 +185,7 @@ func (r *Reconciler) syncMeta(ctx context.Context, cluster *v1alpha1.GreptimeDBC
 		}
 
 		if r.isDeploymentReady(deployment) && !needToUpdate {
-			klog.Infof("The meta is ready")
+			klog.Info("The meta is ready")
 			setGreptimeDBClusterCondition(&cluster.Status, newCondition(v1alpha1.MetaReady, corev1.ConditionTrue, v1alpha1.ReasonMetaReady, "Meta is ready"))
 			return true, nil
 		}
@@ -203,7 +203,7 @@ func (r *Reconciler) syncMeta(ctx context.Context, cluster *v1alpha1.GreptimeDBC
 }
 
 func (r *Reconciler) syncFrontend(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster) (bool, error) {
-	klog.Infof("Syncing frontend...")
+	klog.Info("Syncing frontend...")
 
 	newFrontendService, err := r.buildFrontendService(cluster)
 	if err != nil {
@@ -232,7 +232,7 @@ func (r *Reconciler) syncFrontend(ctx context.Context, cluster *v1alpha1.Greptim
 		}
 
 		if r.isDeploymentReady(deployment) && !needToUpdate {
-			klog.Infof("The frontend is ready")
+			klog.Info("The frontend is ready")
 			setGreptimeDBClusterCondition(&cluster.Status, newCondition(v1alpha1.FrontendReady, corev1.ConditionTrue, v1alpha1.ReasonFrontendReady, "Frontend is ready"))
 			return true, nil
 		}
@@ -250,7 +250,7 @@ func (r *Reconciler) syncFrontend(ctx context.Context, cluster *v1alpha1.Greptim
 }
 
 func (r *Reconciler) syncDatanode(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster) (bool, error) {
-	klog.Infof("Syncing datanode...")
+	klog.Info("Syncing datanode...")
 
 	newDatanodeService, err := r.buildDatanodeService(cluster)
 	if err != nil {
@@ -279,7 +279,7 @@ func (r *Reconciler) syncDatanode(ctx context.Context, cluster *v1alpha1.Greptim
 		}
 
 		if r.isStatefulSetReady(statefulSet) && !needToUpdate {
-			klog.Infof("The datanode is ready")
+			klog.Info("The datanode is ready")
 			setGreptimeDBClusterCondition(&cluster.Status, newCondition(v1alpha1.DatanodeReady, corev1.ConditionTrue, v1alpha1.ReasonDatanodeReady, "Datanode is ready"))
 			return true, nil
 		}
