@@ -224,6 +224,7 @@ type PodTemplateSpec struct {
 type ComponentSpec struct {
 	// The number of replicas of the components.
 	// +reqiured
+	// +kubebuilder:validation:Minimum=0
 	Replicas int32 `json:"replicas"`
 
 	// Template defines the pod template for the component, if not specified, the pod template will use the default value.
@@ -255,7 +256,8 @@ type StorageSpec struct {
 	StorageClassName *string `json:"storageClassName,omitempty"`
 
 	// The size of the storage.
-	// +optional
+	// +optionale
+	// +kubebuilder:validation:Pattern=(^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$)
 	StorageSize string `json:"storageSize,omitempty"`
 
 	// The mount path of the storage in datanode container.
@@ -264,6 +266,8 @@ type StorageSpec struct {
 
 	// The PVCs will retain or delete when the cluster is deleted, default to Retain.
 	// +optional
+	// +kubebuilder:validation:Enum:={"Retain", "Delete"}
+	// +kubebuilder:default:="Retain"
 	StorageRetainPolicy StorageRetainPolicyType `json:"storageRetainPolicy,omitempty"`
 }
 
