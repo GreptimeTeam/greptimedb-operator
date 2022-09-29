@@ -20,11 +20,11 @@ spec:
         image: localhost:5001/greptime/frontend:latest
         args:
           - "-meta-endpoint"
-          - "http://mock-meta.default:3001"
+          - "http://mock-meta:3001"
           - "-l"
           - "0.0.0.0:3306"
           - "-r"
-          - "mock-datanode.default:3306"
+          - "mock-datanode:3306"
   meta:
     replicas: 1
     etcdEndpoints:
@@ -34,7 +34,7 @@ spec:
         image: localhost:5001/greptime/meta:latest
         args:
           - "--etcd-endpoint"
-          - "etcd.default:2379"
+          - "etcd:2379"
   datanode:
     replicas: 1
     template:
