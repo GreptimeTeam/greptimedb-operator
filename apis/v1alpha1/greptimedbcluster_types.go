@@ -382,6 +382,10 @@ const (
 	// GreptimeDBClusterProgressing indicates that the GreptimeDB cluster is progressing.
 	GreptimeDBClusterProgressing GreptimeDBConditionType = "GreptimeDBClusterProgressing"
 
+	ETCDReady GreptimeDBConditionType = "ETCDReady"
+
+	ETCDNotReady GreptimeDBConditionType = "ETCDNotReady"
+
 	MetaReady GreptimeDBConditionType = "MetaReady"
 
 	MetaNotReady GreptimeDBConditionType = "MetaNotReady"
@@ -404,6 +408,10 @@ const (
 
 	// GreptimeDBClusterProgressing indicates that the GreptimeDB cluster is progressing.
 	ReasonGreptimeDBClusterProgressing GreptimeDBConditionReason = "GreptimeDBClusterProgressing"
+
+	ReasonETCDReady GreptimeDBConditionReason = "ReasonETCDReady"
+
+	ReasonETCDNotReady GreptimeDBConditionReason = "ReasonETCDNotReady"
 
 	ReasonMetaReady GreptimeDBConditionReason = "MetaReady"
 
