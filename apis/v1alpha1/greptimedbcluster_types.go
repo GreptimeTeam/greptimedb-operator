@@ -340,7 +340,7 @@ type GreptimeDBClusterCondition struct {
 
 	// The reason for the condition's last transition.
 	// +optional
-	Reason GreptimeDBConditionReason `json:"reason,omitempty"`
+	Reason string `json:"reason,omitempty"`
 
 	// A human readable message indicating details about the transition.
 	// +optional
@@ -382,48 +382,12 @@ const (
 	// GreptimeDBClusterProgressing indicates that the GreptimeDB cluster is progressing.
 	GreptimeDBClusterProgressing GreptimeDBConditionType = "GreptimeDBClusterProgressing"
 
-	ETCDReady GreptimeDBConditionType = "ETCDReady"
-
-	ETCDNotReady GreptimeDBConditionType = "ETCDNotReady"
-
-	MetaReady GreptimeDBConditionType = "MetaReady"
-
-	MetaNotReady GreptimeDBConditionType = "MetaNotReady"
-
-	DatanodeReady GreptimeDBConditionType = "DatanodeReady"
-
-	DatanodeNotReady GreptimeDBConditionType = "DatanodeNotReady"
-
-	FrontendReady GreptimeDBConditionType = "FrontendReady"
-
-	FrontendNotReady GreptimeDBConditionType = "FrontendNotReady"
-)
-
-type GreptimeDBConditionReason string
-
-const (
-	// GreptimeDBClusterReady indicates that the GreptimeDB cluster is ready to serve requests.
-	// Every component in the cluster are all ready.
-	ReasonGreptimeDBClusterReady GreptimeDBConditionReason = "GreptimeDBClusterReady"
-
-	// GreptimeDBClusterProgressing indicates that the GreptimeDB cluster is progressing.
-	ReasonGreptimeDBClusterProgressing GreptimeDBConditionReason = "GreptimeDBClusterProgressing"
-
-	ReasonETCDReady GreptimeDBConditionReason = "ReasonETCDReady"
-
-	ReasonETCDNotReady GreptimeDBConditionReason = "ReasonETCDNotReady"
-
-	ReasonMetaReady GreptimeDBConditionReason = "MetaReady"
-
-	ReasonMetaNotReady GreptimeDBConditionReason = "MetaNotReady"
-
-	ReasonDatanodeReady GreptimeDBConditionReason = "DatanodeReady"
-
-	ReasonDatanodeNotReady GreptimeDBConditionReason = "DatanodeNotReady"
-
-	ReasonFrontendReady GreptimeDBConditionReason = "FrontendReady"
-
-	ReasonFrontendNotReady GreptimeDBConditionReason = "FrontendNotReady"
+	ETCDClusterReady    GreptimeDBConditionType = "ETCDClusterReady"
+	ETCDClusterNotReady GreptimeDBConditionType = "ETCDClusterNotReady"
+	ETCDClusterUnknown  GreptimeDBConditionType = "ETCDClusterUnknown"
+	MetaReady           GreptimeDBConditionType = "MetaReady"
+	DatanodeReady       GreptimeDBConditionType = "DatanodeReady"
+	FrontendReady       GreptimeDBConditionType = "FrontendReady"
 )
 
 // +kubebuilder:object:root=true

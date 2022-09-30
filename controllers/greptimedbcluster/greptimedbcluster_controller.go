@@ -88,6 +88,8 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, err
 	}
 
+	setGreptimeDBClusterCondition(&cluster.Status, newCondition(v1alpha1.GreptimeDBClusterProgressing, corev1.ConditionTrue, "", "GreptimeDB cluster is progressing"))
+
 	defer func() {
 		if err := r.updateStatus(ctx, cluster); err != nil {
 			klog.Infof("Update status error: %v", err)
@@ -106,8 +108,6 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	if err := cluster.SetDefaults(); err != nil {
 		return ctrl.Result{}, err
 	}
-
-	setGreptimeDBClusterCondition(&cluster.Status, newCondition(v1alpha1.GreptimeDBClusterProgressing, corev1.ConditionTrue, v1alpha1.ReasonGreptimeDBClusterProgressing, "GreptimeDB cluster is progressing"))
 
 	// The controller will execute the following actions in order and the next action will begin to execute when the previous one is finished.
 	var actions []SyncFunc
@@ -137,7 +137,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 	if clusterIsReady {
 		klog.Infof("The cluster '%s/%s' is ready", cluster.Namespace, cluster.Name)
-		setGreptimeDBClusterCondition(&cluster.Status, newCondition(v1alpha1.GreptimeDBClusterReady, corev1.ConditionTrue, v1alpha1.ReasonGreptimeDBClusterReady, "GreptimeDB cluster is ready"))
+		setGreptimeDBClusterCondition(&cluster.Status, newCondition(v1alpha1.GreptimeDBClusterReady, corev1.ConditionTrue, "", "GreptimeDB cluster is ready"))
 		return ctrl.Result{}, nil
 	}
 
@@ -150,15 +150,16 @@ func (r *Reconciler) syncMeta(ctx context.Context, cluster *v1alpha1.GreptimeDBC
 	// TODO(zyy17): Add etcd status in cluster status field to avoid multiple checks.
 	maintainer, err := r.etcdMaintenanceBuilder(cluster.Spec.Meta.EtcdEndpoints)
 	if err != nil {
-		setGreptimeDBClusterCondition(&cluster.Status, newCondition(v1alpha1.ETCDNotReady, corev1.ConditionFalse, v1alpha1.ReasonETCDNotReady, "ETCD endpoint error"))
-		return false, err
-	}
-	if err := checkEtcdService(ctx, cluster.Spec.Meta.EtcdEndpoints, maintainer); err != nil {
-		setGreptimeDBClusterCondition(&cluster.Status, newCondition(v1alpha1.ETCDNotReady, corev1.ConditionFalse, v1alpha1.ReasonETCDNotReady, "ETCD cluster is not ready"))
+		setGreptimeDBClusterCondition(&cluster.Status, newCondition(v1alpha1.ETCDClusterUnknown, corev1.ConditionUnknown, "", "ETCD connect failed"))
 		return false, err
 	}
 
-	setGreptimeDBClusterCondition(&cluster.Status, newCondition(v1alpha1.ETCDReady, corev1.ConditionTrue, v1alpha1.ReasonETCDReady, "ETCD cluster is ready"))
+	if err := checkEtcdService(ctx, cluster.Spec.Meta.EtcdEndpoints, maintainer); err != nil {
+		setGreptimeDBClusterCondition(&cluster.Status, newCondition(v1alpha1.ETCDClusterNotReady, corev1.ConditionFalse, "", "ETCD cluster is not ready"))
+		return false, err
+	}
+
+	setGreptimeDBClusterCondition(&cluster.Status, newCondition(v1alpha1.ETCDClusterReady, corev1.ConditionTrue, "", "ETCD cluster is ready"))
 
 	defer func() {
 		etcdClient, ok := maintainer.(*clientv3.Client)
@@ -195,7 +196,7 @@ func (r *Reconciler) syncMeta(ctx context.Context, cluster *v1alpha1.GreptimeDBC
 
 		if r.isDeploymentReady(deployment) && !needToUpdate {
 			klog.Info("The meta is ready")
-			setGreptimeDBClusterCondition(&cluster.Status, newCondition(v1alpha1.MetaReady, corev1.ConditionTrue, v1alpha1.ReasonMetaReady, "Meta is ready"))
+			setGreptimeDBClusterCondition(&cluster.Status, newCondition(v1alpha1.MetaReady, corev1.ConditionTrue, "", "Meta is ready"))
 			return true, nil
 		}
 
@@ -242,7 +243,7 @@ func (r *Reconciler) syncFrontend(ctx context.Context, cluster *v1alpha1.Greptim
 
 		if r.isDeploymentReady(deployment) && !needToUpdate {
 			klog.Info("The frontend is ready")
-			setGreptimeDBClusterCondition(&cluster.Status, newCondition(v1alpha1.FrontendReady, corev1.ConditionTrue, v1alpha1.ReasonFrontendReady, "Frontend is ready"))
+			setGreptimeDBClusterCondition(&cluster.Status, newCondition(v1alpha1.FrontendReady, corev1.ConditionTrue, "", "Frontend is ready"))
 			return true, nil
 		}
 
@@ -289,7 +290,7 @@ func (r *Reconciler) syncDatanode(ctx context.Context, cluster *v1alpha1.Greptim
 
 		if r.isStatefulSetReady(statefulSet) && !needToUpdate {
 			klog.Info("The datanode is ready")
-			setGreptimeDBClusterCondition(&cluster.Status, newCondition(v1alpha1.DatanodeReady, corev1.ConditionTrue, v1alpha1.ReasonDatanodeReady, "Datanode is ready"))
+			setGreptimeDBClusterCondition(&cluster.Status, newCondition(v1alpha1.DatanodeReady, corev1.ConditionTrue, "", "Datanode is ready"))
 			return true, nil
 		}
 
@@ -772,7 +773,7 @@ func (r *Reconciler) updateStatus(ctx context.Context, cluster *v1alpha1.Greptim
 	})
 }
 
-func newCondition(conditionType v1alpha1.GreptimeDBConditionType, conditionStatus corev1.ConditionStatus, reason v1alpha1.GreptimeDBConditionReason, message string) v1alpha1.GreptimeDBClusterCondition {
+func newCondition(conditionType v1alpha1.GreptimeDBConditionType, conditionStatus corev1.ConditionStatus, reason string, message string) v1alpha1.GreptimeDBClusterCondition {
 	return v1alpha1.GreptimeDBClusterCondition{
 		Type:               conditionType,
 		Status:             conditionStatus,
@@ -798,22 +799,12 @@ func setGreptimeDBClusterCondition(status *v1alpha1.GreptimeDBClusterStatus, con
 		currentCondition.Reason == condition.Reason {
 		return
 	}
+
 	if currentCondition != nil && currentCondition.Status == condition.Status {
 		condition.LastTransitionTime = currentCondition.LastTransitionTime
 	}
 
 	status.Conditions = append(status.Conditions, condition)
-}
-
-func filterOutCondition(conditions []v1alpha1.GreptimeDBClusterCondition, conditionType v1alpha1.GreptimeDBConditionType) []v1alpha1.GreptimeDBClusterCondition {
-	var newConditions []v1alpha1.GreptimeDBClusterCondition
-	for _, c := range conditions {
-		if c.Type == conditionType {
-			continue
-		}
-		newConditions = append(newConditions, c)
-	}
-	return newConditions
 }
 
 func checkEtcdService(ctx context.Context, etcdEndpoints []string, etcdMaintenance clientv3.Maintenance) error {
