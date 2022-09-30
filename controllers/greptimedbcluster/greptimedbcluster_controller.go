@@ -88,14 +88,6 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, err
 	}
 
-	setGreptimeDBClusterCondition(&cluster.Status, newCondition(v1alpha1.GreptimeDBClusterProgressing, corev1.ConditionTrue, "", "GreptimeDB cluster is progressing"))
-
-	defer func() {
-		if err := r.updateStatus(ctx, cluster); err != nil {
-			klog.Infof("Update status error: %v", err)
-		}
-	}()
-
 	// The object is being deleted.
 	if !cluster.ObjectMeta.DeletionTimestamp.IsZero() {
 		return r.delete(ctx, cluster)
@@ -108,6 +100,14 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	if err := cluster.SetDefaults(); err != nil {
 		return ctrl.Result{}, err
 	}
+
+	setGreptimeDBClusterCondition(&cluster.Status, newCondition(v1alpha1.GreptimeDBClusterProgressing, corev1.ConditionTrue, "", "GreptimeDB cluster is progressing"))
+
+	defer func() {
+		if err := r.updateStatus(ctx, cluster); err != nil {
+			klog.Infof("Update status error: %v", err)
+		}
+	}()
 
 	// The controller will execute the following actions in order and the next action will begin to execute when the previous one is finished.
 	var actions []SyncFunc
