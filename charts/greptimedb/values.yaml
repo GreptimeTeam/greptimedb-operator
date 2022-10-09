@@ -1,6 +1,5 @@
 base:
   main:
-    image:
     resources:
       requests:
         cpu: 250m

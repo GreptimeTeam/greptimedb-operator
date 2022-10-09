@@ -1,1 +1,1 @@
-The greptimedb-operator is starting, use `kubectl get deployments {{ .Release.Name }}-greptimedb-operator -n {{ .Release.Namespace }}` to check its status.
+The greptimedb-operator is starting, use `kubectl get deployments {{ include "greptimedb-operator.fullname" . }} -n {{ .Release.Namespace }}` to check its status.
