@@ -1980,6 +1980,7 @@ spec:
                 properties:
                   replicas:
                     format: int32
+                    minimum: 1
                     type: integer
                   storage:
                     properties:
@@ -1990,8 +1991,13 @@ spec:
                       storageClassName:
                         type: string
                       storageRetainPolicy:
+                        default: Retain
+                        enum:
+                        - Retain
+                        - Delete
                         type: string
                       storageSize:
+                        pattern: (^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$)
                         type: string
                     type: object
                   template:
@@ -3942,6 +3948,7 @@ spec:
                 properties:
                   replicas:
                     format: int32
+                    minimum: 1
                     type: integer
                   service:
                     properties:
@@ -5990,6 +5997,7 @@ spec:
                     type: array
                   replicas:
                     format: int32
+                    minimum: 1
                     type: integer
                   service:
                     properties:
