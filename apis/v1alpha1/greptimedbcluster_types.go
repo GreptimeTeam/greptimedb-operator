@@ -224,7 +224,7 @@ type PodTemplateSpec struct {
 type ComponentSpec struct {
 	// The number of replicas of the components.
 	// +reqiured
-	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Minimum=1
 	Replicas int32 `json:"replicas"`
 
 	// Template defines the pod template for the component, if not specified, the pod template will use the default value.
@@ -256,7 +256,7 @@ type StorageSpec struct {
 	StorageClassName *string `json:"storageClassName,omitempty"`
 
 	// The size of the storage.
-	// +optionale
+	// +optional
 	// +kubebuilder:validation:Pattern=(^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$)
 	StorageSize string `json:"storageSize,omitempty"`
 
