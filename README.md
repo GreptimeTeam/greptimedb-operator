@@ -128,3 +128,7 @@ The GreptimeDB Operator manages GreptimeDB clusters on [Kubernetes](https://kube
   ```
   $ kind delete clusters greptimedb-playground
   ```
+
+### Use Helm to deploy GreptimeDB Operator and Cluster
+
+Please read the [Guide](./charts/README.md).

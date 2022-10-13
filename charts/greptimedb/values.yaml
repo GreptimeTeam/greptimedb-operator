@@ -1,0 +1,28 @@
+base:
+  main:
+    resources:
+      requests:
+        cpu: 250m
+        memory: 64Mi
+      limits:
+        cpu: 500m
+        memory: 128Mi
+
+frontend:
+  replicas: 1
+  main:
+    image: localhost:5001/greptime/frontend:latest
+
+meta:
+  replicas: 1
+  main:
+    image: localhost:5001/greptime/meta:latest
+
+datanode:
+  replicas: 1
+  storage:
+    storageClassName: standard
+    storageSize: 10Gi
+    storageRetainPolicy: Retain
+  main:
+    image: localhost:5001/greptime/datanode:latest

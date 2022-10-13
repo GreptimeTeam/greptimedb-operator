@@ -51,7 +51,7 @@ help: ## Display this help.
 manifests: kustomize controller-gen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
 	$(CONTROLLER_GEN) rbac:roleName=greptimedb-operator-role crd:maxDescLen=0 webhook paths="./..." output:crd:artifacts:config=config/crd/bases
 	$(KUSTOMIZE) build config/crd > ${MANIFESTS_DIR}/greptimedb-operator-crd.yaml
-	$(KUSTOMIZE) build config/crd > ${CHARTS_DIR}/greptimedb-operator/crds/greptime.io_greptimedbclusters.yaml
+	$(KUSTOMIZE) build config/crd > ${CHARTS_DIR}/greptimedb-operator/crds/greptimedbcluster.yaml
 	$(KUSTOMIZE) build config/default > ${MANIFESTS_DIR}/greptimedb-operator-deployment.yaml
 
 .PHONY: generate

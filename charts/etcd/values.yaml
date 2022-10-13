@@ -1,0 +1,10 @@
+image: bitnami/etcd:3.4.20
+
+servicePorts:
+  client: 2379
+  peer: 2380
+
+storage:
+  storageClassName: "standard"
+  volumeSize: 10Gi
+  dataDir: /var/lib/etcd
