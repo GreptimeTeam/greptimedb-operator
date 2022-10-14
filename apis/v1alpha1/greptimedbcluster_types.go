@@ -314,6 +314,11 @@ type GreptimeDBClusterSpec struct {
 	// +optional
 	MySQLServicePort int32 `json:"mysqlServicePort,omitempty"`
 
+	// +optional
+	// +kubebuilder:validation:Enum:={true, false}
+	// +kubebuilder:default:=true
+	EnableMonitor bool `json:"enableMonitor,omitempty"`
+
 	// More cluster settings can be added here...
 }
 

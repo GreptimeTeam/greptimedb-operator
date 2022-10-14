@@ -127,6 +127,13 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		}
 	}
 
+	if cluster.Spec.EnableMonitor {
+		if err := r.syncPodMonitor(ctx, cluster); err != nil {
+			klog.Infof("Sync pod monitor error: %v", err)
+			return ctrl.Result{}, err
+		}
+	}
+
 	if clusterIsReady {
 		klog.Infof("The cluster '%s/%s' is ready", cluster.Namespace, cluster.Name)
 		setGreptimeDBClusterCondition(&cluster.Status, newCondition(v1alpha1.GreptimeDBClusterReady, corev1.ConditionTrue, "", "GreptimeDB cluster is ready"))

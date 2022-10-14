@@ -3937,6 +3937,12 @@ spec:
                 required:
                 - replicas
                 type: object
+              enableMonitor:
+                default: false
+                enum:
+                - true
+                - false
+                type: boolean
               frontend:
                 properties:
                   replicas:
