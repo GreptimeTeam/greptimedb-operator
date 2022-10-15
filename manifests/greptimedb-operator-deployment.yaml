@@ -3945,7 +3945,7 @@ spec:
                 - replicas
                 type: object
               enableMonitor:
-                default: false
+                default: true
                 enum:
                 - true
                 - false
@@ -8231,6 +8231,18 @@ rules:
   - get
   - patch
   - update
+- apiGroups:
+  - monitoring.coreos.com
+  resources:
+  - podmonitors
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding

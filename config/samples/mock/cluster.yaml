@@ -44,4 +44,4 @@ spec:
       storageClassName: standard
       storageSize: 10Gi
       storageRetainPolicy: Retain
-  enableMonitor: true
+  enableMonitor: false
