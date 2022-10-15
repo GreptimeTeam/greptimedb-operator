@@ -1,101 +1,39 @@
 {{- if .Values.rbac.create }}
 apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRole
+kind: Role
 metadata:
-  creationTimestamp: null
-  name: greptimedb-operator-role
+  name: {{ include "greptimedb-operator.fullname" . }}-leader-election-role
+  namespace: {{ .Release.Namespace }}
 rules:
   - apiGroups:
-      - apps
+      - ''
     resources:
-      - deployments
+      - 'configmaps'
     verbs:
-      - create
-      - delete
       - get
       - list
-      - patch
-      - update
       - watch
+      - create
+      - update
+      - patch
+      - delete
   - apiGroups:
-      - apps
+      - coordination.k8s.io
     resources:
-      - statefulsets
+      - leases
     verbs:
-      - create
-      - delete
       - get
       - list
-      - patch
-      - update
       - watch
+      - create
+      - update
+      - patch
+      - delete
   - apiGroups:
       - ""
     resources:
-      - persistentvolumeclaims
+      - events
     verbs:
       - create
-      - delete
-      - get
-      - list
-      - update
-      - watch
-  - apiGroups:
-      - ""
-    resources:
-      - pods
-    verbs:
-      - create
-      - get
-      - list
-      - watch
-  - apiGroups:
-      - ""
-    resources:
-      - services
-    verbs:
-      - create
-      - delete
-      - get
-      - list
-      - update
-      - watch
-  - apiGroups:
-      - greptime.io
-    resources:
-      - greptimedbclusters
-    verbs:
-      - create
-      - delete
-      - get
-      - list
       - patch
-      - update
-      - watch
-  - apiGroups:
-      - greptime.io
-    resources:
-      - greptimedbclusters/finalizers
-    verbs:
-      - update
-  - apiGroups:
-      - greptime.io
-    resources:
-      - greptimedbclusters/status
-    verbs:
-      - get
-      - patch
-      - update
-  - apiGroups:
-      - monitoring.coreos.com
-    resources:
-      - podmonitors
-    verbs:
-      - create
-      - delete
-      - get
-      - list
-      - patch
-      - update
-      - watch
 {{- end }}
