@@ -1,5 +1,5 @@
 name: ci
-on: [push, pull_request, tag]
+on: [push, pull_request]
 env:
   HUB_REPO: ghcr.io/greptimeteam
   IMAGE_NAME: greptimedb-operator
