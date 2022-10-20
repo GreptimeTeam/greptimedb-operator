@@ -1,12 +1,11 @@
 name: build image
-on: [push, pull_request]
-#on:
-#  push:
-#    tags:
-#      - '*'
-#  pull_request:
-#    tags:
-#      - '*'
+on:
+  push:
+    tags:
+      - '*'
+  pull_request:
+    tags:
+      - '*'
 
 env:
   REGISTRY: ghcr.io
