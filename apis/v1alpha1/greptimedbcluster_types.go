@@ -316,7 +316,6 @@ type GreptimeDBClusterSpec struct {
 
 	// +optional
 	// +kubebuilder:validation:Enum:={true, false}
-	// +kubebuilder:default:=false
 	EnableMonitor bool `json:"enableMonitor,omitempty"`
 
 	// More cluster settings can be added here...

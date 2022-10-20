@@ -3939,7 +3939,6 @@ spec:
                 - replicas
                 type: object
               enableMonitor:
-                default: false
                 enum:
                 - true
                 - false

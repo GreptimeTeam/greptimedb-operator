@@ -74,7 +74,7 @@ func (r *Reconciler) syncMetaPodMonitor(ctx context.Context, cluster *v1alpha1.G
 			return err
 		}
 
-		klog.Infof("Create meta pod monitor: %s in %s", podMonitor.Name, podMonitor.Namespace)
+		klog.Infof("Create meta pod monitor: %s in %s namespace", podMonitor.Name, podMonitor.Namespace)
 		return r.Create(ctx, podMonitor)
 	}
 	if err != nil {
@@ -137,7 +137,7 @@ func (r *Reconciler) syncDatanodePodMonitor(ctx context.Context, cluster *v1alph
 			return err
 		}
 
-		klog.Infof("Create datanode pod monitor: %s in %s", podMonitor.Name, podMonitor.Namespace)
+		klog.Infof("Create datanode pod monitor: %s in %s namespace", podMonitor.Name, podMonitor.Namespace)
 		return r.Create(ctx, podMonitor)
 	}
 	if err != nil {
@@ -178,7 +178,7 @@ func (r *Reconciler) syncFrontendPodMonitor(ctx context.Context, cluster *v1alph
 
 	namespaceName := types.NamespacedName{
 		Namespace: cluster.Namespace,
-		Name:      cluster.Name + "frontend",
+		Name:      cluster.Name + "-frontend",
 	}
 
 	pm := &monitoringv1.PodMonitor{}
@@ -199,7 +199,7 @@ func (r *Reconciler) syncFrontendPodMonitor(ctx context.Context, cluster *v1alph
 			return err
 		}
 
-		klog.Infof("Create frontend pod monitor: %s in %s", podMonitor.Name, podMonitor.Namespace)
+		klog.Infof("Create frontend pod monitor: %s in %s namespace", podMonitor.Name, podMonitor.Namespace)
 		return r.Create(ctx, podMonitor)
 	}
 	if err != nil {
