@@ -1,5 +1,8 @@
 name: ci
 on: [push, pull_request, tag]
+env:
+  HUB_REPO: ghcr.io/greptimeteam
+  IMAGE_NAME: greptimedb-operator
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -74,9 +77,15 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Generate App Version
+        run: echo VERSION=`git describe --tags --always` >> $GITHUB_ENV
+
       - name: Build and push
         uses: docker/build-push-action@v3
         with:
           platforms: linux/amd64,linux/arm64
           push: true
-          tags: ghcr.io/greptimeteam/greptimedb-operator:latest
+          build-args: |
+            IMAGE_NAME=${{ env.IMAGE_NAME }}
+            HUB_REPO=${{ env.HUB_REPO }}
+          tags: ${{ env.HUB_REPO }}/${{ env.IMAGE_NAME }}:${{ env.VERSION }}
