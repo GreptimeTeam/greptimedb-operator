@@ -3944,6 +3944,11 @@ spec:
                 required:
                 - replicas
                 type: object
+              enablePrometheusMonitor:
+                enum:
+                - true
+                - false
+                type: boolean
               frontend:
                 properties:
                   replicas:
@@ -8225,6 +8230,18 @@ rules:
   - get
   - patch
   - update
+- apiGroups:
+  - monitoring.coreos.com
+  resources:
+  - podmonitors
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding

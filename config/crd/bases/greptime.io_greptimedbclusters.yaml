@@ -3938,6 +3938,11 @@ spec:
                 required:
                 - replicas
                 type: object
+              enablePrometheusMonitor:
+                enum:
+                - true
+                - false
+                type: boolean
               frontend:
                 properties:
                   replicas:

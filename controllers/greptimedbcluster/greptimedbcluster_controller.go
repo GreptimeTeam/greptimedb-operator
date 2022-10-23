@@ -74,6 +74,7 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 // +kubebuilder:rbac:groups=core,resources=persistentvolumeclaims,verbs=get;list;watch;create;update;delete;
 // +kubebuilder:rbac:groups=apps,resources=statefulsets,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=monitoring.coreos.com,resources=podmonitors,verbs=get;list;watch;create;update;patch;delete
 
 // Reconcile is reconciliation loop for GreptimeDBCluster.
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
@@ -124,6 +125,13 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		}
 		if index == len(actions)-1 {
 			clusterIsReady = true
+		}
+	}
+
+	if cluster.Spec.EnablePrometheusMonitor {
+		if err := r.syncPodMonitor(ctx, cluster); err != nil {
+			klog.Infof("Sync pod monitor error: %v", err)
+			return ctrl.Result{}, err
 		}
 	}
 
