@@ -16,6 +16,14 @@ const (
 	RetainStorageRetainPolicyTypeDelete StorageRetainPolicyType = "Delete"
 )
 
+type ComponentKind string
+
+const (
+	FrontendComponentKind ComponentKind = "frontend"
+	DatanodeComponentKind ComponentKind = "datanode"
+	MetaComponentKind     ComponentKind = "meta"
+)
+
 // SlimPodSpec is a slimmed down version of corev1.PodSpec.
 // Most of the fields in SlimPodSpec are copied from corev1.PodSpec.
 type SlimPodSpec struct {
@@ -390,6 +398,55 @@ const (
 	// GreptimeDBClusterProgressing indicates that the GreptimeDB cluster is progressing.
 	GreptimeDBClusterProgressing GreptimeDBConditionType = "Progressing"
 )
+
+func NewCondition(conditionType GreptimeDBConditionType, conditionStatus corev1.ConditionStatus,
+	reason, message string) *GreptimeDBClusterCondition {
+	condition := GreptimeDBClusterCondition{
+		Type:               conditionType,
+		Status:             conditionStatus,
+		LastTransitionTime: metav1.Now(),
+		Reason:             reason,
+		Message:            message,
+	}
+	return &condition
+}
+
+func (in *GreptimeDBClusterStatus) GetCondition(conditionType GreptimeDBConditionType) *GreptimeDBClusterCondition {
+	for i := range in.Conditions {
+		c := in.Conditions[i]
+		if c.Type == conditionType {
+			return &c
+		}
+	}
+	return nil
+}
+
+func (in *GreptimeDBClusterStatus) SetCondtion(condition GreptimeDBClusterCondition) {
+	currentCondition := in.GetCondition(condition.Type)
+	if currentCondition != nil &&
+		currentCondition.Status == condition.Status &&
+		currentCondition.Reason == condition.Reason {
+		return
+	}
+
+	if currentCondition != nil && currentCondition.Status == condition.Status {
+		condition.LastTransitionTime = currentCondition.LastTransitionTime
+	}
+
+	newConditions := in.filterOutCondition(in.Conditions, condition.Type)
+	in.Conditions = append(newConditions, condition)
+}
+
+func (in *GreptimeDBClusterStatus) filterOutCondition(conditions []GreptimeDBClusterCondition, conditionType GreptimeDBConditionType) []GreptimeDBClusterCondition {
+	var newCondititions []GreptimeDBClusterCondition
+	for _, c := range conditions {
+		if c.Type == conditionType {
+			continue
+		}
+		newCondititions = append(newCondititions, c)
+	}
+	return newCondititions
+}
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status

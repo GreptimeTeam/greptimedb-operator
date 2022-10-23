@@ -20,6 +20,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
+	"github.com/GreptimeTeam/greptimedb-operator/controllers/greptimedbcluster/deployers"
+	"github.com/GreptimeTeam/greptimedb-operator/pkg/deployer"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -74,11 +76,17 @@ var _ = BeforeSuite(func() {
 
 	ctx, cancel = context.WithCancel(context.TODO())
 	reconciler = &Reconciler{
-		Client:                 manager.GetClient(),
-		Scheme:                 manager.GetScheme(),
-		Recorder:               manager.GetEventRecorderFor("greptimedbcluster-controller"),
-		etcdMaintenanceBuilder: buildMockEtcdMaintenance,
+		Client:   manager.GetClient(),
+		Scheme:   manager.GetScheme(),
+		Recorder: manager.GetEventRecorderFor("greptimedbcluster-controller"),
+
+		deployers: map[v1alpha1.ComponentKind]deployer.Deployer{
+			v1alpha1.FrontendComponentKind: deployers.NewFrontendDeployer(manager),
+			v1alpha1.DatanodeComponentKind: deployers.NewDatanodeDeployer(manager),
+			v1alpha1.MetaComponentKind:     deployers.NewMetaDeployer(manager, deployers.WithEtcdMaintenanceBuilder(buildMockEtcdMaintenance)),
+		},
 	}
+
 	err = reconciler.SetupWithManager(manager)
 	Expect(err).ToNot(HaveOccurred())
 

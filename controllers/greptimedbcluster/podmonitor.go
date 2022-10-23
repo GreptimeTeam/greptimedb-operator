@@ -23,7 +23,6 @@ const (
 type SyncPodMonitorFunc func(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster) error
 
 func (r *Reconciler) syncPodMonitor(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster) error {
-
 	var actions []SyncPodMonitorFunc
 	if cluster.Spec.Meta != nil {
 		actions = append(actions, r.syncMetaPodMonitor)
@@ -50,7 +49,6 @@ func (r *Reconciler) syncPodMonitor(ctx context.Context, cluster *v1alpha1.Grept
 }
 
 func (r *Reconciler) syncMetaPodMonitor(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster) error {
-
 	namespaceName := types.NamespacedName{
 		Namespace: cluster.Namespace,
 		Name:      cluster.Name + "-meta",
@@ -85,7 +83,6 @@ func (r *Reconciler) syncMetaPodMonitor(ctx context.Context, cluster *v1alpha1.G
 }
 
 func (r *Reconciler) buildMetaPodMonitor(cluster *v1alpha1.GreptimeDBCluster, podMonitor *monitoringv1.PodMonitor) error {
-
 	var metaLabels = map[string]string{
 		greptimeDBApplication: cluster.Name + "-meta",
 	}
@@ -113,7 +110,6 @@ func (r *Reconciler) buildMetaPodMonitor(cluster *v1alpha1.GreptimeDBCluster, po
 }
 
 func (r *Reconciler) syncDatanodePodMonitor(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster) error {
-
 	namespaceName := types.NamespacedName{
 		Namespace: cluster.Namespace,
 		Name:      cluster.Name + "-datanode",
@@ -175,7 +171,6 @@ func (r *Reconciler) buildDatanodePodMonitor(cluster *v1alpha1.GreptimeDBCluster
 }
 
 func (r *Reconciler) syncFrontendPodMonitor(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster) error {
-
 	namespaceName := types.NamespacedName{
 		Namespace: cluster.Namespace,
 		Name:      cluster.Name + "-frontend",
@@ -210,7 +205,6 @@ func (r *Reconciler) syncFrontendPodMonitor(ctx context.Context, cluster *v1alph
 }
 
 func (r *Reconciler) buildFrontendPodMonitor(cluster *v1alpha1.GreptimeDBCluster, podMonitor *monitoringv1.PodMonitor) error {
-
 	var frontendLabels = map[string]string{
 		greptimeDBApplication: cluster.Name + "-frontend",
 	}
