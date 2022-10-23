@@ -484,7 +484,7 @@ func (r *Reconciler) buildDatanodeService(cluster *v1alpha1.GreptimeDBCluster) (
 			Name:      cluster.Name + "-datanode",
 		},
 		Spec: corev1.ServiceSpec{
-			Type: corev1.ServiceTypeClusterIP,
+			ClusterIP: corev1.ClusterIPNone,
 			Selector: map[string]string{
 				greptimeDBApplication: cluster.Name + "-datanode",
 			},
@@ -522,7 +522,8 @@ func (r *Reconciler) buildDatanodeStatefulSet(cluster *v1alpha1.GreptimeDBCluste
 			Namespace: cluster.Namespace,
 		},
 		Spec: appsv1.StatefulSetSpec{
-			Replicas: &cluster.Spec.Datanode.Replicas,
+			ServiceName: cluster.Name + "-datanode",
+			Replicas:    &cluster.Spec.Datanode.Replicas,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					greptimeDBApplication: cluster.Name + "-datanode",
