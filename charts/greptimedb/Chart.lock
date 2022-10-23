@@ -1,6 +1,0 @@
-dependencies:
-- name: etcd
-  repository: file://../etcd
-  version: 0.1.0
-digest: sha256:c5db9bff53b3532a78b8d8de82449a632d6cf3168c8e1591a5ed426799db8388
-generated: "2022-09-26T17:29:04.682941+08:00"
