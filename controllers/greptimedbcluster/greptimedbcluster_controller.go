@@ -128,7 +128,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		}
 	}
 
-	if cluster.Spec.EnableMonitor {
+	if cluster.Spec.EnablePrometheusMonitor {
 		if err := r.syncPodMonitor(ctx, cluster); err != nil {
 			klog.Infof("Sync pod monitor error: %v", err)
 			return ctrl.Result{}, err
