@@ -3937,7 +3937,7 @@ spec:
                 required:
                 - replicas
                 type: object
-              enableMonitor:
+              enablePrometheusMonitor:
                 enum:
                 - true
                 - false
