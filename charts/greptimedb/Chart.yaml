@@ -2,9 +2,9 @@ apiVersion: v2
 name: greptimedb
 description: A Helm chart for deploying GreptimeDB cluster in Kubernetes
 type: application
-version: 0.1.0
-appVersion: 0.1.0
+version: 0.2.0
+appVersion: 0.2.0
 dependencies:
   - name: etcd
-    version: "0.1.0"
+    version: "0.2.0"
     repository: "file://../etcd"
