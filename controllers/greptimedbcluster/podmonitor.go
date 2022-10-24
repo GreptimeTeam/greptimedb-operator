@@ -12,6 +12,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
+	"github.com/GreptimeTeam/greptimedb-operator/controllers/greptimedbcluster/deployers"
 )
 
 const (
@@ -84,7 +85,7 @@ func (r *Reconciler) syncMetaPodMonitor(ctx context.Context, cluster *v1alpha1.G
 
 func (r *Reconciler) buildMetaPodMonitor(cluster *v1alpha1.GreptimeDBCluster, podMonitor *monitoringv1.PodMonitor) error {
 	var metaLabels = map[string]string{
-		greptimeDBApplication: cluster.Name + "-meta",
+		deployers.GreptimeComponentName: cluster.Name + "-meta",
 	}
 
 	podMonitor.Spec.PodMetricsEndpoints = []monitoringv1.PodMetricsEndpoint{
@@ -144,9 +145,8 @@ func (r *Reconciler) syncDatanodePodMonitor(ctx context.Context, cluster *v1alph
 }
 
 func (r *Reconciler) buildDatanodePodMonitor(cluster *v1alpha1.GreptimeDBCluster, podMonitor *monitoringv1.PodMonitor) error {
-
 	var datanodeLabels = map[string]string{
-		greptimeDBApplication: cluster.Name + "-datanode",
+		deployers.GreptimeComponentName: cluster.Name + "-datanode",
 	}
 	podMonitor.Spec.PodMetricsEndpoints = []monitoringv1.PodMetricsEndpoint{
 		{
@@ -206,7 +206,7 @@ func (r *Reconciler) syncFrontendPodMonitor(ctx context.Context, cluster *v1alph
 
 func (r *Reconciler) buildFrontendPodMonitor(cluster *v1alpha1.GreptimeDBCluster, podMonitor *monitoringv1.PodMonitor) error {
 	var frontendLabels = map[string]string{
-		greptimeDBApplication: cluster.Name + "-frontend",
+		deployers.GreptimeComponentName: cluster.Name + "-frontend",
 	}
 	podMonitor.Spec.PodMetricsEndpoints = []monitoringv1.PodMetricsEndpoint{
 		{
