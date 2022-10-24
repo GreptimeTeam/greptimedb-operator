@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"go.etcd.io/etcd/client/v3"
 	"google.golang.org/grpc"
 	appsv1 "k8s.io/api/apps/v1"
@@ -56,6 +57,8 @@ func WithEtcdMaintenanceBuilder(builder EtcdMaintenanceBuilder) func(*MetaDeploy
 }
 
 func (d *MetaDeployer) Render(crdObject client.Object) ([]client.Object, error) {
+	var renderObjects []client.Object
+
 	cluster, err := d.GetCluster(crdObject)
 	if err != nil {
 		return nil, err
@@ -65,13 +68,23 @@ func (d *MetaDeployer) Render(crdObject client.Object) ([]client.Object, error) 
 	if err != nil {
 		return nil, err
 	}
+	renderObjects = append(renderObjects, svc)
 
 	deployment, err := d.generateDeployment(cluster)
 	if err != nil {
 		return nil, err
 	}
+	renderObjects = append(renderObjects, deployment)
 
-	return []client.Object{svc, deployment}, nil
+	if cluster.Spec.EnablePrometheusMonitor {
+		pm, err := d.generatePodMonitor(cluster)
+		if err != nil {
+			return nil, err
+		}
+		renderObjects = append(renderObjects, pm)
+	}
+
+	return renderObjects, nil
 }
 
 func (d *MetaDeployer) PreSyncHooks() []deployer.Hook {
@@ -200,6 +213,46 @@ func (d *MetaDeployer) generateDeployment(cluster *v1alpha1.GreptimeDBCluster) (
 	}
 
 	return deployment, nil
+}
+
+func (d *MetaDeployer) generatePodMonitor(cluster *v1alpha1.GreptimeDBCluster) (*monitoringv1.PodMonitor, error) {
+	pm := &monitoringv1.PodMonitor{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       monitoringv1.PodMonitorsKind,
+			APIVersion: monitoringv1.SchemeGroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      d.ResourceName(cluster.Name, v1alpha1.MetaComponentKind),
+			Namespace: cluster.Namespace,
+		},
+		Spec: monitoringv1.PodMonitorSpec{
+			PodTargetLabels: nil,
+			PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
+				{
+					Path:        DefaultMetricPath,
+					Port:        DefaultMetricPortName,
+					Interval:    DefaultScapeInterval,
+					HonorLabels: true,
+				},
+			},
+			Selector: metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					GreptimeComponentName: d.ResourceName(cluster.Name, v1alpha1.MetaComponentKind),
+				},
+			},
+			NamespaceSelector: monitoringv1.NamespaceSelector{
+				MatchNames: []string{
+					cluster.Namespace,
+				},
+			},
+		},
+	}
+
+	if err := deployer.SetControllerAndAnnotation(cluster, pm, d.Scheme, pm.Spec); err != nil {
+		return nil, err
+	}
+
+	return pm, nil
 }
 
 func (d *MetaDeployer) checkEtcdService(ctx context.Context, crdObject client.Object) error {

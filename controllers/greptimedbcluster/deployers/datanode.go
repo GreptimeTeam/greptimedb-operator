@@ -3,6 +3,7 @@ package deployers
 import (
 	"context"
 
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -30,6 +31,8 @@ func NewDatanodeDeployer(mgr ctrl.Manager) *DatanodeDeployer {
 }
 
 func (d *DatanodeDeployer) Render(crdObject client.Object) ([]client.Object, error) {
+	var renderObjects []client.Object
+
 	cluster, err := d.GetCluster(crdObject)
 	if err != nil {
 		return nil, err
@@ -39,13 +42,23 @@ func (d *DatanodeDeployer) Render(crdObject client.Object) ([]client.Object, err
 	if err != nil {
 		return nil, err
 	}
+	renderObjects = append(renderObjects, svc)
 
 	sts, err := d.generateSts(cluster)
 	if err != nil {
 		return nil, err
 	}
+	renderObjects = append(renderObjects, sts)
 
-	return []client.Object{svc, sts}, nil
+	if cluster.Spec.EnablePrometheusMonitor {
+		pm, err := d.generatePodMonitor(cluster)
+		if err != nil {
+			return nil, err
+		}
+		renderObjects = append(renderObjects, pm)
+	}
+
+	return renderObjects, nil
 }
 
 func (d *DatanodeDeployer) CleanUp(ctx context.Context, crdObject client.Object) error {
@@ -261,4 +274,44 @@ func (d *DatanodeDeployer) generateSts(cluster *v1alpha1.GreptimeDBCluster) (*ap
 	}
 
 	return sts, nil
+}
+
+func (d *DatanodeDeployer) generatePodMonitor(cluster *v1alpha1.GreptimeDBCluster) (*monitoringv1.PodMonitor, error) {
+	pm := &monitoringv1.PodMonitor{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       monitoringv1.PodMonitorsKind,
+			APIVersion: monitoringv1.SchemeGroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      d.ResourceName(cluster.Name, v1alpha1.DatanodeComponentKind),
+			Namespace: cluster.Namespace,
+		},
+		Spec: monitoringv1.PodMonitorSpec{
+			PodTargetLabels: nil,
+			PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
+				{
+					Path:        DefaultMetricPath,
+					Port:        DefaultMetricPortName,
+					Interval:    DefaultScapeInterval,
+					HonorLabels: true,
+				},
+			},
+			Selector: metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					GreptimeComponentName: d.ResourceName(cluster.Name, v1alpha1.DatanodeComponentKind),
+				},
+			},
+			NamespaceSelector: monitoringv1.NamespaceSelector{
+				MatchNames: []string{
+					cluster.Namespace,
+				},
+			},
+		},
+	}
+
+	if err := deployer.SetControllerAndAnnotation(cluster, pm, d.Scheme, pm.Spec); err != nil {
+		return nil, err
+	}
+
+	return pm, nil
 }

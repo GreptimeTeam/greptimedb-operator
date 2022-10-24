@@ -127,13 +127,6 @@ func (r *Reconciler) sync(ctx context.Context, cluster *v1alpha1.GreptimeDBClust
 		}
 	}
 
-	if cluster.Spec.EnablePrometheusMonitor {
-		if err := r.syncPodMonitor(ctx, cluster); err != nil {
-			klog.Infof("Sync pod monitor error: %v", err)
-			return ctrl.Result{}, err
-		}
-	}
-
 	if cluster.Spec.Datanode != nil {
 		componentDeployer := r.deployers[v1alpha1.DatanodeComponentKind]
 

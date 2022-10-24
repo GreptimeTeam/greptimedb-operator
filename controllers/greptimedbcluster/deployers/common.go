@@ -17,6 +17,12 @@ const (
 	GreptimeComponentName = "app.greptime.io/component"
 )
 
+var (
+	DefaultMetricPortName = "metrics"
+	DefaultMetricPath     = "/metrics"
+	DefaultScapeInterval  = "30s"
+)
+
 func UpdateStatus(ctx context.Context, input *v1alpha1.GreptimeDBCluster, kc client.Client, opts ...client.UpdateOption) error {
 	cluster := input.DeepCopy()
 	status := cluster.Status
