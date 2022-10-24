@@ -1,9 +1,11 @@
 package deployers
 
 import (
+	"context"
 	"fmt"
 
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/util/retry"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -14,6 +16,19 @@ import (
 const (
 	GreptimeComponentName = "app.greptime.io/component"
 )
+
+func UpdateStatus(ctx context.Context, input *v1alpha1.GreptimeDBCluster, kc client.Client, opts ...client.UpdateOption) error {
+	cluster := input.DeepCopy()
+	status := cluster.Status
+	return retry.RetryOnConflict(retry.DefaultBackoff, func() (err error) {
+		objectKey := client.ObjectKey{Namespace: cluster.Namespace, Name: cluster.Name}
+		if err = kc.Get(ctx, objectKey, cluster); err != nil {
+			return
+		}
+		cluster.Status = status
+		return kc.Status().Update(ctx, cluster, opts...)
+	})
+}
 
 // CommonDeployer is the common deployer for all components of GreptimeDBCluster.
 type CommonDeployer struct {

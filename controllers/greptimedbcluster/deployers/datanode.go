@@ -65,7 +65,7 @@ func (d *DatanodeDeployer) CleanUp(ctx context.Context, crdObject client.Object)
 	return nil
 }
 
-func (d *DatanodeDeployer) IsReady(ctx context.Context, crdObject client.Object) (bool, error) {
+func (d *DatanodeDeployer) CheckAndUpdateStatus(ctx context.Context, crdObject client.Object) (bool, error) {
 	cluster, err := d.GetCluster(crdObject)
 	if err != nil {
 		return false, err
@@ -86,6 +86,12 @@ func (d *DatanodeDeployer) IsReady(ctx context.Context, crdObject client.Object)
 	}
 	if err != nil {
 		return false, err
+	}
+
+	cluster.Status.Datanode.Replicas = *sts.Spec.Replicas
+	cluster.Status.Datanode.ReadyReplicas = sts.Status.ReadyReplicas
+	if err := UpdateStatus(ctx, cluster, d.Client); err != nil {
+		klog.Errorf("Failed to update status: %s", err)
 	}
 
 	return deployer.IsStatefulSetReady(sts), nil

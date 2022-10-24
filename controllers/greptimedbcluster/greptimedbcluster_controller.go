@@ -9,7 +9,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
-	"k8s.io/client-go/util/retry"
 	"k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -103,6 +102,14 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, err
 	}
 
+	if len(cluster.Status.ClusterPhase) == 0 {
+		klog.Infof("Start to create the cluster '%s/%s'", cluster.Namespace, cluster.Name)
+		cluster.Status.ClusterPhase = v1alpha1.ClusterPending
+		if err := deployers.UpdateStatus(ctx, cluster, r.Client); err != nil {
+			return ctrl.Result{}, err
+		}
+	}
+
 	return r.sync(ctx, cluster)
 }
 
@@ -152,9 +159,10 @@ func (r *Reconciler) sync(ctx context.Context, cluster *v1alpha1.GreptimeDBClust
 	}
 
 	if cluster.Status.GetCondition(v1alpha1.GreptimeDBClusterReady) == nil {
-		klog.Infof("The GreptimeDB cluster: '%s/%s' is ready", cluster.Namespace, cluster.Name)
+		klog.Infof("The GreptimeDB cluster '%s/%s' is ready", cluster.Namespace, cluster.Name)
 		cluster.Status.SetCondtion(*v1alpha1.NewCondition(v1alpha1.GreptimeDBClusterReady, corev1.ConditionTrue, "", "the cluster is ready"))
-		if err := r.updateStatus(ctx, cluster); err != nil {
+		cluster.Status.ClusterPhase = v1alpha1.ClusterRunning
+		if err := deployers.UpdateStatus(ctx, cluster, r.Client); err != nil {
 			return ctrl.Result{}, err
 		}
 	}
@@ -197,16 +205,4 @@ func (r *Reconciler) delete(ctx context.Context, cluster *v1alpha1.GreptimeDBClu
 	klog.Infof("Delete GreptimeDB cluster '%s/%s'", cluster.Namespace, cluster.Name)
 
 	return ctrl.Result{}, nil
-}
-
-func (r *Reconciler) updateStatus(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster, opts ...client.UpdateOption) error {
-	status := cluster.DeepCopy().Status
-	return retry.RetryOnConflict(retry.DefaultBackoff, func() (err error) {
-		objectKey := client.ObjectKey{Namespace: cluster.Namespace, Name: cluster.Name}
-		if err = r.Client.Get(ctx, objectKey, cluster); err != nil {
-			return
-		}
-		cluster.Status = status
-		return r.Status().Update(ctx, cluster, opts...)
-	})
 }

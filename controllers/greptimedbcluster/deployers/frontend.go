@@ -7,6 +7,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -45,7 +46,7 @@ func (d *FrontendDeployer) Render(crdObject client.Object) ([]client.Object, err
 	return []client.Object{svc, deployment}, nil
 }
 
-func (d *FrontendDeployer) IsReady(ctx context.Context, crdObject client.Object) (bool, error) {
+func (d *FrontendDeployer) CheckAndUpdateStatus(ctx context.Context, crdObject client.Object) (bool, error) {
 	cluster, err := d.GetCluster(crdObject)
 	if err != nil {
 		return false, err
@@ -66,6 +67,12 @@ func (d *FrontendDeployer) IsReady(ctx context.Context, crdObject client.Object)
 	}
 	if err != nil {
 		return false, err
+	}
+
+	cluster.Status.Frontend.Replicas = *deployment.Spec.Replicas
+	cluster.Status.Frontend.ReadyReplicas = deployment.Status.ReadyReplicas
+	if err := UpdateStatus(ctx, cluster, d.Client); err != nil {
+		klog.Errorf("Failed to update status: %s", err)
 	}
 
 	return deployer.IsDeploymentReady(deployment), nil

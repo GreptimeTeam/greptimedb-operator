@@ -16,12 +16,23 @@ const (
 	RetainStorageRetainPolicyTypeDelete StorageRetainPolicyType = "Delete"
 )
 
+// ComponentKind is the kind of the component in the cluster.
 type ComponentKind string
 
 const (
 	FrontendComponentKind ComponentKind = "frontend"
 	DatanodeComponentKind ComponentKind = "datanode"
 	MetaComponentKind     ComponentKind = "meta"
+)
+
+// ClusterPhase define the phase of the cluster.
+type ClusterPhase string
+
+const (
+	ClusterPending  ClusterPhase = "Pending"
+	ClusterRunning  ClusterPhase = "Running"
+	ClusterFailed   ClusterPhase = "Failed"
+	ClausterUnknown ClusterPhase = "Unknown"
 )
 
 // SlimPodSpec is a slimmed down version of corev1.PodSpec.
@@ -336,6 +347,9 @@ type GreptimeDBClusterStatus struct {
 	Datanode DatanodeStatus `json:"datanode,omitempty"`
 
 	// +optional
+	ClusterPhase ClusterPhase `json:"clusterPhase,omitempty"`
+
+	// +optional
 	Conditions []GreptimeDBClusterCondition `json:"conditions,omitempty"`
 }
 
@@ -364,27 +378,21 @@ type GreptimeDBClusterCondition struct {
 }
 
 type FrontendStatus struct {
-	// +optional
-	Replicas int32 `json:"replicas,omitempty"`
-
-	// +optional
-	ReadyReplicas int32 `json:"readyReplicas,omitempty"`
+	Replicas      int32 `json:"replicas"`
+	ReadyReplicas int32 `json:"readyReplicas"`
 }
 
 type MetaStatus struct {
-	// +optional
-	Replicas int32 `json:"replicas,omitempty"`
+	Replicas      int32 `json:"replicas"`
+	ReadyReplicas int32 `json:"readyReplicas"`
 
 	// +optional
-	ReadyReplicas int32 `json:"readyReplicas,omitempty"`
+	EtcdEndponts []string `json:"etcdEndpoints,omitempty"`
 }
 
 type DatanodeStatus struct {
-	// +optional
-	Replicas int32 `json:"replicas,omitempty"`
-
-	// +optional
-	ReadyReplicas int32 `json:"readyReplicas,omitempty"`
+	Replicas      int32 `json:"replicas"`
+	ReadyReplicas int32 `json:"readyReplicas"`
 }
 
 type GreptimeDBConditionType string
@@ -451,6 +459,11 @@ func (in *GreptimeDBClusterStatus) filterOutCondition(conditions []GreptimeDBClu
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:shortName=gtc
+// +kubebuilder:printcolumn:name="Frontend", type="integer", JSONPath=".status.frontend.readyReplicas"
+// +kubebuilder:printcolumn:name="Datanode", type="integer", JSONPath=".status.datanode.readyReplicas"
+// +kubebuilder:printcolumn:name="Meta", type="integer",JSONPath=".status.meta.readyReplicas"
+// +kubebuilder:printcolumn:name="Phase", type=string, JSONPath=".status.clusterPhase"
+// +kubebuilder:printcolumn:name="Age", type=date, JSONPath=".metadata.creationTimestamp"
 
 // GreptimeDBCluster is the Schema for the greptimedbclusters API
 type GreptimeDBCluster struct {

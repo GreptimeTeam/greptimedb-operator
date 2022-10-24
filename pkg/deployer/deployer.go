@@ -39,8 +39,8 @@ type ComponentOperator interface {
 	// CleanUp cleans up the resources that created by the deployer.
 	CleanUp(ctx context.Context, crdObject client.Object) error
 
-	// IsReady checks if the status of Kubernetes objects are ready.
-	IsReady(ctx context.Context, crdObject client.Object) (bool, error)
+	// CheckAndUpdateStatus checks if the status of Kubernetes objects are ready and update the status.
+	CheckAndUpdateStatus(ctx context.Context, crdObject client.Object) (bool, error)
 
 	// PreSyncHooks returns the hooks that will be executed before the Sync().
 	PreSyncHooks() []Hook
@@ -68,7 +68,7 @@ func (d *DefaultDeployer) Sync(ctx context.Context, crdObject client.Object, ope
 		return err
 	}
 
-	ready, err := operator.IsReady(ctx, crdObject)
+	ready, err := operator.CheckAndUpdateStatus(ctx, crdObject)
 	if err != nil {
 		return err
 	}

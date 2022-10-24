@@ -12,6 +12,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -79,7 +80,7 @@ func (d *MetaDeployer) PreSyncHooks() []deployer.Hook {
 	}
 }
 
-func (d *MetaDeployer) IsReady(ctx context.Context, highLevelObject client.Object) (bool, error) {
+func (d *MetaDeployer) CheckAndUpdateStatus(ctx context.Context, highLevelObject client.Object) (bool, error) {
 	cluster, err := d.GetCluster(highLevelObject)
 	if err != nil {
 		return false, err
@@ -100,6 +101,13 @@ func (d *MetaDeployer) IsReady(ctx context.Context, highLevelObject client.Objec
 	}
 	if err != nil {
 		return false, err
+	}
+
+	cluster.Status.Meta.Replicas = *deployment.Spec.Replicas
+	cluster.Status.Meta.ReadyReplicas = deployment.Status.ReadyReplicas
+	cluster.Status.Meta.EtcdEndponts = cluster.Spec.Meta.EtcdEndpoints
+	if err := UpdateStatus(ctx, cluster, d.Client); err != nil {
+		klog.Errorf("Failed to update status: %s", err)
 	}
 
 	return deployer.IsDeploymentReady(deployment), nil

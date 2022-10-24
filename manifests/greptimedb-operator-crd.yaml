@@ -16,7 +16,23 @@ spec:
     singular: greptimedbcluster
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - jsonPath: .status.frontend.readyReplicas
+      name: Frontend
+      type: integer
+    - jsonPath: .status.datanode.readyReplicas
+      name: Datanode
+      type: integer
+    - jsonPath: .status.meta.readyReplicas
+      name: Meta
+      type: integer
+    - jsonPath: .status.clusterPhase
+      name: Phase
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         properties:
@@ -8036,6 +8052,8 @@ spec:
             type: object
           status:
             properties:
+              clusterPhase:
+                type: string
               conditions:
                 items:
                   properties:
@@ -8066,6 +8084,9 @@ spec:
                   replicas:
                     format: int32
                     type: integer
+                required:
+                - readyReplicas
+                - replicas
                 type: object
               frontend:
                 properties:
@@ -8075,15 +8096,25 @@ spec:
                   replicas:
                     format: int32
                     type: integer
+                required:
+                - readyReplicas
+                - replicas
                 type: object
               meta:
                 properties:
+                  etcdEndpoints:
+                    items:
+                      type: string
+                    type: array
                   readyReplicas:
                     format: int32
                     type: integer
                   replicas:
                     format: int32
                     type: integer
+                required:
+                - readyReplicas
+                - replicas
                 type: object
             type: object
         type: object
