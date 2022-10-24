@@ -1,12 +1,11 @@
 name: Release
-on: [push, pull_request]
-#on:
-#  push:
-#    tags:
-#      - '*'
-#  pull_request:
-#    tags:
-#      - '*'
+on:
+  push:
+    tags:
+      - '*'
+  pull_request:
+    tags:
+      - '*'
 
 jobs:
   release:
@@ -15,15 +14,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Fetch history
+        run: git fetch --prune --unshallow
+
       - name: Configure Git
         run: |
           git config user.name "$GITHUB_ACTOR"
           git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
-
-      - name: Set up Helm
-        uses: azure/setup-helm@v3
-        with:
-          version: v3.9.0
 
       - name: Run chart-releaser
         uses: helm/chart-releaser-action@v1.4.1
