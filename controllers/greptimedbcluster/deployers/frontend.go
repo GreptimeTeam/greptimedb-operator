@@ -153,7 +153,7 @@ func (d *FrontendDeployer) generateDeployment(cluster *v1alpha1.GreptimeDBCluste
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: map[string]string{
-						GreptimeComponentName: cluster.Name + "-frontend",
+						GreptimeComponentName: d.ResourceName(cluster.Name, v1alpha1.FrontendComponentKind),
 					},
 					Annotations: cluster.Spec.Frontend.Template.Annotations,
 				},
