@@ -35,7 +35,7 @@ type Reconciler struct {
 	Scheme   *runtime.Scheme
 	Recorder record.EventRecorder
 
-	deployers map[v1alpha1.ComponentKind]deployer.Deployer
+	deployers []deployer.Deployer
 }
 
 func Setup(mgr ctrl.Manager, _ *options.Options) error {
@@ -45,10 +45,11 @@ func Setup(mgr ctrl.Manager, _ *options.Options) error {
 		Recorder: mgr.GetEventRecorderFor("greptimedbcluster-controller"),
 	}
 
-	reconciler.deployers = map[v1alpha1.ComponentKind]deployer.Deployer{
-		v1alpha1.FrontendComponentKind: deployers.NewFrontendDeployer(mgr),
-		v1alpha1.DatanodeComponentKind: deployers.NewDatanodeDeployer(mgr),
-		v1alpha1.MetaComponentKind:     deployers.NewMetaDeployer(mgr),
+	// sync will execute the sync logic of multiple deployers in order.
+	reconciler.deployers = []deployer.Deployer{
+		deployers.NewMetaDeployer(mgr),
+		deployers.NewDatanodeDeployer(mgr),
+		deployers.NewFrontendDeployer(mgr),
 	}
 
 	return reconciler.SetupWithManager(mgr)
@@ -120,36 +121,9 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (result ct
 	return r.sync(ctx, cluster)
 }
 
-// sync executes the sync logic of multiple components in order.
 func (r *Reconciler) sync(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster) (ctrl.Result, error) {
-	if cluster.Spec.Meta != nil {
-		componentDeployer := r.deployers[v1alpha1.MetaComponentKind]
-
-		err := componentDeployer.Sync(ctx, cluster, componentDeployer)
-		if err == deployer.ErrSyncNotReady {
-			return ctrl.Result{}, nil
-		}
-		if err != nil {
-			return ctrl.Result{RequeueAfter: defaultRequeueAfter}, err
-		}
-	}
-
-	if cluster.Spec.Datanode != nil {
-		componentDeployer := r.deployers[v1alpha1.DatanodeComponentKind]
-
-		err := componentDeployer.Sync(ctx, cluster, componentDeployer)
-		if err == deployer.ErrSyncNotReady {
-			return ctrl.Result{}, nil
-		}
-		if err != nil {
-			return ctrl.Result{RequeueAfter: defaultRequeueAfter}, err
-		}
-	}
-
-	if cluster.Spec.Frontend != nil {
-		componentDeployer := r.deployers[v1alpha1.FrontendComponentKind]
-
-		err := componentDeployer.Sync(ctx, cluster, componentDeployer)
+	for _, d := range r.deployers {
+		err := d.Sync(ctx, cluster, d)
 		if err == deployer.ErrSyncNotReady {
 			return ctrl.Result{}, nil
 		}

@@ -36,24 +36,26 @@ func (d *FrontendDeployer) Render(crdObject client.Object) ([]client.Object, err
 		return nil, err
 	}
 
-	svc, err := d.generateSvc(cluster)
-	if err != nil {
-		return nil, err
-	}
-	renderObjects = append(renderObjects, svc)
-
-	deployment, err := d.generateDeployment(cluster)
-	if err != nil {
-		return nil, err
-	}
-	renderObjects = append(renderObjects, deployment)
-
-	if cluster.Spec.EnablePrometheusMonitor {
-		pm, err := d.generatePodMonitor(cluster)
+	if cluster.Spec.Frontend != nil {
+		svc, err := d.generateSvc(cluster)
 		if err != nil {
 			return nil, err
 		}
-		renderObjects = append(renderObjects, pm)
+		renderObjects = append(renderObjects, svc)
+
+		deployment, err := d.generateDeployment(cluster)
+		if err != nil {
+			return nil, err
+		}
+		renderObjects = append(renderObjects, deployment)
+
+		if cluster.Spec.EnablePrometheusMonitor {
+			pm, err := d.generatePodMonitor(cluster)
+			if err != nil {
+				return nil, err
+			}
+			renderObjects = append(renderObjects, pm)
+		}
 	}
 
 	return renderObjects, nil

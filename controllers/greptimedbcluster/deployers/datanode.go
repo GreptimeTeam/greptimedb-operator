@@ -38,24 +38,26 @@ func (d *DatanodeDeployer) Render(crdObject client.Object) ([]client.Object, err
 		return nil, err
 	}
 
-	svc, err := d.generateSvc(cluster)
-	if err != nil {
-		return nil, err
-	}
-	renderObjects = append(renderObjects, svc)
-
-	sts, err := d.generateSts(cluster)
-	if err != nil {
-		return nil, err
-	}
-	renderObjects = append(renderObjects, sts)
-
-	if cluster.Spec.EnablePrometheusMonitor {
-		pm, err := d.generatePodMonitor(cluster)
+	if cluster.Spec.Datanode != nil {
+		svc, err := d.generateSvc(cluster)
 		if err != nil {
 			return nil, err
 		}
-		renderObjects = append(renderObjects, pm)
+		renderObjects = append(renderObjects, svc)
+
+		sts, err := d.generateSts(cluster)
+		if err != nil {
+			return nil, err
+		}
+		renderObjects = append(renderObjects, sts)
+
+		if cluster.Spec.EnablePrometheusMonitor {
+			pm, err := d.generatePodMonitor(cluster)
+			if err != nil {
+				return nil, err
+			}
+			renderObjects = append(renderObjects, pm)
+		}
 	}
 
 	return renderObjects, nil

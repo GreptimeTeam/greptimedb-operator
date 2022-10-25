@@ -80,10 +80,10 @@ var _ = BeforeSuite(func() {
 		Scheme:   manager.GetScheme(),
 		Recorder: manager.GetEventRecorderFor("greptimedbcluster-controller"),
 
-		deployers: map[v1alpha1.ComponentKind]deployer.Deployer{
-			v1alpha1.FrontendComponentKind: deployers.NewFrontendDeployer(manager),
-			v1alpha1.DatanodeComponentKind: deployers.NewDatanodeDeployer(manager),
-			v1alpha1.MetaComponentKind:     deployers.NewMetaDeployer(manager, deployers.WithEtcdMaintenanceBuilder(buildMockEtcdMaintenance)),
+		deployers: []deployer.Deployer{
+			deployers.NewMetaDeployer(manager, deployers.WithEtcdMaintenanceBuilder(buildMockEtcdMaintenance)),
+			deployers.NewDatanodeDeployer(manager),
+			deployers.NewFrontendDeployer(manager),
 		},
 	}
 

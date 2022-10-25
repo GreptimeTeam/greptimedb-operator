@@ -64,24 +64,26 @@ func (d *MetaDeployer) Render(crdObject client.Object) ([]client.Object, error) 
 		return nil, err
 	}
 
-	svc, err := d.generateSvc(cluster)
-	if err != nil {
-		return nil, err
-	}
-	renderObjects = append(renderObjects, svc)
-
-	deployment, err := d.generateDeployment(cluster)
-	if err != nil {
-		return nil, err
-	}
-	renderObjects = append(renderObjects, deployment)
-
-	if cluster.Spec.EnablePrometheusMonitor {
-		pm, err := d.generatePodMonitor(cluster)
+	if cluster.Spec.Meta != nil {
+		svc, err := d.generateSvc(cluster)
 		if err != nil {
 			return nil, err
 		}
-		renderObjects = append(renderObjects, pm)
+		renderObjects = append(renderObjects, svc)
+
+		deployment, err := d.generateDeployment(cluster)
+		if err != nil {
+			return nil, err
+		}
+		renderObjects = append(renderObjects, deployment)
+
+		if cluster.Spec.EnablePrometheusMonitor {
+			pm, err := d.generatePodMonitor(cluster)
+			if err != nil {
+				return nil, err
+			}
+			renderObjects = append(renderObjects, pm)
+		}
 	}
 
 	return renderObjects, nil
