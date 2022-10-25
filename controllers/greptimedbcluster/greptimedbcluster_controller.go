@@ -75,38 +75,45 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 // +kubebuilder:rbac:groups=monitoring.coreos.com,resources=podmonitors,verbs=get;list;watch;create;update;patch;delete
 
 // Reconcile is reconciliation loop for GreptimeDBCluster.
-func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (result ctrl.Result, err error) {
 	klog.V(2).Infof("Reconciling GreptimeDBCluster: %s", req.NamespacedName)
 
 	cluster := new(v1alpha1.GreptimeDBCluster)
 	if err := r.Get(ctx, req.NamespacedName, cluster); err != nil {
 		if errors.IsNotFound(err) {
-			klog.V(2).Infof("Resource not found: %s", req.NamespacedName)
 			return ctrl.Result{}, nil
 		}
 		return ctrl.Result{}, err
 	}
+
+	defer func() {
+		if err != nil {
+			if err := r.setClusterPhase(ctx, cluster, v1alpha1.ClusterError); err != nil {
+				klog.Errorf("Failed to update status: %v", err)
+				return
+			}
+		}
+	}()
 
 	// The object is being deleted.
 	if !cluster.ObjectMeta.DeletionTimestamp.IsZero() {
 		return r.delete(ctx, cluster)
 	}
 
-	if err := r.addFinalizer(ctx, cluster); err != nil {
-		return ctrl.Result{}, err
+	if err = r.addFinalizer(ctx, cluster); err != nil {
+		return
 	}
 
 	// TODO(zyy17): Add validation for cluster.
 
-	if err := cluster.SetDefaults(); err != nil {
-		return ctrl.Result{}, err
+	if err = cluster.SetDefaults(); err != nil {
+		return
 	}
 
 	if len(cluster.Status.ClusterPhase) == 0 {
 		klog.Infof("Start to create the cluster '%s/%s'", cluster.Namespace, cluster.Name)
-		cluster.Status.ClusterPhase = v1alpha1.ClusterPending
-		if err := deployers.UpdateStatus(ctx, cluster, r.Client); err != nil {
-			return ctrl.Result{}, err
+		if err = r.setClusterPhase(ctx, cluster, v1alpha1.ClusterStarting); err != nil {
+			return
 		}
 	}
 
@@ -198,4 +205,9 @@ func (r *Reconciler) delete(ctx context.Context, cluster *v1alpha1.GreptimeDBClu
 	klog.Infof("Delete GreptimeDB cluster '%s/%s'", cluster.Namespace, cluster.Name)
 
 	return ctrl.Result{}, nil
+}
+
+func (r *Reconciler) setClusterPhase(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster, phase v1alpha1.ClusterPhase) error {
+	cluster.Status.ClusterPhase = phase
+	return deployers.UpdateStatus(ctx, cluster, r.Client)
 }

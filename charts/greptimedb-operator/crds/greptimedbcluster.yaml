@@ -18,19 +18,19 @@ spec:
   versions:
   - additionalPrinterColumns:
     - jsonPath: .status.frontend.readyReplicas
-      name: Frontend
+      name: FRONTEND
       type: integer
     - jsonPath: .status.datanode.readyReplicas
-      name: Datanode
+      name: DATANODE
       type: integer
     - jsonPath: .status.meta.readyReplicas
-      name: Meta
+      name: META
       type: integer
     - jsonPath: .status.clusterPhase
-      name: Phase
+      name: PHASE
       type: string
     - jsonPath: .metadata.creationTimestamp
-      name: Age
+      name: AGE
       type: date
     name: v1alpha1
     schema:

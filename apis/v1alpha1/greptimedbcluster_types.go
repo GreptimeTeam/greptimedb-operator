@@ -29,10 +29,17 @@ const (
 type ClusterPhase string
 
 const (
-	ClusterPending  ClusterPhase = "Pending"
-	ClusterRunning  ClusterPhase = "Running"
-	ClusterFailed   ClusterPhase = "Failed"
-	ClausterUnknown ClusterPhase = "Unknown"
+	// ClusterStarting means the controller start to create cluster.
+	ClusterStarting ClusterPhase = "Starting"
+
+	// ClusterRunning means all the components of cluster is ready.
+	ClusterRunning ClusterPhase = "Running"
+
+	// ClusterError means some kind of error happen in reconcile.
+	ClusterError ClusterPhase = "Error"
+
+	// ClusterTerminating means the cluster is terminating.
+	ClusterTerminating ClusterPhase = "Terminating"
 )
 
 // SlimPodSpec is a slimmed down version of corev1.PodSpec.
@@ -459,11 +466,11 @@ func (in *GreptimeDBClusterStatus) filterOutCondition(conditions []GreptimeDBClu
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:shortName=gtc
-// +kubebuilder:printcolumn:name="Frontend", type="integer", JSONPath=".status.frontend.readyReplicas"
-// +kubebuilder:printcolumn:name="Datanode", type="integer", JSONPath=".status.datanode.readyReplicas"
-// +kubebuilder:printcolumn:name="Meta", type="integer",JSONPath=".status.meta.readyReplicas"
-// +kubebuilder:printcolumn:name="Phase", type=string, JSONPath=".status.clusterPhase"
-// +kubebuilder:printcolumn:name="Age", type=date, JSONPath=".metadata.creationTimestamp"
+// +kubebuilder:printcolumn:name="FRONTEND",type="integer",JSONPath=".status.frontend.readyReplicas"
+// +kubebuilder:printcolumn:name="DATANODE",type="integer",JSONPath=".status.datanode.readyReplicas"
+// +kubebuilder:printcolumn:name="META",type="integer",JSONPath=".status.meta.readyReplicas"
+// +kubebuilder:printcolumn:name="PHASE",type=string,JSONPath=".status.clusterPhase"
+// +kubebuilder:printcolumn:name="AGE",type=date,JSONPath=".metadata.creationTimestamp"
 
 // GreptimeDBCluster is the Schema for the greptimedbclusters API
 type GreptimeDBCluster struct {
