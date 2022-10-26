@@ -72,12 +72,12 @@ var _ = Describe("Test greptimedbcluster controller", func() {
 
 		By("Check status of cluster")
 		Eventually(func() bool {
-			var cluser v1alpha1.GreptimeDBCluster
-			if err := k8sClient.Get(ctx, client.ObjectKey{Namespace: testNamespace, Name: testClusterName}, &cluser); err != nil {
+			var cluster v1alpha1.GreptimeDBCluster
+			if err := k8sClient.Get(ctx, client.ObjectKey{Namespace: testNamespace, Name: testClusterName}, &cluster); err != nil {
 				return false
 			}
 
-			for _, condition := range cluser.Status.Conditions {
+			for _, condition := range cluster.Status.Conditions {
 				if condition.Type == v1alpha1.GreptimeDBClusterReady && condition.Status == corev1.ConditionTrue {
 					return true
 				}

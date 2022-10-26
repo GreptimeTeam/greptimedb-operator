@@ -120,7 +120,7 @@ func (d *MetaDeployer) CheckAndUpdateStatus(ctx context.Context, highLevelObject
 
 	cluster.Status.Meta.Replicas = *deployment.Spec.Replicas
 	cluster.Status.Meta.ReadyReplicas = deployment.Status.ReadyReplicas
-	cluster.Status.Meta.EtcdEndponts = cluster.Spec.Meta.EtcdEndpoints
+	cluster.Status.Meta.EtcdEndpoints = cluster.Spec.Meta.EtcdEndpoints
 	if err := UpdateStatus(ctx, cluster, d.Client); err != nil {
 		klog.Errorf("Failed to update status: %s", err)
 	}

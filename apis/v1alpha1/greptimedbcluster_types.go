@@ -12,7 +12,7 @@ const (
 	// The storage(PVCs) will be retained when the cluster is deleted.
 	RetainStorageRetainPolicyTypeRetain StorageRetainPolicyType = "Retain"
 
-	// RetainStorageRetainPolicyTypeDelete specifiy that the storage will be deleted when the associated StatefulSet delete.
+	// RetainStorageRetainPolicyTypeDelete specify that the storage will be deleted when the associated StatefulSet delete.
 	RetainStorageRetainPolicyTypeDelete StorageRetainPolicyType = "Delete"
 )
 
@@ -138,9 +138,9 @@ type SlimPodSpec struct {
 	SchedulerName string `json:"schedulerName,omitempty"`
 
 	// For most time, there is one main container in a pod(frontend/meta/datanode).
-	// If specified, addtional containers will be added to the pod as sidecar containers.
+	// If specified, additional containers will be added to the pod as sidecar containers.
 	// +optional
-	AddtionalContainers []corev1.Container `json:"addtionalContainers,omitempty"`
+	AdditionalContainers []corev1.Container `json:"additionalContainers,omitempty"`
 }
 
 // MainContainerSpec describes the specification of the main container of a pod.
@@ -249,7 +249,7 @@ type PodTemplateSpec struct {
 // ComponentSpec is the common specification for all components(frontend/meta/datanode).
 type ComponentSpec struct {
 	// The number of replicas of the components.
-	// +reqiured
+	// +required
 	// +kubebuilder:validation:Minimum=1
 	Replicas int32 `json:"replicas"`
 
@@ -331,7 +331,7 @@ type GreptimeDBClusterSpec struct {
 	// +optional
 	Datanode *DatanodeSpec `json:"datanode"`
 
-	// +optinal
+	// +optional
 	HTTPServicePort int32 `json:"httpServicePort,omitempty"`
 
 	// +optional
@@ -379,7 +379,7 @@ type GreptimeDBClusterCondition struct {
 	// +optional
 	Reason string `json:"reason,omitempty"`
 
-	// A human readable message indicating details about the transition.
+	// A human-readable message indicating details about the transition.
 	// +optional
 	Message string `json:"message,omitempty"`
 }
@@ -394,7 +394,7 @@ type MetaStatus struct {
 	ReadyReplicas int32 `json:"readyReplicas"`
 
 	// +optional
-	EtcdEndponts []string `json:"etcdEndpoints,omitempty"`
+	EtcdEndpoints []string `json:"etcdEndpoints,omitempty"`
 }
 
 type DatanodeStatus struct {
@@ -436,7 +436,7 @@ func (in *GreptimeDBClusterStatus) GetCondition(conditionType GreptimeDBConditio
 	return nil
 }
 
-func (in *GreptimeDBClusterStatus) SetCondtion(condition GreptimeDBClusterCondition) {
+func (in *GreptimeDBClusterStatus) SetCondition(condition GreptimeDBClusterCondition) {
 	currentCondition := in.GetCondition(condition.Type)
 	if currentCondition != nil &&
 		currentCondition.Status == condition.Status &&
@@ -453,14 +453,14 @@ func (in *GreptimeDBClusterStatus) SetCondtion(condition GreptimeDBClusterCondit
 }
 
 func (in *GreptimeDBClusterStatus) filterOutCondition(conditions []GreptimeDBClusterCondition, conditionType GreptimeDBConditionType) []GreptimeDBClusterCondition {
-	var newCondititions []GreptimeDBClusterCondition
+	var newConditions []GreptimeDBClusterCondition
 	for _, c := range conditions {
 		if c.Type == conditionType {
 			continue
 		}
-		newCondititions = append(newCondititions, c)
+		newConditions = append(newConditions, c)
 	}
-	return newCondititions
+	return newConditions
 }
 
 // +kubebuilder:object:root=true

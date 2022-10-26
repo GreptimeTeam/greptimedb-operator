@@ -134,7 +134,7 @@ func (r *Reconciler) sync(ctx context.Context, cluster *v1alpha1.GreptimeDBClust
 
 	if cluster.Status.GetCondition(v1alpha1.GreptimeDBClusterReady) == nil {
 		klog.Infof("The GreptimeDB cluster '%s/%s' is ready", cluster.Namespace, cluster.Name)
-		cluster.Status.SetCondtion(*v1alpha1.NewCondition(v1alpha1.GreptimeDBClusterReady, corev1.ConditionTrue, "", "the cluster is ready"))
+		cluster.Status.SetCondition(*v1alpha1.NewCondition(v1alpha1.GreptimeDBClusterReady, corev1.ConditionTrue, "", "the cluster is ready"))
 		cluster.Status.ClusterPhase = v1alpha1.ClusterRunning
 		if err := deployers.UpdateStatus(ctx, cluster, r.Client); err != nil {
 			return ctrl.Result{}, err

@@ -56,7 +56,7 @@ spec:
                   activeDeadlineSeconds:
                     format: int64
                     type: integer
-                  addtionalContainers:
+                  additionalContainers:
                     items:
                       properties:
                         args:
@@ -2021,7 +2021,7 @@ spec:
                       activeDeadlineSeconds:
                         format: int64
                         type: integer
-                      addtionalContainers:
+                      additionalContainers:
                         items:
                           properties:
                             args:
@@ -4065,7 +4065,7 @@ spec:
                       activeDeadlineSeconds:
                         format: int64
                         type: integer
-                      addtionalContainers:
+                      additionalContainers:
                         items:
                           properties:
                             args:
@@ -6114,7 +6114,7 @@ spec:
                       activeDeadlineSeconds:
                         format: int64
                         type: integer
-                      addtionalContainers:
+                      additionalContainers:
                         items:
                           properties:
                             args:
