@@ -2,12 +2,16 @@ package greptimedbcluster
 
 import (
 	"context"
+	"fmt"
 	"time"
 
+	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/meta"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -105,7 +109,9 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (result ct
 		return
 	}
 
-	// TODO(zyy17): Add validation for cluster.
+	if err = r.validate(ctx, cluster); err != nil {
+		return
+	}
 
 	if err = cluster.SetDefaults(); err != nil {
 		return
@@ -184,4 +190,22 @@ func (r *Reconciler) delete(ctx context.Context, cluster *v1alpha1.GreptimeDBClu
 func (r *Reconciler) setClusterPhase(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster, phase v1alpha1.ClusterPhase) error {
 	cluster.Status.ClusterPhase = phase
 	return deployers.UpdateStatus(ctx, cluster, r.Client)
+}
+
+func (r *Reconciler) validate(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster) error {
+	// To detect if the CRD of podmonitor is installed.
+	if cluster.Spec.EnablePrometheusMonitor {
+		// The testNamespacedName is used to check if the CRD of podmonitor is installed, it is not used to create the podmonitor.
+		testNamespacedName := types.NamespacedName{Namespace: cluster.Namespace, Name: cluster.Name}
+		err := r.Get(ctx, testNamespacedName, new(monitoringv1.PodMonitor))
+		if meta.IsNoMatchError(err) {
+			return fmt.Errorf("the crd podmonitor.monitoring.coreos.com is not installed")
+		}
+		// If the podmonitor is installed, the error will be NotFound.
+		if err != nil && !errors.IsNotFound(err) {
+			return err
+		}
+	}
+
+	return nil
 }
