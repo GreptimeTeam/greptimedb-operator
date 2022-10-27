@@ -420,6 +420,7 @@ func NewCondition(conditionType GreptimeDBConditionType, conditionStatus corev1.
 		Type:               conditionType,
 		Status:             conditionStatus,
 		LastTransitionTime: metav1.Now(),
+		LastUpdateTime:     metav1.Now(),
 		Reason:             reason,
 		Message:            message,
 	}
@@ -441,6 +442,7 @@ func (in *GreptimeDBClusterStatus) SetCondition(condition GreptimeDBClusterCondi
 	if currentCondition != nil &&
 		currentCondition.Status == condition.Status &&
 		currentCondition.Reason == condition.Reason {
+		currentCondition.LastUpdateTime = condition.LastUpdateTime
 		return
 	}
 
