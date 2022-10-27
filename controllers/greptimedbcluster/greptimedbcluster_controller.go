@@ -131,6 +131,11 @@ func (r *Reconciler) sync(ctx context.Context, cluster *v1alpha1.GreptimeDBClust
 	for _, d := range r.deployers {
 		err := d.Sync(ctx, cluster, d)
 		if err == deployer.ErrSyncNotReady {
+			if cluster.Status.ClusterPhase != v1alpha1.ClusterStarting {
+				if err := r.setClusterPhase(ctx, cluster, v1alpha1.ClusterStarting); err != nil {
+					return ctrl.Result{}, err
+				}
+			}
 			return ctrl.Result{}, nil
 		}
 		if err != nil {
@@ -138,9 +143,10 @@ func (r *Reconciler) sync(ctx context.Context, cluster *v1alpha1.GreptimeDBClust
 		}
 	}
 
-	if cluster.Status.GetCondition(v1alpha1.GreptimeDBClusterReady) == nil {
+	if cluster.Status.ClusterPhase != v1alpha1.ClusterRunning {
+		// FIXME(zyy17): The logging maybe duplicated because the status update will trigger another reconcile.
 		klog.Infof("The GreptimeDB cluster '%s/%s' is ready", cluster.Namespace, cluster.Name)
-		cluster.Status.SetCondition(*v1alpha1.NewCondition(v1alpha1.GreptimeDBClusterReady, corev1.ConditionTrue, "", "the cluster is ready"))
+		cluster.Status.SetCondition(*v1alpha1.NewCondition(v1alpha1.GreptimeDBClusterReady, corev1.ConditionTrue, "ClusterReady", "the cluster is ready"))
 		cluster.Status.ClusterPhase = v1alpha1.ClusterRunning
 		if err := deployers.UpdateStatus(ctx, cluster, r.Client); err != nil {
 			return ctrl.Result{}, err
