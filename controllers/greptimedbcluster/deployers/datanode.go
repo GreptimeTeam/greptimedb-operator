@@ -289,7 +289,6 @@ func (d *DatanodeDeployer) generatePodMonitor(cluster *v1alpha1.GreptimeDBCluste
 			Namespace: cluster.Namespace,
 		},
 		Spec: monitoringv1.PodMonitorSpec{
-			PodTargetLabels: nil,
 			PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 				{
 					Path:        DefaultMetricPath,
