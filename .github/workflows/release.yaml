@@ -57,8 +57,6 @@ jobs:
 
 #      - name: Run chart-releaser
 #        uses: helm/chart-releaser-action@v1.4.1
-#        with:
-#          charts_dir: ./charts/greptimedb-operator
 #        env:
 #          CR_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
 
@@ -70,7 +68,5 @@ jobs:
       - name: Upload Release Asset
         uses: ncipollo/release-action@v1
         with:
-          artifacts: |
-            "./greptimedb-0.1.0.tgz"
-            "./greptimedb-operator-0.1.0.tgz"
+          artifacts: "greptimedb-0.1.0.tgz,greptimedb-operator-0.1.0.tgz"
           token: ${{ secrets.GITHUB_TOKEN }}
