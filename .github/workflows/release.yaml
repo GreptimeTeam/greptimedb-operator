@@ -1,5 +1,4 @@
 name: Release
-#on: [push, pull_request]
 on:
   push:
     tags:
@@ -63,5 +62,5 @@ jobs:
       - name: Upload Release Asset
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "greptimedb-${{ steps.meta.outputs.tags }}.tgz,greptimedb-operator-${{ steps.meta.outputs.tags }}.tgz"
+          artifacts: "greptimedb-${{ github.ref }}.tgz,greptimedb-operator-${{ github.ref }}.tgz"
           token: ${{ secrets.GITHUB_TOKEN }}

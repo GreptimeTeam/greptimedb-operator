@@ -1,12 +1,5 @@
 name: ci
-#on: [push, pull_request]
-on:
-  push:
-    tags:
-      - '*'
-  pull_request:
-    tags:
-      - '*'
+on: [push, pull_request]
 
 jobs:
   build:
