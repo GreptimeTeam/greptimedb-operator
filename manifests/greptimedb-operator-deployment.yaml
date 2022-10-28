@@ -23,7 +23,23 @@ spec:
     singular: greptimedbcluster
   scope: Namespaced
   versions:
-  - name: v1alpha1
+  - additionalPrinterColumns:
+    - jsonPath: .status.frontend.readyReplicas
+      name: FRONTEND
+      type: integer
+    - jsonPath: .status.datanode.readyReplicas
+      name: DATANODE
+      type: integer
+    - jsonPath: .status.meta.readyReplicas
+      name: META
+      type: integer
+    - jsonPath: .status.clusterPhase
+      name: PHASE
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: AGE
+      type: date
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         properties:
@@ -40,7 +56,7 @@ spec:
                   activeDeadlineSeconds:
                     format: int64
                     type: integer
-                  addtionalContainers:
+                  additionalContainers:
                     items:
                       properties:
                         args:
@@ -2005,7 +2021,7 @@ spec:
                       activeDeadlineSeconds:
                         format: int64
                         type: integer
-                      addtionalContainers:
+                      additionalContainers:
                         items:
                           properties:
                             args:
@@ -4049,7 +4065,7 @@ spec:
                       activeDeadlineSeconds:
                         format: int64
                         type: integer
-                      addtionalContainers:
+                      additionalContainers:
                         items:
                           properties:
                             args:
@@ -6098,7 +6114,7 @@ spec:
                       activeDeadlineSeconds:
                         format: int64
                         type: integer
-                      addtionalContainers:
+                      additionalContainers:
                         items:
                           properties:
                             args:
@@ -8043,6 +8059,8 @@ spec:
             type: object
           status:
             properties:
+              clusterPhase:
+                type: string
               conditions:
                 items:
                   properties:
@@ -8073,6 +8091,9 @@ spec:
                   replicas:
                     format: int32
                     type: integer
+                required:
+                - readyReplicas
+                - replicas
                 type: object
               frontend:
                 properties:
@@ -8082,15 +8103,25 @@ spec:
                   replicas:
                     format: int32
                     type: integer
+                required:
+                - readyReplicas
+                - replicas
                 type: object
               meta:
                 properties:
+                  etcdEndpoints:
+                    items:
+                      type: string
+                    type: array
                   readyReplicas:
                     format: int32
                     type: integer
                   replicas:
                     format: int32
                     type: integer
+                required:
+                - readyReplicas
+                - replicas
                 type: object
             type: object
         type: object

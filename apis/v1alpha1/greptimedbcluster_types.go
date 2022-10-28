@@ -12,8 +12,34 @@ const (
 	// The storage(PVCs) will be retained when the cluster is deleted.
 	RetainStorageRetainPolicyTypeRetain StorageRetainPolicyType = "Retain"
 
-	// RetainStorageRetainPolicyTypeDelete specifiy that the storage will be deleted when the associated StatefulSet delete.
+	// RetainStorageRetainPolicyTypeDelete specify that the storage will be deleted when the associated StatefulSet delete.
 	RetainStorageRetainPolicyTypeDelete StorageRetainPolicyType = "Delete"
+)
+
+// ComponentKind is the kind of the component in the cluster.
+type ComponentKind string
+
+const (
+	FrontendComponentKind ComponentKind = "frontend"
+	DatanodeComponentKind ComponentKind = "datanode"
+	MetaComponentKind     ComponentKind = "meta"
+)
+
+// ClusterPhase define the phase of the cluster.
+type ClusterPhase string
+
+const (
+	// ClusterStarting means the controller start to create cluster.
+	ClusterStarting ClusterPhase = "Starting"
+
+	// ClusterRunning means all the components of cluster is ready.
+	ClusterRunning ClusterPhase = "Running"
+
+	// ClusterError means some kind of error happen in reconcile.
+	ClusterError ClusterPhase = "Error"
+
+	// ClusterTerminating means the cluster is terminating.
+	ClusterTerminating ClusterPhase = "Terminating"
 )
 
 // SlimPodSpec is a slimmed down version of corev1.PodSpec.
@@ -112,9 +138,9 @@ type SlimPodSpec struct {
 	SchedulerName string `json:"schedulerName,omitempty"`
 
 	// For most time, there is one main container in a pod(frontend/meta/datanode).
-	// If specified, addtional containers will be added to the pod as sidecar containers.
+	// If specified, additional containers will be added to the pod as sidecar containers.
 	// +optional
-	AddtionalContainers []corev1.Container `json:"addtionalContainers,omitempty"`
+	AdditionalContainers []corev1.Container `json:"additionalContainers,omitempty"`
 }
 
 // MainContainerSpec describes the specification of the main container of a pod.
@@ -223,7 +249,7 @@ type PodTemplateSpec struct {
 // ComponentSpec is the common specification for all components(frontend/meta/datanode).
 type ComponentSpec struct {
 	// The number of replicas of the components.
-	// +reqiured
+	// +required
 	// +kubebuilder:validation:Minimum=1
 	Replicas int32 `json:"replicas"`
 
@@ -305,7 +331,7 @@ type GreptimeDBClusterSpec struct {
 	// +optional
 	Datanode *DatanodeSpec `json:"datanode"`
 
-	// +optinal
+	// +optional
 	HTTPServicePort int32 `json:"httpServicePort,omitempty"`
 
 	// +optional
@@ -326,6 +352,9 @@ type GreptimeDBClusterStatus struct {
 	Frontend FrontendStatus `json:"frontend,omitempty"`
 	Meta     MetaStatus     `json:"meta,omitempty"`
 	Datanode DatanodeStatus `json:"datanode,omitempty"`
+
+	// +optional
+	ClusterPhase ClusterPhase `json:"clusterPhase,omitempty"`
 
 	// +optional
 	Conditions []GreptimeDBClusterCondition `json:"conditions,omitempty"`
@@ -350,33 +379,27 @@ type GreptimeDBClusterCondition struct {
 	// +optional
 	Reason string `json:"reason,omitempty"`
 
-	// A human readable message indicating details about the transition.
+	// A human-readable message indicating details about the transition.
 	// +optional
 	Message string `json:"message,omitempty"`
 }
 
 type FrontendStatus struct {
-	// +optional
-	Replicas int32 `json:"replicas,omitempty"`
-
-	// +optional
-	ReadyReplicas int32 `json:"readyReplicas,omitempty"`
+	Replicas      int32 `json:"replicas"`
+	ReadyReplicas int32 `json:"readyReplicas"`
 }
 
 type MetaStatus struct {
-	// +optional
-	Replicas int32 `json:"replicas,omitempty"`
+	Replicas      int32 `json:"replicas"`
+	ReadyReplicas int32 `json:"readyReplicas"`
 
 	// +optional
-	ReadyReplicas int32 `json:"readyReplicas,omitempty"`
+	EtcdEndpoints []string `json:"etcdEndpoints,omitempty"`
 }
 
 type DatanodeStatus struct {
-	// +optional
-	Replicas int32 `json:"replicas,omitempty"`
-
-	// +optional
-	ReadyReplicas int32 `json:"readyReplicas,omitempty"`
+	Replicas      int32 `json:"replicas"`
+	ReadyReplicas int32 `json:"readyReplicas"`
 }
 
 type GreptimeDBConditionType string
@@ -391,9 +414,65 @@ const (
 	GreptimeDBClusterProgressing GreptimeDBConditionType = "Progressing"
 )
 
+func NewCondition(conditionType GreptimeDBConditionType, conditionStatus corev1.ConditionStatus,
+	reason, message string) *GreptimeDBClusterCondition {
+	condition := GreptimeDBClusterCondition{
+		Type:               conditionType,
+		Status:             conditionStatus,
+		LastTransitionTime: metav1.Now(),
+		LastUpdateTime:     metav1.Now(),
+		Reason:             reason,
+		Message:            message,
+	}
+	return &condition
+}
+
+func (in *GreptimeDBClusterStatus) GetCondition(conditionType GreptimeDBConditionType) *GreptimeDBClusterCondition {
+	for i := range in.Conditions {
+		c := in.Conditions[i]
+		if c.Type == conditionType {
+			return &c
+		}
+	}
+	return nil
+}
+
+func (in *GreptimeDBClusterStatus) SetCondition(condition GreptimeDBClusterCondition) {
+	currentCondition := in.GetCondition(condition.Type)
+	if currentCondition != nil &&
+		currentCondition.Status == condition.Status &&
+		currentCondition.Reason == condition.Reason {
+		currentCondition.LastUpdateTime = condition.LastUpdateTime
+		return
+	}
+
+	if currentCondition != nil && currentCondition.Status == condition.Status {
+		condition.LastTransitionTime = currentCondition.LastTransitionTime
+	}
+
+	newConditions := in.filterOutCondition(in.Conditions, condition.Type)
+	in.Conditions = append(newConditions, condition)
+}
+
+func (in *GreptimeDBClusterStatus) filterOutCondition(conditions []GreptimeDBClusterCondition, conditionType GreptimeDBConditionType) []GreptimeDBClusterCondition {
+	var newConditions []GreptimeDBClusterCondition
+	for _, c := range conditions {
+		if c.Type == conditionType {
+			continue
+		}
+		newConditions = append(newConditions, c)
+	}
+	return newConditions
+}
+
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:shortName=gtc
+// +kubebuilder:printcolumn:name="FRONTEND",type="integer",JSONPath=".status.frontend.readyReplicas"
+// +kubebuilder:printcolumn:name="DATANODE",type="integer",JSONPath=".status.datanode.readyReplicas"
+// +kubebuilder:printcolumn:name="META",type="integer",JSONPath=".status.meta.readyReplicas"
+// +kubebuilder:printcolumn:name="PHASE",type=string,JSONPath=".status.clusterPhase"
+// +kubebuilder:printcolumn:name="AGE",type=date,JSONPath=".metadata.creationTimestamp"
 
 // GreptimeDBCluster is the Schema for the greptimedbclusters API
 type GreptimeDBCluster struct {
