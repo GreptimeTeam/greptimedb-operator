@@ -75,4 +75,4 @@ jobs:
           artifacts: |
             "greptimedb-0.1.0.tgz"
             "greptimedb-operator-0.1.0.tgz"
-          token: ${{ secrets.YOUR_GITHUB_TOKEN }}
+          token: "${{ secrets.GITHUB_TOKEN }}"
