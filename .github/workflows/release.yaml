@@ -71,6 +71,6 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           artifacts: |
-            "greptimedb-0.1.0.tgz"
-            "greptimedb-operator-0.1.0.tgz"
+            "./greptimedb-0.1.0.tgz"
+            "./greptimedb-operator-0.1.0.tgz"
           token: ${{ secrets.GITHUB_TOKEN }}
