@@ -70,7 +70,7 @@ jobs:
           helm package ./charts/greptimedb
 
       - name: Upload Release Asset
-        uses: ncipollo/release-action@v1.11.1
+        uses: ncipollo/release-action@v1
         with:
           artifacts: |
             "greptimedb-0.1.0.tgz"
