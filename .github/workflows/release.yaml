@@ -64,5 +64,5 @@ jobs:
         with:
           artifacts: |
             greptimedb-${{ github.ref }}.tgz
-            greptimedb-operator-${{ github.ref }}.tgz"
+            greptimedb-operator-${{ github.ref }}.tgz
           token: ${{ secrets.GITHUB_TOKEN }}
