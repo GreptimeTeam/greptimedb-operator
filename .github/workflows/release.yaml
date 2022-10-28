@@ -10,7 +10,6 @@ on:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
-  TAG_REF: ${{ github.ref }}
 
 jobs:
   docker:
@@ -63,5 +62,7 @@ jobs:
       - name: Upload Release Asset
         uses: ncipollo/release-action@v1
         with:
-          artifacts: "greptimedb-${TAG_REF}.tgz,greptimedb-operator-${TAG_REF}.tgz"
+          artifacts: |
+            greptimedb-${{ github.ref }}.tgz
+            greptimedb-operator-${{ github.ref }}.tgz"
           token: ${{ secrets.GITHUB_TOKEN }}
