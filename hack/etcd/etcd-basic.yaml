@@ -54,9 +54,15 @@ spec:
       labels:
         app: etcd
     spec:
+      securityContext:
+        fsGroup: 1001
       containers:
         - name: etcd
           image: bitnami/etcd:3.4.20
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 1001
           command:
             - "etcd"
             - "--name"

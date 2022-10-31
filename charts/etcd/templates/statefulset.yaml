@@ -25,9 +25,15 @@ spec:
       labels:
         app: {{ .Release.Name }}-etcd
     spec:
+      securityContext:
+        fsGroup: 1001
       containers:
         - name: etcd
           image:  {{ .Values.image }}
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            runAsUser: 1001
           command:
             - "etcd"
             - "--name"
