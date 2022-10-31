@@ -42,12 +42,14 @@ type ComponentOperator interface {
 	// CheckAndUpdateStatus checks if the status of Kubernetes objects are ready and update the status.
 	CheckAndUpdateStatus(ctx context.Context, crdObject client.Object) (bool, error)
 
-	// PreSyncHooks returns the hooks that will be executed before the Sync().
+	// PreSyncHooks returns the hooks that will be executed before the core login of Sync().
 	PreSyncHooks() []Hook
 
-	// PostSyncHooks returns the hooks that will be executed after the Sync().
+	// PostSyncHooks returns the hooks that will be executed after the core login of Sync().
 	PostSyncHooks() []Hook
 }
+
+var _ Deployer = &DefaultDeployer{}
 
 // DefaultDeployer implement some common behaviors of the ComponentOperator interface.
 type DefaultDeployer struct {
@@ -55,12 +57,16 @@ type DefaultDeployer struct {
 }
 
 func (d *DefaultDeployer) Sync(ctx context.Context, crdObject client.Object, operator ComponentOperator) error {
-	if err := d.onPrevSync(ctx, crdObject, operator); err != nil {
+	objects, err := operator.Render(crdObject)
+	if err != nil {
 		return err
 	}
 
-	objects, err := operator.Render(crdObject)
-	if err != nil {
+	if len(objects) == 0 {
+		return nil
+	}
+
+	if err := d.onPrevSync(ctx, crdObject, operator); err != nil {
 		return err
 	}
 
@@ -82,6 +88,10 @@ func (d *DefaultDeployer) Sync(ctx context.Context, crdObject client.Object, ope
 	}
 
 	return nil
+}
+
+func (d *DefaultDeployer) Render(_ client.Object) ([]client.Object, error) {
+	return nil, nil
 }
 
 func (d *DefaultDeployer) Apply(ctx context.Context, objects []client.Object) error {
@@ -111,6 +121,10 @@ func (d *DefaultDeployer) Apply(ctx context.Context, objects []client.Object) er
 
 func (d *DefaultDeployer) CleanUp(_ context.Context, _ client.Object) error {
 	return nil
+}
+
+func (d *DefaultDeployer) CheckAndUpdateStatus(_ context.Context, _ client.Object) (bool, error) {
+	return false, nil
 }
 
 func (d *DefaultDeployer) PreSyncHooks() []Hook {
