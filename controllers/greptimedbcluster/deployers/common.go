@@ -4,6 +4,8 @@ import (
 	"context"
 	"fmt"
 
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/util/retry"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -21,6 +23,8 @@ var (
 	DefaultMetricPortName = "metrics"
 	DefaultMetricPath     = "/metrics"
 	DefaultScapeInterval  = "30s"
+
+	DefaultConfigPath = "/etc/greptimedb"
 )
 
 func UpdateStatus(ctx context.Context, input *v1alpha1.GreptimeDBCluster, kc client.Client, opts ...client.UpdateOption) error {
@@ -65,4 +69,37 @@ func (c *CommonDeployer) GetCluster(crdObject client.Object) (*v1alpha1.Greptime
 		return nil, fmt.Errorf("the object is not GreptimeDBCluster")
 	}
 	return cluster, nil
+}
+
+func (c *CommonDeployer) GenerateConfigMap(cluster *v1alpha1.GreptimeDBCluster, componentKind v1alpha1.ComponentKind) (*corev1.ConfigMap, error) {
+	var config string
+
+	switch componentKind {
+	case v1alpha1.MetaComponentKind:
+		config = cluster.Spec.Meta.Config
+	case v1alpha1.FrontendComponentKind:
+		config = cluster.Spec.Frontend.Config
+	case v1alpha1.DatanodeComponentKind:
+		config = cluster.Spec.Datanode.Config
+	}
+
+	configmap := &corev1.ConfigMap{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "ConfigMap",
+			APIVersion: "v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      c.ResourceName(cluster.Name, componentKind),
+			Namespace: cluster.Namespace,
+		},
+		Data: map[string]string{
+			"config.toml": config,
+		},
+	}
+
+	if err := deployer.SetControllerAndAnnotation(cluster, configmap, c.Scheme, configmap.Data); err != nil {
+		return nil, err
+	}
+
+	return configmap, nil
 }

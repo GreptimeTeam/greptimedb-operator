@@ -1988,6 +1988,8 @@ spec:
                 type: object
               datanode:
                 properties:
+                  config:
+                    type: string
                   replicas:
                     format: int32
                     minimum: 1
@@ -3961,6 +3963,8 @@ spec:
                 type: boolean
               frontend:
                 properties:
+                  config:
+                    type: string
                   replicas:
                     format: int32
                     minimum: 1
@@ -6006,6 +6010,8 @@ spec:
                 type: integer
               meta:
                 properties:
+                  config:
+                    type: string
                   etcdEndpoints:
                     items:
                       type: string

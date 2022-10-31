@@ -51,6 +51,20 @@ func (d *DatanodeDeployer) Render(crdObject client.Object) ([]client.Object, err
 		}
 		renderObjects = append(renderObjects, sts)
 
+		if len(cluster.Spec.Datanode.Config) > 0 {
+			cm, err := d.GenerateConfigMap(cluster, v1alpha1.DatanodeComponentKind)
+			if err != nil {
+				return nil, err
+			}
+			renderObjects = append(renderObjects, cm)
+
+			for _, object := range renderObjects {
+				if sts, ok := object.(*appsv1.StatefulSet); ok {
+					d.mountConfigMapVolume(sts, cm.Name)
+				}
+			}
+		}
+
 		if cluster.Spec.EnablePrometheusMonitor {
 			pm, err := d.generatePodMonitor(cluster)
 			if err != nil {
@@ -315,4 +329,26 @@ func (d *DatanodeDeployer) generatePodMonitor(cluster *v1alpha1.GreptimeDBCluste
 	}
 
 	return pm, nil
+}
+
+func (d *DatanodeDeployer) mountConfigMapVolume(sts *appsv1.StatefulSet, name string) {
+	sts.Spec.Template.Spec.Volumes = append(sts.Spec.Template.Spec.Volumes, corev1.Volume{
+		Name: "config",
+		VolumeSource: corev1.VolumeSource{
+			ConfigMap: &corev1.ConfigMapVolumeSource{
+				LocalObjectReference: corev1.LocalObjectReference{
+					Name: name,
+				},
+			},
+		},
+	})
+
+	for i, container := range sts.Spec.Template.Spec.Containers {
+		if container.Name == string(v1alpha1.DatanodeComponentKind) {
+			sts.Spec.Template.Spec.Containers[i].VolumeMounts = append(sts.Spec.Template.Spec.Containers[i].VolumeMounts, corev1.VolumeMount{
+				Name:      "config",
+				MountPath: DefaultConfigPath,
+			})
+		}
+	}
 }

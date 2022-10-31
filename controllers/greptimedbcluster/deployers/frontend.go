@@ -49,6 +49,20 @@ func (d *FrontendDeployer) Render(crdObject client.Object) ([]client.Object, err
 		}
 		renderObjects = append(renderObjects, deployment)
 
+		if len(cluster.Spec.Frontend.Config) > 0 {
+			cm, err := d.GenerateConfigMap(cluster, v1alpha1.FrontendComponentKind)
+			if err != nil {
+				return nil, err
+			}
+			renderObjects = append(renderObjects, cm)
+
+			for _, object := range renderObjects {
+				if deployment, ok := object.(*appsv1.Deployment); ok {
+					d.mountConfigMapVolume(deployment, cm.Name)
+				}
+			}
+		}
+
 		if cluster.Spec.EnablePrometheusMonitor {
 			pm, err := d.generatePodMonitor(cluster)
 			if err != nil {
@@ -239,4 +253,26 @@ func (d *FrontendDeployer) generatePodMonitor(cluster *v1alpha1.GreptimeDBCluste
 	}
 
 	return pm, nil
+}
+
+func (d *FrontendDeployer) mountConfigMapVolume(deployment *appsv1.Deployment, name string) {
+	deployment.Spec.Template.Spec.Volumes = append(deployment.Spec.Template.Spec.Volumes, corev1.Volume{
+		Name: "config",
+		VolumeSource: corev1.VolumeSource{
+			ConfigMap: &corev1.ConfigMapVolumeSource{
+				LocalObjectReference: corev1.LocalObjectReference{
+					Name: name,
+				},
+			},
+		},
+	})
+
+	for i, container := range deployment.Spec.Template.Spec.Containers {
+		if container.Name == string(v1alpha1.FrontendComponentKind) {
+			deployment.Spec.Template.Spec.Containers[i].VolumeMounts = append(deployment.Spec.Template.Spec.Containers[i].VolumeMounts, corev1.VolumeMount{
+				Name:      "config",
+				MountPath: DefaultConfigPath,
+			})
+		}
+	}
 }

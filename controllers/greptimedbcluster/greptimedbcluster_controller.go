@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/BurntSushi/toml"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -213,5 +214,34 @@ func (r *Reconciler) validate(ctx context.Context, cluster *v1alpha1.GreptimeDBC
 		}
 	}
 
+	if cluster.Spec.Meta != nil {
+		if err := r.validateTomlConfig(cluster.Spec.Meta.Config); err != nil {
+			return fmt.Errorf("invalid meta toml config: %v", err)
+		}
+	}
+
+	if cluster.Spec.Datanode != nil {
+		if err := r.validateTomlConfig(cluster.Spec.Datanode.Config); err != nil {
+			return fmt.Errorf("invalid datanode toml config: %v", err)
+		}
+	}
+
+	if cluster.Spec.Frontend != nil {
+		if err := r.validateTomlConfig(cluster.Spec.Frontend.Config); err != nil {
+			return fmt.Errorf("invalid frontend toml config: %v", err)
+		}
+	}
+
+	return nil
+}
+
+func (r *Reconciler) validateTomlConfig(input string) error {
+	if len(input) > 0 {
+		data := make(map[string]interface{})
+		err := toml.Unmarshal([]byte(input), &data)
+		if err != nil {
+			return err
+		}
+	}
 	return nil
 }

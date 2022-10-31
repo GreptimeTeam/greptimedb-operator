@@ -253,6 +253,10 @@ type ComponentSpec struct {
 	// +kubebuilder:validation:Minimum=1
 	Replicas int32 `json:"replicas"`
 
+	// The content of the configuration file of the component in TOML format.
+	// +optional
+	Config string `json:"config,omitempty"`
+
 	// Template defines the pod template for the component, if not specified, the pod template will use the default value.
 	// +optional
 	Template *PodTemplateSpec `json:"template,omitempty"`
