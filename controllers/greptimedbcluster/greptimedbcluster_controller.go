@@ -200,6 +200,10 @@ func (r *Reconciler) setClusterPhase(ctx context.Context, cluster *v1alpha1.Grep
 }
 
 func (r *Reconciler) validate(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster) error {
+	if cluster.Spec.Meta == nil && cluster.Spec.Datanode == nil && cluster.Spec.Frontend == nil {
+		return fmt.Errorf("no components spec in cluster")
+	}
+
 	// To detect if the CRD of podmonitor is installed.
 	if cluster.Spec.EnablePrometheusMonitor {
 		// The testNamespacedName is used to check if the CRD of podmonitor is installed, it is not used to create the podmonitor.

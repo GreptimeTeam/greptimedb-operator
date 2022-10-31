@@ -45,17 +45,29 @@ func (in *GreptimeDBCluster) SetDefaults() error {
 				},
 			},
 		},
-		Frontend: &FrontendSpec{
+		HTTPServicePort:  int32(defaultHTTPServicePort),
+		GRPCServicePort:  int32(defaultGRPCServicePort),
+		MySQLServicePort: int32(defaultMySQLServicePort),
+	}
+
+	if in.Spec.Frontend != nil {
+		defaultGreptimeDBClusterSpec.Frontend = &FrontendSpec{
 			ComponentSpec: ComponentSpec{
 				Template: &PodTemplateSpec{},
 			},
-		},
-		Meta: &MetaSpec{
+		}
+	}
+
+	if in.Spec.Meta != nil {
+		defaultGreptimeDBClusterSpec.Meta = &MetaSpec{
 			ComponentSpec: ComponentSpec{
 				Template: &PodTemplateSpec{},
 			},
-		},
-		Datanode: &DatanodeSpec{
+		}
+	}
+
+	if in.Spec.Datanode != nil {
+		defaultGreptimeDBClusterSpec.Datanode = &DatanodeSpec{
 			ComponentSpec: ComponentSpec{
 				Template: &PodTemplateSpec{},
 			},
@@ -66,26 +78,29 @@ func (in *GreptimeDBCluster) SetDefaults() error {
 				MountPath:           defaultDataNodeStorageMountPath,
 				StorageRetainPolicy: defaultStorageRetainPolicyType,
 			},
-		},
-		HTTPServicePort:  int32(defaultHTTPServicePort),
-		GRPCServicePort:  int32(defaultGRPCServicePort),
-		MySQLServicePort: int32(defaultMySQLServicePort),
+		}
 	}
 
 	if err := mergo.Merge(&in.Spec, defaultGreptimeDBClusterSpec); err != nil {
 		return err
 	}
 
-	if err := mergo.Merge(in.Spec.Frontend.Template, in.Spec.Base); err != nil {
-		return err
+	if in.Spec.Frontend != nil {
+		if err := mergo.Merge(in.Spec.Frontend.Template, in.Spec.Base); err != nil {
+			return err
+		}
 	}
 
-	if err := mergo.Merge(in.Spec.Meta.Template, in.Spec.Base); err != nil {
-		return err
+	if in.Spec.Meta != nil {
+		if err := mergo.Merge(in.Spec.Meta.Template, in.Spec.Base); err != nil {
+			return err
+		}
 	}
 
-	if err := mergo.Merge(in.Spec.Datanode.Template, in.Spec.Base); err != nil {
-		return err
+	if in.Spec.Datanode != nil {
+		if err := mergo.Merge(in.Spec.Datanode.Template, in.Spec.Base); err != nil {
+			return err
+		}
 	}
 
 	return nil
