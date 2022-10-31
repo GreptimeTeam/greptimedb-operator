@@ -214,16 +214,22 @@ func (r *Reconciler) validate(ctx context.Context, cluster *v1alpha1.GreptimeDBC
 		}
 	}
 
-	if err := r.validateTomlConfig(cluster.Spec.Meta.Config); err != nil {
-		return fmt.Errorf("invalid toml config: %v", err)
+	if cluster.Spec.Meta != nil {
+		if err := r.validateTomlConfig(cluster.Spec.Meta.Config); err != nil {
+			return fmt.Errorf("invalid toml config: %v", err)
+		}
 	}
 
-	if err := r.validateTomlConfig(cluster.Spec.Datanode.Config); err != nil {
-		return fmt.Errorf("invalid toml config: %v", err)
+	if cluster.Spec.Datanode != nil {
+		if err := r.validateTomlConfig(cluster.Spec.Datanode.Config); err != nil {
+			return fmt.Errorf("invalid toml config: %v", err)
+		}
 	}
 
-	if err := r.validateTomlConfig(cluster.Spec.Frontend.Config); err != nil {
-		return fmt.Errorf("invalid toml config: %v", err)
+	if cluster.Spec.Frontend != nil {
+		if err := r.validateTomlConfig(cluster.Spec.Frontend.Config); err != nil {
+			return fmt.Errorf("invalid toml config: %v", err)
+		}
 	}
 
 	return nil
