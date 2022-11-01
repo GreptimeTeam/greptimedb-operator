@@ -295,7 +295,7 @@ func (d *MetaDeployer) mountConfigMapVolume(deployment *appsv1.Deployment, name 
 func (d *MetaDeployer) checkEtcdService(ctx context.Context, crdObject client.Object) error {
 	cluster, err := d.GetCluster(crdObject)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	maintainer, err := d.etcdMaintenanceBuilder(cluster.Spec.Meta.EtcdEndpoints)
