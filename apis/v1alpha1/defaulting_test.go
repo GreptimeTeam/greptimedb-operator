@@ -13,7 +13,7 @@ func TestSetDefaults(t *testing.T) {
 		input GreptimeDBCluster
 		want  GreptimeDBCluster
 	}{
-		// #1
+		// #0
 		{
 			GreptimeDBCluster{
 				Spec: GreptimeDBClusterSpec{
@@ -130,7 +130,7 @@ func TestSetDefaults(t *testing.T) {
 			},
 		},
 
-		// #2
+		// #1
 		{
 			GreptimeDBCluster{
 				Spec: GreptimeDBClusterSpec{
@@ -274,6 +274,74 @@ func TestSetDefaults(t *testing.T) {
 										Limits: map[corev1.ResourceName]resource.Quantity{
 											"cpu":    resource.MustParse("1000m"),
 											"memory": resource.MustParse("1024Mi"),
+										},
+									},
+								},
+							},
+						},
+						Storage: StorageSpec{
+							Name:                defaultDataNodeStorageName,
+							StorageClassName:    &defaultDataNodeStorageClassName,
+							StorageSize:         defaultDataNodeStorageSize,
+							MountPath:           defaultDataNodeStorageMountPath,
+							StorageRetainPolicy: defaultStorageRetainPolicyType,
+						},
+					},
+
+					HTTPServicePort:  int32(defaultHTTPServicePort),
+					GRPCServicePort:  int32(defaultGRPCServicePort),
+					MySQLServicePort: int32(defaultMySQLServicePort),
+				},
+			},
+		},
+
+		// #2
+		{
+			GreptimeDBCluster{
+				Spec: GreptimeDBClusterSpec{
+					Base: &PodTemplateSpec{
+						MainContainer: &MainContainerSpec{
+							Image: "localhost:5001/greptime/greptimedb:latest",
+						},
+					},
+					Datanode: &DatanodeSpec{
+						ComponentSpec: ComponentSpec{
+							Replicas: 3,
+						},
+					},
+				},
+			},
+			GreptimeDBCluster{
+				Spec: GreptimeDBClusterSpec{
+					Base: &PodTemplateSpec{
+						MainContainer: &MainContainerSpec{
+							Image: "localhost:5001/greptime/greptimedb:latest",
+							Resources: &corev1.ResourceRequirements{
+								Requests: map[corev1.ResourceName]resource.Quantity{
+									"cpu":    resource.MustParse(defaultRequestCPU),
+									"memory": resource.MustParse(defaultRequestMemory),
+								},
+								Limits: map[corev1.ResourceName]resource.Quantity{
+									"cpu":    resource.MustParse(defaultLimitCPU),
+									"memory": resource.MustParse(defaultLimitMemory),
+								},
+							},
+						},
+					},
+					Datanode: &DatanodeSpec{
+						ComponentSpec: ComponentSpec{
+							Replicas: 3,
+							Template: &PodTemplateSpec{
+								MainContainer: &MainContainerSpec{
+									Image: "localhost:5001/greptime/greptimedb:latest",
+									Resources: &corev1.ResourceRequirements{
+										Requests: map[corev1.ResourceName]resource.Quantity{
+											"cpu":    resource.MustParse(defaultRequestCPU),
+											"memory": resource.MustParse(defaultRequestMemory),
+										},
+										Limits: map[corev1.ResourceName]resource.Quantity{
+											"cpu":    resource.MustParse(defaultLimitCPU),
+											"memory": resource.MustParse(defaultLimitMemory),
 										},
 									},
 								},
