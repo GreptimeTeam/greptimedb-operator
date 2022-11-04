@@ -3,14 +3,15 @@ package greptimedbcluster
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/BurntSushi/toml"
-	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/api/meta"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
@@ -79,6 +80,7 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 // +kubebuilder:rbac:groups=apps,resources=statefulsets,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=monitoring.coreos.com,resources=podmonitors,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=apiextensions.k8s.io,resources=customresourcedefinitions,verbs=get;list;watch
 
 // Reconcile is reconciliation loop for GreptimeDBCluster.
 func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (result ctrl.Result, err error) {
@@ -202,15 +204,17 @@ func (r *Reconciler) setClusterPhase(ctx context.Context, cluster *v1alpha1.Grep
 func (r *Reconciler) validate(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster) error {
 	// To detect if the CRD of podmonitor is installed.
 	if cluster.Spec.EnablePrometheusMonitor {
-		// The testNamespacedName is used to check if the CRD of podmonitor is installed, it is not used to create the podmonitor.
-		testNamespacedName := types.NamespacedName{Namespace: cluster.Namespace, Name: cluster.Name}
-		err := r.Get(ctx, testNamespacedName, new(monitoringv1.PodMonitor))
-		if meta.IsNoMatchError(err) {
-			return fmt.Errorf("the crd podmonitor.monitoring.coreos.com is not installed")
-		}
-		// If the podmonitor is installed, the error will be NotFound.
-		if err != nil && !errors.IsNotFound(err) {
-			return err
+		// CheckPodMonitorCRDInstall is used to check if the CRD of podmonitor is installed, it is not used to create the podmonitor.
+		err := r.checkPodMonitorCRDInstall(ctx, metav1.GroupKind{
+			Group: "monitoring.coreos.com",
+			Kind:  "PodMonitor",
+		})
+		if err != nil {
+			if errors.IsNotFound(err) {
+				return fmt.Errorf("the crd podmonitors.monitoring.coreos.com is not installed")
+			} else {
+				return fmt.Errorf("check crd of podmonitors.monitoring.coreos.com is installed error: %v", err)
+			}
 		}
 	}
 
@@ -242,6 +246,16 @@ func (r *Reconciler) validateTomlConfig(input string) error {
 		if err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+func (r *Reconciler) checkPodMonitorCRDInstall(ctx context.Context, groupKind metav1.GroupKind) error {
+	var crd apiextensionsv1.CustomResourceDefinition
+	nameNamespace := types.NamespacedName{Name: fmt.Sprintf("%ss.%s", strings.ToLower(groupKind.Kind), groupKind.Group)}
+	err := r.Get(ctx, nameNamespace, &crd)
+	if err != nil {
+		return err
 	}
 	return nil
 }
