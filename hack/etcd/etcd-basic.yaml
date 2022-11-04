@@ -56,7 +56,7 @@ spec:
     spec:
       containers:
         - name: etcd
-          image: bitnami/etcd:3.4.20
+          image: greptime/etcd:v3.5.5
           command:
             - "etcd"
             - "--name"

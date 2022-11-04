@@ -1,4 +1,4 @@
-image: bitnami/etcd:3.4.20
+image: greptime/etcd:v3.5.5
 
 servicePorts:
   client: 2379
