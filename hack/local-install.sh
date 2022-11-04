@@ -61,8 +61,8 @@ function process_db_image() {
 }
 
 function process_operator_image() {
-    docker pull ghcr.io/greptimeteam/operator-test:latest
-    docker tag ghcr.io/greptimeteam/operator-test:latest localhost:5001/greptime/greptimedb-operator:latest
+    docker pull greptime/greptimedb-operator:latest
+    docker tag greptime/greptimedb-operator:latest localhost:5001/greptime/greptimedb-operator:latest
     docker push localhost:5001/greptime/greptimedb-operator:latest
 }
 
