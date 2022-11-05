@@ -2,6 +2,7 @@ package deployers
 
 import (
 	"context"
+	"fmt"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	appsv1 "k8s.io/api/apps/v1"
@@ -201,6 +202,23 @@ func (d *DatanodeDeployer) generateSvc(cluster *v1alpha1.GreptimeDBCluster) (*co
 }
 
 func (d *DatanodeDeployer) generateSts(cluster *v1alpha1.GreptimeDBCluster) (*appsv1.StatefulSet, error) {
+	var (
+		args    []string
+		command []string
+	)
+
+	if len(cluster.Spec.Datanode.Template.MainContainer.Command) > 0 {
+		command = cluster.Spec.Frontend.Template.MainContainer.Command
+	} else {
+		command = []string{"/bin/sh", "-c"}
+	}
+
+	if len(cluster.Spec.Datanode.Template.MainContainer.Args) > 0 {
+		args = cluster.Spec.Frontend.Template.MainContainer.Args
+	} else {
+		args = d.buildDatanodeArgs(cluster)
+	}
+
 	sts := &appsv1.StatefulSet{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "StatefulSet",
@@ -231,12 +249,23 @@ func (d *DatanodeDeployer) generateSts(cluster *v1alpha1.GreptimeDBCluster) (*ap
 							Name:      string(v1alpha1.DatanodeComponentKind),
 							Image:     cluster.Spec.Datanode.Template.MainContainer.Image,
 							Resources: *cluster.Spec.Datanode.Template.MainContainer.Resources,
-							Command:   cluster.Spec.Datanode.Template.MainContainer.Command,
-							Args:      cluster.Spec.Datanode.Template.MainContainer.Args,
+							Command:   command,
+							Args:      args,
 							VolumeMounts: []corev1.VolumeMount{
 								{
 									Name:      cluster.Spec.Datanode.Storage.Name,
 									MountPath: cluster.Spec.Datanode.Storage.MountPath,
+								},
+							},
+							// TODO(zyy17): the datanode don't support to accept hostname.
+							Env: []corev1.EnvVar{
+								{
+									Name: "POD_IP",
+									ValueFrom: &corev1.EnvVarSource{
+										FieldRef: &corev1.ObjectFieldSelector{
+											FieldPath: "status.podIP",
+										},
+									},
 								},
 							},
 							Ports: []corev1.ContainerPort{
@@ -254,6 +283,11 @@ func (d *DatanodeDeployer) generateSts(cluster *v1alpha1.GreptimeDBCluster) (*ap
 									Name:          "mysql",
 									Protocol:      corev1.ProtocolTCP,
 									ContainerPort: cluster.Spec.MySQLServicePort,
+								},
+								{
+									Name:          "postgres",
+									Protocol:      corev1.ProtocolTCP,
+									ContainerPort: cluster.Spec.PostgresServicePort,
 								},
 							},
 						},
@@ -350,5 +384,20 @@ func (d *DatanodeDeployer) mountConfigMapVolume(sts *appsv1.StatefulSet, name st
 				MountPath: DefaultConfigPath,
 			})
 		}
+	}
+}
+
+// FIXME(zyy17): It's the temporary way to generate node id for datanode: use the sequence number of statefulset pod.
+// For getting sequence number from hostname, we use the tricks to execute multiple commands in Pod:
+// Commands: [ "/bin/sh", "-c" ]
+// Args: [ "command1 ; command2; command3" ]
+func (d *DatanodeDeployer) buildDatanodeArgs(cluster *v1alpha1.GreptimeDBCluster) []string {
+	return []string{
+		fmt.Sprintf("hostname=`hostname`; node_id=${hostname##*-}; greptime datanode start --node-id=${node_id} --metasrv-addr=%s --rpc-addr=%s --http-addr=%s --mysql-addr=%s --postgres-addr=%s",
+			fmt.Sprintf("%s.%s:%d", d.ResourceName(cluster.Name, v1alpha1.MetaComponentKind), cluster.Namespace, cluster.Spec.Meta.ServicePort),
+			fmt.Sprintf("${POD_IP}:%d", cluster.Spec.GRPCServicePort),
+			fmt.Sprintf("0.0.0.0:%d", cluster.Spec.HTTPServicePort),
+			fmt.Sprintf("0.0.0.0:%d", cluster.Spec.MySQLServicePort),
+			fmt.Sprintf("0.0.0.0:%d", cluster.Spec.PostgresServicePort)),
 	}
 }

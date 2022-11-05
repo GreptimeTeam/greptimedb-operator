@@ -267,7 +267,7 @@ type MetaSpec struct {
 	ComponentSpec `json:",inline"`
 
 	// +optional
-	Service corev1.ServiceSpec `json:"service,omitempty"`
+	ServicePort int32 `json:"servicePort,omitempty"`
 
 	// +optional
 	EtcdEndpoints []string `json:"etcdEndpoints,omitempty"`
@@ -343,6 +343,15 @@ type GreptimeDBClusterSpec struct {
 
 	// +optional
 	MySQLServicePort int32 `json:"mysqlServicePort,omitempty"`
+
+	// +optional
+	PostgresServicePort int32 `json:"postgresServicePort,omitempty"`
+
+	// +optional
+	OpenTSDBServicePort int32 `json:"openTSDBServicePort,omitempty"`
+
+	// +optional
+	EnableInfluxDBProtocol bool `json:"enableInfluxDBProtocol,omitempty"`
 
 	// +optional
 	// +kubebuilder:validation:Enum:={true, false}
