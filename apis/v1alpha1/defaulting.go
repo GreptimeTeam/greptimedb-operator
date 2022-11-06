@@ -12,6 +12,8 @@ var (
 	defaultLimitCPU      = "500m"
 	defaultLimitMemory   = "128Mi"
 
+	defaultVersion = "v0.1.0"
+
 	// The default settings for GreptimeDBClusterSpec.
 	defaultHTTPServicePort     = 4000
 	defaultGRPCServicePort     = 4001
@@ -48,18 +50,34 @@ func (in *GreptimeDBCluster) SetDefaults() error {
 				},
 			},
 		},
-		Frontend: &FrontendSpec{
+
+		HTTPServicePort:     int32(defaultHTTPServicePort),
+		GRPCServicePort:     int32(defaultGRPCServicePort),
+		MySQLServicePort:    int32(defaultMySQLServicePort),
+		PostgresServicePort: int32(defaultPostgresServicePort),
+		OpenTSDBServicePort: int32(defaultOpenTSDBServicePort),
+		Version:             defaultVersion,
+	}
+
+	if in.Spec.Frontend != nil {
+		defaultGreptimeDBClusterSpec.Frontend = &FrontendSpec{
 			ComponentSpec: ComponentSpec{
 				Template: &PodTemplateSpec{},
 			},
-		},
-		Meta: &MetaSpec{
+		}
+	}
+
+	if in.Spec.Meta != nil {
+		defaultGreptimeDBClusterSpec.Meta = &MetaSpec{
 			ComponentSpec: ComponentSpec{
 				Template: &PodTemplateSpec{},
 			},
 			ServicePort: int32(defaultMetaServicePort),
-		},
-		Datanode: &DatanodeSpec{
+		}
+	}
+
+	if in.Spec.Datanode != nil {
+		defaultGreptimeDBClusterSpec.Datanode = &DatanodeSpec{
 			ComponentSpec: ComponentSpec{
 				Template: &PodTemplateSpec{},
 			},
@@ -70,28 +88,29 @@ func (in *GreptimeDBCluster) SetDefaults() error {
 				MountPath:           defaultDataNodeStorageMountPath,
 				StorageRetainPolicy: defaultStorageRetainPolicyType,
 			},
-		},
-		HTTPServicePort:     int32(defaultHTTPServicePort),
-		GRPCServicePort:     int32(defaultGRPCServicePort),
-		MySQLServicePort:    int32(defaultMySQLServicePort),
-		PostgresServicePort: int32(defaultPostgresServicePort),
-		OpenTSDBServicePort: int32(defaultOpenTSDBServicePort),
+		}
 	}
 
 	if err := mergo.Merge(&in.Spec, defaultGreptimeDBClusterSpec); err != nil {
 		return err
 	}
 
-	if err := mergo.Merge(in.Spec.Frontend.Template, in.Spec.Base); err != nil {
-		return err
+	if in.Spec.Frontend != nil {
+		if err := mergo.Merge(in.Spec.Frontend.Template, in.Spec.Base); err != nil {
+			return err
+		}
 	}
 
-	if err := mergo.Merge(in.Spec.Meta.Template, in.Spec.Base); err != nil {
-		return err
+	if in.Spec.Meta != nil {
+		if err := mergo.Merge(in.Spec.Meta.Template, in.Spec.Base); err != nil {
+			return err
+		}
 	}
 
-	if err := mergo.Merge(in.Spec.Datanode.Template, in.Spec.Base); err != nil {
-		return err
+	if in.Spec.Datanode != nil {
+		if err := mergo.Merge(in.Spec.Datanode.Template, in.Spec.Base); err != nil {
+			return err
+		}
 	}
 
 	return nil

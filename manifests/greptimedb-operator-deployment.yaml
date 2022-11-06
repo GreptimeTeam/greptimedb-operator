@@ -7984,6 +7984,8 @@ spec:
               postgresServicePort:
                 format: int32
                 type: integer
+              version:
+                type: string
             type: object
           status:
             properties:

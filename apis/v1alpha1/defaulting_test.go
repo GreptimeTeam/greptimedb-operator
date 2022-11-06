@@ -19,7 +19,7 @@ func TestSetDefaults(t *testing.T) {
 				Spec: GreptimeDBClusterSpec{
 					Base: &PodTemplateSpec{
 						MainContainer: &MainContainerSpec{
-							Image: "localhost:5001/greptime/greptimedb:latest",
+							Image: "greptime/greptimedb:latest",
 						},
 					},
 					Frontend: &FrontendSpec{
@@ -43,7 +43,7 @@ func TestSetDefaults(t *testing.T) {
 				Spec: GreptimeDBClusterSpec{
 					Base: &PodTemplateSpec{
 						MainContainer: &MainContainerSpec{
-							Image: "localhost:5001/greptime/greptimedb:latest",
+							Image: "greptime/greptimedb:latest",
 							Resources: &corev1.ResourceRequirements{
 								Requests: map[corev1.ResourceName]resource.Quantity{
 									"cpu":    resource.MustParse(defaultRequestCPU),
@@ -61,7 +61,7 @@ func TestSetDefaults(t *testing.T) {
 							Replicas: 3,
 							Template: &PodTemplateSpec{
 								MainContainer: &MainContainerSpec{
-									Image: "localhost:5001/greptime/greptimedb:latest",
+									Image: "greptime/greptimedb:latest",
 									Resources: &corev1.ResourceRequirements{
 										Requests: map[corev1.ResourceName]resource.Quantity{
 											"cpu":    resource.MustParse(defaultRequestCPU),
@@ -81,7 +81,7 @@ func TestSetDefaults(t *testing.T) {
 							Replicas: 3,
 							Template: &PodTemplateSpec{
 								MainContainer: &MainContainerSpec{
-									Image: "localhost:5001/greptime/greptimedb:latest",
+									Image: "greptime/greptimedb:latest",
 									Resources: &corev1.ResourceRequirements{
 										Requests: map[corev1.ResourceName]resource.Quantity{
 											"cpu":    resource.MustParse(defaultRequestCPU),
@@ -95,13 +95,14 @@ func TestSetDefaults(t *testing.T) {
 								},
 							},
 						},
+						ServicePort: int32(defaultMetaServicePort),
 					},
 					Datanode: &DatanodeSpec{
 						ComponentSpec: ComponentSpec{
 							Replicas: 1,
 							Template: &PodTemplateSpec{
 								MainContainer: &MainContainerSpec{
-									Image: "localhost:5001/greptime/greptimedb:latest",
+									Image: "greptime/greptimedb:latest",
 									Resources: &corev1.ResourceRequirements{
 										Requests: map[corev1.ResourceName]resource.Quantity{
 											"cpu":    resource.MustParse(defaultRequestCPU),
@@ -123,9 +124,12 @@ func TestSetDefaults(t *testing.T) {
 							StorageRetainPolicy: defaultStorageRetainPolicyType,
 						},
 					},
-					HTTPServicePort:  int32(defaultHTTPServicePort),
-					GRPCServicePort:  int32(defaultGRPCServicePort),
-					MySQLServicePort: int32(defaultMySQLServicePort),
+					HTTPServicePort:     int32(defaultHTTPServicePort),
+					GRPCServicePort:     int32(defaultGRPCServicePort),
+					MySQLServicePort:    int32(defaultMySQLServicePort),
+					PostgresServicePort: int32(defaultPostgresServicePort),
+					OpenTSDBServicePort: int32(defaultOpenTSDBServicePort),
+					Version:             defaultVersion,
 				},
 			},
 		},
@@ -136,7 +140,7 @@ func TestSetDefaults(t *testing.T) {
 				Spec: GreptimeDBClusterSpec{
 					Base: &PodTemplateSpec{
 						MainContainer: &MainContainerSpec{
-							Image: "localhost:5001/greptime/greptimedb:latest",
+							Image: "greptime/greptimedb:latest",
 							Resources: &corev1.ResourceRequirements{
 								Requests: map[corev1.ResourceName]resource.Quantity{
 									"cpu":    resource.MustParse("500m"),
@@ -154,10 +158,10 @@ func TestSetDefaults(t *testing.T) {
 							Replicas: 3,
 							Template: &PodTemplateSpec{
 								MainContainer: &MainContainerSpec{
-									Image: "localhost:5001/greptime/frontend:latest",
+									Image: "greptime/frontend:latest",
 									Args: []string{
-										"--meta-endpoint",
-										"http://mock-meta.default:3001",
+										"--metasrv-addr",
+										"meta.default:3002",
 									},
 								},
 							},
@@ -168,16 +172,16 @@ func TestSetDefaults(t *testing.T) {
 							Replicas: 3,
 							Template: &PodTemplateSpec{
 								MainContainer: &MainContainerSpec{
-									Image: "localhost:5001/greptime/meta:latest",
+									Image: "greptime/meta:latest",
 									Args: []string{
-										"--etcd-endpoint",
+										"--store-addr",
 										"etcd.default:2379",
 									},
 								},
 							},
 						},
 						EtcdEndpoints: []string{
-							"127.0.0.1:2379",
+							"etcd.default:2379",
 						},
 					},
 					Datanode: &DatanodeSpec{
@@ -185,7 +189,7 @@ func TestSetDefaults(t *testing.T) {
 							Replicas: 1,
 							Template: &PodTemplateSpec{
 								MainContainer: &MainContainerSpec{
-									Image: "localhost:5001/greptime/greptimedb:latest",
+									Image: "greptime/greptimedb:latest",
 								},
 							},
 						},
@@ -196,7 +200,7 @@ func TestSetDefaults(t *testing.T) {
 				Spec: GreptimeDBClusterSpec{
 					Base: &PodTemplateSpec{
 						MainContainer: &MainContainerSpec{
-							Image: "localhost:5001/greptime/greptimedb:latest",
+							Image: "greptime/greptimedb:latest",
 							Resources: &corev1.ResourceRequirements{
 								Requests: map[corev1.ResourceName]resource.Quantity{
 									"cpu":    resource.MustParse("500m"),
@@ -214,10 +218,10 @@ func TestSetDefaults(t *testing.T) {
 							Replicas: 3,
 							Template: &PodTemplateSpec{
 								MainContainer: &MainContainerSpec{
-									Image: "localhost:5001/greptime/frontend:latest",
+									Image: "greptime/frontend:latest",
 									Args: []string{
-										"--meta-endpoint",
-										"http://mock-meta.default:3001",
+										"--metasrv-addr",
+										"meta.default:3002",
 									},
 									Resources: &corev1.ResourceRequirements{
 										Requests: map[corev1.ResourceName]resource.Quantity{
@@ -238,9 +242,9 @@ func TestSetDefaults(t *testing.T) {
 							Replicas: 3,
 							Template: &PodTemplateSpec{
 								MainContainer: &MainContainerSpec{
-									Image: "localhost:5001/greptime/meta:latest",
+									Image: "greptime/meta:latest",
 									Args: []string{
-										"--etcd-endpoint",
+										"--store-addr",
 										"etcd.default:2379",
 									},
 									Resources: &corev1.ResourceRequirements{
@@ -257,15 +261,16 @@ func TestSetDefaults(t *testing.T) {
 							},
 						},
 						EtcdEndpoints: []string{
-							"127.0.0.1:2379",
+							"etcd.default:2379",
 						},
+						ServicePort: int32(defaultMetaServicePort),
 					},
 					Datanode: &DatanodeSpec{
 						ComponentSpec: ComponentSpec{
 							Replicas: 1,
 							Template: &PodTemplateSpec{
 								MainContainer: &MainContainerSpec{
-									Image: "localhost:5001/greptime/greptimedb:latest",
+									Image: "greptime/greptimedb:latest",
 									Resources: &corev1.ResourceRequirements{
 										Requests: map[corev1.ResourceName]resource.Quantity{
 											"cpu":    resource.MustParse("500m"),
@@ -288,9 +293,12 @@ func TestSetDefaults(t *testing.T) {
 						},
 					},
 
-					HTTPServicePort:  int32(defaultHTTPServicePort),
-					GRPCServicePort:  int32(defaultGRPCServicePort),
-					MySQLServicePort: int32(defaultMySQLServicePort),
+					HTTPServicePort:     int32(defaultHTTPServicePort),
+					GRPCServicePort:     int32(defaultGRPCServicePort),
+					MySQLServicePort:    int32(defaultMySQLServicePort),
+					PostgresServicePort: int32(defaultPostgresServicePort),
+					OpenTSDBServicePort: int32(defaultOpenTSDBServicePort),
+					Version:             defaultVersion,
 				},
 			},
 		},
@@ -301,7 +309,7 @@ func TestSetDefaults(t *testing.T) {
 				Spec: GreptimeDBClusterSpec{
 					Base: &PodTemplateSpec{
 						MainContainer: &MainContainerSpec{
-							Image: "localhost:5001/greptime/greptimedb:latest",
+							Image: "greptime/greptimedb:latest",
 						},
 					},
 					Datanode: &DatanodeSpec{
@@ -315,7 +323,7 @@ func TestSetDefaults(t *testing.T) {
 				Spec: GreptimeDBClusterSpec{
 					Base: &PodTemplateSpec{
 						MainContainer: &MainContainerSpec{
-							Image: "localhost:5001/greptime/greptimedb:latest",
+							Image: "greptime/greptimedb:latest",
 							Resources: &corev1.ResourceRequirements{
 								Requests: map[corev1.ResourceName]resource.Quantity{
 									"cpu":    resource.MustParse(defaultRequestCPU),
@@ -333,7 +341,7 @@ func TestSetDefaults(t *testing.T) {
 							Replicas: 3,
 							Template: &PodTemplateSpec{
 								MainContainer: &MainContainerSpec{
-									Image: "localhost:5001/greptime/greptimedb:latest",
+									Image: "greptime/greptimedb:latest",
 									Resources: &corev1.ResourceRequirements{
 										Requests: map[corev1.ResourceName]resource.Quantity{
 											"cpu":    resource.MustParse(defaultRequestCPU),
@@ -356,9 +364,12 @@ func TestSetDefaults(t *testing.T) {
 						},
 					},
 
-					HTTPServicePort:  int32(defaultHTTPServicePort),
-					GRPCServicePort:  int32(defaultGRPCServicePort),
-					MySQLServicePort: int32(defaultMySQLServicePort),
+					HTTPServicePort:     int32(defaultHTTPServicePort),
+					GRPCServicePort:     int32(defaultGRPCServicePort),
+					MySQLServicePort:    int32(defaultMySQLServicePort),
+					PostgresServicePort: int32(defaultPostgresServicePort),
+					OpenTSDBServicePort: int32(defaultOpenTSDBServicePort),
+					Version:             defaultVersion,
 				},
 			},
 		},

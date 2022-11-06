@@ -357,6 +357,10 @@ type GreptimeDBClusterSpec struct {
 	// +kubebuilder:validation:Enum:={true, false}
 	EnablePrometheusMonitor bool `json:"enablePrometheusMonitor,omitempty"`
 
+	// +optional
+	// The version of greptimedb.
+	Version string `json:"version,omitempty"`
+
 	// More cluster settings can be added here...
 }
 
