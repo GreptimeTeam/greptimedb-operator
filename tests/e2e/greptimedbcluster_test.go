@@ -20,23 +20,31 @@ import (
 )
 
 const (
-	createTableSQL = `CREATE TABLE monitor (
-                        host STRING,
-                        ts BIGINT,
-                        cpu DOUBLE DEFAULT 0,
-                        memory DOUBLE,
-                        TIME INDEX (ts),
-                      PRIMARY KEY(ts,host)) ENGINE=mito WITH(regions=1)`
-	insertDataSQL = `INSERT INTO monitor(host, cpu, memory, ts) VALUES ('host1', 66.6, 1024, 1660897955)`
-	selectDataSQL = `SELECT * FROM monitor`
+	createTableSQL = `CREATE TABLE dist_table (
+                        ts TIMESTAMP DEFAULT current_timestamp(),
+                        n INT,
+    					row_id INT,
+                        TIME INDEX (ts)
+                     )
+                     PARTITION BY RANGE COLUMNS (n) (
+    				 	PARTITION r0 VALUES LESS THAN (5),
+    					PARTITION r1 VALUES LESS THAN (9),
+    					PARTITION r2 VALUES LESS THAN (MAXVALUE),
+					)
+					engine=mito;`
+
+	insertDataSQLStr = "INSERT INTO dist_table(n, row_id) VALUES (%d, %d)"
+
+	selectDataSQL = `SELECT * FROM dist_table`
+
+	testRowIDNum = 12
 )
 
-// Metric is the schema of test data in SQL table.
-type Metric struct {
-	hostname  string
-	timestamp int32
-	cpu       float64
-	memory    float64
+// TestData is the schema of test data in SQL table.
+type TestData struct {
+	timestamp string
+	n         int32
+	rowID     int32
 }
 
 var _ = Describe("Basic test greptimedbcluster controller", func() {
@@ -97,20 +105,23 @@ var _ = Describe("Basic test greptimedbcluster controller", func() {
 		_, err = db.Query(createTableSQL)
 		Expect(err).NotTo(HaveOccurred(), "failed to create SQL table")
 
-		_, err = db.Query(insertDataSQL)
-		Expect(err).NotTo(HaveOccurred(), "failed to insert data")
+		for rowID := 1; rowID <= testRowIDNum; rowID++ {
+			insertDataSQL := fmt.Sprintf(insertDataSQLStr, rowID, rowID)
+			_, err = db.Query(insertDataSQL)
+			Expect(err).NotTo(HaveOccurred(), "failed to insert data")
+		}
 
 		results, err := db.Query(selectDataSQL)
 		Expect(err).NotTo(HaveOccurred(), "failed to get data")
 
-		var metrics []Metric
+		var data []TestData
 		for results.Next() {
-			var m Metric
-			err = results.Scan(&m.hostname, &m.cpu, &m.memory, &m.timestamp)
+			var d TestData
+			err = results.Scan(&d.timestamp, &d.n, &d.rowID)
 			Expect(err).NotTo(HaveOccurred(), "failed to scan data that query from db")
-			metrics = append(metrics, m)
+			data = append(data, d)
 		}
-		Expect(len(metrics) == 1).Should(BeTrue(), "get the wrong data from db")
+		Expect(len(data) == testRowIDNum).Should(BeTrue(), "get the wrong data from db")
 
 		By("Delete cluster")
 		err = k8sClient.Delete(ctx, testCluster)

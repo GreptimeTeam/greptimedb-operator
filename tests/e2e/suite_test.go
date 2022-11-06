@@ -22,10 +22,9 @@ import (
 )
 
 var (
-	cfg        *rest.Config
-	k8sClient  client.Client
-	reconciler *greptimedbcluster.Reconciler
-	testEnv    *envtest.Environment
+	cfg       *rest.Config
+	k8sClient client.Client
+	testEnv   *envtest.Environment
 
 	ctx    context.Context
 	cancel context.CancelFunc

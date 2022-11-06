@@ -6,42 +6,12 @@ metadata:
 spec:
   base:
     main:
-      resources:
-        requests:
-          memory: "64Mi"
-          cpu: "250m"
-        limits:
-          memory: "128Mi"
-          cpu: "500m"
+      image: localhost:5001/greptime/greptimedb:latest
   frontend:
     replicas: 1
-    template:
-      main:
-        image: localhost:5001/greptime/frontend:latest
-        args:
-          - "-meta-endpoint"
-          - "http://e2e-cluster-meta.default:3001"
-          - "-l"
-          - "0.0.0.0:3306"
-          - "-r"
-          - "e2e-cluster-datanode.default:3306"
   meta:
     replicas: 1
-    # FIXME(zyy17): 'etcdEndpoints' should be same as the args in meta. We can fix it when we startup operator as the Pod.
     etcdEndpoints:
-      - "127.0.0.1:2379"
-    template:
-      main:
-        image: localhost:5001/greptime/meta:latest
-        args:
-          - "--etcd-endpoint"
-          - "etcd.default:2379"
+      - "etcd.default:2379"
   datanode:
-    replicas: 1
-    template:
-      main:
-        image: localhost:5001/greptime/greptimedb:latest
-    storage:
-      storageClassName: standard
-      storageSize: 10Gi
-      storageRetainPolicy: Retain
+    replicas: 3

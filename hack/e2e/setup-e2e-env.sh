@@ -8,10 +8,8 @@ CLUSTER=greptimedb-operator-e2e
 REGISTRY_NAME=kind-registry
 REGISTRY_PORT=5001
 
-TEST_ETCD_IMAGE=ghcr.io/greptimeteam/etcd:latest
-TEST_META_IMAGE=ghcr.io/greptimeteam/meta-mock:latest
-TEST_FRONTEND_IMAGE=ghcr.io/greptimeteam/frontend-mock:latest
-TEST_GREPTIMEDB_IMAGE=ghcr.io/greptimeteam/db-test:latest
+TEST_GREPTIMEDB_IMAGE=greptime/greptimedb:integration-paas-test
+TEST_ETCD_IMAGE=greptime/etcd:v3.5.5
 
 function check_prerequisites() {
     if ! hash docker 2>/dev/null; then
@@ -84,7 +82,7 @@ EOF
 }
 
 function deploy_etcd() {
-    kubectl apply -f ./hack/etcd/etcd-basic.yaml
+    kubectl apply -f ./hack/e2e/etcd.yaml
     if ! kubectl rollout status --watch --timeout=180s statefulset/etcd; then
        echo "Deploy etcd failed"
        exit
@@ -97,14 +95,6 @@ function pull_images_and_push_to_local_registry() {
     docker tag "${TEST_ETCD_IMAGE}" localhost:5001/greptime/etcd:latest
     docker push localhost:5001/greptime/etcd:latest
 
-    docker pull "${TEST_META_IMAGE}"
-    docker tag "${TEST_META_IMAGE}" localhost:5001/greptime/meta:latest
-    docker push localhost:5001/greptime/meta:latest
-
-    docker pull "${TEST_FRONTEND_IMAGE}"
-    docker tag "${TEST_FRONTEND_IMAGE}" localhost:5001/greptime/frontend:latest
-    docker push localhost:5001/greptime/frontend:latest
-
     docker pull "${TEST_GREPTIMEDB_IMAGE}"
     docker tag "${TEST_GREPTIMEDB_IMAGE}" localhost:5001/greptime/greptimedb:latest
     docker push localhost:5001/greptime/greptimedb:latest
@@ -113,5 +103,5 @@ function pull_images_and_push_to_local_registry() {
 check_prerequisites
 start_local_registry
 create_kind_cluster
-deploy_etcd
 pull_images_and_push_to_local_registry
+deploy_etcd
