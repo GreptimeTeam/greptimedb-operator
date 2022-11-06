@@ -30,6 +30,8 @@ type EtcdMaintenanceBuilder func(etcdEndpoints []string) (clientv3.Maintenance, 
 type MetaDeployer struct {
 	*CommonDeployer
 
+	CheckEtcdService bool
+
 	etcdMaintenanceBuilder func(etcdEndpoints []string) (clientv3.Maintenance, error)
 }
 
@@ -104,9 +106,11 @@ func (d *MetaDeployer) Render(crdObject client.Object) ([]client.Object, error) 
 }
 
 func (d *MetaDeployer) PreSyncHooks() []deployer.Hook {
-	return []deployer.Hook{
-		d.checkEtcdService,
+	var hooks []deployer.Hook
+	if d.CheckEtcdService {
+		hooks = append(hooks, d.checkEtcdService)
 	}
+	return hooks
 }
 
 func (d *MetaDeployer) CheckAndUpdateStatus(ctx context.Context, highLevelObject client.Object) (bool, error) {
