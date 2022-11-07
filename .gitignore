@@ -23,3 +23,6 @@ testbin/*
 *.swp
 *.swo
 *~
+
+# macOS
+.DS_Store
