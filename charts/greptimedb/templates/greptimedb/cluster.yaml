@@ -53,3 +53,4 @@ spec:
       storageClassName: {{ .Values.datanode.storage.storageClassName }}
       storageSize: {{ .Values.datanode.storage.storageSize }}
       storageRetainPolicy: {{ .Values.datanode.storage.storageRetainPolicy }}
+  enablePrometheusMonitor: false

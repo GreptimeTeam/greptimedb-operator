@@ -43,8 +43,8 @@ function process_meta_image() {
 }
 
 function process_etcd_image() {
-    docker pull ghcr.io/greptimeteam/etcd:latest
-    docker tag ghcr.io/greptimeteam/etcd:latest localhost:5001/greptime/etcd:latest
+    docker pull greptimeteam/etcd:v3.5.5
+    docker tag greptimeteam/etcd:v3.5.5 localhost:5001/greptime/etcd:latest
     docker push localhost:5001/greptime/etcd:latest
 }
 

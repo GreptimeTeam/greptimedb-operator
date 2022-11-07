@@ -28,7 +28,7 @@ spec:
   meta:
     replicas: 1
     etcdEndpoints:
-      - "etcd:2379"
+      - "etcd.default:2379"
     template:
       main:
         image: localhost:5001/greptime/meta:latest
