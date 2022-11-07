@@ -31,13 +31,17 @@ const (
     					PARTITION r1 VALUES LESS THAN (9),
     					PARTITION r2 VALUES LESS THAN (MAXVALUE),
 					)
-					engine=mito;`
+					engine=mito`
 
 	insertDataSQLStr = "INSERT INTO dist_table(n, row_id) VALUES (%d, %d)"
 
 	selectDataSQL = `SELECT * FROM dist_table`
 
 	testRowIDNum = 12
+)
+
+var (
+	defaultQueryTimeout = 5 * time.Second
 )
 
 // TestData is the schema of test data in SQL table.
@@ -102,16 +106,24 @@ var _ = Describe("Basic test greptimedbcluster controller", func() {
 		}, 60*time.Second, time.Second).ShouldNot(HaveOccurred())
 
 		By("Execute SQL queries after connecting")
-		_, err = db.Query(createTableSQL)
+
+		ctx, cancel := context.WithTimeout(context.Background(), defaultQueryTimeout)
+		defer cancel()
+
+		_, err = db.ExecContext(ctx, createTableSQL)
 		Expect(err).NotTo(HaveOccurred(), "failed to create SQL table")
 
+		ctx, cancel = context.WithTimeout(context.Background(), defaultQueryTimeout)
+		defer cancel()
 		for rowID := 1; rowID <= testRowIDNum; rowID++ {
 			insertDataSQL := fmt.Sprintf(insertDataSQLStr, rowID, rowID)
-			_, err = db.Query(insertDataSQL)
+			_, err = db.ExecContext(ctx, insertDataSQL)
 			Expect(err).NotTo(HaveOccurred(), "failed to insert data")
 		}
 
-		results, err := db.Query(selectDataSQL)
+		ctx, cancel = context.WithTimeout(context.Background(), defaultQueryTimeout)
+		defer cancel()
+		results, err := db.QueryContext(ctx, selectDataSQL)
 		Expect(err).NotTo(HaveOccurred(), "failed to get data")
 
 		var data []TestData

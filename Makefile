@@ -82,7 +82,7 @@ setup-e2e: ## Setup e2e test environment.
 
 .PHONY: e2e
 e2e: setup-e2e ## Run e2e tests.
-	go test ./tests/e2e/... && kind delete clusters greptimedb-operator-e2e
+	go test -timeout 8m -v ./tests/e2e/... && kind delete clusters greptimedb-operator-e2e
 
 .PHONY: test
 test: manifests generate fmt vet envtest ## Run tests.
