@@ -1,4 +1,5 @@
 name: "PR Title Checker"
+
 on:
   pull_request_target:
     types:
@@ -10,7 +11,7 @@ on:
 
 jobs:
   check:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - uses: thehanimo/pr-title-checker@v1.3.4
         with:

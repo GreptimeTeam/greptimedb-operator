@@ -1,8 +1,10 @@
 name: ci
+
 on: [push, pull_request]
 
 jobs:
   build:
+    name: Build the project
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout sources
@@ -21,10 +23,12 @@ jobs:
         run: |
           make check-code-generation
 
-      - name: Build the project
+      - name: Compile the project
         run: |
           make
+
   unit-tests:
+    name: Run unit tests
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout sources
@@ -38,7 +42,9 @@ jobs:
       - name: Run the unit tests
         run: |
           make test
+
   e2e:
+    name: Run e2e
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout sources

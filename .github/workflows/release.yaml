@@ -1,4 +1,5 @@
 name: Release
+
 on:
   push:
     tags:
@@ -9,7 +10,8 @@ on:
 
 jobs:
   docker:
-    runs-on: ubuntu-latest
+    name: Build the docker image
+    runs-on: ubuntu-22.04
     steps:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -17,7 +19,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
-      - name: Login to Docker Hub
+      - name: Login to DockerHub
         uses: docker/login-action@v2
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
@@ -41,22 +43,23 @@ jobs:
             greptime/greptimedb-operator:${{ github.ref_name }}
 
   release:
-    runs-on: ubuntu-latest
+    name: Release artifacts
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Package Charts
+      - name: Package charts
         run: |
           helm package ./charts/greptimedb-operator
           helm package ./charts/greptimedb
 
-      - name: Rename Packages
+      - name: Rename packages
         run: |
           mv greptimedb-${{ github.ref_name }}.tgz greptimedb-${{ github.ref_name }}.charts.tgz
           mv greptimedb-operator-${{ github.ref_name }}.tgz greptimedb-operator-${{ github.ref_name }}.charts.tgz
 
-      - name: Upload Release Asset
+      - name: Upload release asset
         uses: ncipollo/release-action@v1
         with:
           artifacts: |
