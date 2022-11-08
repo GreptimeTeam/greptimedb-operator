@@ -208,13 +208,13 @@ func (d *DatanodeDeployer) generateSts(cluster *v1alpha1.GreptimeDBCluster) (*ap
 	)
 
 	if len(cluster.Spec.Datanode.Template.MainContainer.Command) > 0 {
-		command = cluster.Spec.Frontend.Template.MainContainer.Command
+		command = cluster.Spec.Datanode.Template.MainContainer.Command
 	} else {
 		command = []string{"/bin/sh", "-c"}
 	}
 
 	if len(cluster.Spec.Datanode.Template.MainContainer.Args) > 0 {
-		args = cluster.Spec.Frontend.Template.MainContainer.Args
+		args = cluster.Spec.Datanode.Template.MainContainer.Args
 	} else {
 		args = d.buildDatanodeArgs(cluster)
 	}

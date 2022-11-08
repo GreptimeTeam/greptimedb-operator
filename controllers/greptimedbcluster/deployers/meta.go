@@ -180,7 +180,7 @@ func (d *MetaDeployer) generateSvc(cluster *v1alpha1.GreptimeDBCluster) (*corev1
 
 func (d *MetaDeployer) generateDeployment(cluster *v1alpha1.GreptimeDBCluster) (*appsv1.Deployment, error) {
 	var args []string
-	if len(cluster.Spec.Frontend.Template.MainContainer.Args) > 0 {
+	if len(cluster.Spec.Meta.Template.MainContainer.Args) > 0 {
 		args = cluster.Spec.Meta.Template.MainContainer.Args
 	} else {
 		args = d.buildMetaArgs(cluster)
