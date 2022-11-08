@@ -41,7 +41,7 @@ type Reconciler struct {
 	Scheme   *runtime.Scheme
 	Recorder record.EventRecorder
 
-	deployers []deployer.Deployer
+	Deployers []deployer.Deployer
 }
 
 func Setup(mgr ctrl.Manager, _ *options.Options) error {
@@ -52,7 +52,7 @@ func Setup(mgr ctrl.Manager, _ *options.Options) error {
 	}
 
 	// sync will execute the sync logic of multiple deployers in order.
-	reconciler.deployers = []deployer.Deployer{
+	reconciler.Deployers = []deployer.Deployer{
 		deployers.NewMetaDeployer(mgr),
 		deployers.NewDatanodeDeployer(mgr),
 		deployers.NewFrontendDeployer(mgr),
@@ -131,7 +131,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (result ct
 }
 
 func (r *Reconciler) sync(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster) (ctrl.Result, error) {
-	for _, d := range r.deployers {
+	for _, d := range r.Deployers {
 		err := d.Sync(ctx, cluster, d)
 		if err == deployer.ErrSyncNotReady {
 			if cluster.Status.ClusterPhase != v1alpha1.ClusterStarting {
@@ -178,7 +178,7 @@ func (r *Reconciler) delete(ctx context.Context, cluster *v1alpha1.GreptimeDBClu
 		return ctrl.Result{}, nil
 	}
 
-	for _, d := range r.deployers {
+	for _, d := range r.Deployers {
 		if err := d.CleanUp(ctx, cluster); err != nil {
 			return ctrl.Result{}, err
 		}

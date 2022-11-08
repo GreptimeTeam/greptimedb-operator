@@ -84,7 +84,7 @@ var _ = BeforeSuite(func() {
 		Scheme:   manager.GetScheme(),
 		Recorder: manager.GetEventRecorderFor("greptimedbcluster-controller"),
 
-		deployers: []deployer.Deployer{
+		Deployers: []deployer.Deployer{
 			deployers.NewMetaDeployer(manager, deployers.WithEtcdMaintenanceBuilder(buildMockEtcdMaintenance)),
 			deployers.NewDatanodeDeployer(manager),
 			deployers.NewFrontendDeployer(manager),

@@ -19,6 +19,8 @@ import (
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 	"github.com/GreptimeTeam/greptimedb-operator/cmd/operator/app/options"
 	"github.com/GreptimeTeam/greptimedb-operator/controllers/greptimedbcluster"
+	"github.com/GreptimeTeam/greptimedb-operator/controllers/greptimedbcluster/deployers"
+	"github.com/GreptimeTeam/greptimedb-operator/pkg/deployer"
 )
 
 var (
@@ -69,7 +71,7 @@ var _ = BeforeSuite(func() {
 	Expect(err).ToNot(HaveOccurred())
 
 	ctx, cancel = context.WithCancel(context.TODO())
-	err = greptimedbcluster.Setup(manager, options.NewDefaultOptions())
+	err = Setup(manager, options.NewDefaultOptions())
 	Expect(err).ToNot(HaveOccurred())
 
 	go func() {
@@ -85,3 +87,20 @@ var _ = AfterSuite(func() {
 	err := testEnv.Stop()
 	Expect(err).NotTo(HaveOccurred())
 })
+
+func Setup(mgr ctrl.Manager, _ *options.Options) error {
+	reconciler := &greptimedbcluster.Reconciler{
+		Client:   mgr.GetClient(),
+		Scheme:   mgr.GetScheme(),
+		Recorder: mgr.GetEventRecorderFor("greptimedbcluster-controller"),
+	}
+
+	// sync will execute the sync logic of multiple deployers in order.
+	reconciler.Deployers = []deployer.Deployer{
+		deployers.NewMetaDeployer(mgr, deployers.WithCheckEtcdService(false)),
+		deployers.NewDatanodeDeployer(mgr),
+		deployers.NewFrontendDeployer(mgr),
+	}
+
+	return reconciler.SetupWithManager(mgr)
+}
