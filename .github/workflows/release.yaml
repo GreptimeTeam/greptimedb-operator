@@ -10,7 +10,7 @@ on:
 
 jobs:
   docker:
-    name: Build the docker image
+    name: Build and push image
     runs-on: ubuntu-22.04
     steps:
       - name: Set up QEMU
@@ -32,6 +32,12 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Configure tag
+        shell: bash
+        run: |
+          VERSION=${{ github.ref_name }}
+          echo "VERSION=${VERSION:1}" >> $GITHUB_ENV
+
       - name: Build and push
         uses: docker/build-push-action@v3
         with:
@@ -39,30 +45,14 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            ghcr.io/greptimeteam/greptimedb-operator:${{ github.ref_name }}
-            greptime/greptimedb-operator:${{ github.ref_name }}
-
+            greptime/greptimedb-operator:latest
+            greptime/greptimedb-operator:${{ env.VERSION }}
+            ghcr.io/greptimeteam/greptimedb-operator:${{ env.VERSION }}
   release:
-    name: Release artifacts
+    name: Release the artifacts
     runs-on: ubuntu-22.04
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
-      - name: Package charts
-        run: |
-          helm package ./charts/greptimedb-operator
-          helm package ./charts/greptimedb
-
-      - name: Rename packages
-        run: |
-          mv greptimedb-${{ github.ref_name }}.tgz greptimedb-${{ github.ref_name }}.charts.tgz
-          mv greptimedb-operator-${{ github.ref_name }}.tgz greptimedb-operator-${{ github.ref_name }}.charts.tgz
-
-      - name: Upload release asset
-        uses: ncipollo/release-action@v1
+      - name: Publish release
+        uses: softprops/action-gh-release@v1
         with:
-          artifacts: |
-            greptimedb-${{ github.ref_name }}.charts.tgz
-            greptimedb-operator-${{ github.ref_name }}.charts.tgz
-          token: ${{ secrets.GITHUB_TOKEN }}
+          name: "Release ${{ github.ref_name }}"
