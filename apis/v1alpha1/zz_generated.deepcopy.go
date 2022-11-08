@@ -298,7 +298,6 @@ func (in *MainContainerSpec) DeepCopy() *MainContainerSpec {
 func (in *MetaSpec) DeepCopyInto(out *MetaSpec) {
 	*out = *in
 	in.ComponentSpec.DeepCopyInto(&out.ComponentSpec)
-	in.Service.DeepCopyInto(&out.Service)
 	if in.EtcdEndpoints != nil {
 		in, out := &in.EtcdEndpoints, &out.EtcdEndpoints
 		*out = make([]string, len(*in))

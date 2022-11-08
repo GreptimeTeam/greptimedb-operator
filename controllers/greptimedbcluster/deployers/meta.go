@@ -30,6 +30,8 @@ type EtcdMaintenanceBuilder func(etcdEndpoints []string) (clientv3.Maintenance, 
 type MetaDeployer struct {
 	*CommonDeployer
 
+	CheckEtcdService bool
+
 	etcdMaintenanceBuilder func(etcdEndpoints []string) (clientv3.Maintenance, error)
 }
 
@@ -104,9 +106,11 @@ func (d *MetaDeployer) Render(crdObject client.Object) ([]client.Object, error) 
 }
 
 func (d *MetaDeployer) PreSyncHooks() []deployer.Hook {
-	return []deployer.Hook{
-		d.checkEtcdService,
+	var hooks []deployer.Hook
+	if d.CheckEtcdService {
+		hooks = append(hooks, d.checkEtcdService)
 	}
+	return hooks
 }
 
 func (d *MetaDeployer) CheckAndUpdateStatus(ctx context.Context, highLevelObject client.Object) (bool, error) {
@@ -159,9 +163,9 @@ func (d *MetaDeployer) generateSvc(cluster *v1alpha1.GreptimeDBCluster) (*corev1
 			},
 			Ports: []corev1.ServicePort{
 				{
-					Name:     "grpc",
+					Name:     "meta",
 					Protocol: corev1.ProtocolTCP,
-					Port:     cluster.Spec.GRPCServicePort,
+					Port:     cluster.Spec.Meta.ServicePort,
 				},
 			},
 		},
@@ -175,6 +179,13 @@ func (d *MetaDeployer) generateSvc(cluster *v1alpha1.GreptimeDBCluster) (*corev1
 }
 
 func (d *MetaDeployer) generateDeployment(cluster *v1alpha1.GreptimeDBCluster) (*appsv1.Deployment, error) {
+	var args []string
+	if len(cluster.Spec.Meta.Template.MainContainer.Args) > 0 {
+		args = cluster.Spec.Meta.Template.MainContainer.Args
+	} else {
+		args = d.buildMetaArgs(cluster)
+	}
+
 	deployment := &appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Deployment",
@@ -205,12 +216,12 @@ func (d *MetaDeployer) generateDeployment(cluster *v1alpha1.GreptimeDBCluster) (
 							Image:     cluster.Spec.Meta.Template.MainContainer.Image,
 							Resources: *cluster.Spec.Meta.Template.MainContainer.Resources,
 							Command:   cluster.Spec.Meta.Template.MainContainer.Command,
-							Args:      cluster.Spec.Meta.Template.MainContainer.Args,
+							Args:      args,
 							Ports: []corev1.ContainerPort{
 								{
-									Name:          "grpc",
+									Name:          "meta",
 									Protocol:      corev1.ProtocolTCP,
-									ContainerPort: cluster.Spec.GRPCServicePort,
+									ContainerPort: cluster.Spec.Meta.ServicePort,
 								},
 							},
 						},
@@ -333,4 +344,13 @@ func buildEtcdMaintenance(etcdEndpoints []string) (clientv3.Maintenance, error) 
 	}
 
 	return etcdClient, nil
+}
+
+func (d *MetaDeployer) buildMetaArgs(cluster *v1alpha1.GreptimeDBCluster) []string {
+	return []string{
+		"metasrv", "start",
+		"--bind-addr", fmt.Sprintf("0.0.0.0:%d", cluster.Spec.Meta.ServicePort),
+		"--server-addr", fmt.Sprintf("%s.%s:%d", d.ResourceName(cluster.Name, v1alpha1.MetaComponentKind), cluster.Namespace, cluster.Spec.Meta.ServicePort),
+		"--store-addr", cluster.Spec.Meta.EtcdEndpoints[0],
+	}
 }

@@ -12,16 +12,21 @@ var (
 	defaultLimitCPU      = "500m"
 	defaultLimitMemory   = "128Mi"
 
+	defaultVersion = "v0.1.0"
+
 	// The default settings for GreptimeDBClusterSpec.
-	defaultHTTPServicePort  = 3000
-	defaultGRPCServicePort  = 3001
-	defaultMySQLServicePort = 3306
+	defaultHTTPServicePort     = 4000
+	defaultGRPCServicePort     = 4001
+	defaultMySQLServicePort    = 3306
+	defaultPostgresServicePort = 5432
+	defaultOpenTSDBServicePort = 4242
+	defaultMetaServicePort     = 3002
 
 	// The default storage settings for datanode.
 	defaultDataNodeStorageName      = "datanode"
 	defaultDataNodeStorageClassName = "standard" // 'standard' is the default local storage class of kind.
 	defaultDataNodeStorageSize      = "10Gi"
-	defaultDataNodeStorageMountPath = "/greptimedb/data"
+	defaultDataNodeStorageMountPath = "/tmp/greptimedb"
 	defaultStorageRetainPolicyType  = RetainStorageRetainPolicyTypeRetain
 )
 
@@ -45,9 +50,13 @@ func (in *GreptimeDBCluster) SetDefaults() error {
 				},
 			},
 		},
-		HTTPServicePort:  int32(defaultHTTPServicePort),
-		GRPCServicePort:  int32(defaultGRPCServicePort),
-		MySQLServicePort: int32(defaultMySQLServicePort),
+
+		HTTPServicePort:     int32(defaultHTTPServicePort),
+		GRPCServicePort:     int32(defaultGRPCServicePort),
+		MySQLServicePort:    int32(defaultMySQLServicePort),
+		PostgresServicePort: int32(defaultPostgresServicePort),
+		OpenTSDBServicePort: int32(defaultOpenTSDBServicePort),
+		Version:             defaultVersion,
 	}
 
 	if in.Spec.Frontend != nil {
@@ -63,6 +72,7 @@ func (in *GreptimeDBCluster) SetDefaults() error {
 			ComponentSpec: ComponentSpec{
 				Template: &PodTemplateSpec{},
 			},
+			ServicePort: int32(defaultMetaServicePort),
 		}
 	}
 

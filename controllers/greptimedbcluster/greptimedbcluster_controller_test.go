@@ -104,7 +104,7 @@ func createCluster(name, namespace string) *v1alpha1.GreptimeDBCluster {
 		Spec: v1alpha1.GreptimeDBClusterSpec{
 			Base: &v1alpha1.PodTemplateSpec{
 				MainContainer: &v1alpha1.MainContainerSpec{
-					Image: "localhost:5001/greptime/greptimedb:latest",
+					Image: "greptime/greptimedb:latest",
 				},
 			},
 			Frontend: &v1alpha1.FrontendSpec{
@@ -115,6 +115,9 @@ func createCluster(name, namespace string) *v1alpha1.GreptimeDBCluster {
 			Meta: &v1alpha1.MetaSpec{
 				ComponentSpec: v1alpha1.ComponentSpec{
 					Replicas: 3,
+				},
+				EtcdEndpoints: []string{
+					"etcd.default:2379",
 				},
 			},
 			Datanode: &v1alpha1.DatanodeSpec{

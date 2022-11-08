@@ -6,10 +6,12 @@ metadata:
 spec:
   base:
     main:
-      image: localhost:5001/greptime/greptimedb:latest
+      image: greptime/greptimedb:integration-paas-test
   frontend:
     replicas: 1
   meta:
-    replicas: 3
-  datanode:
     replicas: 1
+    etcdEndpoints:
+      - "etcd.default:2379"
+  datanode:
+    replicas: 3
