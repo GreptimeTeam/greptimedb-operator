@@ -2,7 +2,6 @@ package deployers
 
 import (
 	"context"
-	"fmt"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	appsv1 "k8s.io/api/apps/v1"
@@ -139,16 +138,6 @@ func (d *FrontendDeployer) generateSvc(cluster *v1alpha1.GreptimeDBCluster) (*co
 					Protocol: corev1.ProtocolTCP,
 					Port:     cluster.Spec.MySQLServicePort,
 				},
-				{
-					Name:     "postgres",
-					Protocol: corev1.ProtocolTCP,
-					Port:     cluster.Spec.PostgresServicePort,
-				},
-				{
-					Name:     "opentsdb",
-					Protocol: corev1.ProtocolTCP,
-					Port:     cluster.Spec.OpenTSDBServicePort,
-				},
 			},
 		},
 	}
@@ -161,13 +150,6 @@ func (d *FrontendDeployer) generateSvc(cluster *v1alpha1.GreptimeDBCluster) (*co
 }
 
 func (d *FrontendDeployer) generateDeployment(cluster *v1alpha1.GreptimeDBCluster) (*appsv1.Deployment, error) {
-	var args []string
-	if len(cluster.Spec.Frontend.Template.MainContainer.Args) > 0 {
-		args = cluster.Spec.Frontend.Template.MainContainer.Args
-	} else {
-		args = d.buildFrontendArgs(cluster)
-	}
-
 	deployment := &appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Deployment",
@@ -198,7 +180,7 @@ func (d *FrontendDeployer) generateDeployment(cluster *v1alpha1.GreptimeDBCluste
 							Image:     cluster.Spec.Frontend.Template.MainContainer.Image,
 							Resources: *cluster.Spec.Frontend.Template.MainContainer.Resources,
 							Command:   cluster.Spec.Frontend.Template.MainContainer.Command,
-							Args:      args,
+							Args:      cluster.Spec.Frontend.Template.MainContainer.Args,
 							Ports: []corev1.ContainerPort{
 								{
 									Name:          "grpc",
@@ -214,16 +196,6 @@ func (d *FrontendDeployer) generateDeployment(cluster *v1alpha1.GreptimeDBCluste
 									Name:          "mysql",
 									Protocol:      corev1.ProtocolTCP,
 									ContainerPort: cluster.Spec.MySQLServicePort,
-								},
-								{
-									Name:          "postgres",
-									Protocol:      corev1.ProtocolTCP,
-									ContainerPort: cluster.Spec.PostgresServicePort,
-								},
-								{
-									Name:          "opentsdb",
-									Protocol:      corev1.ProtocolTCP,
-									ContainerPort: cluster.Spec.OpenTSDBServicePort,
 								},
 							},
 						},
@@ -242,18 +214,6 @@ func (d *FrontendDeployer) generateDeployment(cluster *v1alpha1.GreptimeDBCluste
 	}
 
 	return deployment, nil
-}
-
-func (d *FrontendDeployer) buildFrontendArgs(cluster *v1alpha1.GreptimeDBCluster) []string {
-	return []string{
-		"frontend", "start",
-		"--grpc-addr", fmt.Sprintf("0.0.0.0:%d", cluster.Spec.GRPCServicePort),
-		"--metasrv-addr", fmt.Sprintf("%s.%s:%d", d.ResourceName(cluster.Name, v1alpha1.MetaComponentKind), cluster.Namespace, cluster.Spec.Meta.ServicePort),
-		"--http-addr", fmt.Sprintf("0.0.0.0:%d", cluster.Spec.HTTPServicePort),
-		"--mysql-addr", fmt.Sprintf("0.0.0.0:%d", cluster.Spec.MySQLServicePort),
-		"--postgres-addr", fmt.Sprintf("0.0.0.0:%d", cluster.Spec.PostgresServicePort),
-		"--opentsdb-addr", fmt.Sprintf("0.0.0.0:%d", cluster.Spec.OpenTSDBServicePort),
-	}
 }
 
 func (d *FrontendDeployer) generatePodMonitor(cluster *v1alpha1.GreptimeDBCluster) (*monitoringv1.PodMonitor, error) {
