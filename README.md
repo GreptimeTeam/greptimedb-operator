@@ -2,13 +2,35 @@
 
 ## Overview
 
-The GreptimeDB Operator manages GreptimeDB clusters on [Kubernetes](https://kubernetes.io/) by using [Operator pattern](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/).
+The GreptimeDB Operator manages [GreptimeDB](https://github.com/GrepTimeTeam/greptimedb) clusters on [Kubernetes](https://kubernetes.io/) by using [Operator pattern](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/).
+
+The GreptimeDB operator abstract the model of maintaining the high aviable GreptimeDB cluster, you can create you own cluster as easy as possible:
+
+```yaml
+$ cat <<EOF | kubectl apply -f -
+apiVersion: greptime.io/v1alpha1
+kind: GreptimeDBCluster
+metadata:
+  name: basic
+spec:
+  base:
+    main:
+      image: greptime/greptimedb
+  frontend:
+    replicas: 1
+  meta:
+    replicas: 1
+    etcdEndpoints:
+      - "etcd.default:2379"
+  datanode:
+    replicas: 3
+```
 
 ## Getting Started
 
 ### Prerequisites
 
-- Kubernetes 1.18 or higher version is required
+- **Kubernetes 1.18 or higher version is required**
 
   You can use [kind](https://kind.sigs.k8s.io/) to create your own Kubernetes cluster:
 
@@ -16,119 +38,108 @@ The GreptimeDB Operator manages GreptimeDB clusters on [Kubernetes](https://kube
   $ kind create cluster
   ```
 
-  If you want to deploy Kubernetes with local registry, you can use the following commands (the scripts is modified from [here](https://kind.sigs.k8s.io/docs/user/local-registry/)):
+  If you want to deploy Kubernetes with local registry, you can use the following commands:
 
   ```
-  $ ./greptimedb-operator/hack/kind/3-nodes-with-local-registry.sh
+  $ make kind-up
   ```
 
-- [kubectl](https://kubernetes.io/docs/tasks/tools/)
+  It will create the cluster with 3 nodes and local registry.
 
-- Go 1.18 or higher version is required
+- **kubectl**
 
-### Usages
-
-- **Install the CRDs**
-
-  ```
-  $ make install
-  ```
+  You can download the `kubectl` tool from the [page](https://kubernetes.io/docs/tasks/tools/).
   
-- **Run the operator locally**
+- **Helm**
 
-  ```
-  $ make run
-  ```
-  
-- **Build the docker image of greptimedb-operator**
+  You can follow the [guide](https://helm.sh/docs/intro/install/) to  install Helm.
 
-  ```
-  $ make docker-build
-  ```
+### Quick start
 
-- **Manager the basic greptimedb cluster**
+You can use Helm chart of greptimedb-operator in [helm-charts](https://github.com/GreptimeTeam/helm-charts/blob/main/charts/greptimedb-operator/README.md) to start your operator quickly.
 
-  ```
-  # Create the cluster.
-  $ kubectl apply -f ./config/samples/basic/cluster.yaml
+## Development
 
-  # Delete the cluster.
-  $ kubectl delete -f ./config/samples/basic/cluster.yaml
-  ```
+### About `make` targets
 
-- **Deploy greptimedb-operator in Kubernetes**
+We can use `make` to handle most of development, you can use the targets that list by the following command:
 
-  ```
-  # Create the greptimedb-operator deployment(including CRDs, RBAC, Deployment etc.).
-  $ make deploy
+```
+$ make help
+```
 
-  # Delete the greptimedb-operator deployment.
-  $ make undeploy
-  ```
+### Run operator on host
 
-- **Deploy the basic cluster of one Datanode**
+1. Install the CRDs:
 
-  ```
-  # Deploy the cluster that only has one Datanode.
-  $ kubectl apply -f ./config/samples/basic-datanode/cluster.yaml
+   ```
+   $ make install
+   ```
 
-  # Port forward the service to your host.
-  $ kubectl port-forward svc/basic-datanode 3306:3306
+2. Run the operator on your host(make sure your Kubernetes is ready):
 
-  # Use mysql client to connect service.
-  $ mysql -h 127.0.0.1 -P 3306
-  ```
+   ```
+   $ make run
+   ```
 
-  After connecting to the cluster, you can [run your own SQL](https://github.com/GreptimeTeam/greptimedb).
+### Deploy operator on self-managed Kubernetes
 
-  Make sure your [greptimedb](https://github.com/GreptimeTeam/greptimedb) image is already in your local registry of kind, you can push your greptimedb image:
+1. Build the image of operator
 
-  ```
-  # Build image in greptimedb repo.
-  $ docker build --network host -f docker/Dockerfile -t localhost:5001/greptime/greptimedb .
+   ```
+   $ make docker-build
+   ```
 
-  # Push the image to local registry.
-  $ docker push localhost:5001/greptimedb
-  ```
+   the default image URL is:
 
-- **Run Tests**
+   ```
+   localhost:5001/greptime/greptimedb-operator:latest
+   ```
 
-  - **Run Unit Test**
+   You can prefer your registry and tag:
 
-    ```
-    $ make test
-    ```
+   ```
+   $ make docker-build IMAGE_REPO=<your-image-repo> IMAGE_TAG=<your-image-tag>
+   ```
 
-  - **Run e2e Test**
+   **Note**: If you use the `IMAGE_REPO` or `IMAGE_TAG` in `make docker-build`, you also have to use them again in the following command.
 
-    Prerequisites: docker / kind / kubectl
+2. Push the image
 
-    ```
-    $ make e2e
-    ```
+   ```
+   $ make docker-push
+   ```
 
-### Run your local GreptimeDB cluster
+3. Deploy the operator in your self-managed Kubernetes
 
-- **Prerequisites**
+   ```
+   $ make deploy
+   ```
 
-  - [docker](https://docs.docker.com/get-docker/)
-  - [kind](https://kind.sigs.k8s.io/docs/user/quick-start/#installing-from-release-binaries)
-  - [kubectl](https://kubernetes.io/docs/tasks/tools/)
+   The operator will deploy in `greptimedb-operator-system` namespace:
+   
+   ```
+   $ kubectl get pod -n greptimedb-operator-system
+   NAME                                   READY   STATUS    RESTARTS   AGE
+   greptimedb-operator-7b4496c84d-bpwbm   1/1     Running   0          76s
+   ```
 
-- **How to run**
+   If you want to delete the deployment, you can:
 
-  ```
-  $ ./hack/local-install.sh
-  ```
+   ```
+   $ make undeploy
+   ```
 
-  The installation will still run foreground to keep the port forward connection to GreptimeDB, you can open another terminal and use mysql client to connnect GreptimeDB.
+### Testing
 
-  To uninstall the deployments, you can:
+1. Run unit test
 
-  ```
-  $ kind delete clusters greptimedb-playground
-  ```
+   ```
+   $ make test
+   ```
 
-### Use Helm to deploy GreptimeDB Operator and Cluster
+2. Run e2e test
 
-Please read the [Guide](./charts/README.md).
+   ```
+   $ make e2e
+   ```
