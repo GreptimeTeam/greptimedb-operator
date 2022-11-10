@@ -15,7 +15,7 @@ metadata:
 spec:
   base:
     main:
-      image: greptime/greptimedb
+      image: greptime/greptimedb:latest
   frontend:
     replicas: 1
   meta:
