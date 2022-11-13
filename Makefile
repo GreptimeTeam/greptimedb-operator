@@ -3,6 +3,8 @@ IMAGE_REGISTRY ?= localhost:5001
 IMAGE_REPO ?= ${IMAGE_REGISTRY}/greptime
 IMAGE_TAG ?= latest
 DOCKER_BUILD_OPTIONS ?= --network host
+OPERATOR_DOCKERFILE = ./docker/operator/Dockerfile
+INITIALIZER_DOCKERFILE = ./docker/initializer/Dockerfile
 
 MANIFESTS_DIR = ./manifests
 
@@ -96,17 +98,29 @@ kind-up: ## Create the kind cluster for developing.
 build: generate fmt vet ## Build manager binary.
 	go build -ldflags '${LDFLAGS}' -o bin/greptimedb-operator ./cmd/operator/main.go
 
+.PHONY: initializer
+initializer:
+	go build -ldflags '${LDFLAGS}' -o bin/greptimedb-initializer ./cmd/initializer/...
+
 .PHONY: run
 run: manifests generate fmt vet ## Run a controller from your host.
 	go run -ldflags '${LDFLAGS}' ./cmd/operator/main.go
 
-.PHONY: docker-build
-docker-build: ## Build docker image with the greptimedb-operator.
-	docker build ${DOCKER_BUILD_OPTIONS} -t ${IMAGE_REPO}/greptimedb-operator:${IMAGE_TAG} .
+.PHONY: docker-build-operator
+docker-build-operator: ## Build docker image with the greptimedb-operator.
+	docker build ${DOCKER_BUILD_OPTIONS} -f  ${OPERATOR_DOCKERFILE} -t ${IMAGE_REPO}/greptimedb-operator:${IMAGE_TAG} .
 
-.PHONY: docker-push
-docker-push: ## Push docker image with the greptimedb-operator.
+.PHONY: docker-build-initializer
+docker-build-initializer: ## Build docker image with the greptimedb-initializer.
+	docker build ${DOCKER_BUILD_OPTIONS} -f  ${INITIALIZER_DOCKERFILE} -t ${IMAGE_REPO}/greptimedb-initializer:${IMAGE_TAG} .
+
+.PHONY: docker-push-operator
+docker-push-operator: ## Push docker image with the greptimedb-operator.
 	docker push ${IMAGE_REPO}/greptimedb-operator:${IMAGE_TAG}
+
+.PHONY: docker-push-initializer
+docker-push-initializer: ## Push docker image with the greptimedb-initializer.
+	docker push ${IMAGE_REPO}/greptimedb-initializer:${IMAGE_TAG}
 
 ##@ Deployment
 

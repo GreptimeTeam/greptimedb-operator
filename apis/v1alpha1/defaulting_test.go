@@ -41,6 +41,7 @@ func TestSetDefaults(t *testing.T) {
 			},
 			GreptimeDBCluster{
 				Spec: GreptimeDBClusterSpec{
+					Initializer: &InitializerSpec{Image: defaultInitializer},
 					Base: &PodTemplateSpec{
 						MainContainer: &MainContainerSpec{
 							Image: "greptime/greptimedb:latest",
@@ -198,6 +199,7 @@ func TestSetDefaults(t *testing.T) {
 			},
 			GreptimeDBCluster{
 				Spec: GreptimeDBClusterSpec{
+					Initializer: &InitializerSpec{Image: defaultInitializer},
 					Base: &PodTemplateSpec{
 						MainContainer: &MainContainerSpec{
 							Image: "greptime/greptimedb:latest",
@@ -321,6 +323,7 @@ func TestSetDefaults(t *testing.T) {
 			},
 			GreptimeDBCluster{
 				Spec: GreptimeDBClusterSpec{
+					Initializer: &InitializerSpec{Image: defaultInitializer},
 					Base: &PodTemplateSpec{
 						MainContainer: &MainContainerSpec{
 							Image: "greptime/greptimedb:latest",

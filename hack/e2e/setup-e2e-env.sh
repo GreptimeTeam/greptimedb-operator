@@ -100,8 +100,14 @@ function pull_images_and_push_to_local_registry() {
     docker push localhost:5001/greptime/greptimedb:latest
 }
 
+function build_initializer_image() {
+    make docker-build-initializer
+    make docker-push-initializer
+}
+
 check_prerequisites
 start_local_registry
 create_kind_cluster
 pull_images_and_push_to_local_registry
+build_initializer_image
 deploy_etcd

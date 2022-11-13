@@ -28,6 +28,8 @@ var (
 	defaultDataNodeStorageSize      = "10Gi"
 	defaultDataNodeStorageMountPath = "/tmp/greptimedb"
 	defaultStorageRetainPolicyType  = RetainStorageRetainPolicyTypeRetain
+
+	defaultInitializer = "greptime/greptimedb-initializer:latest"
 )
 
 func (in *GreptimeDBCluster) SetDefaults() error {
@@ -50,7 +52,7 @@ func (in *GreptimeDBCluster) SetDefaults() error {
 				},
 			},
 		},
-
+		Initializer:         &InitializerSpec{Image: defaultInitializer},
 		HTTPServicePort:     int32(defaultHTTPServicePort),
 		GRPCServicePort:     int32(defaultGRPCServicePort),
 		MySQLServicePort:    int32(defaultMySQLServicePort),

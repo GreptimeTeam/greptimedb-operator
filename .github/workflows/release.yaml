@@ -38,16 +38,28 @@ jobs:
           VERSION=${{ github.ref_name }}
           echo "VERSION=${VERSION:1}" >> $GITHUB_ENV
 
-      - name: Build and push
+      - name: Build and push operator
         uses: docker/build-push-action@v3
         with:
-          file: ./Dockerfile
+          file: ./docker/operator/Dockerfile
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
             greptime/greptimedb-operator:latest
             greptime/greptimedb-operator:${{ env.VERSION }}
             ghcr.io/greptimeteam/greptimedb-operator:${{ env.VERSION }}
+
+      - name: Build and push initializer
+        uses: docker/build-push-action@v3
+        with:
+          file: ./docker/initializer/Dockerfile
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: |
+            greptime/greptimedb-initializer:latest
+            greptime/greptimedb-initializer:${{ env.VERSION }}
+            ghcr.io/greptimeteam/greptimedb-initializer:${{ env.VERSION }}
+
   release:
     name: Release the artifacts
     runs-on: ubuntu-22.04

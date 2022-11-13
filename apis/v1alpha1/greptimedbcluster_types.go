@@ -317,6 +317,12 @@ type DatanodeSpec struct {
 	// More datanode settings can be added here...
 }
 
+// InitializerSpec is the init container to set up components configurations before running the container.
+type InitializerSpec struct {
+	// +optional
+	Image string `json:"image,omitempty"`
+}
+
 // GreptimeDBClusterSpec defines the desired state of GreptimeDBCluster
 type GreptimeDBClusterSpec struct {
 	// Base is the base pod template for all components and can be overridden by template of individual component.
@@ -361,6 +367,8 @@ type GreptimeDBClusterSpec struct {
 	// The version of greptimedb.
 	Version string `json:"version,omitempty"`
 
+	// +optional
+	Initializer *InitializerSpec `json:"initializer,omitempty"`
 	// More cluster settings can be added here...
 }
 

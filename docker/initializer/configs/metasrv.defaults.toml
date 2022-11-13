@@ -1,0 +1,5 @@
+# The following default configs from https://github.com/GreptimeTeam/greptimedb/blob/develop/config/metasrv.example.toml
+bind_addr = '127.0.0.1:3002'
+server_addr = '0.0.0.0:3002'
+store_addr = '127.0.0.1:2380'
+datanode_lease_secs = 30

@@ -4,7 +4,7 @@
 
 The GreptimeDB Operator manages [GreptimeDB](https://github.com/GrepTimeTeam/greptimedb) clusters on [Kubernetes](https://kubernetes.io/) by using [Operator pattern](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/).
 
-The GreptimeDB operator abstract the model of maintaining the high aviable GreptimeDB cluster, you can create you own cluster as easy as possible:
+The GreptimeDB operator abstract the model of maintaining the high available GreptimeDB cluster, you can create you own cluster as easy as possible:
 
 ```yaml
 $ cat <<EOF | kubectl apply -f -
@@ -62,7 +62,7 @@ You can use Helm chart of greptimedb-operator in [helm-charts](https://github.co
 
 ### About `make` targets
 
-We can use `make` to handle most of development, you can use the targets that list by the following command:
+We can use `make` to handle most development, you can use the targets that list by the following command:
 
 ```
 $ make help
@@ -87,7 +87,7 @@ $ make help
 1. Build the image of operator
 
    ```
-   $ make docker-build
+   $ make docker-build-operator
    ```
 
    the default image URL is:
@@ -99,7 +99,7 @@ $ make help
    You can prefer your registry and tag:
 
    ```
-   $ make docker-build IMAGE_REPO=<your-image-repo> IMAGE_TAG=<your-image-tag>
+   $ make docker-build-operator IMAGE_REPO=<your-image-repo> IMAGE_TAG=<your-image-tag>
    ```
 
    **Note**: If you use the `IMAGE_REPO` or `IMAGE_TAG` in `make docker-build`, you also have to use them again in the following command.
@@ -107,7 +107,7 @@ $ make help
 2. Push the image
 
    ```
-   $ make docker-push
+   $ make docker-push-operator
    ```
 
 3. Deploy the operator in your self-managed Kubernetes

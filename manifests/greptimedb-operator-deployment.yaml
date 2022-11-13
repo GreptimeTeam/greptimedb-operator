@@ -6016,6 +6016,11 @@ spec:
               httpServicePort:
                 format: int32
                 type: integer
+              initializer:
+                properties:
+                  image:
+                    type: string
+                type: object
               meta:
                 properties:
                   config:
@@ -8263,7 +8268,7 @@ spec:
         - --enable-leader-election
         command:
         - greptimedb-operator
-        image: greptime/greptimedb-operator:latest
+        image: localhost:5001/greptime/greptimedb-operator:latest
         livenessProbe:
           httpGet:
             path: /healthz
