@@ -163,6 +163,8 @@ func readClusterConfig() (*v1alpha1.GreptimeDBCluster, error) {
 func forwardRequest(clusterName string) {
 	for {
 		cmd := exec.Command("kubectl", "port-forward", fmt.Sprintf("svc/%s-frontend", clusterName), "3306:3306")
-		cmd.Run()
+		if err := cmd.Run(); err != nil {
+			return
+		}
 	}
 }

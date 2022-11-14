@@ -134,7 +134,10 @@ func checkResource(namespace, name string, object client.Object, request reconci
 		err := k8sClient.Get(ctx, client.ObjectKey{Namespace: namespace, Name: name}, object)
 		if err != nil {
 			// Try 3 (= 1s/300ms) times
-			reconciler.Reconcile(context.TODO(), request)
+			_, err := reconciler.Reconcile(context.TODO(), request)
+			if err != nil {
+				return err
+			}
 		}
 		return err
 	}, 30*time.Second, time.Second).Should(BeNil())
