@@ -102,6 +102,7 @@ func createCluster(name, namespace string) *v1alpha1.GreptimeDBCluster {
 			Namespace: namespace,
 		},
 		Spec: v1alpha1.GreptimeDBClusterSpec{
+			Initializer: &v1alpha1.InitializerSpec{Image: "greptime/greptimedb-initializer:latest"},
 			Base: &v1alpha1.PodTemplateSpec{
 				MainContainer: &v1alpha1.MainContainerSpec{
 					Image: "greptime/greptimedb:latest",

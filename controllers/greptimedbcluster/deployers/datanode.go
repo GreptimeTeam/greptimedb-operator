@@ -18,6 +18,12 @@ import (
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/deployer"
 )
 
+const (
+	defaultConfigName      = "datanode.toml"
+	defaultInputConfigFile = "/config/datanode/defaults/"
+	defaultConfigDir       = "/etc/datanode/"
+)
+
 // DatanodeDeployer is the deployer for datanode.
 type DatanodeDeployer struct {
 	*CommonDeployer
@@ -202,17 +208,7 @@ func (d *DatanodeDeployer) generateSvc(cluster *v1alpha1.GreptimeDBCluster) (*co
 }
 
 func (d *DatanodeDeployer) generateSts(cluster *v1alpha1.GreptimeDBCluster) (*appsv1.StatefulSet, error) {
-	var (
-		args    []string
-		command []string
-	)
-
-	if len(cluster.Spec.Datanode.Template.MainContainer.Command) > 0 {
-		command = cluster.Spec.Datanode.Template.MainContainer.Command
-	} else {
-		command = []string{"/bin/sh", "-c"}
-	}
-
+	var args []string
 	if len(cluster.Spec.Datanode.Template.MainContainer.Args) > 0 {
 		args = cluster.Spec.Datanode.Template.MainContainer.Args
 	} else {
@@ -244,17 +240,60 @@ func (d *DatanodeDeployer) generateSts(cluster *v1alpha1.GreptimeDBCluster) (*ap
 					Annotations: cluster.Spec.Datanode.Template.Annotations,
 				},
 				Spec: corev1.PodSpec{
+					Volumes: []corev1.Volume{
+						{
+							Name: "config",
+							VolumeSource: corev1.VolumeSource{
+								EmptyDir: &corev1.EmptyDirVolumeSource{},
+							},
+						},
+					},
+					InitContainers: []corev1.Container{
+						{
+							Name:  "greptimedb-initializer",
+							Image: cluster.Spec.Initializer.Image,
+							Command: []string{
+								"greptimedb-initializer",
+							},
+							Args: []string{
+								"--config-path", defaultConfigDir + defaultConfigName,
+								"--input-config-file", defaultInputConfigFile + defaultConfigName,
+								"--datanode-rpc-port", fmt.Sprintf("%d", cluster.Spec.GRPCServicePort),
+							},
+							VolumeMounts: []corev1.VolumeMount{
+								{
+									Name:      "config",
+									MountPath: defaultConfigDir,
+								},
+							},
+							// TODO(zyy17): the datanode don't support to accept hostname.
+							Env: []corev1.EnvVar{
+								{
+									Name: "POD_IP",
+									ValueFrom: &corev1.EnvVarSource{
+										FieldRef: &corev1.ObjectFieldSelector{
+											FieldPath: "status.podIP",
+										},
+									},
+								},
+							},
+						},
+					},
 					Containers: []corev1.Container{
 						{
 							Name:      string(v1alpha1.DatanodeComponentKind),
 							Image:     cluster.Spec.Datanode.Template.MainContainer.Image,
 							Resources: *cluster.Spec.Datanode.Template.MainContainer.Resources,
-							Command:   command,
+							Command:   cluster.Spec.Datanode.Template.MainContainer.Command,
 							Args:      args,
 							VolumeMounts: []corev1.VolumeMount{
 								{
 									Name:      cluster.Spec.Datanode.Storage.Name,
 									MountPath: cluster.Spec.Datanode.Storage.MountPath,
+								},
+								{
+									Name:      "config",
+									MountPath: defaultConfigDir,
 								},
 							},
 							// TODO(zyy17): the datanode don't support to accept hostname.
@@ -387,17 +426,13 @@ func (d *DatanodeDeployer) mountConfigMapVolume(sts *appsv1.StatefulSet, name st
 	}
 }
 
-// FIXME(zyy17): It's the temporary way to generate node id for datanode: use the sequence number of statefulset pod.
-// For getting sequence number from hostname, we use the tricks to execute multiple commands in Pod:
-// Commands: [ "/bin/sh", "-c" ]
-// Args: [ "command1 ; command2; command3" ]
 func (d *DatanodeDeployer) buildDatanodeArgs(cluster *v1alpha1.GreptimeDBCluster) []string {
 	return []string{
-		fmt.Sprintf("hostname=`hostname`; node_id=${hostname##*-}; greptime datanode start --node-id=${node_id} --metasrv-addr=%s --rpc-addr=%s --http-addr=%s --mysql-addr=%s --postgres-addr=%s",
-			fmt.Sprintf("%s.%s:%d", d.ResourceName(cluster.Name, v1alpha1.MetaComponentKind), cluster.Namespace, cluster.Spec.Meta.ServicePort),
-			fmt.Sprintf("${POD_IP}:%d", cluster.Spec.GRPCServicePort),
-			fmt.Sprintf("0.0.0.0:%d", cluster.Spec.HTTPServicePort),
-			fmt.Sprintf("0.0.0.0:%d", cluster.Spec.MySQLServicePort),
-			fmt.Sprintf("0.0.0.0:%d", cluster.Spec.PostgresServicePort)),
+		"datanode", "start",
+		"--metasrv-addr", fmt.Sprintf("%s.%s:%d", d.ResourceName(cluster.Name, v1alpha1.MetaComponentKind), cluster.Namespace, cluster.Spec.Meta.ServicePort),
+		"--http-addr", fmt.Sprintf("0.0.0.0:%d", cluster.Spec.HTTPServicePort),
+		"--mysql-addr", fmt.Sprintf("0.0.0.0:%d", cluster.Spec.MySQLServicePort),
+		"--postgres-addr", fmt.Sprintf("0.0.0.0:%d", cluster.Spec.PostgresServicePort),
+		"--config-file", defaultConfigDir + defaultConfigName,
 	}
 }

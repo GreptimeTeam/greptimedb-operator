@@ -6009,6 +6009,11 @@ spec:
               httpServicePort:
                 format: int32
                 type: integer
+              initializer:
+                properties:
+                  image:
+                    type: string
+                type: object
               meta:
                 properties:
                   config:

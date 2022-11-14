@@ -4,9 +4,9 @@
 
 The GreptimeDB Operator manages [GreptimeDB](https://github.com/GrepTimeTeam/greptimedb) clusters on [Kubernetes](https://kubernetes.io/) by using [Operator pattern](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/).
 
-The GreptimeDB operator abstract the model of maintaining the high aviable GreptimeDB cluster, you can create you own cluster as easy as possible:
+The GreptimeDB operator abstract the model of maintaining the high available GreptimeDB cluster, you can create you own cluster as easy as possible:
 
-```yaml
+```shell
 $ cat <<EOF | kubectl apply -f -
 apiVersion: greptime.io/v1alpha1
 kind: GreptimeDBCluster
@@ -62,7 +62,7 @@ You can use Helm chart of greptimedb-operator in [helm-charts](https://github.co
 
 ### About `make` targets
 
-We can use `make` to handle most of development, you can use the targets that list by the following command:
+We can use `make` to handle most development, you can use the targets that list by the following command:
 
 ```
 $ make help
@@ -87,7 +87,7 @@ $ make help
 1. Build the image of operator
 
    ```
-   $ make docker-build
+   $ make docker-build-operator
    ```
 
    the default image URL is:
@@ -99,15 +99,15 @@ $ make help
    You can prefer your registry and tag:
 
    ```
-   $ make docker-build IMAGE_REPO=<your-image-repo> IMAGE_TAG=<your-image-tag>
+   $ make docker-build-operator IMAGE_REPO=<your-image-repo> IMAGE_TAG=<your-image-tag>
    ```
 
-   **Note**: If you use the `IMAGE_REPO` or `IMAGE_TAG` in `make docker-build`, you also have to use them again in the following command.
+   **Note**: If you use the `IMAGE_REPO` or `IMAGE_TAG` in `make docker-build-operator`, you also have to use them again in the following command.
 
 2. Push the image
 
    ```
-   $ make docker-push
+   $ make docker-push-operator
    ```
 
 3. Deploy the operator in your self-managed Kubernetes
@@ -129,6 +129,20 @@ $ make help
    ```
    $ make undeploy
    ```
+   
+
+If you want to build `greptimedb-initializer` which it's the init-container to process the initialization(for example: allocating node id for datanode), you can use the following commands that similar to above:
+
+```
+# Building initializer.
+$ make initializer
+
+# Building initializer image, also can use IMAGE_REPO and IMAGE_NAME.
+$ make docker-build-initializer
+
+# Pushing initializer image, also can use IMAGE_REPO and IMAGE_NAME.
+$ make docker-push-initializer
+```
 
 ### Testing
 
