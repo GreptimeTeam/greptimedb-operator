@@ -60,6 +60,14 @@ generate: kustomize controller-gen ## Generate code containing DeepCopy, DeepCop
 fmt: ## Run go fmt against code.
 	go fmt ./...
 
+.PHONY: install-golint
+install-golint:
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.50.0
+
+.PHONY: lint
+lint:
+	$(GOBIN)/golangci-lint run
+
 .PHONY: check-code-generation
 check-code-generation: ## Check code generation.
 	echo "Checking code generation"

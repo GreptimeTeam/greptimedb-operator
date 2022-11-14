@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"os/exec"
 	"time"
 
@@ -147,7 +147,7 @@ var _ = Describe("Basic test greptimedbcluster controller", func() {
 })
 
 func readClusterConfig() (*v1alpha1.GreptimeDBCluster, error) {
-	data, err := ioutil.ReadFile("./testdata/cluster.yaml")
+	data, err := os.ReadFile("./testdata/cluster.yaml")
 	if err != nil {
 		return nil, err
 	}
