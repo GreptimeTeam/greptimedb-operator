@@ -8268,7 +8268,7 @@ spec:
         - --enable-leader-election
         command:
         - greptimedb-operator
-        image: localhost:5001/greptime/greptimedb-operator:latest
+        image: greptime/greptimedb-operator:latest
         livenessProbe:
           httpGet:
             path: /healthz
