@@ -6,7 +6,7 @@ The GreptimeDB Operator manages [GreptimeDB](https://github.com/GrepTimeTeam/gre
 
 The GreptimeDB operator abstract the model of maintaining the high available GreptimeDB cluster, you can create you own cluster as easy as possible:
 
-```yaml
+```shell
 $ cat <<EOF | kubectl apply -f -
 apiVersion: greptime.io/v1alpha1
 kind: GreptimeDBCluster
@@ -102,7 +102,7 @@ $ make help
    $ make docker-build-operator IMAGE_REPO=<your-image-repo> IMAGE_TAG=<your-image-tag>
    ```
 
-   **Note**: If you use the `IMAGE_REPO` or `IMAGE_TAG` in `make docker-build`, you also have to use them again in the following command.
+   **Note**: If you use the `IMAGE_REPO` or `IMAGE_TAG` in `make docker-build-operator`, you also have to use them again in the following command.
 
 2. Push the image
 
@@ -129,6 +129,20 @@ $ make help
    ```
    $ make undeploy
    ```
+   
+
+If you want to build `greptimedb-initializer` which it's the init-container to process the initialization(for example: allocating node id for datanode), you can use the following commands that similar to above:
+
+```
+# Building initializer.
+$ make initializer
+
+# Building initializer image, also can use IMAGE_REPO and IMAGE_NAME.
+$ make docker-build-initializer
+
+# Pushing initializer image, also can use IMAGE_REPO and IMAGE_NAME.
+$ make docker-push-initializer
+```
 
 ### Testing
 

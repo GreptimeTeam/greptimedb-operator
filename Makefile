@@ -95,11 +95,11 @@ kind-up: ## Create the kind cluster for developing.
 ##@ Build
 
 .PHONY: build
-build: generate fmt vet ## Build manager binary.
+build: generate fmt vet ## Build greptimedb-operator binary.
 	go build -ldflags '${LDFLAGS}' -o bin/greptimedb-operator ./cmd/operator/main.go
 
 .PHONY: initializer
-initializer:
+initializer: ## Build greptimedb-initializer binary.
 	go build -ldflags '${LDFLAGS}' -o bin/greptimedb-initializer ./cmd/initializer/...
 
 .PHONY: run
