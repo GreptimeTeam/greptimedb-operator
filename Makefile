@@ -60,11 +60,6 @@ generate: kustomize controller-gen ## Generate code containing DeepCopy, DeepCop
 fmt: ## Run go fmt against code.
 	go fmt ./...
 
-.PHONY: check-format
-fmt-check: ## Check files format.
-	echo "Checking files format ..."
-	go fmt ./... | grep . && { echo "Unformatted files found"; exit 1; } || echo "No file to format"
-
 .PHONY: check-code-generation
 check-code-generation: ## Check code generation.
 	echo "Checking code generation"
