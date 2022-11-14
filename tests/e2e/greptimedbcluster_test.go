@@ -14,6 +14,7 @@ import (
 	"github.com/go-sql-driver/mysql"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/yaml"
+	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
@@ -164,6 +165,7 @@ func forwardRequest(clusterName string) {
 	for {
 		cmd := exec.Command("kubectl", "port-forward", fmt.Sprintf("svc/%s-frontend", clusterName), "3306:3306")
 		if err := cmd.Run(); err != nil {
+			klog.Errorf("Failed to port forward:%v", err)
 			return
 		}
 	}
