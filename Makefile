@@ -61,11 +61,11 @@ fmt: ## Run go fmt against code.
 	go fmt ./...
 
 .PHONY: install-golint
-install-golint:
+install-golint: ## Install golint
 	go install github.com/golangci/golangci-lint/cmd/golangci-lint@master
 
 .PHONY: lint
-lint: install-golint
+lint: install-golint ## Run golint
 	$(GOBIN)/golangci-lint run --timeout 5m0s
 
 .PHONY: check-code-generation
