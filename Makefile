@@ -60,10 +60,13 @@ generate: kustomize controller-gen ## Generate code containing DeepCopy, DeepCop
 fmt: ## Run go fmt against code.
 	go fmt ./...
 
-.PHONY: check-format
-fmt-check: ## Check files format.
-	echo "Checking files format ..."
-	go fmt ./... | grep . && { echo "Unformatted files found"; exit 1; } || echo "No file to format"
+.PHONY: install-golint
+install-golint: ## Install golint
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@master
+
+.PHONY: lint
+lint: install-golint ## Run golint
+	$(GOBIN)/golangci-lint run --timeout 5m0s
 
 .PHONY: check-code-generation
 check-code-generation: ## Check code generation.

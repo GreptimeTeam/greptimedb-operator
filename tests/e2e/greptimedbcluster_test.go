@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"os/exec"
 	"time"
 
@@ -14,6 +14,7 @@ import (
 	"github.com/go-sql-driver/mysql"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/yaml"
+	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
@@ -146,7 +147,7 @@ var _ = Describe("Basic test greptimedbcluster controller", func() {
 })
 
 func readClusterConfig() (*v1alpha1.GreptimeDBCluster, error) {
-	data, err := ioutil.ReadFile("./testdata/cluster.yaml")
+	data, err := os.ReadFile("./testdata/cluster.yaml")
 	if err != nil {
 		return nil, err
 	}
@@ -163,6 +164,9 @@ func readClusterConfig() (*v1alpha1.GreptimeDBCluster, error) {
 func forwardRequest(clusterName string) {
 	for {
 		cmd := exec.Command("kubectl", "port-forward", fmt.Sprintf("svc/%s-frontend", clusterName), "3306:3306")
-		cmd.Run()
+		if err := cmd.Run(); err != nil {
+			klog.Errorf("Failed to port forward:%v", err)
+			return
+		}
 	}
 }

@@ -15,9 +15,9 @@ jobs:
         with:
           go-version: "1.18.4"
 
-      - name: Format check
+      - name: Make lint
         run: |
-          make fmt-check
+          make lint
 
       - name: Check code generation
         run: |
