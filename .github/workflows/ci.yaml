@@ -15,11 +15,9 @@ jobs:
         with:
           go-version: "1.18.4"
 
-      - name: golangci-lint
-        uses: golangci/golangci-lint-action@v3.3.0
-        with:
-          version: v1.50.0
-          args: --timeout 10m0s
+      - name: Make lint
+        run: |
+          make lint
 
       - name: Check code generation
         run: |
