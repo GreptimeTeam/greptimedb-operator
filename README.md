@@ -24,6 +24,7 @@ spec:
       - "etcd.default:2379"
   datanode:
     replicas: 3
+EOF
 ```
 
 ## Getting Started
