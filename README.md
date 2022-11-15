@@ -6,8 +6,8 @@ The GreptimeDB Operator manages [GreptimeDB](https://github.com/GrepTimeTeam/gre
 
 The GreptimeDB operator abstract the model of maintaining the high available GreptimeDB cluster, you can create you own cluster as easy as possible:
 
-```shell
-$ cat <<EOF | kubectl apply -f -
+```console
+cat <<EOF | kubectl apply -f -
 apiVersion: greptime.io/v1alpha1
 kind: GreptimeDBCluster
 metadata:
@@ -34,14 +34,14 @@ spec:
 
   You can use [kind](https://kind.sigs.k8s.io/) to create your own Kubernetes cluster:
 
-  ```
-  $ kind create cluster
+  ```console
+  kind create cluster
   ```
 
   If you want to deploy Kubernetes with local registry, you can use the following commands:
 
-  ```
-  $ make kind-up
+  ```console
+  make kind-up
   ```
 
   It will create the cluster with 3 nodes and local registry.
@@ -64,96 +64,101 @@ You can use Helm chart of greptimedb-operator in [helm-charts](https://github.co
 
 We can use `make` to handle most development, you can use the targets that list by the following command:
 
-```
-$ make help
+```console
+make help
 ```
 
 ### Run operator on host
 
 1. Install the CRDs:
 
-   ```
-   $ make install
+   ```console
+   make install
    ```
 
 2. Run the operator on your host(make sure your Kubernetes is ready):
 
-   ```
-   $ make run
+   ```console
+   make run
    ```
 
 ### Deploy operator on self-managed Kubernetes
 
 1. Build the image of operator
 
-   ```
-   $ make docker-build-operator
+   ```console
+   make docker-build-operator
    ```
 
    the default image URL is:
 
-   ```
+   ```console
    localhost:5001/greptime/greptimedb-operator:latest
    ```
 
    You can prefer your registry and tag:
 
-   ```
-   $ make docker-build-operator IMAGE_REPO=<your-image-repo> IMAGE_TAG=<your-image-tag>
+   ```console
+   make docker-build-operator IMAGE_REPO=<your-image-repo> IMAGE_TAG=<your-image-tag>
    ```
 
    **Note**: If you use the `IMAGE_REPO` or `IMAGE_TAG` in `make docker-build-operator`, you also have to use them again in the following command.
 
 2. Push the image
 
-   ```
-   $ make docker-push-operator
+   ```console
+   make docker-push-operator
    ```
 
 3. Deploy the operator in your self-managed Kubernetes
 
-   ```
-   $ make deploy
+   ```console
+   make deploy
    ```
 
    The operator will deploy in `greptimedb-operator-system` namespace:
    
-   ```
-   $ kubectl get pod -n greptimedb-operator-system
+   ```console
+   kubectl get pod -n greptimedb-operator-system
    NAME                                   READY   STATUS    RESTARTS   AGE
    greptimedb-operator-7b4496c84d-bpwbm   1/1     Running   0          76s
    ```
 
    If you want to delete the deployment, you can:
 
-   ```
-   $ make undeploy
+   ```console
+   make undeploy
    ```
    
 
 If you want to build `greptimedb-initializer` which it's the init-container to process the initialization(for example: allocating node id for datanode), you can use the following commands that similar to above:
 
-```
+```console
 # Building initializer.
-$ make initializer
+make initializer
 
 # Building initializer image, also can use IMAGE_REPO and IMAGE_NAME.
-$ make docker-build-initializer
+make docker-build-initializer
 
 # Pushing initializer image, also can use IMAGE_REPO and IMAGE_NAME.
-$ make docker-push-initializer
+make docker-push-initializer
 ```
 
 ### Testing
 
 1. Run unit test
 
-   ```
-   $ make test
+   ```console
+   make test
    ```
 
 2. Run e2e test
 
+   ```console
+   make e2e
    ```
-   $ make e2e
-   ```
+
+## License
+
+greptimedb-operator uses the [Apache 2.0 license](./LICENSE) to strike a balance between
+open contributions and allowing you to use the software however you want.
