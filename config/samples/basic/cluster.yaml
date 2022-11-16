@@ -6,7 +6,7 @@ metadata:
 spec:
   base:
     main:
-      image: greptime/greptimedb:integration-paas-test
+      image: greptime/greptimedb:0.1.0-alpha-20221116
   frontend:
     replicas: 1
   meta:
