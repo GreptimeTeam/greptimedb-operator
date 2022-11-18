@@ -18,7 +18,7 @@ var (
 	defaultHTTPServicePort     = 4000
 	defaultGRPCServicePort     = 4001
 	defaultMySQLServicePort    = 4002
-	defaultPostgresServicePort = 5432
+	defaultPostgresServicePort = 4003
 	defaultOpenTSDBServicePort = 4242
 	defaultMetaServicePort     = 3002
 
