@@ -86,7 +86,7 @@ var _ = Describe("Basic test greptimedbcluster controller", func() {
 		Eventually(func() error {
 			cfg := mysql.Config{
 				Net:                  "tcp",
-				Addr:                 "127.0.0.1:3306",
+				Addr:                 "127.0.0.1:4002",
 				User:                 "",
 				Passwd:               "",
 				DBName:               "",
@@ -163,7 +163,7 @@ func readClusterConfig() (*v1alpha1.GreptimeDBCluster, error) {
 // FIXME(zyy17): When the e2e exit, the kubectl process still active background.
 func forwardRequest(clusterName string) {
 	for {
-		cmd := exec.Command("kubectl", "port-forward", fmt.Sprintf("svc/%s-frontend", clusterName), "3306:3306")
+		cmd := exec.Command("kubectl", "port-forward", fmt.Sprintf("svc/%s-frontend", clusterName), "4002:4002")
 		if err := cmd.Run(); err != nil {
 			klog.Errorf("Failed to port forward:%v", err)
 			return
