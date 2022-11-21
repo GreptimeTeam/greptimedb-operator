@@ -17,8 +17,8 @@ var (
 	// The default settings for GreptimeDBClusterSpec.
 	defaultHTTPServicePort     = 4000
 	defaultGRPCServicePort     = 4001
-	defaultMySQLServicePort    = 3306
-	defaultPostgresServicePort = 5432
+	defaultMySQLServicePort    = 4002
+	defaultPostgresServicePort = 4003
 	defaultOpenTSDBServicePort = 4242
 	defaultMetaServicePort     = 3002
 
