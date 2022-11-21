@@ -25,12 +25,12 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Login to GitHub Container Registry
+      - name: Login to UCloud Container Registry
         uses: docker/login-action@v2
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          registry: uhub.service.ucloud.cn
+          username: ${{ secrets.UCLOUD_USERNAME }}
+          password: ${{ secrets.UCLOUD_PASSWORD }}
 
       - name: Configure tag
         shell: bash
@@ -47,7 +47,8 @@ jobs:
           tags: |
             greptime/greptimedb-operator:latest
             greptime/greptimedb-operator:${{ env.VERSION }}
-            ghcr.io/greptimeteam/greptimedb-operator:${{ env.VERSION }}
+            uhub.service.ucloud.cn/greptime/greptimedb-operator:latest
+            uhub.service.ucloud.cn/greptime/greptimedb-operator:${{ env.VERSION }}
 
       - name: Build and push initializer
         uses: docker/build-push-action@v3
@@ -58,7 +59,8 @@ jobs:
           tags: |
             greptime/greptimedb-initializer:latest
             greptime/greptimedb-initializer:${{ env.VERSION }}
-            ghcr.io/greptimeteam/greptimedb-initializer:${{ env.VERSION }}
+            uhub.service.ucloud.cn/greptime/greptimedb-initializer:latest
+            uhub.service.ucloud.cn/greptime/greptimedb-initializer:${{ env.VERSION }}
 
   release:
     name: Release the artifacts
