@@ -12,22 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Prometheus Monitor Service (Metrics)
-apiVersion: monitoring.coreos.com/v1
-kind: ServiceMonitor
-metadata:
-  labels:
-    control-plane: controller-manager
-  name: controller-manager-metrics-monitor
-  namespace: system
-spec:
-  endpoints:
-    - path: /metrics
-      port: https
-      scheme: https
-      bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
-      tlsConfig:
-        insecureSkipVerify: true
-  selector:
-    matchLabels:
-      control-plane: controller-manager
+header:
+  license:
+    spdx-id: Apache-2.0
+    copyright-owner: Greptime Team
+
+  paths:
+    - "**/*.go"
+    - "**/*.sh"
+    - "**/*.yaml"
+    - "Makefile"
+
+  comment: on-failure
+
+dependency:
+  files:
+    - Cargo.toml
