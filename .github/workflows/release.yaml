@@ -68,9 +68,11 @@ jobs:
     steps:
       - name: Checkout sources
         uses: actions/checkout@v3
+
       - name: Rename crd file
         run: |
           cp ./config/crd/bases/greptime.io_greptimedbclusters.yaml ./greptimedbcluster.yaml
+
       - name: Publish release
         uses: softprops/action-gh-release@v1
         with:
