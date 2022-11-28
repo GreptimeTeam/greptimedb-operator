@@ -20,10 +20,10 @@ type StorageConfig struct {
 }
 
 type MetaClientOptions struct {
-	MetaSrvAddr    string `toml:"metasrv_addr"`
-	Timeout        int32  `toml:"timeout_millis"`
-	ConnectTimeout int32  `toml:"connect_timeout_millis"`
-	TCPNoDelay     bool   `toml:"tcp_nodelay"`
+	MetaSrvAddr    []string `toml:"metasrv_addrs"`
+	Timeout        int32    `toml:"timeout_millis"`
+	ConnectTimeout int32    `toml:"connect_timeout_millis"`
+	TCPNoDelay     bool     `toml:"tcp_nodelay"`
 }
 
 type DatanodeConfig struct {
@@ -37,6 +37,7 @@ type DatanodeConfig struct {
 	MySQLRuntimeSize    int32  `toml:"mysql_runtime_size"`
 	PostgresAddr        string `toml:"postgres_addr"`
 	PostgresRuntimeSize int32  `toml:"postgres_runtime_size"`
+	EnableMemoryCatalog bool   `toml:"enable_memory_catalog"`
 
 	StorageConfig     `toml:"storage"`
 	MetaClientOptions `toml:"meta_client_opts"`
