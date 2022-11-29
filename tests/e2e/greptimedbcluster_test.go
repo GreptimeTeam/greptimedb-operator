@@ -97,6 +97,7 @@ var _ = Describe("Basic test greptimedbcluster controller", func() {
 
 		By("Connecting GreptimeDB")
 		var db *sql.DB
+		var conn *sql.Conn
 		Eventually(func() error {
 			cfg := mysql.Config{
 				Net:                  "tcp",
@@ -112,7 +113,7 @@ var _ = Describe("Basic test greptimedbcluster controller", func() {
 				return err
 			}
 
-			_, err = db.Conn(context.TODO())
+			conn, err = db.Conn(context.TODO())
 			if err != nil {
 				return err
 			}
@@ -125,20 +126,20 @@ var _ = Describe("Basic test greptimedbcluster controller", func() {
 		ctx, cancel := context.WithTimeout(context.Background(), defaultQueryTimeout)
 		defer cancel()
 
-		_, err = db.ExecContext(ctx, createTableSQL)
+		_, err = conn.ExecContext(ctx, createTableSQL)
 		Expect(err).NotTo(HaveOccurred(), "failed to create SQL table")
 
 		ctx, cancel = context.WithTimeout(context.Background(), defaultQueryTimeout)
 		defer cancel()
 		for rowID := 1; rowID <= testRowIDNum; rowID++ {
 			insertDataSQL := fmt.Sprintf(insertDataSQLStr, rowID, rowID)
-			_, err = db.ExecContext(ctx, insertDataSQL)
+			_, err = conn.ExecContext(ctx, insertDataSQL)
 			Expect(err).NotTo(HaveOccurred(), "failed to insert data")
 		}
 
 		ctx, cancel = context.WithTimeout(context.Background(), defaultQueryTimeout)
 		defer cancel()
-		results, err := db.QueryContext(ctx, selectDataSQL)
+		results, err := conn.QueryContext(ctx, selectDataSQL)
 		Expect(err).NotTo(HaveOccurred(), "failed to get data")
 
 		var data []TestData
