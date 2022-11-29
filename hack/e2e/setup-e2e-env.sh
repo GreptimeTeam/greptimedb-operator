@@ -22,7 +22,7 @@ CLUSTER=greptimedb-operator-e2e
 REGISTRY_NAME=kind-registry
 REGISTRY_PORT=5001
 
-TEST_GREPTIMEDB_IMAGE=greptime/greptimedb:0.1.0-alpha-20221116
+TEST_GREPTIMEDB_IMAGE=greptime/greptimedb:0.1.0-alpha-20221128-weekly
 TEST_ETCD_IMAGE=greptime/etcd:v3.5.5
 
 function check_prerequisites() {
