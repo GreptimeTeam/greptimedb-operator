@@ -361,6 +361,7 @@ func buildEtcdMaintenance(etcdEndpoints []string) (clientv3.Maintenance, error) 
 		DialOptions: []grpc.DialOption{grpc.WithBlock()},
 	})
 	if err != nil {
+		klog.Infof("Build etcd maintenance error:%v", err)
 		return nil, err
 	}
 
