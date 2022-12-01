@@ -37,6 +37,7 @@ import (
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 	"github.com/GreptimeTeam/greptimedb-operator/controllers/greptimedbcluster/deployers"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/deployer"
+	"github.com/GreptimeTeam/greptimedb-operator/pkg/metrics"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -103,6 +104,7 @@ var _ = BeforeSuite(func() {
 			deployers.NewDatanodeDeployer(manager),
 			deployers.NewFrontendDeployer(manager),
 		},
+		Metrics: metrics.NewMetrics(),
 	}
 
 	err = reconciler.SetupWithManager(manager)

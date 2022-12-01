@@ -13,43 +13,31 @@ const (
 )
 
 type Metrics struct {
-	clusterStatus *prometheus.GaugeVec
-	clusterUpdate *prometheus.GaugeVec
-	clusterCount  prometheus.Gauge
+	ClusterStatus *prometheus.GaugeVec
+	ClusterUpdate *prometheus.GaugeVec
+	ClusterCount  prometheus.Gauge
 }
 
 func NewMetrics() *Metrics {
 	m := Metrics{
-		clusterStatus: prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		ClusterStatus: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Name: "greptimedb_cluster_status",
 			Help: "When the greptimedb cluster running is 3, starting is 2, Deleted is 1, otherwise 0",
 		}, []string{"name", "namespace"}),
-		clusterUpdate: prometheus.NewGaugeVec(prometheus.GaugeOpts{
+		ClusterUpdate: prometheus.NewGaugeVec(prometheus.GaugeOpts{
 			Name: "greptimedb_cluster_update_count",
 			Help: "Number of greptimedb cluster update count",
 		}, []string{"name", "namespace"}),
-		clusterCount: prometheus.NewGauge(prometheus.GaugeOpts{
+		ClusterCount: prometheus.NewGauge(prometheus.GaugeOpts{
 			Name: "greptimedb_cluster_total_count",
 			Help: "Number of greptimedb cluster total count",
 		}),
 	}
 	metrics.Registry.MustRegister(
-		m.clusterStatus,
-		m.clusterUpdate,
-		m.clusterCount,
+		m.ClusterStatus,
+		m.ClusterUpdate,
+		m.ClusterCount,
 	)
 
 	return &m
-}
-
-func (m *Metrics) ClusterStatus() *prometheus.GaugeVec {
-	return m.clusterStatus
-}
-
-func (m *Metrics) ClusterUpdate() *prometheus.GaugeVec {
-	return m.clusterUpdate
-}
-
-func (m *Metrics) ClusterCount() prometheus.Gauge {
-	return m.clusterCount
 }

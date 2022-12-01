@@ -35,6 +35,7 @@ import (
 	"github.com/GreptimeTeam/greptimedb-operator/controllers/greptimedbcluster"
 	"github.com/GreptimeTeam/greptimedb-operator/controllers/greptimedbcluster/deployers"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/deployer"
+	"github.com/GreptimeTeam/greptimedb-operator/pkg/metrics"
 )
 
 var (
@@ -115,6 +116,7 @@ func Setup(mgr ctrl.Manager, _ *options.Options) error {
 		deployers.NewDatanodeDeployer(mgr),
 		deployers.NewFrontendDeployer(mgr),
 	}
+	reconciler.Metrics = metrics.NewMetrics()
 
 	return reconciler.SetupWithManager(mgr)
 }

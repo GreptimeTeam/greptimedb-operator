@@ -114,11 +114,11 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (result ct
 		return ctrl.Result{}, err
 	}
 
-	r.Metrics.ClusterUpdate().WithLabelValues(cluster.Name, cluster.Namespace).Set(float64(cluster.Generation))
+	r.Metrics.ClusterUpdate.WithLabelValues(cluster.Name, cluster.Namespace).Set(float64(cluster.Generation))
 
 	defer func() {
 		if err != nil {
-			r.Metrics.ClusterStatus().WithLabelValues(cluster.Name, cluster.Namespace).Set(metrics.ClusterError)
+			r.Metrics.ClusterStatus.WithLabelValues(cluster.Name, cluster.Namespace).Set(metrics.ClusterError)
 			if err := r.setClusterPhase(ctx, cluster, v1alpha1.ClusterError); err != nil {
 				klog.Errorf("Failed to update status: %v", err)
 				return
@@ -145,7 +145,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (result ct
 
 	if len(cluster.Status.ClusterPhase) == 0 {
 		klog.Infof("Start to create the cluster '%s/%s'", cluster.Namespace, cluster.Name)
-		r.Metrics.ClusterStatus().WithLabelValues(cluster.Name, cluster.Namespace).Set(metrics.ClusterStarting)
+		r.Metrics.ClusterStatus.WithLabelValues(cluster.Name, cluster.Namespace).Set(metrics.ClusterStarting)
 		if err = r.setClusterPhase(ctx, cluster, v1alpha1.ClusterStarting); err != nil {
 			return
 		}
@@ -159,7 +159,7 @@ func (r *Reconciler) sync(ctx context.Context, cluster *v1alpha1.GreptimeDBClust
 		err := d.Sync(ctx, cluster, d)
 		if err == deployer.ErrSyncNotReady {
 			if cluster.Status.ClusterPhase != v1alpha1.ClusterStarting {
-				r.Metrics.ClusterStatus().WithLabelValues(cluster.Name, cluster.Namespace).Set(metrics.ClusterStarting)
+				r.Metrics.ClusterStatus.WithLabelValues(cluster.Name, cluster.Namespace).Set(metrics.ClusterStarting)
 				if err := r.setClusterPhase(ctx, cluster, v1alpha1.ClusterStarting); err != nil {
 					return ctrl.Result{}, err
 				}
@@ -180,7 +180,7 @@ func (r *Reconciler) sync(ctx context.Context, cluster *v1alpha1.GreptimeDBClust
 			return ctrl.Result{}, err
 		}
 	}
-	r.Metrics.ClusterStatus().WithLabelValues(cluster.Name, cluster.Namespace).Set(metrics.ClusterRunning)
+	r.Metrics.ClusterStatus.WithLabelValues(cluster.Name, cluster.Namespace).Set(metrics.ClusterRunning)
 
 	return ctrl.Result{}, nil
 }
@@ -204,7 +204,7 @@ func (r *Reconciler) delete(ctx context.Context, cluster *v1alpha1.GreptimeDBClu
 		return ctrl.Result{}, nil
 	}
 
-	r.Metrics.ClusterStatus().WithLabelValues(cluster.Name, cluster.Namespace).Set(metrics.ClusterDeleted)
+	r.Metrics.ClusterStatus.WithLabelValues(cluster.Name, cluster.Namespace).Set(metrics.ClusterDeleted)
 
 	for _, d := range r.Deployers {
 		if err := d.CleanUp(ctx, cluster); err != nil {
@@ -300,7 +300,7 @@ func (r *Reconciler) setClusterCount(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	r.Metrics.ClusterCount().Set(float64(len(clusterList.Items)))
+	r.Metrics.ClusterCount.Set(float64(len(clusterList.Items)))
 
 	return nil
 }
