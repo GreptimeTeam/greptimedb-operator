@@ -315,11 +315,30 @@ type StorageSpec struct {
 	StorageRetainPolicy StorageRetainPolicyType `json:"storageRetainPolicy,omitempty"`
 }
 
+type ServiceSpec struct {
+	// type determines how the Service is exposed.
+	// +optional
+	Type corev1.ServiceType `json:"type,omitempty"`
+
+	// Additional annotations for the service
+	// +optional
+	Annotations map[string]string `json:"annotations,omitempty"`
+
+	// Additional labels for the service
+	// +optional
+	Labels map[string]string `json:"labels,omitempty"`
+
+	// loadBalancerClass is the class of the load balancer implementation this Service belongs to.
+	// +optional
+	LoadBalancerClass *string `json:"loadBalancerClass,omitempty"`
+}
+
 // FrontendSpec is the specification for frontend component.
 type FrontendSpec struct {
 	ComponentSpec `json:",inline"`
 
-	Service corev1.ServiceSpec `json:"service,omitempty"`
+	// +optional
+	Service ServiceSpec `json:"service,omitempty"`
 	// More frontend settings can be added here...
 }
 

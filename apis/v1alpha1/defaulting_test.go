@@ -90,6 +90,9 @@ func TestSetDefaults(t *testing.T) {
 								},
 							},
 						},
+						Service: ServiceSpec{
+							Type: corev1.ServiceTypeClusterIP,
+						},
 					},
 					Meta: &MetaSpec{
 						ComponentSpec: ComponentSpec{
@@ -251,6 +254,9 @@ func TestSetDefaults(t *testing.T) {
 									},
 								},
 							},
+						},
+						Service: ServiceSpec{
+							Type: corev1.ServiceTypeClusterIP,
 						},
 					},
 					Meta: &MetaSpec{

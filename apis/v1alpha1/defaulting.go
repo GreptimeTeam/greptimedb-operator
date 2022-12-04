@@ -80,6 +80,9 @@ func (in *GreptimeDBCluster) SetDefaults() error {
 			ComponentSpec: ComponentSpec{
 				Template: &PodTemplateSpec{},
 			},
+			Service: ServiceSpec{
+				Type: corev1.ServiceTypeClusterIP,
+			},
 		}
 	}
 

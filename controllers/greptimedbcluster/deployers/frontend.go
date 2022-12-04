@@ -123,47 +123,52 @@ func (d *FrontendDeployer) CheckAndUpdateStatus(ctx context.Context, crdObject c
 }
 
 func (d *FrontendDeployer) generateSvc(cluster *v1alpha1.GreptimeDBCluster) (*corev1.Service, error) {
+	ports := []corev1.ServicePort{
+		{
+			Name:     "grpc",
+			Protocol: corev1.ProtocolTCP,
+			Port:     cluster.Spec.GRPCServicePort,
+		},
+		{
+			Name:     "http",
+			Protocol: corev1.ProtocolTCP,
+			Port:     cluster.Spec.HTTPServicePort,
+		},
+		{
+			Name:     "mysql",
+			Protocol: corev1.ProtocolTCP,
+			Port:     cluster.Spec.MySQLServicePort,
+		},
+		{
+			Name:     "postgres",
+			Protocol: corev1.ProtocolTCP,
+			Port:     cluster.Spec.PostgresServicePort,
+		},
+		{
+			Name:     "opentsdb",
+			Protocol: corev1.ProtocolTCP,
+			Port:     cluster.Spec.OpenTSDBServicePort,
+		},
+	}
+
 	svc := &corev1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Service",
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace: cluster.Namespace,
-			Name:      d.ResourceName(cluster.Name, v1alpha1.FrontendComponentKind),
+			Namespace:   cluster.Namespace,
+			Name:        d.ResourceName(cluster.Name, v1alpha1.FrontendComponentKind),
+			Annotations: cluster.Spec.Frontend.Service.Annotations,
+			Labels:      cluster.Spec.Frontend.Service.Labels,
 		},
 		Spec: corev1.ServiceSpec{
-			Type: corev1.ServiceTypeClusterIP,
+			Type: cluster.Spec.Frontend.Service.Type,
 			Selector: map[string]string{
 				GreptimeComponentName: d.ResourceName(cluster.Name, v1alpha1.FrontendComponentKind),
 			},
-			Ports: []corev1.ServicePort{
-				{
-					Name:     "grpc",
-					Protocol: corev1.ProtocolTCP,
-					Port:     cluster.Spec.GRPCServicePort,
-				},
-				{
-					Name:     "http",
-					Protocol: corev1.ProtocolTCP,
-					Port:     cluster.Spec.HTTPServicePort,
-				},
-				{
-					Name:     "mysql",
-					Protocol: corev1.ProtocolTCP,
-					Port:     cluster.Spec.MySQLServicePort,
-				},
-				{
-					Name:     "postgres",
-					Protocol: corev1.ProtocolTCP,
-					Port:     cluster.Spec.PostgresServicePort,
-				},
-				{
-					Name:     "opentsdb",
-					Protocol: corev1.ProtocolTCP,
-					Port:     cluster.Spec.OpenTSDBServicePort,
-				},
-			},
+			Ports:             ports,
+			LoadBalancerClass: cluster.Spec.Frontend.Service.LoadBalancerClass,
 		},
 	}
 
