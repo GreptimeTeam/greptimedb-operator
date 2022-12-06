@@ -129,7 +129,18 @@ func setLastAppliedResourceSpecAnnotation(object client.Object, spec interface{}
 		return err
 	}
 
-	object.SetAnnotations(map[string]string{LastAppliedResourceSpec: string(data)})
+	annotations := mergeAnnotations(object.GetAnnotations(), map[string]string{LastAppliedResourceSpec: string(data)})
+	object.SetAnnotations(annotations)
 
 	return nil
+}
+
+func mergeAnnotations(input, new map[string]string) map[string]string {
+	if len(input) == 0 {
+		return new
+	}
+	for k, v := range new {
+		input[k] = v
+	}
+	return input
 }
