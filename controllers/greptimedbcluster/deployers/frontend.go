@@ -211,6 +211,7 @@ func (d *FrontendDeployer) generateDeployment(cluster *v1alpha1.GreptimeDBCluste
 					Annotations: cluster.Spec.Frontend.Template.Annotations,
 				},
 				Spec: corev1.PodSpec{
+					ImagePullSecrets: cluster.Spec.Frontend.Template.ImagePullSecrets,
 					Containers: []corev1.Container{
 						{
 							Name:      string(v1alpha1.FrontendComponentKind),
