@@ -281,7 +281,7 @@ func (d *FrontendDeployer) generateDeployment(cluster *v1alpha1.GreptimeDBCluste
 }
 
 func (d *FrontendDeployer) buildFrontendArgs(cluster *v1alpha1.GreptimeDBCluster) []string {
-	return []string{
+	var args = []string{
 		"frontend", "start",
 		"--grpc-addr", fmt.Sprintf("0.0.0.0:%d", cluster.Spec.GRPCServicePort),
 		"--metasrv-addr", fmt.Sprintf("%s.%s:%d", d.ResourceName(cluster.Name, v1alpha1.MetaComponentKind), cluster.Namespace, cluster.Spec.Meta.ServicePort),
@@ -290,6 +290,16 @@ func (d *FrontendDeployer) buildFrontendArgs(cluster *v1alpha1.GreptimeDBCluster
 		"--postgres-addr", fmt.Sprintf("0.0.0.0:%d", cluster.Spec.PostgresServicePort),
 		"--opentsdb-addr", fmt.Sprintf("0.0.0.0:%d", cluster.Spec.OpenTSDBServicePort),
 	}
+
+	if cluster.Spec.Frontend != nil && cluster.Spec.Frontend.TLSConfig != nil {
+		args = append(args, []string{
+			"--tls-mode", "require",
+			"--tls-cert-path", defaultTLSConfigsMountDir + "/cert",
+			"--tls-key-path", defaultTLSConfigsMountDir + "/key-secret",
+		}...)
+	}
+
+	return args
 }
 
 func (d *FrontendDeployer) generatePodMonitor(cluster *v1alpha1.GreptimeDBCluster) (*monitoringv1.PodMonitor, error) {
