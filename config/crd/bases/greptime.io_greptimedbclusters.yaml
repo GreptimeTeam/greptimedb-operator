@@ -5927,6 +5927,42 @@ spec:
                         format: int64
                         type: integer
                     type: object
+                  tlsConfig:
+                    properties:
+                      ca:
+                        properties:
+                          key:
+                            type: string
+                          name:
+                            type: string
+                          optional:
+                            type: boolean
+                        required:
+                        - key
+                        type: object
+                      cert:
+                        properties:
+                          key:
+                            type: string
+                          name:
+                            type: string
+                          optional:
+                            type: boolean
+                        required:
+                        - key
+                        type: object
+                      keySecret:
+                        properties:
+                          key:
+                            type: string
+                          name:
+                            type: string
+                          optional:
+                            type: boolean
+                        required:
+                        - key
+                        type: object
+                    type: object
                 required:
                 - replicas
                 type: object
