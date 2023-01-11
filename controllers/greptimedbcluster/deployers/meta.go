@@ -246,6 +246,7 @@ func (d *MetaDeployer) generateDeployment(cluster *v1alpha1.GreptimeDBCluster) (
 									ContainerPort: cluster.Spec.Meta.ServicePort,
 								},
 							},
+							Env: cluster.Spec.Meta.Template.MainContainer.Env,
 						},
 					},
 				},
