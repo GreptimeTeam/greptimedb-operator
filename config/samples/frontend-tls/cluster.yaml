@@ -23,12 +23,16 @@ spec:
       image: greptime/greptimedb:0.1.0-alpha-20230102-weekly
   frontend:
     replicas: 1
-    service:
-      type: LoadBalancer
-      loadBalancerClass: service.k8s.aws/nlb
-      annotations:
-        service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
-        external-dns.alpha.kubernetes.io/hostname: "test.greptime.io"
+    tlsConfig:
+      ca:
+        key: ca.crt
+        name: test-tls
+      cert:
+        key: tls.crt
+        name: test-tls
+      keySecret:
+        key: tls.key
+        name: test-tls
   meta:
     replicas: 1
     etcdEndpoints:

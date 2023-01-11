@@ -31,6 +31,10 @@ import (
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/deployer"
 )
 
+var (
+	defaultTLSConfigsMountDir = "/etc/greptimedb-frontend-tls"
+)
+
 type FrontendDeployer struct {
 	*CommonDeployer
 }
@@ -187,6 +191,15 @@ func (d *FrontendDeployer) generateDeployment(cluster *v1alpha1.GreptimeDBCluste
 		args = d.buildFrontendArgs(cluster)
 	}
 
+	var (
+		tlsConfigVolumes []corev1.Volume
+		tlsConfigMounts  []corev1.VolumeMount
+	)
+
+	if cluster.Spec.Frontend.TLSConfig != nil {
+		tlsConfigVolumes, tlsConfigMounts = d.generateTLSConfigMount(cluster.Spec.Frontend.TLSConfig)
+	}
+
 	deployment := &appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Deployment",
@@ -212,6 +225,7 @@ func (d *FrontendDeployer) generateDeployment(cluster *v1alpha1.GreptimeDBCluste
 				},
 				Spec: corev1.PodSpec{
 					ImagePullSecrets: cluster.Spec.Frontend.Template.ImagePullSecrets,
+					Volumes:          tlsConfigVolumes,
 					Containers: []corev1.Container{
 						{
 							Name:      string(v1alpha1.FrontendComponentKind),
@@ -246,6 +260,8 @@ func (d *FrontendDeployer) generateDeployment(cluster *v1alpha1.GreptimeDBCluste
 									ContainerPort: cluster.Spec.OpenTSDBServicePort,
 								},
 							},
+							Env:          cluster.Spec.Frontend.Template.MainContainer.Env,
+							VolumeMounts: tlsConfigMounts,
 						},
 					},
 				},
@@ -335,4 +351,56 @@ func (d *FrontendDeployer) mountConfigMapVolume(deployment *appsv1.Deployment, n
 			})
 		}
 	}
+}
+
+func (d *FrontendDeployer) generateTLSConfigMount(tlsConfig *v1alpha1.TLSConfig) ([]corev1.Volume, []corev1.VolumeMount) {
+	volumes := []corev1.Volume{
+		{
+			Name: "ca",
+			VolumeSource: corev1.VolumeSource{
+				Secret: &corev1.SecretVolumeSource{
+					SecretName: tlsConfig.CA.Name,
+				},
+			},
+		},
+		{
+			Name: "cert",
+			VolumeSource: corev1.VolumeSource{
+				Secret: &corev1.SecretVolumeSource{
+					SecretName: tlsConfig.Cert.Name,
+				},
+			},
+		},
+		{
+			Name: "key-secret",
+			VolumeSource: corev1.VolumeSource{
+				Secret: &corev1.SecretVolumeSource{
+					SecretName: tlsConfig.KeySecret.Name,
+				},
+			},
+		},
+	}
+
+	volumeMounts := []corev1.VolumeMount{
+		{
+			Name:      "ca",
+			MountPath: defaultTLSConfigsMountDir + "/ca",
+			SubPath:   tlsConfig.CA.Key,
+			ReadOnly:  true,
+		},
+		{
+			Name:      "cert",
+			MountPath: defaultTLSConfigsMountDir + "/cert",
+			SubPath:   tlsConfig.Cert.Key,
+			ReadOnly:  true,
+		},
+		{
+			Name:      "key-secret",
+			MountPath: defaultTLSConfigsMountDir + "/key-secret",
+			SubPath:   tlsConfig.KeySecret.Key,
+			ReadOnly:  true,
+		},
+	}
+
+	return volumes, volumeMounts
 }

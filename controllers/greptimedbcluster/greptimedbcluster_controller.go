@@ -220,6 +220,21 @@ func (r *Reconciler) validate(ctx context.Context, cluster *v1alpha1.GreptimeDBC
 		return fmt.Errorf("no components spec in cluster")
 	}
 
+	if cluster.Spec.Frontend != nil && cluster.Spec.Frontend.TLSConfig != nil {
+		err := r.Get(ctx, types.NamespacedName{Namespace: cluster.Namespace, Name: cluster.Spec.Frontend.TLSConfig.CA.Name}, &corev1.Secret{})
+		if err != nil {
+			return fmt.Errorf("get CA secret '%s' failed, error: '%v'", cluster.Spec.Frontend.TLSConfig.CA.Name, err)
+		}
+		err = r.Get(ctx, types.NamespacedName{Namespace: cluster.Namespace, Name: cluster.Spec.Frontend.TLSConfig.Cert.Name}, &corev1.Secret{})
+		if err != nil {
+			return fmt.Errorf("get cert secret '%s' failed, error: '%v'", cluster.Spec.Frontend.TLSConfig.Cert.Name, err)
+		}
+		err = r.Get(ctx, types.NamespacedName{Namespace: cluster.Namespace, Name: cluster.Spec.Frontend.TLSConfig.KeySecret.Name}, &corev1.Secret{})
+		if err != nil {
+			return fmt.Errorf("get key secret '%s' failed, error: '%v'", cluster.Spec.Frontend.TLSConfig.KeySecret.Name, err)
+		}
+	}
+
 	// To detect if the CRD of podmonitor is installed.
 	if cluster.Spec.EnablePrometheusMonitor {
 		// CheckPodMonitorCRDInstall is used to check if the CRD of podmonitor is installed, it is not used to create the podmonitor.

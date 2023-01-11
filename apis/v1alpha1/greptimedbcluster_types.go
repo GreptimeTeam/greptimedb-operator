@@ -337,9 +337,24 @@ type ServiceSpec struct {
 type FrontendSpec struct {
 	ComponentSpec `json:",inline"`
 
-	// +optional
+	// The Kubernetes service spec.
 	Service ServiceSpec `json:"service,omitempty"`
+
+	// +optional
+	TLSConfig *TLSConfig `json:"tlsConfig,omitempty"`
+
 	// More frontend settings can be added here...
+}
+
+type TLSConfig struct {
+	// The CA certificate used to sign the server certificate.
+	CA *corev1.SecretKeySelector `json:"ca,omitempty"`
+
+	// Contains the TLS certificate for the server.
+	Cert *corev1.SecretKeySelector `json:"cert,omitempty"`
+
+	// The private key for the server certificate.
+	KeySecret *corev1.SecretKeySelector `json:"keySecret,omitempty"`
 }
 
 // DatanodeSpec is the specification for datanode component.
