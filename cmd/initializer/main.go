@@ -40,7 +40,6 @@ func main() {
 
 	pflag.StringVar(&opts.configPath, "config-path", "/etc/datanode/datanode.toml", "default config path")
 	pflag.StringVar(&opts.defaultConfigPath, "input-config-file", "/datanode/defaults/datanode.toml", "output config path")
-	pflag.StringVar(&opts.defaultConfigPath, "input-config-file", "/datanode/defaults/datanode.toml", "output config path")
 	pflag.StringVar(&opts.datanodeServiceName, "datanode-service-name", "", "the name of datanode service")
 	pflag.StringVar(&opts.namespace, "namespace", "", "the cluster namespace")
 
