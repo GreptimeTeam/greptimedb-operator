@@ -254,6 +254,7 @@ func (d *DatanodeDeployer) generateSts(cluster *v1alpha1.GreptimeDBCluster) (*ap
 					Annotations: cluster.Spec.Datanode.Template.Annotations,
 				},
 				Spec: corev1.PodSpec{
+					ImagePullSecrets: cluster.Spec.Datanode.Template.ImagePullSecrets,
 					Volumes: []corev1.Volume{
 						{
 							Name: "config",

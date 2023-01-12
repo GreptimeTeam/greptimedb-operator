@@ -231,6 +231,7 @@ func (d *MetaDeployer) generateDeployment(cluster *v1alpha1.GreptimeDBCluster) (
 					Annotations: cluster.Spec.Meta.Template.Annotations,
 				},
 				Spec: corev1.PodSpec{
+					ImagePullSecrets: cluster.Spec.Meta.Template.ImagePullSecrets,
 					Containers: []corev1.Container{
 						{
 							Name:      string(v1alpha1.MetaComponentKind),
