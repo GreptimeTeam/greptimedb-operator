@@ -74,7 +74,7 @@ func main() {
 	if len(podName) == 0 {
 		klog.Fatalf("Get empty pod name")
 	}
-	datanodeConfig.RPCHostName = fmt.Sprintf("%s.%s.%s", podName, opts.datanodeServiceName, opts.namespace)
+	datanodeConfig.RPCHostName = fmt.Sprintf("%s.%s.%s:%d", podName, opts.datanodeServiceName, opts.namespace, opts.datanodeRPCPort)
 	klog.Infof("rpc hostname: %s", datanodeConfig.RPCHostName)
 
 	buf := new(bytes.Buffer)
