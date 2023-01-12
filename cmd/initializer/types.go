@@ -30,6 +30,7 @@ type DatanodeConfig struct {
 	NodeID              uint64 `toml:"node_id"`
 	HTTPAddr            string `toml:"http_addr"`
 	RPCAddr             string `toml:"rpc_addr"`
+	RPCHostName         string `toml:"rpc_hostname"`
 	WALDir              string `toml:"wal_dir"`
 	RPCRuntimeSize      int32  `toml:"rpc_runtime_size"`
 	Mode                string `toml:"mode"`

@@ -274,6 +274,8 @@ func (d *DatanodeDeployer) generateSts(cluster *v1alpha1.GreptimeDBCluster) (*ap
 								"--config-path", defaultConfigDir + defaultConfigName,
 								"--input-config-file", defaultInputConfigFile + defaultConfigName,
 								"--datanode-rpc-port", fmt.Sprintf("%d", cluster.Spec.GRPCServicePort),
+								"--datanode-service-name", d.ResourceName(cluster.Name, v1alpha1.DatanodeComponentKind),
+								"--namespace", cluster.Namespace,
 							},
 							VolumeMounts: []corev1.VolumeMount{
 								{
@@ -288,6 +290,14 @@ func (d *DatanodeDeployer) generateSts(cluster *v1alpha1.GreptimeDBCluster) (*ap
 									ValueFrom: &corev1.EnvVarSource{
 										FieldRef: &corev1.ObjectFieldSelector{
 											FieldPath: "status.podIP",
+										},
+									},
+								},
+								{
+									Name: "POD_NAME",
+									ValueFrom: &corev1.EnvVarSource{
+										FieldRef: &corev1.ObjectFieldSelector{
+											FieldPath: "metadata.name",
 										},
 									},
 								},
