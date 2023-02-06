@@ -222,13 +222,6 @@ func (d *DatanodeDeployer) generateSvc(cluster *v1alpha1.GreptimeDBCluster) (*co
 }
 
 func (d *DatanodeDeployer) generateSts(cluster *v1alpha1.GreptimeDBCluster) (*appsv1.StatefulSet, error) {
-	var args []string
-	if len(cluster.Spec.Datanode.Template.MainContainer.Args) > 0 {
-		args = cluster.Spec.Datanode.Template.MainContainer.Args
-	} else {
-		args = d.buildDatanodeArgs(cluster)
-	}
-
 	sts := &appsv1.StatefulSet{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "StatefulSet",
@@ -246,108 +239,7 @@ func (d *DatanodeDeployer) generateSts(cluster *v1alpha1.GreptimeDBCluster) (*ap
 					GreptimeComponentName: d.ResourceName(cluster.Name, v1alpha1.DatanodeComponentKind),
 				},
 			},
-			Template: corev1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{
-						GreptimeComponentName: d.ResourceName(cluster.Name, v1alpha1.DatanodeComponentKind),
-					},
-					Annotations: cluster.Spec.Datanode.Template.Annotations,
-				},
-				Spec: corev1.PodSpec{
-					ImagePullSecrets: cluster.Spec.Datanode.Template.ImagePullSecrets,
-					Volumes: []corev1.Volume{
-						{
-							Name: "config",
-							VolumeSource: corev1.VolumeSource{
-								EmptyDir: &corev1.EmptyDirVolumeSource{},
-							},
-						},
-					},
-					InitContainers: []corev1.Container{
-						{
-							Name:  "greptimedb-initializer",
-							Image: cluster.Spec.Initializer.Image,
-							Command: []string{
-								"greptimedb-initializer",
-							},
-							Args: []string{
-								"--config-path", defaultConfigDir + defaultConfigName,
-								"--input-config-file", defaultInputConfigFile + defaultConfigName,
-								"--datanode-rpc-port", fmt.Sprintf("%d", cluster.Spec.GRPCServicePort),
-							},
-							VolumeMounts: []corev1.VolumeMount{
-								{
-									Name:      "config",
-									MountPath: defaultConfigDir,
-								},
-							},
-							// TODO(zyy17): the datanode don't support to accept hostname.
-							Env: []corev1.EnvVar{
-								{
-									Name: "POD_IP",
-									ValueFrom: &corev1.EnvVarSource{
-										FieldRef: &corev1.ObjectFieldSelector{
-											FieldPath: "status.podIP",
-										},
-									},
-								},
-							},
-						},
-					},
-					Containers: []corev1.Container{
-						{
-							Name:      string(v1alpha1.DatanodeComponentKind),
-							Image:     cluster.Spec.Datanode.Template.MainContainer.Image,
-							Resources: *cluster.Spec.Datanode.Template.MainContainer.Resources,
-							Command:   cluster.Spec.Datanode.Template.MainContainer.Command,
-							Args:      args,
-							VolumeMounts: []corev1.VolumeMount{
-								{
-									Name:      cluster.Spec.Datanode.Storage.Name,
-									MountPath: cluster.Spec.Datanode.Storage.MountPath,
-								},
-								{
-									Name:      "config",
-									MountPath: defaultConfigDir,
-								},
-							},
-							// TODO(zyy17): the datanode don't support to accept hostname.
-							Env: []corev1.EnvVar{
-								{
-									Name: "POD_IP",
-									ValueFrom: &corev1.EnvVarSource{
-										FieldRef: &corev1.ObjectFieldSelector{
-											FieldPath: "status.podIP",
-										},
-									},
-								},
-							},
-							Ports: []corev1.ContainerPort{
-								{
-									Name:          "grpc",
-									Protocol:      corev1.ProtocolTCP,
-									ContainerPort: cluster.Spec.GRPCServicePort,
-								},
-								{
-									Name:          "http",
-									Protocol:      corev1.ProtocolTCP,
-									ContainerPort: cluster.Spec.HTTPServicePort,
-								},
-								{
-									Name:          "mysql",
-									Protocol:      corev1.ProtocolTCP,
-									ContainerPort: cluster.Spec.MySQLServicePort,
-								},
-								{
-									Name:          "postgres",
-									Protocol:      corev1.ProtocolTCP,
-									ContainerPort: cluster.Spec.PostgresServicePort,
-								},
-							},
-						},
-					},
-				},
-			},
+			Template: *d.generatePodTemplateSpec(cluster),
 			VolumeClaimTemplates: []corev1.PersistentVolumeClaim{
 				{
 					ObjectMeta: metav1.ObjectMeta{
@@ -367,10 +259,6 @@ func (d *DatanodeDeployer) generateSts(cluster *v1alpha1.GreptimeDBCluster) (*ap
 				},
 			},
 		},
-	}
-
-	for k, v := range cluster.Spec.Datanode.Template.Labels {
-		sts.Labels[k] = v
 	}
 
 	if err := deployer.SetControllerAndAnnotation(cluster, sts, d.Scheme, sts.Spec); err != nil {
@@ -448,4 +336,101 @@ func (d *DatanodeDeployer) buildDatanodeArgs(cluster *v1alpha1.GreptimeDBCluster
 		"--mysql-addr", fmt.Sprintf("0.0.0.0:%d", cluster.Spec.MySQLServicePort),
 		"--config-file", defaultConfigDir + defaultConfigName,
 	}
+}
+
+func (d *DatanodeDeployer) generatePodTemplateSpec(cluster *v1alpha1.GreptimeDBCluster) *corev1.PodTemplateSpec {
+	podTemplateSpec := deployer.GeneratePodTemplateSpec(cluster.Spec.Datanode.Template, string(v1alpha1.DatanodeComponentKind))
+
+	if len(cluster.Spec.Datanode.Template.MainContainer.Args) == 0 {
+		// Setup main container args.
+		podTemplateSpec.Spec.Containers[0].Args = d.buildDatanodeArgs(cluster)
+	}
+
+	podTemplateSpec.Spec.Containers[0].Env = append(podTemplateSpec.Spec.Containers[0].Env, corev1.EnvVar{
+		Name: "POD_IP",
+		ValueFrom: &corev1.EnvVarSource{
+			FieldRef: &corev1.ObjectFieldSelector{
+				FieldPath: "status.podIP",
+			},
+		},
+	})
+
+	podTemplateSpec.Spec.Containers[0].VolumeMounts = []corev1.VolumeMount{
+		{
+			Name:      cluster.Spec.Datanode.Storage.Name,
+			MountPath: cluster.Spec.Datanode.Storage.MountPath,
+		},
+		{
+			Name:      "config",
+			MountPath: defaultConfigDir,
+		},
+	}
+
+	podTemplateSpec.Spec.Containers[0].Ports = []corev1.ContainerPort{
+		{
+			Name:          "grpc",
+			Protocol:      corev1.ProtocolTCP,
+			ContainerPort: cluster.Spec.GRPCServicePort,
+		},
+		{
+			Name:          "http",
+			Protocol:      corev1.ProtocolTCP,
+			ContainerPort: cluster.Spec.HTTPServicePort,
+		},
+		{
+			Name:          "mysql",
+			Protocol:      corev1.ProtocolTCP,
+			ContainerPort: cluster.Spec.MySQLServicePort,
+		},
+		{
+			Name:          "postgres",
+			Protocol:      corev1.ProtocolTCP,
+			ContainerPort: cluster.Spec.PostgresServicePort,
+		},
+	}
+
+	podTemplateSpec.Spec.Volumes = []corev1.Volume{
+		{
+			Name: "config",
+			VolumeSource: corev1.VolumeSource{
+				EmptyDir: &corev1.EmptyDirVolumeSource{},
+			},
+		},
+	}
+
+	podTemplateSpec.Spec.InitContainers = append(podTemplateSpec.Spec.InitContainers, corev1.Container{
+		Name:  "greptimedb-initializer",
+		Image: cluster.Spec.Initializer.Image,
+		Command: []string{
+			"greptimedb-initializer",
+		},
+		Args: []string{
+			"--config-path", defaultConfigDir + defaultConfigName,
+			"--input-config-file", defaultInputConfigFile + defaultConfigName,
+			"--datanode-rpc-port", fmt.Sprintf("%d", cluster.Spec.GRPCServicePort),
+		},
+		VolumeMounts: []corev1.VolumeMount{
+			{
+				Name:      "config",
+				MountPath: defaultConfigDir,
+			},
+		},
+		// TODO(zyy17): the datanode don't support to accept hostname.
+		Env: []corev1.EnvVar{
+			{
+				Name: "POD_IP",
+				ValueFrom: &corev1.EnvVarSource{
+					FieldRef: &corev1.ObjectFieldSelector{
+						FieldPath: "status.podIP",
+					},
+				},
+			},
+		},
+	})
+
+	podTemplateSpec.ObjectMeta.Labels = deployer.MergeStringMap(podTemplateSpec.ObjectMeta.Labels, map[string]string{
+		GreptimeComponentName: d.ResourceName(cluster.Name, v1alpha1.DatanodeComponentKind),
+	})
+
+	return podTemplateSpec
 }

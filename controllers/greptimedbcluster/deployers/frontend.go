@@ -180,13 +180,6 @@ func (d *FrontendDeployer) generateSvc(cluster *v1alpha1.GreptimeDBCluster) (*co
 }
 
 func (d *FrontendDeployer) generateDeployment(cluster *v1alpha1.GreptimeDBCluster) (*appsv1.Deployment, error) {
-	var args []string
-	if len(cluster.Spec.Frontend.Template.MainContainer.Args) > 0 {
-		args = cluster.Spec.Frontend.Template.MainContainer.Args
-	} else {
-		args = d.buildFrontendArgs(cluster)
-	}
-
 	deployment := &appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Deployment",
@@ -203,58 +196,8 @@ func (d *FrontendDeployer) generateDeployment(cluster *v1alpha1.GreptimeDBCluste
 					GreptimeComponentName: d.ResourceName(cluster.Name, v1alpha1.FrontendComponentKind),
 				},
 			},
-			Template: corev1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{
-						GreptimeComponentName: d.ResourceName(cluster.Name, v1alpha1.FrontendComponentKind),
-					},
-					Annotations: cluster.Spec.Frontend.Template.Annotations,
-				},
-				Spec: corev1.PodSpec{
-					ImagePullSecrets: cluster.Spec.Frontend.Template.ImagePullSecrets,
-					Containers: []corev1.Container{
-						{
-							Name:      string(v1alpha1.FrontendComponentKind),
-							Image:     cluster.Spec.Frontend.Template.MainContainer.Image,
-							Resources: *cluster.Spec.Frontend.Template.MainContainer.Resources,
-							Command:   cluster.Spec.Frontend.Template.MainContainer.Command,
-							Args:      args,
-							Ports: []corev1.ContainerPort{
-								{
-									Name:          "grpc",
-									Protocol:      corev1.ProtocolTCP,
-									ContainerPort: cluster.Spec.GRPCServicePort,
-								},
-								{
-									Name:          "http",
-									Protocol:      corev1.ProtocolTCP,
-									ContainerPort: cluster.Spec.HTTPServicePort,
-								},
-								{
-									Name:          "mysql",
-									Protocol:      corev1.ProtocolTCP,
-									ContainerPort: cluster.Spec.MySQLServicePort,
-								},
-								{
-									Name:          "postgres",
-									Protocol:      corev1.ProtocolTCP,
-									ContainerPort: cluster.Spec.PostgresServicePort,
-								},
-								{
-									Name:          "opentsdb",
-									Protocol:      corev1.ProtocolTCP,
-									ContainerPort: cluster.Spec.OpenTSDBServicePort,
-								},
-							},
-						},
-					},
-				},
-			},
+			Template: *d.generatePodTemplateSpec(cluster),
 		},
-	}
-
-	for k, v := range cluster.Spec.Frontend.Template.Labels {
-		deployment.Labels[k] = v
 	}
 
 	if err := deployer.SetControllerAndAnnotation(cluster, deployment, d.Scheme, deployment.Spec); err != nil {
@@ -335,4 +278,47 @@ func (d *FrontendDeployer) mountConfigMapVolume(deployment *appsv1.Deployment, n
 			})
 		}
 	}
+}
+
+func (d *FrontendDeployer) generatePodTemplateSpec(cluster *v1alpha1.GreptimeDBCluster) *corev1.PodTemplateSpec {
+	podTemplateSpec := deployer.GeneratePodTemplateSpec(cluster.Spec.Frontend.Template, string(v1alpha1.FrontendComponentKind))
+
+	if len(cluster.Spec.Frontend.Template.MainContainer.Args) == 0 {
+		// Setup main container args.
+		podTemplateSpec.Spec.Containers[0].Args = d.buildFrontendArgs(cluster)
+	}
+
+	podTemplateSpec.ObjectMeta.Labels = deployer.MergeStringMap(podTemplateSpec.ObjectMeta.Labels, map[string]string{
+		GreptimeComponentName: d.ResourceName(cluster.Name, v1alpha1.FrontendComponentKind),
+	})
+
+	podTemplateSpec.Spec.Containers[0].Ports = []corev1.ContainerPort{
+		{
+			Name:          "grpc",
+			Protocol:      corev1.ProtocolTCP,
+			ContainerPort: cluster.Spec.GRPCServicePort,
+		},
+		{
+			Name:          "http",
+			Protocol:      corev1.ProtocolTCP,
+			ContainerPort: cluster.Spec.HTTPServicePort,
+		},
+		{
+			Name:          "mysql",
+			Protocol:      corev1.ProtocolTCP,
+			ContainerPort: cluster.Spec.MySQLServicePort,
+		},
+		{
+			Name:          "postgres",
+			Protocol:      corev1.ProtocolTCP,
+			ContainerPort: cluster.Spec.PostgresServicePort,
+		},
+		{
+			Name:          "opentsdb",
+			Protocol:      corev1.ProtocolTCP,
+			ContainerPort: cluster.Spec.OpenTSDBServicePort,
+		},
+	}
+
+	return podTemplateSpec
 }
