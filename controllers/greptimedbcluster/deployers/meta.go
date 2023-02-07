@@ -200,13 +200,6 @@ func (d *MetaDeployer) generateSvc(cluster *v1alpha1.GreptimeDBCluster) (*corev1
 }
 
 func (d *MetaDeployer) generateDeployment(cluster *v1alpha1.GreptimeDBCluster) (*appsv1.Deployment, error) {
-	var args []string
-	if len(cluster.Spec.Meta.Template.MainContainer.Args) > 0 {
-		args = cluster.Spec.Meta.Template.MainContainer.Args
-	} else {
-		args = d.buildMetaArgs(cluster)
-	}
-
 	deployment := &appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Deployment",
@@ -223,38 +216,8 @@ func (d *MetaDeployer) generateDeployment(cluster *v1alpha1.GreptimeDBCluster) (
 					GreptimeComponentName: d.ResourceName(cluster.Name, v1alpha1.MetaComponentKind),
 				},
 			},
-			Template: corev1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{
-						GreptimeComponentName: d.ResourceName(cluster.Name, v1alpha1.MetaComponentKind),
-					},
-					Annotations: cluster.Spec.Meta.Template.Annotations,
-				},
-				Spec: corev1.PodSpec{
-					ImagePullSecrets: cluster.Spec.Meta.Template.ImagePullSecrets,
-					Containers: []corev1.Container{
-						{
-							Name:      string(v1alpha1.MetaComponentKind),
-							Image:     cluster.Spec.Meta.Template.MainContainer.Image,
-							Resources: *cluster.Spec.Meta.Template.MainContainer.Resources,
-							Command:   cluster.Spec.Meta.Template.MainContainer.Command,
-							Args:      args,
-							Ports: []corev1.ContainerPort{
-								{
-									Name:          "meta",
-									Protocol:      corev1.ProtocolTCP,
-									ContainerPort: cluster.Spec.Meta.ServicePort,
-								},
-							},
-						},
-					},
-				},
-			},
+			Template: *d.generatePodTemplateSpec(cluster),
 		},
-	}
-
-	for k, v := range cluster.Spec.Meta.Template.Labels {
-		deployment.Labels[k] = v
 	}
 
 	if err := deployer.SetControllerAndAnnotation(cluster, deployment, d.Scheme, deployment.Spec); err != nil {
@@ -375,4 +338,27 @@ func (d *MetaDeployer) buildMetaArgs(cluster *v1alpha1.GreptimeDBCluster) []stri
 		"--server-addr", fmt.Sprintf("%s.%s:%d", d.ResourceName(cluster.Name, v1alpha1.MetaComponentKind), cluster.Namespace, cluster.Spec.Meta.ServicePort),
 		"--store-addr", cluster.Spec.Meta.EtcdEndpoints[0],
 	}
+}
+
+func (d *MetaDeployer) generatePodTemplateSpec(cluster *v1alpha1.GreptimeDBCluster) *corev1.PodTemplateSpec {
+	podTemplateSpec := deployer.GeneratePodTemplateSpec(cluster.Spec.Meta.Template, string(v1alpha1.MetaComponentKind))
+
+	if len(cluster.Spec.Meta.Template.MainContainer.Args) == 0 {
+		// Setup main container args.
+		podTemplateSpec.Spec.Containers[0].Args = d.buildMetaArgs(cluster)
+	}
+
+	podTemplateSpec.Spec.Containers[0].Ports = []corev1.ContainerPort{
+		{
+			Name:          "meta",
+			Protocol:      corev1.ProtocolTCP,
+			ContainerPort: cluster.Spec.Meta.ServicePort,
+		},
+	}
+
+	podTemplateSpec.ObjectMeta.Labels = deployer.MergeStringMap(podTemplateSpec.ObjectMeta.Labels, map[string]string{
+		GreptimeComponentName: d.ResourceName(cluster.Name, v1alpha1.MetaComponentKind),
+	})
+
+	return podTemplateSpec
 }

@@ -25,6 +25,8 @@ MANIFESTS_DIR = ./manifests
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION = 1.24.1
 
+GOLANGCI_LINT_VERSION = v1.50.1
+
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
 GOBIN=$(shell go env GOPATH)/bin
@@ -78,7 +80,7 @@ fmt: ## Run go fmt against code.
 
 .PHONY: install-golint
 install-golint: ## Install golint
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@master
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@${GOLANGCI_LINT_VERSION}
 
 .PHONY: lint
 lint: install-golint ## Run golint

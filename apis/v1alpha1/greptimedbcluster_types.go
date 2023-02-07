@@ -131,7 +131,7 @@ type SlimPodSpec struct {
 	// Default to false.
 	// HostNetwork field is from 'corev1.PodSpec.HostNetwork'.
 	// +optional
-	HostNetwork *bool `json:"hostNetwork,omitempty"`
+	HostNetwork bool `json:"hostNetwork,omitempty"`
 
 	// ImagePullSecrets is an optional list of references to secrets in the same namespace to use for pulling any of the images used by this PodSpec.
 	// If specified, these secrets will be passed to individual puller implementations for them to use.
@@ -200,11 +200,6 @@ type MainContainerSpec struct {
 	// +optional
 	WorkingDir string `json:"workingDir,omitempty"`
 
-	// Pod volumes to mount into the container's filesystem.
-	// VolumeMounts field is from 'corev1.Container.VolumeMounts'.
-	// +optional
-	VolumeMounts []corev1.VolumeMount `json:"volumeMounts,omitempty"`
-
 	// List of environment variables to set in the container.
 	// Cannot be updated.
 	// Env field is from 'corev1.Container.Env'.
@@ -238,7 +233,7 @@ type MainContainerSpec struct {
 	// More info: https://kubernetes.io/docs/concepts/containers/images#updating-images
 	// ImagePullPolicy field is from 'corev1.Container.ImagePullPolicy'.
 	// +optional
-	ImagePullPolicy *corev1.PullPolicy `json:"imagePullPolicy,omitempty"`
+	ImagePullPolicy corev1.PullPolicy `json:"imagePullPolicy,omitempty"`
 }
 
 // PodTemplateSpec defines the template for a pod of cluster.

@@ -1948,26 +1948,6 @@ spec:
                               x-kubernetes-int-or-string: true
                             type: object
                         type: object
-                      volumeMounts:
-                        items:
-                          properties:
-                            mountPath:
-                              type: string
-                            mountPropagation:
-                              type: string
-                            name:
-                              type: string
-                            readOnly:
-                              type: boolean
-                            subPath:
-                              type: string
-                            subPathExpr:
-                              type: string
-                          required:
-                          - mountPath
-                          - name
-                          type: object
-                        type: array
                       workingDir:
                         type: string
                     type: object
@@ -3915,26 +3895,6 @@ spec:
                                   x-kubernetes-int-or-string: true
                                 type: object
                             type: object
-                          volumeMounts:
-                            items:
-                              properties:
-                                mountPath:
-                                  type: string
-                                mountPropagation:
-                                  type: string
-                                name:
-                                  type: string
-                                readOnly:
-                                  type: boolean
-                                subPath:
-                                  type: string
-                                subPathExpr:
-                                  type: string
-                              required:
-                              - mountPath
-                              - name
-                              type: object
-                            type: array
                           workingDir:
                             type: string
                         type: object
@@ -5889,26 +5849,6 @@ spec:
                                   x-kubernetes-int-or-string: true
                                 type: object
                             type: object
-                          volumeMounts:
-                            items:
-                              properties:
-                                mountPath:
-                                  type: string
-                                mountPropagation:
-                                  type: string
-                                name:
-                                  type: string
-                                readOnly:
-                                  type: boolean
-                                subPath:
-                                  type: string
-                                subPathExpr:
-                                  type: string
-                              required:
-                              - mountPath
-                              - name
-                              type: object
-                            type: array
                           workingDir:
                             type: string
                         type: object
@@ -7859,26 +7799,6 @@ spec:
                                   x-kubernetes-int-or-string: true
                                 type: object
                             type: object
-                          volumeMounts:
-                            items:
-                              properties:
-                                mountPath:
-                                  type: string
-                                mountPropagation:
-                                  type: string
-                                name:
-                                  type: string
-                                readOnly:
-                                  type: boolean
-                                subPath:
-                                  type: string
-                                subPathExpr:
-                                  type: string
-                              required:
-                              - mountPath
-                              - name
-                              type: object
-                            type: array
                           workingDir:
                             type: string
                         type: object

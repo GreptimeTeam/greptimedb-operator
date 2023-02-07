@@ -282,13 +282,6 @@ func (in *MainContainerSpec) DeepCopyInto(out *MainContainerSpec) {
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
-	if in.VolumeMounts != nil {
-		in, out := &in.VolumeMounts, &out.VolumeMounts
-		*out = make([]v1.VolumeMount, len(*in))
-		for i := range *in {
-			(*in)[i].DeepCopyInto(&(*out)[i])
-		}
-	}
 	if in.Env != nil {
 		in, out := &in.Env, &out.Env
 		*out = make([]v1.EnvVar, len(*in))
@@ -310,11 +303,6 @@ func (in *MainContainerSpec) DeepCopyInto(out *MainContainerSpec) {
 		in, out := &in.Lifecycle, &out.Lifecycle
 		*out = new(v1.Lifecycle)
 		(*in).DeepCopyInto(*out)
-	}
-	if in.ImagePullPolicy != nil {
-		in, out := &in.ImagePullPolicy, &out.ImagePullPolicy
-		*out = new(v1.PullPolicy)
-		**out = **in
 	}
 }
 
@@ -463,11 +451,6 @@ func (in *SlimPodSpec) DeepCopyInto(out *SlimPodSpec) {
 	if in.ActiveDeadlineSeconds != nil {
 		in, out := &in.ActiveDeadlineSeconds, &out.ActiveDeadlineSeconds
 		*out = new(int64)
-		**out = **in
-	}
-	if in.HostNetwork != nil {
-		in, out := &in.HostNetwork, &out.HostNetwork
-		*out = new(bool)
 		**out = **in
 	}
 	if in.ImagePullSecrets != nil {
