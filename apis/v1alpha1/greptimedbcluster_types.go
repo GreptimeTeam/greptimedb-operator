@@ -334,7 +334,26 @@ type FrontendSpec struct {
 
 	// +optional
 	Service ServiceSpec `json:"service,omitempty"`
+
+	// The TLS configurations of the frontend.
+	// +optional
+	TLS *TLSSpec `json:"tls,omitempty"`
+
 	// More frontend settings can be added here...
+}
+
+type TLSSpec struct {
+	// The CA certificate used to sign the server certificate.
+	CA *corev1.SecretKeySelector `json:"ca,omitempty"`
+
+	// Contains the TLS certificate for the server.
+	Cert *corev1.SecretKeySelector `json:"cert,omitempty"`
+
+	// The private key for the server certificate.
+	KeySecret *corev1.SecretKeySelector `json:"keySecret,omitempty"`
+
+	// The mouth path of certificate in frontend container.
+	CertificateMountPath string `json:"certificateMountPath,omitempty"`
 }
 
 // DatanodeSpec is the specification for datanode component.

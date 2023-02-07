@@ -208,7 +208,7 @@ func (d *FrontendDeployer) generateDeployment(cluster *v1alpha1.GreptimeDBCluste
 }
 
 func (d *FrontendDeployer) buildFrontendArgs(cluster *v1alpha1.GreptimeDBCluster) []string {
-	return []string{
+	var args = []string{
 		"frontend", "start",
 		"--grpc-addr", fmt.Sprintf("0.0.0.0:%d", cluster.Spec.GRPCServicePort),
 		"--metasrv-addr", fmt.Sprintf("%s.%s:%d", d.ResourceName(cluster.Name, v1alpha1.MetaComponentKind), cluster.Namespace, cluster.Spec.Meta.ServicePort),
@@ -217,6 +217,16 @@ func (d *FrontendDeployer) buildFrontendArgs(cluster *v1alpha1.GreptimeDBCluster
 		"--postgres-addr", fmt.Sprintf("0.0.0.0:%d", cluster.Spec.PostgresServicePort),
 		"--opentsdb-addr", fmt.Sprintf("0.0.0.0:%d", cluster.Spec.OpenTSDBServicePort),
 	}
+
+	if cluster.Spec.Frontend != nil && cluster.Spec.Frontend.TLS != nil {
+		args = append(args, []string{
+			"--tls-mode", "require",
+			"--tls-cert-path", cluster.Spec.Frontend.TLS.CertificateMountPath + "/cert",
+			"--tls-key-path", cluster.Spec.Frontend.TLS.CertificateMountPath + "/key-secret",
+		}...)
+	}
+
+	return args
 }
 
 func (d *FrontendDeployer) generatePodMonitor(cluster *v1alpha1.GreptimeDBCluster) (*monitoringv1.PodMonitor, error) {
@@ -320,5 +330,70 @@ func (d *FrontendDeployer) generatePodTemplateSpec(cluster *v1alpha1.GreptimeDBC
 		},
 	}
 
+	// Setup frontend tls configurations.
+	var (
+		tlsConfigVolumes []corev1.Volume
+		tlsConfigMounts  []corev1.VolumeMount
+	)
+
+	if cluster.Spec.Frontend.TLS != nil {
+		tlsConfigVolumes, tlsConfigMounts = d.generateTLSConfigMount(cluster.Spec.Frontend.TLS)
+	}
+
+	podTemplateSpec.Spec.Volumes = append(podTemplateSpec.Spec.Volumes, tlsConfigVolumes...)
+	podTemplateSpec.Spec.Containers[0].VolumeMounts = append(podTemplateSpec.Spec.Containers[0].VolumeMounts, tlsConfigMounts...)
+
 	return podTemplateSpec
+}
+
+func (d *FrontendDeployer) generateTLSConfigMount(tlsSpec *v1alpha1.TLSSpec) ([]corev1.Volume, []corev1.VolumeMount) {
+	volumes := []corev1.Volume{
+		{
+			Name: "ca",
+			VolumeSource: corev1.VolumeSource{
+				Secret: &corev1.SecretVolumeSource{
+					SecretName: tlsSpec.CA.Name,
+				},
+			},
+		},
+		{
+			Name: "cert",
+			VolumeSource: corev1.VolumeSource{
+				Secret: &corev1.SecretVolumeSource{
+					SecretName: tlsSpec.Cert.Name,
+				},
+			},
+		},
+		{
+			Name: "key-secret",
+			VolumeSource: corev1.VolumeSource{
+				Secret: &corev1.SecretVolumeSource{
+					SecretName: tlsSpec.KeySecret.Name,
+				},
+			},
+		},
+	}
+
+	volumeMounts := []corev1.VolumeMount{
+		{
+			Name:      "ca",
+			MountPath: tlsSpec.CertificateMountPath + "/ca",
+			SubPath:   tlsSpec.CA.Key,
+			ReadOnly:  true,
+		},
+		{
+			Name:      "cert",
+			MountPath: tlsSpec.CertificateMountPath + "/cert",
+			SubPath:   tlsSpec.Cert.Key,
+			ReadOnly:  true,
+		},
+		{
+			Name:      "key-secret",
+			MountPath: tlsSpec.CertificateMountPath + "/key-secret",
+			SubPath:   tlsSpec.KeySecret.Key,
+			ReadOnly:  true,
+		},
+	}
+
+	return volumes, volumeMounts
 }
