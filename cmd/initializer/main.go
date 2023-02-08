@@ -28,9 +28,11 @@ import (
 )
 
 type options struct {
-	configPath        string
-	defaultConfigPath string
-	datanodeRPCPort   int32
+	configPath          string
+	defaultConfigPath   string
+	datanodeRPCPort     int32
+	datanodeServiceName string
+	namespace           string
 }
 
 func main() {
@@ -38,6 +40,8 @@ func main() {
 
 	pflag.StringVar(&opts.configPath, "config-path", "/etc/datanode/datanode.toml", "default config path")
 	pflag.StringVar(&opts.defaultConfigPath, "input-config-file", "/datanode/defaults/datanode.toml", "output config path")
+	pflag.StringVar(&opts.datanodeServiceName, "datanode-service-name", "", "the name of datanode service")
+	pflag.StringVar(&opts.namespace, "namespace", "", "the cluster namespace")
 
 	// FIXME(zyy17): The greptimedb should support inject configs as env.
 	pflag.Int32Var(&opts.datanodeRPCPort, "datanode-rpc-port", 4001, "datanode rpc port")
@@ -65,6 +69,13 @@ func main() {
 		klog.Fatalf("Get empty pod ip")
 	}
 	datanodeConfig.RPCAddr = fmt.Sprintf("%s:%d", podIP, opts.datanodeRPCPort)
+
+	podName := os.Getenv("POD_NAME")
+	if len(podName) == 0 {
+		klog.Fatalf("Get empty pod name")
+	}
+	datanodeConfig.RPCHostName = fmt.Sprintf("%s.%s.%s:%d", podName, opts.datanodeServiceName, opts.namespace, opts.datanodeRPCPort)
+	klog.Infof("rpc hostname: %s", datanodeConfig.RPCHostName)
 
 	buf := new(bytes.Buffer)
 	err = toml.NewEncoder(buf).Encode(&datanodeConfig)
