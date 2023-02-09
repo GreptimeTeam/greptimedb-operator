@@ -33,6 +33,17 @@ type options struct {
 	datanodeRPCPort     int32
 	datanodeServiceName string
 	namespace           string
+
+	// The storage options.
+	storageType     string
+	localStorageDir string
+	bucket          string
+	prefix          string
+	accessKeyID     string
+	secretAccessKey string
+
+	endpoint string
+	region   string
 }
 
 func main() {
@@ -42,6 +53,16 @@ func main() {
 	pflag.StringVar(&opts.defaultConfigPath, "input-config-file", "/datanode/defaults/datanode.toml", "output config path")
 	pflag.StringVar(&opts.datanodeServiceName, "datanode-service-name", "", "the name of datanode service")
 	pflag.StringVar(&opts.namespace, "namespace", "", "the cluster namespace")
+
+	// Handle storage options.
+	pflag.StringVar(&opts.storageType, "storage-type", "", "the storage type")
+	pflag.StringVar(&opts.localStorageDir, "local-storage-dir", "", "the directory of local storage")
+	pflag.StringVar(&opts.bucket, "bucket", "", "the bucket of s3 storage")
+	pflag.StringVar(&opts.prefix, "prefix", "", "the prefix of s3 storage")
+	pflag.StringVar(&opts.accessKeyID, "access-key-id", "", "the access key id of s3 storage")
+	pflag.StringVar(&opts.secretAccessKey, "secret-access-key", "", "the access key id of s3 storage")
+	pflag.StringVar(&opts.endpoint, "endpoint", "", "the endpoint of s3 storage")
+	pflag.StringVar(&opts.region, "region", "", "the region of s3 storage")
 
 	// FIXME(zyy17): The greptimedb should support inject configs as env.
 	pflag.Int32Var(&opts.datanodeRPCPort, "datanode-rpc-port", 4001, "datanode rpc port")
@@ -56,6 +77,21 @@ func main() {
 	_, err := toml.DecodeFile(opts.defaultConfigPath, &datanodeConfig)
 	if err != nil {
 		klog.Fatalf("Parse input toml file failed, err '%v'", err)
+	}
+
+	if opts.storageType == "S3" {
+		datanodeConfig.StorageConfig.Type = "S3"
+		datanodeConfig.StorageConfig.Bucket = opts.bucket
+		datanodeConfig.StorageConfig.AccessKeyID = opts.accessKeyID
+		datanodeConfig.StorageConfig.SecretAccessKey = opts.secretAccessKey
+		datanodeConfig.StorageConfig.Endpoint = opts.endpoint
+		datanodeConfig.StorageConfig.Region = opts.region
+		datanodeConfig.StorageConfig.Root = opts.prefix
+		datanodeConfig.StorageConfig.DataDir = ""
+	}
+
+	if opts.storageType == "Local" {
+		datanodeConfig.StorageConfig.DataDir = opts.localStorageDir
 	}
 
 	nodeID, err := allocateNodeID()

@@ -276,6 +276,15 @@ func (r *Reconciler) validate(ctx context.Context, cluster *v1alpha1.GreptimeDBC
 		}
 	}
 
+	if cluster.Spec.StorageProvider != nil {
+		if cluster.Spec.StorageProvider.S3 != nil {
+			err := r.Get(ctx, types.NamespacedName{Namespace: cluster.Namespace, Name: cluster.Spec.StorageProvider.S3.SecretName}, &corev1.Secret{})
+			if err != nil {
+				return fmt.Errorf("get storage secret '%s' failed, error: '%v'", cluster.Spec.StorageProvider.S3.SecretName, err)
+			}
+		}
+	}
+
 	return nil
 }
 

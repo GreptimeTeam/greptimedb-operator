@@ -7835,6 +7835,27 @@ spec:
               postgresServicePort:
                 format: int32
                 type: integer
+              storage:
+                properties:
+                  local:
+                    properties:
+                      directory:
+                        type: string
+                    type: object
+                  s3:
+                    properties:
+                      bucket:
+                        type: string
+                      endpoint:
+                        type: string
+                      prefix:
+                        type: string
+                      region:
+                        type: string
+                      secretName:
+                        type: string
+                    type: object
+                type: object
               version:
                 type: string
             type: object
