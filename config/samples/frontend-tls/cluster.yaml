@@ -24,15 +24,8 @@ spec:
   frontend:
     replicas: 1
     tls:
-      ca:
-        key: ca.crt
-        name: frontend-tls
-      cert:
-        key: tls.crt
-        name: frontend-tls
-      keySecret:
-        key: tls.key
-        name: frontend-tls
+      secretName: frontend-tls
+      certificateMountPath: /etc/greptimedb-frontend-tls
   meta:
     replicas: 1
     etcdEndpoints:

@@ -17,6 +17,7 @@ package deployers
 import (
 	"context"
 	"fmt"
+	"path/filepath"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	appsv1 "k8s.io/api/apps/v1"
@@ -29,6 +30,12 @@ import (
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/deployer"
+)
+
+const (
+	CASecretKey     = "ca.crt"
+	TLSCrtSecretKey = "tls.crt"
+	TLSKeySecretKey = "tls.key"
 )
 
 type FrontendDeployer struct {
@@ -221,8 +228,8 @@ func (d *FrontendDeployer) buildFrontendArgs(cluster *v1alpha1.GreptimeDBCluster
 	if cluster.Spec.Frontend != nil && cluster.Spec.Frontend.TLS != nil {
 		args = append(args, []string{
 			"--tls-mode", "require",
-			"--tls-cert-path", cluster.Spec.Frontend.TLS.CertificateMountPath + "/cert",
-			"--tls-key-path", cluster.Spec.Frontend.TLS.CertificateMountPath + "/key-secret",
+			"--tls-cert-path", filepath.Join(cluster.Spec.Frontend.TLS.CertificateMountPath, TLSCrtSecretKey),
+			"--tls-key-path", filepath.Join(cluster.Spec.Frontend.TLS.CertificateMountPath, TLSKeySecretKey),
 		}...)
 	}
 
@@ -337,63 +344,24 @@ func (d *FrontendDeployer) generatePodTemplateSpec(cluster *v1alpha1.GreptimeDBC
 	)
 
 	if cluster.Spec.Frontend.TLS != nil {
-		tlsConfigVolumes, tlsConfigMounts = d.generateTLSConfigMount(cluster.Spec.Frontend.TLS)
+		podTemplateSpec.Spec.Volumes = append(podTemplateSpec.Spec.Volumes, corev1.Volume{
+			Name: "frontend-tls",
+			VolumeSource: corev1.VolumeSource{
+				Secret: &corev1.SecretVolumeSource{
+					SecretName: cluster.Spec.Frontend.TLS.SecretName,
+				},
+			},
+		})
+
+		podTemplateSpec.Spec.Containers[0].VolumeMounts = append(podTemplateSpec.Spec.Containers[0].VolumeMounts, corev1.VolumeMount{
+			Name:      "frontend-tls",
+			MountPath: cluster.Spec.Frontend.TLS.CertificateMountPath,
+			ReadOnly:  true,
+		})
 	}
 
 	podTemplateSpec.Spec.Volumes = append(podTemplateSpec.Spec.Volumes, tlsConfigVolumes...)
 	podTemplateSpec.Spec.Containers[0].VolumeMounts = append(podTemplateSpec.Spec.Containers[0].VolumeMounts, tlsConfigMounts...)
 
 	return podTemplateSpec
-}
-
-func (d *FrontendDeployer) generateTLSConfigMount(tlsSpec *v1alpha1.TLSSpec) ([]corev1.Volume, []corev1.VolumeMount) {
-	volumes := []corev1.Volume{
-		{
-			Name: "ca",
-			VolumeSource: corev1.VolumeSource{
-				Secret: &corev1.SecretVolumeSource{
-					SecretName: tlsSpec.CA.Name,
-				},
-			},
-		},
-		{
-			Name: "cert",
-			VolumeSource: corev1.VolumeSource{
-				Secret: &corev1.SecretVolumeSource{
-					SecretName: tlsSpec.Cert.Name,
-				},
-			},
-		},
-		{
-			Name: "key-secret",
-			VolumeSource: corev1.VolumeSource{
-				Secret: &corev1.SecretVolumeSource{
-					SecretName: tlsSpec.KeySecret.Name,
-				},
-			},
-		},
-	}
-
-	volumeMounts := []corev1.VolumeMount{
-		{
-			Name:      "ca",
-			MountPath: tlsSpec.CertificateMountPath + "/ca",
-			SubPath:   tlsSpec.CA.Key,
-			ReadOnly:  true,
-		},
-		{
-			Name:      "cert",
-			MountPath: tlsSpec.CertificateMountPath + "/cert",
-			SubPath:   tlsSpec.Cert.Key,
-			ReadOnly:  true,
-		},
-		{
-			Name:      "key-secret",
-			MountPath: tlsSpec.CertificateMountPath + "/key-secret",
-			SubPath:   tlsSpec.KeySecret.Key,
-			ReadOnly:  true,
-		},
-	}
-
-	return volumes, volumeMounts
 }

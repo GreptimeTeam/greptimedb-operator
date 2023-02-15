@@ -343,16 +343,13 @@ type FrontendSpec struct {
 }
 
 type TLSSpec struct {
-	// The CA certificate used to sign the server certificate.
-	CA *corev1.SecretKeySelector `json:"ca,omitempty"`
-
-	// Contains the TLS certificate for the server.
-	Cert *corev1.SecretKeySelector `json:"cert,omitempty"`
-
-	// The private key for the server certificate.
-	KeySecret *corev1.SecretKeySelector `json:"keySecret,omitempty"`
+	// The secret name of the TLS certificate, and it must be in the same namespace of the cluster.
+	// The secret must contain keys named ca.crt, tls.crt and tls.key.
+	// +optional
+	SecretName string `json:"secretName,omitempty"`
 
 	// The mouth path of certificate in frontend container.
+	// +optional
 	CertificateMountPath string `json:"certificateMountPath,omitempty"`
 }
 
