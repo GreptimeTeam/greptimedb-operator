@@ -5866,6 +5866,13 @@ spec:
                         format: int64
                         type: integer
                     type: object
+                  tls:
+                    properties:
+                      certificateMountPath:
+                        type: string
+                      secretName:
+                        type: string
+                    type: object
                 required:
                 - replicas
                 type: object

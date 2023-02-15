@@ -334,7 +334,23 @@ type FrontendSpec struct {
 
 	// +optional
 	Service ServiceSpec `json:"service,omitempty"`
+
+	// The TLS configurations of the frontend.
+	// +optional
+	TLS *TLSSpec `json:"tls,omitempty"`
+
 	// More frontend settings can be added here...
+}
+
+type TLSSpec struct {
+	// The secret name of the TLS certificate, and it must be in the same namespace of the cluster.
+	// The secret must contain keys named ca.crt, tls.crt and tls.key.
+	// +optional
+	SecretName string `json:"secretName,omitempty"`
+
+	// The mouth path of certificate in frontend container.
+	// +optional
+	CertificateMountPath string `json:"certificateMountPath,omitempty"`
 }
 
 // DatanodeSpec is the specification for datanode component.

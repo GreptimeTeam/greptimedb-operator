@@ -220,6 +220,28 @@ func (r *Reconciler) validate(ctx context.Context, cluster *v1alpha1.GreptimeDBC
 		return fmt.Errorf("no components spec in cluster")
 	}
 
+	if cluster.Spec.Frontend != nil && cluster.Spec.Frontend.TLS != nil {
+		if len(cluster.Spec.Frontend.TLS.SecretName) > 0 {
+			tlsSecret := &corev1.Secret{}
+			err := r.Get(ctx, types.NamespacedName{Namespace: cluster.Namespace, Name: cluster.Spec.Frontend.TLS.SecretName}, tlsSecret)
+			if err != nil {
+				return fmt.Errorf("get tls secret '%s' failed, error: '%v'", cluster.Spec.Frontend.TLS.SecretName, err)
+			}
+
+			if _, ok := tlsSecret.Data[deployers.CASecretKey]; !ok {
+				return fmt.Errorf("tls secret '%s' does not contain key '%s'", cluster.Spec.Frontend.TLS.SecretName, deployers.CASecretKey)
+			}
+
+			if _, ok := tlsSecret.Data[deployers.TLSCrtSecretKey]; !ok {
+				return fmt.Errorf("tls secret '%s' does not contain key '%s'", cluster.Spec.Frontend.TLS.SecretName, deployers.TLSCrtSecretKey)
+			}
+
+			if _, ok := tlsSecret.Data[deployers.TLSKeySecretKey]; !ok {
+				return fmt.Errorf("tls secret '%s' does not contain key '%s'", cluster.Spec.Frontend.TLS.SecretName, deployers.TLSKeySecretKey)
+			}
+		}
+	}
+
 	// To detect if the CRD of podmonitor is installed.
 	if cluster.Spec.EnablePrometheusMonitor {
 		// CheckPodMonitorCRDInstall is used to check if the CRD of podmonitor is installed, it is not used to create the podmonitor.

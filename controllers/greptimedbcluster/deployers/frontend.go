@@ -17,6 +17,7 @@ package deployers
 import (
 	"context"
 	"fmt"
+	"path/filepath"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	appsv1 "k8s.io/api/apps/v1"
@@ -29,6 +30,12 @@ import (
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/deployer"
+)
+
+const (
+	CASecretKey     = "ca.crt"
+	TLSCrtSecretKey = "tls.crt"
+	TLSKeySecretKey = "tls.key"
 )
 
 type FrontendDeployer struct {
@@ -208,7 +215,7 @@ func (d *FrontendDeployer) generateDeployment(cluster *v1alpha1.GreptimeDBCluste
 }
 
 func (d *FrontendDeployer) buildFrontendArgs(cluster *v1alpha1.GreptimeDBCluster) []string {
-	return []string{
+	var args = []string{
 		"frontend", "start",
 		"--grpc-addr", fmt.Sprintf("0.0.0.0:%d", cluster.Spec.GRPCServicePort),
 		"--metasrv-addr", fmt.Sprintf("%s.%s:%d", d.ResourceName(cluster.Name, v1alpha1.MetaComponentKind), cluster.Namespace, cluster.Spec.Meta.ServicePort),
@@ -217,6 +224,16 @@ func (d *FrontendDeployer) buildFrontendArgs(cluster *v1alpha1.GreptimeDBCluster
 		"--postgres-addr", fmt.Sprintf("0.0.0.0:%d", cluster.Spec.PostgresServicePort),
 		"--opentsdb-addr", fmt.Sprintf("0.0.0.0:%d", cluster.Spec.OpenTSDBServicePort),
 	}
+
+	if cluster.Spec.Frontend != nil && cluster.Spec.Frontend.TLS != nil {
+		args = append(args, []string{
+			"--tls-mode", "require",
+			"--tls-cert-path", filepath.Join(cluster.Spec.Frontend.TLS.CertificateMountPath, TLSCrtSecretKey),
+			"--tls-key-path", filepath.Join(cluster.Spec.Frontend.TLS.CertificateMountPath, TLSKeySecretKey),
+		}...)
+	}
+
+	return args
 }
 
 func (d *FrontendDeployer) generatePodMonitor(cluster *v1alpha1.GreptimeDBCluster) (*monitoringv1.PodMonitor, error) {
@@ -319,6 +336,32 @@ func (d *FrontendDeployer) generatePodTemplateSpec(cluster *v1alpha1.GreptimeDBC
 			ContainerPort: cluster.Spec.OpenTSDBServicePort,
 		},
 	}
+
+	// Setup frontend tls configurations.
+	var (
+		tlsConfigVolumes []corev1.Volume
+		tlsConfigMounts  []corev1.VolumeMount
+	)
+
+	if cluster.Spec.Frontend.TLS != nil {
+		podTemplateSpec.Spec.Volumes = append(podTemplateSpec.Spec.Volumes, corev1.Volume{
+			Name: "frontend-tls",
+			VolumeSource: corev1.VolumeSource{
+				Secret: &corev1.SecretVolumeSource{
+					SecretName: cluster.Spec.Frontend.TLS.SecretName,
+				},
+			},
+		})
+
+		podTemplateSpec.Spec.Containers[0].VolumeMounts = append(podTemplateSpec.Spec.Containers[0].VolumeMounts, corev1.VolumeMount{
+			Name:      "frontend-tls",
+			MountPath: cluster.Spec.Frontend.TLS.CertificateMountPath,
+			ReadOnly:  true,
+		})
+	}
+
+	podTemplateSpec.Spec.Volumes = append(podTemplateSpec.Spec.Volumes, tlsConfigVolumes...)
+	podTemplateSpec.Spec.Containers[0].VolumeMounts = append(podTemplateSpec.Spec.Containers[0].VolumeMounts, tlsConfigMounts...)
 
 	return podTemplateSpec
 }
