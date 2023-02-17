@@ -39,6 +39,11 @@ const (
 	defaultConfigDir       = "/etc/datanode/"
 )
 
+const (
+	AccessKeyIDSecretKey     = "access-key-id"
+	SecretAccessKeySecretKey = "secret-access-key"
+)
+
 // DatanodeDeployer is the deployer for datanode.
 type DatanodeDeployer struct {
 	*CommonDeployer
@@ -469,8 +474,8 @@ func (d *DatanodeDeployer) generateInitializer(cluster *v1alpha1.GreptimeDBClust
 				"--storage-type", "S3",
 				"--bucket", cluster.Spec.StorageProvider.S3.Bucket,
 				"--prefix", cluster.Spec.StorageProvider.S3.Prefix,
-				"--access-key-id", string(s3Credentials.Data["access-key-id"]),
-				"--secret-access-key", string(s3Credentials.Data["secret-access-key"]),
+				"--access-key-id", string(s3Credentials.Data[AccessKeyIDSecretKey]),
+				"--secret-access-key", string(s3Credentials.Data[SecretAccessKeySecretKey]),
 				"--endpoint", cluster.Spec.StorageProvider.S3.Endpoint,
 				"--region", cluster.Spec.StorageProvider.S3.Region,
 			}

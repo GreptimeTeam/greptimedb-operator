@@ -278,9 +278,18 @@ func (r *Reconciler) validate(ctx context.Context, cluster *v1alpha1.GreptimeDBC
 
 	if cluster.Spec.StorageProvider != nil {
 		if cluster.Spec.StorageProvider.S3 != nil {
-			err := r.Get(ctx, types.NamespacedName{Namespace: cluster.Namespace, Name: cluster.Spec.StorageProvider.S3.SecretName}, &corev1.Secret{})
+			storageCredentialsSecret := &corev1.Secret{}
+			err := r.Get(ctx, types.NamespacedName{Namespace: cluster.Namespace, Name: cluster.Spec.StorageProvider.S3.SecretName}, storageCredentialsSecret)
 			if err != nil {
-				return fmt.Errorf("get storage secret '%s' failed, error: '%v'", cluster.Spec.StorageProvider.S3.SecretName, err)
+				return fmt.Errorf("get storage credentials secret '%s' failed, error: '%v'", cluster.Spec.StorageProvider.S3.SecretName, err)
+			}
+
+			if _, ok := storageCredentialsSecret.Data[deployers.AccessKeyIDSecretKey]; !ok {
+				return fmt.Errorf("credentials secret '%s' does not contain key '%s'", cluster.Spec.StorageProvider.S3.SecretName, deployers.AccessKeyIDSecretKey)
+			}
+
+			if _, ok := storageCredentialsSecret.Data[deployers.SecretAccessKeySecretKey]; !ok {
+				return fmt.Errorf("credentials secret '%s' does not contain key '%s'", cluster.Spec.StorageProvider.S3.SecretName, deployers.SecretAccessKeySecretKey)
 			}
 		}
 	}

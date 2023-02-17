@@ -387,6 +387,8 @@ type S3StorageProvider struct {
 	Endpoint string `json:"endpoint,omitempty"`
 
 	// The secret of storing the credentials of access key id and secret access key.
+	// The secret must be the same namespace with the GreptimeDBCluster resource.
+	// +optional
 	SecretName string `json:"secretName,omitempty"`
 
 	// The prefix path of the data in the bucket.
