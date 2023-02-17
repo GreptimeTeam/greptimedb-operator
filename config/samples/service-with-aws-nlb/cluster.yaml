@@ -20,7 +20,7 @@ metadata:
 spec:
   base:
     main:
-      image: greptime/greptimedb:0.1.0-alpha-20221128-weekly
+      image: greptime/greptimedb:0.1.0-alpha-20230213-weekly
   frontend:
     replicas: 1
     service:
