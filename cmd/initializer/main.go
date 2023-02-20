@@ -60,7 +60,7 @@ func main() {
 	pflag.StringVar(&opts.bucket, "bucket", "", "the bucket of s3 storage")
 	pflag.StringVar(&opts.prefix, "prefix", "", "the prefix of s3 storage")
 	pflag.StringVar(&opts.accessKeyID, "access-key-id", "", "the access key id of s3 storage")
-	pflag.StringVar(&opts.secretAccessKey, "secret-access-key", "", "the access key id of s3 storage")
+	pflag.StringVar(&opts.secretAccessKey, "secret-access-key", "", "the secret access key of s3 storage")
 	pflag.StringVar(&opts.endpoint, "endpoint", "", "the endpoint of s3 storage")
 	pflag.StringVar(&opts.region, "region", "", "the region of s3 storage")
 

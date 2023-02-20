@@ -277,6 +277,10 @@ func (r *Reconciler) validate(ctx context.Context, cluster *v1alpha1.GreptimeDBC
 	}
 
 	if cluster.Spec.StorageProvider != nil {
+		if cluster.Spec.StorageProvider.Local != nil && cluster.Spec.StorageProvider.S3 != nil {
+			return fmt.Errorf("only one storage provider can be specified")
+		}
+
 		if cluster.Spec.StorageProvider.S3 != nil {
 			storageCredentialsSecret := &corev1.Secret{}
 			err := r.Get(ctx, types.NamespacedName{Namespace: cluster.Namespace, Name: cluster.Spec.StorageProvider.S3.SecretName}, storageCredentialsSecret)
@@ -285,11 +289,11 @@ func (r *Reconciler) validate(ctx context.Context, cluster *v1alpha1.GreptimeDBC
 			}
 
 			if _, ok := storageCredentialsSecret.Data[deployers.AccessKeyIDSecretKey]; !ok {
-				return fmt.Errorf("credentials secret '%s' does not contain key '%s'", cluster.Spec.StorageProvider.S3.SecretName, deployers.AccessKeyIDSecretKey)
+				return fmt.Errorf("credentials secret '%s' does not contain access key id '%s'", cluster.Spec.StorageProvider.S3.SecretName, deployers.AccessKeyIDSecretKey)
 			}
 
 			if _, ok := storageCredentialsSecret.Data[deployers.SecretAccessKeySecretKey]; !ok {
-				return fmt.Errorf("credentials secret '%s' does not contain key '%s'", cluster.Spec.StorageProvider.S3.SecretName, deployers.SecretAccessKeySecretKey)
+				return fmt.Errorf("credentials secret '%s' does not contain secret access key '%s'", cluster.Spec.StorageProvider.S3.SecretName, deployers.SecretAccessKeySecretKey)
 			}
 		}
 	}
