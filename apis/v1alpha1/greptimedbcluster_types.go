@@ -367,6 +367,40 @@ type InitializerSpec struct {
 	Image string `json:"image,omitempty"`
 }
 
+// StorageProvider defines the storage provider for the cluster. The data will be stored in the storage.
+type StorageProvider struct {
+	S3    *S3StorageProvider    `json:"s3,omitempty"`
+	Local *LocalStorageProvider `json:"local,omitempty"`
+}
+
+type S3StorageProvider struct {
+	// The data will be stored in the bucket.
+	// +optional
+	Bucket string `json:"bucket,omitempty"`
+
+	// The region of the bucket.
+	// +optional
+	Region string `json:"region,omitempty"`
+
+	// The endpoint of the bucket.
+	// +optional
+	Endpoint string `json:"endpoint,omitempty"`
+
+	// The secret of storing the credentials of access key id and secret access key.
+	// The secret must be the same namespace with the GreptimeDBCluster resource.
+	// +optional
+	SecretName string `json:"secretName,omitempty"`
+
+	// The prefix path of the data in the bucket.
+	// +optional
+	Prefix string `json:"prefix,omitempty"`
+}
+
+type LocalStorageProvider struct {
+	// The local directory to store the data.
+	Directory string `json:"directory,omitempty"`
+}
+
 // GreptimeDBClusterSpec defines the desired state of GreptimeDBCluster
 type GreptimeDBClusterSpec struct {
 	// Base is the base pod template for all components and can be overridden by template of individual component.
@@ -413,7 +447,11 @@ type GreptimeDBClusterSpec struct {
 
 	// +optional
 	Initializer *InitializerSpec `json:"initializer,omitempty"`
-	// More cluster settings can be added here...
+
+	// +optional
+	StorageProvider *StorageProvider `json:"storage,omitempty"`
+
+	// More cluster settings can be added here.
 }
 
 // GreptimeDBClusterStatus defines the observed state of GreptimeDBCluster

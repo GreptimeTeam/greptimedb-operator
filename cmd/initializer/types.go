@@ -15,8 +15,14 @@
 package main
 
 type StorageConfig struct {
-	Type    string `toml:"type"`
-	DataDir string `toml:"data_dir"`
+	Type            string `toml:"type"`
+	DataDir         string `toml:"data_dir"`
+	Bucket          string `toml:"bucket"`
+	Root            string `toml:"root"`
+	AccessKeyID     string `toml:"access_key_id"`
+	SecretAccessKey string `toml:"secret_access_key"`
+	Endpoint        string `toml:"endpoint"`
+	Region          string `toml:"region"`
 }
 
 type MetaClientOptions struct {

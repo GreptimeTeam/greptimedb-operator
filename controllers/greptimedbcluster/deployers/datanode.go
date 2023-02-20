@@ -24,6 +24,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -36,6 +37,11 @@ const (
 	defaultConfigName      = "datanode.toml"
 	defaultInputConfigFile = "/config/datanode/defaults/"
 	defaultConfigDir       = "/etc/datanode/"
+)
+
+const (
+	AccessKeyIDSecretKey     = "access-key-id"
+	SecretAccessKeySecretKey = "secret-access-key"
 )
 
 // DatanodeDeployer is the deployer for datanode.
@@ -398,7 +404,17 @@ func (d *DatanodeDeployer) generatePodTemplateSpec(cluster *v1alpha1.GreptimeDBC
 		},
 	}
 
-	podTemplateSpec.Spec.InitContainers = append(podTemplateSpec.Spec.InitContainers, corev1.Container{
+	podTemplateSpec.Spec.InitContainers = append(podTemplateSpec.Spec.InitContainers, *d.generateInitializer(cluster))
+
+	podTemplateSpec.ObjectMeta.Labels = deployer.MergeStringMap(podTemplateSpec.ObjectMeta.Labels, map[string]string{
+		GreptimeComponentName: d.ResourceName(cluster.Name, v1alpha1.DatanodeComponentKind),
+	})
+
+	return podTemplateSpec
+}
+
+func (d *DatanodeDeployer) generateInitializer(cluster *v1alpha1.GreptimeDBCluster) *corev1.Container {
+	initializer := &corev1.Container{
 		Name:  "greptimedb-initializer",
 		Image: cluster.Spec.Initializer.Image,
 		Command: []string{
@@ -436,11 +452,36 @@ func (d *DatanodeDeployer) generatePodTemplateSpec(cluster *v1alpha1.GreptimeDBC
 				},
 			},
 		},
-	})
+	}
 
-	podTemplateSpec.ObjectMeta.Labels = deployer.MergeStringMap(podTemplateSpec.ObjectMeta.Labels, map[string]string{
-		GreptimeComponentName: d.ResourceName(cluster.Name, v1alpha1.DatanodeComponentKind),
-	})
+	if cluster.Spec.StorageProvider != nil {
+		if cluster.Spec.StorageProvider.Local != nil {
+			storageArgs := []string{
+				"--storage-type", "Local",
+				"--local-storage-dir", cluster.Spec.StorageProvider.Local.Directory,
+			}
+			initializer.Args = append(initializer.Args, storageArgs...)
+		}
 
-	return podTemplateSpec
+		if cluster.Spec.StorageProvider.S3 != nil {
+			var s3Credentials corev1.Secret
+			if err := d.Get(context.Background(), types.NamespacedName{Namespace: cluster.Namespace, Name: cluster.Spec.StorageProvider.S3.SecretName}, &s3Credentials); err != nil {
+				klog.Errorf("failed to get s3 secret: %v", err)
+				return nil
+			}
+
+			storageArgs := []string{
+				"--storage-type", "S3",
+				"--bucket", cluster.Spec.StorageProvider.S3.Bucket,
+				"--prefix", cluster.Spec.StorageProvider.S3.Prefix,
+				"--access-key-id", string(s3Credentials.Data[AccessKeyIDSecretKey]),
+				"--secret-access-key", string(s3Credentials.Data[SecretAccessKeySecretKey]),
+				"--endpoint", cluster.Spec.StorageProvider.S3.Endpoint,
+				"--region", cluster.Spec.StorageProvider.S3.Region,
+			}
+			initializer.Args = append(initializer.Args, storageArgs...)
+		}
+	}
+
+	return initializer
 }
