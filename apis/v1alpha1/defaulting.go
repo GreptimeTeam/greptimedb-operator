@@ -38,7 +38,6 @@ var (
 
 	// The default storage settings for datanode.
 	defaultDataNodeStorageName      = "datanode"
-	defaultDataNodeStorageClassName = "standard" // 'standard' is the default local storage class of kind.
 	defaultDataNodeStorageSize      = "10Gi"
 	defaultDataNodeStorageMountPath = "/tmp/greptimedb"
 	defaultStorageRetainPolicyType  = RetainStorageRetainPolicyTypeRetain
@@ -107,7 +106,6 @@ func (in *GreptimeDBCluster) SetDefaults() error {
 			},
 			Storage: StorageSpec{
 				Name:                defaultDataNodeStorageName,
-				StorageClassName:    &defaultDataNodeStorageClassName,
 				StorageSize:         defaultDataNodeStorageSize,
 				MountPath:           defaultDataNodeStorageMountPath,
 				StorageRetainPolicy: defaultStorageRetainPolicyType,

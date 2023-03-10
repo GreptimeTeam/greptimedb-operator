@@ -136,7 +136,6 @@ func TestSetDefaults(t *testing.T) {
 						},
 						Storage: StorageSpec{
 							Name:                defaultDataNodeStorageName,
-							StorageClassName:    &defaultDataNodeStorageClassName,
 							StorageSize:         defaultDataNodeStorageSize,
 							MountPath:           defaultDataNodeStorageMountPath,
 							StorageRetainPolicy: defaultStorageRetainPolicyType,
@@ -308,7 +307,6 @@ func TestSetDefaults(t *testing.T) {
 						},
 						Storage: StorageSpec{
 							Name:                defaultDataNodeStorageName,
-							StorageClassName:    &defaultDataNodeStorageClassName,
 							StorageSize:         defaultDataNodeStorageSize,
 							MountPath:           defaultDataNodeStorageMountPath,
 							StorageRetainPolicy: defaultStorageRetainPolicyType,
@@ -380,7 +378,6 @@ func TestSetDefaults(t *testing.T) {
 						},
 						Storage: StorageSpec{
 							Name:                defaultDataNodeStorageName,
-							StorageClassName:    &defaultDataNodeStorageClassName,
 							StorageSize:         defaultDataNodeStorageSize,
 							MountPath:           defaultDataNodeStorageMountPath,
 							StorageRetainPolicy: defaultStorageRetainPolicyType,
