@@ -243,7 +243,7 @@ func (r *Reconciler) validate(ctx context.Context, cluster *v1alpha1.GreptimeDBC
 	}
 
 	// To detect if the CRD of podmonitor is installed.
-	if cluster.Spec.EnablePrometheusMonitor {
+	if cluster.Spec.PrometheusMonitor.Enabled {
 		// CheckPodMonitorCRDInstall is used to check if the CRD of podmonitor is installed, it is not used to create the podmonitor.
 		err := r.checkPodMonitorCRDInstall(ctx, metav1.GroupKind{
 			Group: "monitoring.coreos.com",

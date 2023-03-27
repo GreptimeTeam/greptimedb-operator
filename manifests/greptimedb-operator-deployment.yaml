@@ -3924,11 +3924,6 @@ spec:
                 type: object
               enableInfluxDBProtocol:
                 type: boolean
-              enablePrometheusMonitor:
-                enum:
-                - true
-                - false
-                type: boolean
               frontend:
                 properties:
                   config:
@@ -7842,6 +7837,23 @@ spec:
               postgresServicePort:
                 format: int32
                 type: integer
+              prometheusMonitor:
+                properties:
+                  enabled:
+                    type: boolean
+                  honorLabels:
+                    type: boolean
+                  interval:
+                    type: string
+                  labelsSelector:
+                    additionalProperties:
+                      type: string
+                    type: object
+                  path:
+                    type: string
+                  port:
+                    type: string
+                type: object
               storage:
                 properties:
                   local:

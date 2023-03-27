@@ -438,8 +438,7 @@ type GreptimeDBClusterSpec struct {
 	EnableInfluxDBProtocol bool `json:"enableInfluxDBProtocol,omitempty"`
 
 	// +optional
-	// +kubebuilder:validation:Enum:={true, false}
-	EnablePrometheusMonitor bool `json:"enablePrometheusMonitor,omitempty"`
+	PrometheusMonitor *PrometheusMonitor `json:"prometheusMonitor,omitempty"`
 
 	// +optional
 	// The version of greptimedb.
@@ -452,6 +451,33 @@ type GreptimeDBClusterSpec struct {
 	StorageProvider *StorageProvider `json:"storage,omitempty"`
 
 	// More cluster settings can be added here.
+}
+
+// PrometheusMonitor defines the PodMonitor configuration.
+type PrometheusMonitor struct {
+	// Enable a prometheus PodMonitor
+	// +optional
+	Enabled bool `json:"enabled,omitempty"`
+
+	// HTTP path to scrape for metrics.
+	// +optional
+	Path string `json:"path,omitempty"`
+
+	// Name of the pod port this endpoint refers to. Mutually exclusive with targetPort.
+	// +optional
+	Port string `json:"port,omitempty"`
+
+	// Interval at which metrics should be scraped
+	// +optional
+	Interval string `json:"interval,omitempty"`
+
+	// HonorLabels chooses the metrics labels on collisions with target labels.
+	// +optional
+	HonorLabels bool `json:"honorLabels,omitempty"`
+
+	// Prometheus PodMonitor selector.
+	// +optional
+	LabelsSelector map[string]string `json:"labelsSelector,omitempty"`
 }
 
 // GreptimeDBClusterStatus defines the observed state of GreptimeDBCluster

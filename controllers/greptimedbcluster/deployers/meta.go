@@ -114,7 +114,7 @@ func (d *MetaDeployer) Render(crdObject client.Object) ([]client.Object, error) 
 			}
 		}
 
-		if cluster.Spec.EnablePrometheusMonitor {
+		if cluster.Spec.PrometheusMonitor.Enabled {
 			pm, err := d.generatePodMonitor(cluster)
 			if err != nil {
 				return nil, err
@@ -236,14 +236,15 @@ func (d *MetaDeployer) generatePodMonitor(cluster *v1alpha1.GreptimeDBCluster) (
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      d.ResourceName(cluster.Name, v1alpha1.MetaComponentKind),
 			Namespace: cluster.Namespace,
+			Labels:    cluster.Spec.PrometheusMonitor.LabelsSelector,
 		},
 		Spec: monitoringv1.PodMonitorSpec{
 			PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 				{
-					Path:        DefaultMetricPath,
-					Port:        DefaultMetricPortName,
-					Interval:    DefaultScapeInterval,
-					HonorLabels: true,
+					Path:        cluster.Spec.PrometheusMonitor.Path,
+					Port:        cluster.Spec.PrometheusMonitor.Port,
+					Interval:    cluster.Spec.PrometheusMonitor.Interval,
+					HonorLabels: cluster.Spec.PrometheusMonitor.HonorLabels,
 				},
 			},
 			Selector: metav1.LabelSelector{
