@@ -190,6 +190,11 @@ func (d *MetaDeployer) generateSvc(cluster *v1alpha1.GreptimeDBCluster) (*corev1
 					Protocol: corev1.ProtocolTCP,
 					Port:     cluster.Spec.Meta.ServicePort,
 				},
+				{
+					Name:     "http",
+					Protocol: corev1.ProtocolTCP,
+					Port:     cluster.Spec.HTTPServicePort,
+				},
 			},
 		},
 	}
@@ -356,6 +361,11 @@ func (d *MetaDeployer) generatePodTemplateSpec(cluster *v1alpha1.GreptimeDBClust
 			Name:          "meta",
 			Protocol:      corev1.ProtocolTCP,
 			ContainerPort: cluster.Spec.Meta.ServicePort,
+		},
+		{
+			Name:          "http",
+			Protocol:      corev1.ProtocolTCP,
+			ContainerPort: cluster.Spec.HTTPServicePort,
 		},
 	}
 
