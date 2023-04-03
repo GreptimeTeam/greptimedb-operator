@@ -114,12 +114,14 @@ func (d *MetaDeployer) Render(crdObject client.Object) ([]client.Object, error) 
 			}
 		}
 
-		if cluster.Spec.PrometheusMonitor.Enabled {
-			pm, err := d.generatePodMonitor(cluster)
-			if err != nil {
-				return nil, err
+		if cluster.Spec.PrometheusMonitor != nil {
+			if cluster.Spec.PrometheusMonitor.Enabled {
+				pm, err := d.generatePodMonitor(cluster)
+				if err != nil {
+					return nil, err
+				}
+				renderObjects = append(renderObjects, pm)
 			}
-			renderObjects = append(renderObjects, pm)
 		}
 	}
 
