@@ -243,17 +243,19 @@ func (r *Reconciler) validate(ctx context.Context, cluster *v1alpha1.GreptimeDBC
 	}
 
 	// To detect if the CRD of podmonitor is installed.
-	if cluster.Spec.EnablePrometheusMonitor {
-		// CheckPodMonitorCRDInstall is used to check if the CRD of podmonitor is installed, it is not used to create the podmonitor.
-		err := r.checkPodMonitorCRDInstall(ctx, metav1.GroupKind{
-			Group: "monitoring.coreos.com",
-			Kind:  "PodMonitor",
-		})
-		if err != nil {
-			if errors.IsNotFound(err) {
-				return fmt.Errorf("the crd podmonitors.monitoring.coreos.com is not installed")
-			} else {
-				return fmt.Errorf("check crd of podmonitors.monitoring.coreos.com is installed error: %v", err)
+	if cluster.Spec.PrometheusMonitor != nil {
+		if cluster.Spec.PrometheusMonitor.Enabled {
+			// CheckPodMonitorCRDInstall is used to check if the CRD of podmonitor is installed, it is not used to create the podmonitor.
+			err := r.checkPodMonitorCRDInstall(ctx, metav1.GroupKind{
+				Group: "monitoring.coreos.com",
+				Kind:  "PodMonitor",
+			})
+			if err != nil {
+				if errors.IsNotFound(err) {
+					return fmt.Errorf("the crd podmonitors.monitoring.coreos.com is not installed")
+				} else {
+					return fmt.Errorf("check crd of podmonitors.monitoring.coreos.com is installed error: %v", err)
+				}
 			}
 		}
 	}

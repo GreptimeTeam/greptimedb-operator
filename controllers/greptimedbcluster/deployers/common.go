@@ -34,10 +34,6 @@ const (
 )
 
 var (
-	DefaultMetricPortName = "metrics"
-	DefaultMetricPath     = "/metrics"
-	DefaultScapeInterval  = "30s"
-
 	DefaultConfigPath = "/etc/greptimedb"
 )
 
