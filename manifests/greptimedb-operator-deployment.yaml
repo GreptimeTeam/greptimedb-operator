@@ -5893,6 +5893,12 @@ spec:
                 properties:
                   config:
                     type: string
+                  datanodeSelector:
+                    default: LoadBased
+                    enum:
+                    - LoadBased
+                    - LeaseBased
+                    type: string
                   etcdEndpoints:
                     items:
                       type: string

@@ -281,6 +281,12 @@ type MetaSpec struct {
 	// +optional
 	EtcdEndpoints []string `json:"etcdEndpoints,omitempty"`
 
+	// More info: https://docs.greptime.com/developer-guide/meta/selector
+	// +kubebuilder:validation:Enum:={"LoadBased", "LeaseBased"}
+	// +kubebuilder:default:="LoadBased"
+	// +optional
+	DatanodeSelector string `json:"datanodeSelector,omitempty"`
+
 	// More meta settings can be added here...
 }
 
