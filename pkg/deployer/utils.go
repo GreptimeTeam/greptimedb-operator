@@ -107,6 +107,7 @@ func GeneratePodTemplateSpec(template *v1alpha1.PodTemplateSpec, mainContainerNa
 					ReadinessProbe:  template.MainContainer.ReadinessProbe,
 					Lifecycle:       template.MainContainer.Lifecycle,
 					ImagePullPolicy: template.MainContainer.ImagePullPolicy,
+					VolumeMounts:    template.MainContainer.VolumeMounts,
 				},
 			},
 			NodeSelector:                  template.NodeSelector,
@@ -120,6 +121,7 @@ func GeneratePodTemplateSpec(template *v1alpha1.PodTemplateSpec, mainContainerNa
 			ImagePullSecrets:              template.ImagePullSecrets,
 			Affinity:                      template.Affinity,
 			SchedulerName:                 template.SchedulerName,
+			Volumes:                       template.Volumes,
 		},
 	}
 
