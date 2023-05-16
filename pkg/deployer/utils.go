@@ -122,6 +122,7 @@ func GeneratePodTemplateSpec(template *v1alpha1.PodTemplateSpec, mainContainerNa
 			Affinity:                      template.Affinity,
 			SchedulerName:                 template.SchedulerName,
 			Volumes:                       template.Volumes,
+			Tolerations:                   template.Tolerations,
 		},
 	}
 
