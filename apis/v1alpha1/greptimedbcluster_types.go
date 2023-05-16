@@ -155,6 +155,10 @@ type SlimPodSpec struct {
 	// If specified, additional containers will be added to the pod as sidecar containers.
 	// +optional
 	AdditionalContainers []corev1.Container `json:"additionalContainers,omitempty"`
+
+	// List of volumes that can be mounted by containers belonging to the pod.
+	// +optional
+	Volumes []corev1.Volume `json:"volumes,omitempty"`
 }
 
 // MainContainerSpec describes the specification of the main container of a pod.
@@ -234,6 +238,11 @@ type MainContainerSpec struct {
 	// ImagePullPolicy field is from 'corev1.Container.ImagePullPolicy'.
 	// +optional
 	ImagePullPolicy corev1.PullPolicy `json:"imagePullPolicy,omitempty"`
+
+	// Pod volumes to mount into the container's filesystem.
+	// Cannot be updated.
+	// +optional
+	VolumeMounts []corev1.VolumeMount `json:"volumeMounts,omitempty"`
 }
 
 // PodTemplateSpec defines the template for a pod of cluster.
