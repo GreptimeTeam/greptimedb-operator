@@ -537,6 +537,13 @@ func (in *SlimPodSpec) DeepCopyInto(out *SlimPodSpec) {
 		*out = new(v1.Affinity)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.Tolerations != nil {
+		in, out := &in.Tolerations, &out.Tolerations
+		*out = make([]v1.Toleration, len(*in))
+		for i := range *in {
+			(*in)[i].DeepCopyInto(&(*out)[i])
+		}
+	}
 	if in.AdditionalContainers != nil {
 		in, out := &in.AdditionalContainers, &out.AdditionalContainers
 		*out = make([]v1.Container, len(*in))
