@@ -29,12 +29,13 @@ var (
 	defaultVersion = "v0.1.0"
 
 	// The default settings for GreptimeDBClusterSpec.
-	defaultHTTPServicePort     = 4000
-	defaultGRPCServicePort     = 4001
-	defaultMySQLServicePort    = 4002
-	defaultPostgresServicePort = 4003
-	defaultOpenTSDBServicePort = 4242
-	defaultMetaServicePort     = 3002
+	defaultHTTPServicePort       = 4000
+	defaultGRPCServicePort       = 4001
+	defaultMySQLServicePort      = 4002
+	defaultPostgresServicePort   = 4003
+	defaultPrometheusServicePort = 4004
+	defaultOpenTSDBServicePort   = 4242
+	defaultMetaServicePort       = 3002
 
 	// The default storage settings for datanode.
 	defaultDataNodeStorageName      = "datanode"
@@ -66,13 +67,14 @@ func (in *GreptimeDBCluster) SetDefaults() error {
 				},
 			},
 		},
-		Initializer:         &InitializerSpec{Image: defaultInitializer},
-		HTTPServicePort:     int32(defaultHTTPServicePort),
-		GRPCServicePort:     int32(defaultGRPCServicePort),
-		MySQLServicePort:    int32(defaultMySQLServicePort),
-		PostgresServicePort: int32(defaultPostgresServicePort),
-		OpenTSDBServicePort: int32(defaultOpenTSDBServicePort),
-		Version:             defaultVersion,
+		Initializer:           &InitializerSpec{Image: defaultInitializer},
+		HTTPServicePort:       int32(defaultHTTPServicePort),
+		GRPCServicePort:       int32(defaultGRPCServicePort),
+		MySQLServicePort:      int32(defaultMySQLServicePort),
+		PostgresServicePort:   int32(defaultPostgresServicePort),
+		PrometheusServicePort: int32(defaultPrometheusServicePort),
+		OpenTSDBServicePort:   int32(defaultOpenTSDBServicePort),
+		Version:               defaultVersion,
 	}
 
 	if in.Spec.Frontend != nil {
