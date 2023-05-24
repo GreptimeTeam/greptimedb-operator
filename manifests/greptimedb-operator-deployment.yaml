@@ -10718,6 +10718,9 @@ spec:
                   port:
                     type: string
                 type: object
+              prometheusServicePort:
+                format: int32
+                type: integer
               storage:
                 properties:
                   local:

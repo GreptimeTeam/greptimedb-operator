@@ -218,6 +218,21 @@ func (d *DatanodeDeployer) generateSvc(cluster *v1alpha1.GreptimeDBCluster) (*co
 					Protocol: corev1.ProtocolTCP,
 					Port:     cluster.Spec.MySQLServicePort,
 				},
+				{
+					Name:     "postgres",
+					Protocol: corev1.ProtocolTCP,
+					Port:     cluster.Spec.PostgresServicePort,
+				},
+				{
+					Name:     "opentsdb",
+					Protocol: corev1.ProtocolTCP,
+					Port:     cluster.Spec.OpenTSDBServicePort,
+				},
+				{
+					Name:     "prometheus",
+					Protocol: corev1.ProtocolTCP,
+					Port:     cluster.Spec.PrometheusServicePort,
+				},
 			},
 		},
 	}
@@ -395,6 +410,16 @@ func (d *DatanodeDeployer) generatePodTemplateSpec(cluster *v1alpha1.GreptimeDBC
 			Name:          "postgres",
 			Protocol:      corev1.ProtocolTCP,
 			ContainerPort: cluster.Spec.PostgresServicePort,
+		},
+		{
+			Name:          "opentsdb",
+			Protocol:      corev1.ProtocolTCP,
+			ContainerPort: cluster.Spec.OpenTSDBServicePort,
+		},
+		{
+			Name:          "prometheus",
+			Protocol:      corev1.ProtocolTCP,
+			ContainerPort: cluster.Spec.PrometheusServicePort,
 		},
 	}
 

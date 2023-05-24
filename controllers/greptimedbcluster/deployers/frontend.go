@@ -158,6 +158,11 @@ func (d *FrontendDeployer) generateSvc(cluster *v1alpha1.GreptimeDBCluster) (*co
 			Protocol: corev1.ProtocolTCP,
 			Port:     cluster.Spec.OpenTSDBServicePort,
 		},
+		{
+			Name:     "prometheus",
+			Protocol: corev1.ProtocolTCP,
+			Port:     cluster.Spec.PrometheusServicePort,
+		},
 	}
 
 	svc := &corev1.Service{
@@ -337,6 +342,11 @@ func (d *FrontendDeployer) generatePodTemplateSpec(cluster *v1alpha1.GreptimeDBC
 			Name:          "opentsdb",
 			Protocol:      corev1.ProtocolTCP,
 			ContainerPort: cluster.Spec.OpenTSDBServicePort,
+		},
+		{
+			Name:          "prometheus",
+			Protocol:      corev1.ProtocolTCP,
+			ContainerPort: cluster.Spec.PrometheusServicePort,
 		},
 	}
 
