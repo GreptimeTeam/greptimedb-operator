@@ -26,6 +26,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
+	"github.com/GreptimeTeam/greptimedb-operator/pkg/dbconfig"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/deployer"
 )
 
@@ -82,15 +83,9 @@ func (c *CommonDeployer) GetCluster(crdObject client.Object) (*v1alpha1.Greptime
 }
 
 func (c *CommonDeployer) GenerateConfigMap(cluster *v1alpha1.GreptimeDBCluster, componentKind v1alpha1.ComponentKind) (*corev1.ConfigMap, error) {
-	var config string
-
-	switch componentKind {
-	case v1alpha1.MetaComponentKind:
-		config = cluster.Spec.Meta.Config
-	case v1alpha1.FrontendComponentKind:
-		config = cluster.Spec.Frontend.Config
-	case v1alpha1.DatanodeComponentKind:
-		config = cluster.Spec.Datanode.Config
+	config, err := dbconfig.FromClusterCRD(cluster, componentKind)
+	if err != nil {
+		return nil, err
 	}
 
 	configmap := &corev1.ConfigMap{
@@ -103,7 +98,7 @@ func (c *CommonDeployer) GenerateConfigMap(cluster *v1alpha1.GreptimeDBCluster, 
 			Namespace: cluster.Namespace,
 		},
 		Data: map[string]string{
-			"config.toml": config,
+			"init-config.toml": string(config),
 		},
 	}
 

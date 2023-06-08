@@ -12,21 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package datanode
+package dbconfig
 
 import (
 	"fmt"
 
-	"github.com/pelletier/go-toml/v2"
 	corev1 "k8s.io/api/core/v1"
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/utils"
 )
 
-// Config is the configuration for the datanode.
+// DatanodeConfig is the configuration for the datanode.
 type (
-	Config struct {
+	DatanodeConfig struct {
 		// Node running mode.
 		Mode string `toml:"mode,omitempty"`
 
@@ -123,50 +122,30 @@ type (
 	}
 )
 
-// FromRawData creates datanode config from the raw input.
-func FromRawData(input []byte) (*Config, error) {
-	var cfg Config
-	if err := toml.Unmarshal(input, &cfg); err != nil {
-		return nil, err
-	}
-	return &cfg, nil
-}
-
-// FromClusterCRD creates datanode config from the cluster CRD.
-func FromClusterCRD(cluster *v1alpha1.GreptimeDBCluster) (*Config, error) {
-	var cfg Config
+func (c *DatanodeConfig) fromClusterCRD(cluster *v1alpha1.GreptimeDBCluster) error {
 	if cluster.Spec.StorageProvider != nil {
 		if cluster.Spec.StorageProvider.Local != nil {
-			cfg.Storage.Type = "File"
-			cfg.Storage.DataHome = cluster.Spec.StorageProvider.Local.Directory
+			c.Storage.Type = "File"
+			c.Storage.DataHome = cluster.Spec.StorageProvider.Local.Directory
 		} else if cluster.Spec.StorageProvider.S3 != nil {
 			if cluster.Spec.StorageProvider.S3.SecretName != "" {
-				accessKeyID, secretAccessKey, err := cfg.getS3Credentials(cluster.Namespace, cluster.Spec.StorageProvider.S3.SecretName)
+				accessKeyID, secretAccessKey, err := c.getS3Credentials(cluster.Namespace, cluster.Spec.StorageProvider.S3.SecretName)
 				if err != nil {
-					return nil, err
+					return err
 				}
-				cfg.Storage.AccessKeyID = string(accessKeyID)
-				cfg.Storage.SecretAccessKey = string(secretAccessKey)
+				c.Storage.AccessKeyID = string(accessKeyID)
+				c.Storage.SecretAccessKey = string(secretAccessKey)
 			}
 
-			cfg.Storage.Type = "S3"
-			cfg.Storage.Bucket = cluster.Spec.StorageProvider.S3.Bucket
-			cfg.Storage.Root = cluster.Spec.StorageProvider.S3.Prefix
-			cfg.Storage.Endpoint = cluster.Spec.StorageProvider.S3.Endpoint
-			cfg.Storage.Region = cluster.Spec.StorageProvider.S3.Region
+			c.Storage.Type = "S3"
+			c.Storage.Bucket = cluster.Spec.StorageProvider.S3.Bucket
+			c.Storage.Root = cluster.Spec.StorageProvider.S3.Prefix
+			c.Storage.Endpoint = cluster.Spec.StorageProvider.S3.Endpoint
+			c.Storage.Region = cluster.Spec.StorageProvider.S3.Region
 		}
 	}
 
-	return &cfg, nil
-}
-
-// Marshal marshals the datanode config to string in TOML format.
-func (c *Config) Marshal() ([]byte, error) {
-	ouput, err := toml.Marshal(c)
-	if err != nil {
-		return nil, err
-	}
-	return ouput, nil
+	return nil
 }
 
 const (
@@ -174,7 +153,7 @@ const (
 	SecretAccessKeySecretKey = "secret-access-key"
 )
 
-func (c *Config) getS3Credentials(namespace, name string) (accessKeyID, secretAccessKey []byte, err error) {
+func (c *DatanodeConfig) getS3Credentials(namespace, name string) (accessKeyID, secretAccessKey []byte, err error) {
 	var s3Credentials corev1.Secret
 
 	if err = utils.GetK8sResource(namespace, name, &s3Credentials); err != nil {

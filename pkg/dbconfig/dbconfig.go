@@ -16,38 +16,103 @@ package dbconfig
 
 import (
 	"fmt"
+	"os"
+
+	"github.com/imdario/mergo"
+	"github.com/pelletier/go-toml/v2"
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
-	"github.com/GreptimeTeam/greptimedb-operator/pkg/dbconfig/datanode"
-	"github.com/GreptimeTeam/greptimedb-operator/pkg/dbconfig/frontend"
-	"github.com/GreptimeTeam/greptimedb-operator/pkg/dbconfig/metasrv"
 )
 
-// FromClusterCRD is the factory method to create dbconfig from GreptimeDBCluster CRD.
-func FromClusterCRD(cluster *v1alpha1.GreptimeDBCluster, componentKind v1alpha1.ComponentKind) ([]byte, error) {
-	if componentKind == v1alpha1.MetaComponentKind {
-		metasrvConfig, err := metasrv.FromClusterCRD(cluster)
-		if err != nil {
-			return nil, err
-		}
-		return metasrvConfig.Marshal()
+// FromFile creates config from the file.
+func FromFile(filename string, config interface{}) error {
+	if err := checkConfigType(config); err != nil {
+		return err
 	}
 
-	if componentKind == v1alpha1.FrontendComponentKind {
-		frontendConfig, err := frontend.FromClusterCRD(cluster)
-		if err != nil {
-			return nil, err
-		}
-		return frontendConfig.Marshal()
+	data, err := os.ReadFile(filename)
+	if err != nil {
+		return err
 	}
 
-	if componentKind == v1alpha1.DatanodeComponentKind {
-		datanodeConfig, err := datanode.FromClusterCRD(cluster)
-		if err != nil {
-			return nil, err
-		}
-		return datanodeConfig.Marshal()
+	return FromRawData(data, config)
+}
+
+// FromRawData creates config from the raw input.
+func FromRawData(raw []byte, config interface{}) error {
+	if err := checkConfigType(config); err != nil {
+		return err
 	}
 
-	return nil, fmt.Errorf("unknown component kind: %v", componentKind)
+	if err := toml.Unmarshal(raw, config); err != nil {
+		return err
+	}
+	return nil
+}
+
+// Marshal marshals the input config to toml.
+func Marshal(config interface{}) ([]byte, error) {
+	if err := checkConfigType(config); err != nil {
+		return nil, err
+	}
+
+	ouput, err := toml.Marshal(config)
+	if err != nil {
+		return nil, err
+	}
+	return ouput, nil
+}
+
+// Merge merges the extra config to the input object.
+func Merge(extraConfigData []byte, baseConfig interface{}) error {
+	extraConfig, err := newConfig(baseConfig)
+	if err != nil {
+		return err
+	}
+
+	if err := FromRawData(extraConfigData, extraConfig); err != nil {
+		return err
+	}
+
+	if err := mergo.Merge(baseConfig, extraConfig, mergo.WithOverride); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// FromClusterCRD creates config from the cluster CRD.
+func FromClusterCRD(cluster *v1alpha1.GreptimeDBCluster, config interface{}) error {
+	switch config.(type) {
+	case *MetasrvConfig:
+		return config.(*MetasrvConfig).fromClusterCRD(cluster)
+	case *FrontendConfig:
+		return config.(*FrontendConfig).fromClusterCRD(cluster)
+	case *DatanodeConfig:
+		return config.(*DatanodeConfig).fromClusterCRD(cluster)
+	default:
+		return fmt.Errorf("unknown object type: %T", config)
+	}
+}
+
+func newConfig(config interface{}) (interface{}, error) {
+	switch config.(type) {
+	case *MetasrvConfig:
+		return &MetasrvConfig{}, nil
+	case *FrontendConfig:
+		return &FrontendConfig{}, nil
+	case *DatanodeConfig:
+		return &DatanodeConfig{}, nil
+	default:
+		return nil, fmt.Errorf("unknown object type: %T", config)
+	}
+}
+
+func checkConfigType(config interface{}) error {
+	switch config.(type) {
+	case *MetasrvConfig, *FrontendConfig, *DatanodeConfig:
+		return nil
+	default:
+		return fmt.Errorf("unknown object type: %T", config)
+	}
 }

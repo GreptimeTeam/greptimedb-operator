@@ -12,15 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package metasrv
+package dbconfig
 
 import (
-	"github.com/pelletier/go-toml/v2"
-
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 )
 
-type Config struct {
+// MetasrvConfig is the configuration for the metasrv.
+type MetasrvConfig struct {
 	// The bind address of metasrv.
 	BindAddr string `toml:"bind_addr,omitempty"`
 
@@ -45,26 +44,6 @@ type Config struct {
 	} `toml:"logging,omitempty"`
 }
 
-// FromRawData creates metasrv config from the given input.
-func FromRawData(input []byte) (*Config, error) {
-	var cfg Config
-	if err := toml.Unmarshal(input, &cfg); err != nil {
-		return nil, err
-	}
-	return &cfg, nil
-}
-
-// FromClusterCRD creates metasrv config from the cluster CRD.
-func FromClusterCRD(cluster *v1alpha1.GreptimeDBCluster) (*Config, error) {
-	return &Config{}, nil
-}
-
-// Marshal marshals the metasrv config to string in TOML format.
-func (c *Config) Marshal() ([]byte, error) {
-	ouput, err := toml.Marshal(c)
-	if err != nil {
-		return nil, err
-	}
-
-	return ouput, nil
+func (c *MetasrvConfig) fromClusterCRD(_ *v1alpha1.GreptimeDBCluster) error {
+	return nil
 }

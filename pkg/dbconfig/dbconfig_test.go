@@ -15,6 +15,8 @@
 package dbconfig
 
 import (
+	"os"
+	"reflect"
 	"testing"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -22,7 +24,19 @@ import (
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 )
 
-func TestFromClusterCRD(t *testing.T) {
+func TestMetasrvConfigFromFile(t *testing.T) {
+	testFromFile("testdata/metasrv.toml", &MetasrvConfig{}, t)
+}
+
+func TestFrontendConfigFromFile(t *testing.T) {
+	testFromFile("testdata/frontend.toml", &FrontendConfig{}, t)
+}
+
+func TestDatanodeConfigFromFile(t *testing.T) {
+	testFromFile("testdata/datanode.toml", &DatanodeConfig{}, t)
+}
+
+func TestDatanodeFromClusterCRD(t *testing.T) {
 	testCluster := &v1alpha1.GreptimeDBCluster{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-cluster",
@@ -38,18 +52,138 @@ func TestFromClusterCRD(t *testing.T) {
 		},
 	}
 
-	_, err := FromClusterCRD(testCluster, v1alpha1.MetaComponentKind)
-	if err != nil {
-		t.Fatalf("failed to generate metasrv config from cluster CRD: %v", err)
+	testConfig := `
+	[storage]
+	type = 'S3'
+	bucket = 'testbucket'
+	root = 'testcluster'`
+
+	cfg := &DatanodeConfig{}
+	if err := FromClusterCRD(testCluster, cfg); err != nil {
+		t.Fatal(err)
 	}
 
-	_, err = FromClusterCRD(testCluster, v1alpha1.DatanodeComponentKind)
-	if err != nil {
-		t.Fatalf("failed to generate datanode config from cluster CRD: %v", err)
+	if _, err := Marshal(cfg); err != nil {
+		t.Fatal(err)
 	}
 
-	_, err = FromClusterCRD(testCluster, v1alpha1.FrontendComponentKind)
+	wantedCfg := &DatanodeConfig{}
+	if err := FromRawData([]byte(testConfig), wantedCfg); err != nil {
+		t.Fatal(err)
+	}
+
+	if !reflect.DeepEqual(wantedCfg, cfg) {
+		t.Errorf("generated config is not equal to wanted config:\n, want: %v\n, got: %v\n", wantedCfg, cfg)
+	}
+}
+
+func TestMetasrvConfigMerge(t *testing.T) {
+	var extraInput = `
+[logging]
+dir = '/other/dir'
+level = 'error'
+`
+
+	extraCfg := &MetasrvConfig{}
+	if err := FromRawData([]byte(extraInput), extraCfg); err != nil {
+		t.Fatal(err)
+	}
+
+	baseCfg := &MetasrvConfig{}
+	if err := FromFile("testdata/metasrv.toml", baseCfg); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := Merge([]byte(extraInput), baseCfg); err != nil {
+		t.Fatal(err)
+	}
+
+	if !reflect.DeepEqual(baseCfg.Logging.Level, extraCfg.Logging.Level) {
+		t.Errorf("logging.level is not equal: want %s, got %s", extraCfg.Logging.Level, baseCfg.Logging.Level)
+	}
+
+	if !reflect.DeepEqual(baseCfg.Logging.Dir, extraCfg.Logging.Dir) {
+		t.Errorf("logging.dir is not equal: want %s, got %s", extraCfg.Logging.Dir, baseCfg.Logging.Dir)
+	}
+}
+
+func TestFrontendConfigMerge(t *testing.T) {
+	var extraInput = `
+[logging]
+dir = '/other/dir'
+level = 'error'
+`
+
+	extraCfg := &FrontendConfig{}
+	if err := FromRawData([]byte(extraInput), extraCfg); err != nil {
+		t.Fatal(err)
+	}
+
+	baseCfg := &FrontendConfig{}
+	if err := FromFile("testdata/frontend.toml", baseCfg); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := Merge([]byte(extraInput), baseCfg); err != nil {
+		t.Fatal(err)
+	}
+
+	if !reflect.DeepEqual(baseCfg.Logging.Level, extraCfg.Logging.Level) {
+		t.Errorf("logging.level is not equal: want %s, got %s", extraCfg.Logging.Level, baseCfg.Logging.Level)
+	}
+
+	if !reflect.DeepEqual(baseCfg.Logging.Dir, extraCfg.Logging.Dir) {
+		t.Errorf("logging.dir is not equal: want %s, got %s", extraCfg.Logging.Dir, baseCfg.Logging.Dir)
+	}
+}
+
+func TestDatanodeConfigMerge(t *testing.T) {
+	var extraInput = `
+[logging]
+dir = '/other/dir'
+level = 'error'
+`
+
+	extraCfg := &DatanodeConfig{}
+	if err := FromRawData([]byte(extraInput), extraCfg); err != nil {
+		t.Fatal(err)
+	}
+
+	baseCfg := &DatanodeConfig{}
+	if err := FromFile("testdata/datanode.toml", baseCfg); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := Merge([]byte(extraInput), baseCfg); err != nil {
+		t.Fatal(err)
+	}
+
+	if !reflect.DeepEqual(baseCfg.Logging.Level, extraCfg.Logging.Level) {
+		t.Errorf("logging.level is not equal: want %s, got %s", extraCfg.Logging.Level, baseCfg.Logging.Level)
+	}
+
+	if !reflect.DeepEqual(baseCfg.Logging.Dir, extraCfg.Logging.Dir) {
+		t.Errorf("logging.dir is not equal: want %s, got %s", extraCfg.Logging.Dir, baseCfg.Logging.Dir)
+	}
+}
+
+func testFromFile(filename string, config interface{}, t *testing.T) {
+	data, err := os.ReadFile(filename)
 	if err != nil {
-		t.Fatalf("failed to generate frontend config from cluster CRD: %v", err)
+		t.Fatal(err)
+	}
+
+	if err := FromFile(filename, config); err != nil {
+		t.Fatal(err)
+	}
+
+	output, err := Marshal(config)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !reflect.DeepEqual(data, output) {
+		t.Errorf("generated config is not equal to original config:\n, want: %s\n, got: %s\n",
+			string(data), string(output))
 	}
 }

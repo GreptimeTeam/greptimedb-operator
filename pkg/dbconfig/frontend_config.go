@@ -12,17 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package frontend
+package dbconfig
 
 import (
-	"github.com/pelletier/go-toml/v2"
-
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 )
 
-// Config is the configuration for the frontend.
+// FrontendConfig is the configuration for the frontend.
 type (
-	Config struct {
+	FrontendConfig struct {
 		// Node running mode.
 		Mode string `toml:"mode,omitempty"`
 
@@ -100,26 +98,6 @@ type (
 	}
 )
 
-// FromRawData creates frontend config from the raw input.
-func FromRawData(input []byte) (*Config, error) {
-	var cfg Config
-	if err := toml.Unmarshal(input, &cfg); err != nil {
-		return nil, err
-	}
-	return &cfg, nil
-}
-
-// FromClusterCRD creates frontend config from the cluster CRD.
-func FromClusterCRD(cluster *v1alpha1.GreptimeDBCluster) (*Config, error) {
-	return &Config{}, nil
-}
-
-// Marshal marshals the frontend config to string in TOML format.
-func (c *Config) Marshal() ([]byte, error) {
-	ouput, err := toml.Marshal(c)
-	if err != nil {
-		return nil, err
-	}
-
-	return ouput, nil
+func (c *FrontendConfig) fromClusterCRD(_ *v1alpha1.GreptimeDBCluster) error {
+	return nil
 }
