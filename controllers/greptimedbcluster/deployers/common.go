@@ -82,54 +82,9 @@ func (c *CommonDeployer) GetCluster(crdObject client.Object) (*v1alpha1.Greptime
 }
 
 func (c *CommonDeployer) GenerateConfigMap(cluster *v1alpha1.GreptimeDBCluster, componentKind v1alpha1.ComponentKind) (*corev1.ConfigMap, error) {
-	var (
-		configData []byte
-		err        error
-	)
-
-	switch componentKind {
-	case v1alpha1.MetaComponentKind:
-		cfg := &dbconfig.MetasrvConfig{}
-		if err := dbconfig.FromClusterCRD(cluster, cfg); err != nil {
-			return nil, err
-		}
-		if cluster.Spec.Meta != nil && len(cluster.Spec.Meta.Config) > 0 {
-			if err := dbconfig.Merge([]byte(cluster.Spec.Meta.Config), cfg); err != nil {
-				return nil, err
-			}
-		}
-		configData, err = dbconfig.Marshal(cfg)
-		if err != nil {
-			return nil, err
-		}
-	case v1alpha1.FrontendComponentKind:
-		cfg := &dbconfig.FrontendConfig{}
-		if err := dbconfig.FromClusterCRD(cluster, cfg); err != nil {
-			return nil, err
-		}
-		if cluster.Spec.Frontend != nil && len(cluster.Spec.Frontend.Config) > 0 {
-			if err := dbconfig.Merge([]byte(cluster.Spec.Frontend.Config), cfg); err != nil {
-				return nil, err
-			}
-		}
-		configData, err = dbconfig.Marshal(cfg)
-		if err != nil {
-			return nil, err
-		}
-	case v1alpha1.DatanodeComponentKind:
-		cfg := &dbconfig.DatanodeConfig{}
-		if err := dbconfig.FromClusterCRD(cluster, cfg); err != nil {
-			return nil, err
-		}
-		if cluster.Spec.Datanode != nil && len(cluster.Spec.Datanode.Config) > 0 {
-			if err := dbconfig.Merge([]byte(cluster.Spec.Datanode.Config), cfg); err != nil {
-				return nil, err
-			}
-		}
-		configData, err = dbconfig.Marshal(cfg)
-		if err != nil {
-			return nil, err
-		}
+	configData, err := dbconfig.FromCluster(cluster, componentKind)
+	if err != nil {
+		return nil, err
 	}
 
 	configmap := &corev1.ConfigMap{

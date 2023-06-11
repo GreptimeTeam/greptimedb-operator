@@ -18,6 +18,8 @@ import (
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 )
 
+var _ Config = &MetasrvConfig{}
+
 // MetasrvConfig is the configuration for the metasrv.
 type MetasrvConfig struct {
 	// The bind address of metasrv.
@@ -44,6 +46,17 @@ type MetasrvConfig struct {
 	} `toml:"logging,omitempty"`
 }
 
-func (c *MetasrvConfig) fromClusterCRD(_ *v1alpha1.GreptimeDBCluster) error {
+// ConfigureByCluster configures the metasrv config by the given cluster.
+func (c *MetasrvConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster) error {
+	if cluster.Spec.Meta != nil && len(cluster.Spec.Meta.Config) > 0 {
+		if err := Merge([]byte(cluster.Spec.Meta.Config), c); err != nil {
+			return err
+		}
+	}
 	return nil
+}
+
+// Kind returns the component kind of the metasrv.
+func (c *MetasrvConfig) Kind() v1alpha1.ComponentKind {
+	return v1alpha1.MetaComponentKind
 }

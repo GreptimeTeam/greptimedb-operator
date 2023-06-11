@@ -18,6 +18,8 @@ import (
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 )
 
+var _ Config = &FrontendConfig{}
+
 // FrontendConfig is the configuration for the frontend.
 type (
 	FrontendConfig struct {
@@ -98,6 +100,18 @@ type (
 	}
 )
 
-func (c *FrontendConfig) fromClusterCRD(_ *v1alpha1.GreptimeDBCluster) error {
+// ConfigureByCluster configures the frontend configuration by the given cluster.
+func (c *FrontendConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster) error {
+	if cluster.Spec.Frontend != nil && len(cluster.Spec.Frontend.Config) > 0 {
+		if err := Merge([]byte(cluster.Spec.Frontend.Config), c); err != nil {
+			return err
+		}
+	}
+
 	return nil
+}
+
+// Kind returns the component kind of the frontend.
+func (c *FrontendConfig) Kind() v1alpha1.ComponentKind {
+	return v1alpha1.FrontendComponentKind
 }

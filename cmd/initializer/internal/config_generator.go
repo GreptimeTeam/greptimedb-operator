@@ -79,29 +79,34 @@ func (c *ConfigGenerator) Generate() error {
 }
 
 func (c *ConfigGenerator) generateDatanodeConfig(initConfig []byte) ([]byte, error) {
-	cfg := &dbconfig.DatanodeConfig{}
-	if err := dbconfig.FromRawData(initConfig, cfg); err != nil {
+	cfg, err := dbconfig.FromRawData(initConfig, v1alpha1.DatanodeComponentKind)
+	if err != nil {
 		return nil, err
+	}
+
+	datanodeCfg, ok := cfg.(*dbconfig.DatanodeConfig)
+	if !ok {
+		return nil, fmt.Errorf("cfg is not datanode config")
 	}
 
 	nodeID, err := c.allocateDatanodeID()
 	if err != nil {
 		klog.Fatalf("Allocate node id failed: %v", err)
 	}
-	cfg.NodeID = &nodeID
+	datanodeCfg.NodeID = &nodeID
 
 	podIP := os.Getenv("POD_IP")
 	if len(podIP) == 0 {
 		return nil, fmt.Errorf("empty pod ip")
 	}
-	cfg.RPCAddr = fmt.Sprintf("%s:%d", podIP, c.DatanodeRPCPort)
+	datanodeCfg.RPCAddr = fmt.Sprintf("%s:%d", podIP, c.DatanodeRPCPort)
 
 	podName := os.Getenv("POD_NAME")
 	if len(podName) == 0 {
 		return nil, fmt.Errorf("empty pod name")
 	}
 
-	cfg.RPCHostName = fmt.Sprintf("%s.%s.%s:%d", podName,
+	datanodeCfg.RPCHostName = fmt.Sprintf("%s.%s.%s:%d", podName,
 		c.DatanodeServiceName, c.Namespace, c.DatanodeRPCPort)
 
 	configData, err := dbconfig.Marshal(cfg)

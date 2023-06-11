@@ -25,18 +25,18 @@ import (
 )
 
 func TestMetasrvConfigFromFile(t *testing.T) {
-	testFromFile("testdata/metasrv.toml", &MetasrvConfig{}, t)
+	testFromFile("testdata/metasrv.toml", v1alpha1.MetaComponentKind, t)
 }
 
 func TestFrontendConfigFromFile(t *testing.T) {
-	testFromFile("testdata/frontend.toml", &FrontendConfig{}, t)
+	testFromFile("testdata/frontend.toml", v1alpha1.FrontendComponentKind, t)
 }
 
 func TestDatanodeConfigFromFile(t *testing.T) {
-	testFromFile("testdata/datanode.toml", &DatanodeConfig{}, t)
+	testFromFile("testdata/datanode.toml", v1alpha1.DatanodeComponentKind, t)
 }
 
-func TestDatanodeFromClusterCRD(t *testing.T) {
+func TestFromClusterForDatanodeConfig(t *testing.T) {
 	testCluster := &v1alpha1.GreptimeDBCluster{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-cluster",
@@ -52,132 +52,110 @@ func TestDatanodeFromClusterCRD(t *testing.T) {
 		},
 	}
 
-	testConfig := `
-	[storage]
-	type = 'S3'
-	bucket = 'testbucket'
-	root = 'testcluster'`
+	testConfig := `[storage]
+type = 'S3'
+bucket = 'testbucket'
+root = 'testcluster'
+`
 
-	cfg := &DatanodeConfig{}
-	if err := FromClusterCRD(testCluster, cfg); err != nil {
+	data, err := FromCluster(testCluster, v1alpha1.DatanodeComponentKind)
+	if err != nil {
 		t.Fatal(err)
 	}
 
-	if _, err := Marshal(cfg); err != nil {
-		t.Fatal(err)
-	}
-
-	wantedCfg := &DatanodeConfig{}
-	if err := FromRawData([]byte(testConfig), wantedCfg); err != nil {
-		t.Fatal(err)
-	}
-
-	if !reflect.DeepEqual(wantedCfg, cfg) {
-		t.Errorf("generated config is not equal to wanted config:\n, want: %v\n, got: %v\n", wantedCfg, cfg)
+	if !reflect.DeepEqual([]byte(testConfig), data) {
+		t.Errorf("generated config is not equal to wanted config:\n, want: %s\n, got: %s\n", testConfig, string(data))
 	}
 }
 
-func TestMetasrvConfigMerge(t *testing.T) {
-	var extraInput = `
+func TestFromClusterForDatanodeConfigWithExtraConfig(t *testing.T) {
+	extraConfig := `[logging]
+dir = '/other/dir'
+level = 'error'
+`
+	testCluster := &v1alpha1.GreptimeDBCluster{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-cluster",
+			Namespace: "default",
+		},
+		Spec: v1alpha1.GreptimeDBClusterSpec{
+			StorageProvider: &v1alpha1.StorageProvider{
+				S3: &v1alpha1.S3StorageProvider{
+					Prefix: "testcluster",
+					Bucket: "testbucket",
+				},
+			},
+			Datanode: &v1alpha1.DatanodeSpec{
+				ComponentSpec: v1alpha1.ComponentSpec{
+					Config: extraConfig,
+				},
+			},
+		},
+	}
+
+	testConfig := `[storage]
+type = 'S3'
+bucket = 'testbucket'
+root = 'testcluster'
+
 [logging]
 dir = '/other/dir'
 level = 'error'
 `
 
-	extraCfg := &MetasrvConfig{}
-	if err := FromRawData([]byte(extraInput), extraCfg); err != nil {
+	data, err := FromCluster(testCluster, v1alpha1.DatanodeComponentKind)
+	if err != nil {
 		t.Fatal(err)
 	}
 
-	baseCfg := &MetasrvConfig{}
-	if err := FromFile("testdata/metasrv.toml", baseCfg); err != nil {
-		t.Fatal(err)
-	}
-
-	if err := Merge([]byte(extraInput), baseCfg); err != nil {
-		t.Fatal(err)
-	}
-
-	if !reflect.DeepEqual(baseCfg.Logging.Level, extraCfg.Logging.Level) {
-		t.Errorf("logging.level is not equal: want %s, got %s", extraCfg.Logging.Level, baseCfg.Logging.Level)
-	}
-
-	if !reflect.DeepEqual(baseCfg.Logging.Dir, extraCfg.Logging.Dir) {
-		t.Errorf("logging.dir is not equal: want %s, got %s", extraCfg.Logging.Dir, baseCfg.Logging.Dir)
+	if !reflect.DeepEqual([]byte(testConfig), data) {
+		t.Errorf("generated config is not equal to wanted config:\n, want: %s\n, got: %s\n", testConfig, string(data))
 	}
 }
 
-func TestFrontendConfigMerge(t *testing.T) {
-	var extraInput = `
+func TestMerge(t *testing.T) {
+	extraInput := `
 [logging]
 dir = '/other/dir'
 level = 'error'
 `
-
-	extraCfg := &FrontendConfig{}
-	if err := FromRawData([]byte(extraInput), extraCfg); err != nil {
+	extraCfg, err := FromRawData([]byte(extraInput), v1alpha1.FrontendComponentKind)
+	if err != nil {
 		t.Fatal(err)
 	}
 
-	baseCfg := &FrontendConfig{}
-	if err := FromFile("testdata/frontend.toml", baseCfg); err != nil {
+	cfg, err := FromFile("testdata/frontend.toml", v1alpha1.FrontendComponentKind)
+	if err != nil {
 		t.Fatal(err)
 	}
 
-	if err := Merge([]byte(extraInput), baseCfg); err != nil {
+	if err := Merge([]byte(extraInput), cfg); err != nil {
 		t.Fatal(err)
 	}
 
-	if !reflect.DeepEqual(baseCfg.Logging.Level, extraCfg.Logging.Level) {
-		t.Errorf("logging.level is not equal: want %s, got %s", extraCfg.Logging.Level, baseCfg.Logging.Level)
+	frontendCfg := cfg.(*FrontendConfig)
+	frontendExtraCfg := extraCfg.(*FrontendConfig)
+	if !reflect.DeepEqual(frontendCfg.Logging.Level, frontendExtraCfg.Logging.Level) {
+		t.Errorf("logging.level is not equal: want %s, got %s", frontendExtraCfg.Logging.Level, frontendCfg.Logging.Level)
 	}
 
-	if !reflect.DeepEqual(baseCfg.Logging.Dir, extraCfg.Logging.Dir) {
-		t.Errorf("logging.dir is not equal: want %s, got %s", extraCfg.Logging.Dir, baseCfg.Logging.Dir)
+	if !reflect.DeepEqual(frontendCfg.Logging.Dir, frontendExtraCfg.Logging.Dir) {
+		t.Errorf("logging.dir is not equal: want %s, got %s", frontendExtraCfg.Logging.Dir, frontendCfg.Logging.Dir)
 	}
 }
 
-func TestDatanodeConfigMerge(t *testing.T) {
-	var extraInput = `
-[logging]
-dir = '/other/dir'
-level = 'error'
-`
-
-	extraCfg := &DatanodeConfig{}
-	if err := FromRawData([]byte(extraInput), extraCfg); err != nil {
-		t.Fatal(err)
-	}
-
-	baseCfg := &DatanodeConfig{}
-	if err := FromFile("testdata/datanode.toml", baseCfg); err != nil {
-		t.Fatal(err)
-	}
-
-	if err := Merge([]byte(extraInput), baseCfg); err != nil {
-		t.Fatal(err)
-	}
-
-	if !reflect.DeepEqual(baseCfg.Logging.Level, extraCfg.Logging.Level) {
-		t.Errorf("logging.level is not equal: want %s, got %s", extraCfg.Logging.Level, baseCfg.Logging.Level)
-	}
-
-	if !reflect.DeepEqual(baseCfg.Logging.Dir, extraCfg.Logging.Dir) {
-		t.Errorf("logging.dir is not equal: want %s, got %s", extraCfg.Logging.Dir, baseCfg.Logging.Dir)
-	}
-}
-
-func testFromFile(filename string, config interface{}, t *testing.T) {
+func testFromFile(filename string, kind v1alpha1.ComponentKind, t *testing.T) {
 	data, err := os.ReadFile(filename)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	if err := FromFile(filename, config); err != nil {
+	cfg, err := FromFile(filename, kind)
+	if err != nil {
 		t.Fatal(err)
 	}
 
-	output, err := Marshal(config)
+	output, err := Marshal(cfg)
 	if err != nil {
 		t.Fatal(err)
 	}

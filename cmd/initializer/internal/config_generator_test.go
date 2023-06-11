@@ -60,23 +60,28 @@ func TestConfigGenerator(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	var cfg dbconfig.DatanodeConfig
-	if err := dbconfig.FromFile(opts.ConfigPath, &cfg); err != nil {
+	cfg, err := dbconfig.FromFile(opts.ConfigPath, v1alpha1.DatanodeComponentKind)
+	if err != nil {
 		t.Fatal(err)
 	}
 
-	if !reflect.DeepEqual(testPodIndex, *cfg.NodeID) {
-		t.Fatalf("nodeID is not equal, want: '%d', got: '%d'", testPodIndex, cfg.NodeID)
+	datanodeCfg, ok := cfg.(*dbconfig.DatanodeConfig)
+	if !ok {
+		t.Fatal(fmt.Errorf("invalid config type"))
+	}
+
+	if !reflect.DeepEqual(testPodIndex, *datanodeCfg.NodeID) {
+		t.Fatalf("nodeID is not equal, want: '%d', got: '%d'", testPodIndex, datanodeCfg.NodeID)
 	}
 
 	wantRPCAddr := fmt.Sprintf("%s:%d", testPodIP, testRPCPort)
-	if !reflect.DeepEqual(wantRPCAddr, cfg.RPCAddr) {
-		t.Fatalf("RPCAddr is not equal, want: '%s', got: '%s'", wantRPCAddr, cfg.RPCAddr)
+	if !reflect.DeepEqual(wantRPCAddr, datanodeCfg.RPCAddr) {
+		t.Fatalf("RPCAddr is not equal, want: '%s', got: '%s'", wantRPCAddr, datanodeCfg.RPCAddr)
 	}
 
 	wantRPCHostname := fmt.Sprintf("%s.%s.%s:%d", testPodName, testClusterService, testClusterNamespace, testRPCPort)
-	if !reflect.DeepEqual(wantRPCHostname, cfg.RPCHostName) {
-		t.Fatalf("RPCHostName is not equal, want: '%s', got: '%s'", wantRPCHostname, cfg.RPCHostName)
+	if !reflect.DeepEqual(wantRPCHostname, datanodeCfg.RPCHostName) {
+		t.Fatalf("RPCHostName is not equal, want: '%s', got: '%s'", wantRPCHostname, datanodeCfg.RPCHostName)
 	}
 }
 

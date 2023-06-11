@@ -23,6 +23,8 @@ import (
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/utils"
 )
 
+var _ Config = &DatanodeConfig{}
+
 // DatanodeConfig is the configuration for the datanode.
 type (
 	DatanodeConfig struct {
@@ -122,7 +124,8 @@ type (
 	}
 )
 
-func (c *DatanodeConfig) fromClusterCRD(cluster *v1alpha1.GreptimeDBCluster) error {
+// ConfigureByCluster configures the datanode config by the given cluster.
+func (c *DatanodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster) error {
 	if cluster.Spec.StorageProvider != nil {
 		if cluster.Spec.StorageProvider.Local != nil {
 			c.Storage.Type = "File"
@@ -145,7 +148,18 @@ func (c *DatanodeConfig) fromClusterCRD(cluster *v1alpha1.GreptimeDBCluster) err
 		}
 	}
 
+	if cluster.Spec.Datanode != nil && len(cluster.Spec.Datanode.Config) > 0 {
+		if err := Merge([]byte(cluster.Spec.Datanode.Config), c); err != nil {
+			return err
+		}
+	}
+
 	return nil
+}
+
+// Kind returns the component kind of the frontend.
+func (c *DatanodeConfig) Kind() v1alpha1.ComponentKind {
+	return v1alpha1.DatanodeComponentKind
 }
 
 const (

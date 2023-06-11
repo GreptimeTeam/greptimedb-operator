@@ -24,38 +24,55 @@ import (
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 )
 
-// FromFile creates config from the file.
-func FromFile(filename string, config interface{}) error {
-	if err := checkConfigType(config); err != nil {
-		return err
-	}
+// Config is the interface for the config of greptimedb.
+type Config interface {
+	// Kind returns the component kind of the config.
+	Kind() v1alpha1.ComponentKind
 
+	// ConfigureByCluster configures the config by the given cluster.
+	ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster) error
+}
+
+// NewFromComponentKind creates config from the component kind.
+func NewFromComponentKind(kind v1alpha1.ComponentKind) (Config, error) {
+	switch kind {
+	case v1alpha1.MetaComponentKind:
+		return &MetasrvConfig{}, nil
+	case v1alpha1.DatanodeComponentKind:
+		return &DatanodeConfig{}, nil
+	case v1alpha1.FrontendComponentKind:
+		return &FrontendConfig{}, nil
+	default:
+		return nil, fmt.Errorf("unknown component kind: %s", kind)
+	}
+}
+
+// FromFile creates config from the file.
+func FromFile(filename string, kind v1alpha1.ComponentKind) (Config, error) {
 	data, err := os.ReadFile(filename)
 	if err != nil {
-		return err
-	}
-
-	return FromRawData(data, config)
-}
-
-// FromRawData creates config from the raw input.
-func FromRawData(raw []byte, config interface{}) error {
-	if err := checkConfigType(config); err != nil {
-		return err
-	}
-
-	if err := toml.Unmarshal(raw, config); err != nil {
-		return err
-	}
-	return nil
-}
-
-// Marshal marshals the input config to toml.
-func Marshal(config interface{}) ([]byte, error) {
-	if err := checkConfigType(config); err != nil {
 		return nil, err
 	}
 
+	return FromRawData(data, kind)
+}
+
+// FromRawData creates config from the raw input.
+func FromRawData(raw []byte, kind v1alpha1.ComponentKind) (Config, error) {
+	cfg, err := NewFromComponentKind(kind)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := toml.Unmarshal(raw, cfg); err != nil {
+		return nil, err
+	}
+
+	return cfg, nil
+}
+
+// Marshal marshals the input config to toml.
+func Marshal(config Config) ([]byte, error) {
 	ouput, err := toml.Marshal(config)
 	if err != nil {
 		return nil, err
@@ -64,13 +81,9 @@ func Marshal(config interface{}) ([]byte, error) {
 }
 
 // Merge merges the extra config to the input object.
-func Merge(extraConfigData []byte, baseConfig interface{}) error {
-	extraConfig, err := newConfig(baseConfig)
+func Merge(extraConfigData []byte, baseConfig Config) error {
+	extraConfig, err := FromRawData(extraConfigData, baseConfig.Kind())
 	if err != nil {
-		return err
-	}
-
-	if err := FromRawData(extraConfigData, extraConfig); err != nil {
 		return err
 	}
 
@@ -81,38 +94,16 @@ func Merge(extraConfigData []byte, baseConfig interface{}) error {
 	return nil
 }
 
-// FromClusterCRD creates config from the cluster CRD.
-func FromClusterCRD(cluster *v1alpha1.GreptimeDBCluster, config interface{}) error {
-	switch config.(type) {
-	case *MetasrvConfig:
-		return config.(*MetasrvConfig).fromClusterCRD(cluster)
-	case *FrontendConfig:
-		return config.(*FrontendConfig).fromClusterCRD(cluster)
-	case *DatanodeConfig:
-		return config.(*DatanodeConfig).fromClusterCRD(cluster)
-	default:
-		return fmt.Errorf("unknown object type: %T", config)
+// FromCluster creates config data from the cluster CRD.
+func FromCluster(cluster *v1alpha1.GreptimeDBCluster, componentKind v1alpha1.ComponentKind) ([]byte, error) {
+	cfg, err := NewFromComponentKind(componentKind)
+	if err != nil {
+		return nil, err
 	}
-}
 
-func newConfig(config interface{}) (interface{}, error) {
-	switch config.(type) {
-	case *MetasrvConfig:
-		return &MetasrvConfig{}, nil
-	case *FrontendConfig:
-		return &FrontendConfig{}, nil
-	case *DatanodeConfig:
-		return &DatanodeConfig{}, nil
-	default:
-		return nil, fmt.Errorf("unknown object type: %T", config)
+	if err := cfg.ConfigureByCluster(cluster); err != nil {
+		return nil, err
 	}
-}
 
-func checkConfigType(config interface{}) error {
-	switch config.(type) {
-	case *MetasrvConfig, *FrontendConfig, *DatanodeConfig:
-		return nil
-	default:
-		return fmt.Errorf("unknown object type: %T", config)
-	}
+	return Marshal(cfg)
 }
