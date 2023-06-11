@@ -119,7 +119,7 @@ build: generate fmt vet ## Build greptimedb-operator binary.
 
 .PHONY: initializer
 initializer: ## Build greptimedb-initializer binary.
-	go build -ldflags '${LDFLAGS}' -o bin/greptimedb-initializer ./cmd/initializer/...
+	go build -ldflags '${LDFLAGS}' -o bin/greptimedb-initializer ./cmd/initializer/main.go
 
 .PHONY: run
 run: manifests generate fmt vet ## Run a controller from your host.
