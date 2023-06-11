@@ -45,7 +45,7 @@ func TestConfigGenerator(t *testing.T) {
 
 	opts := &Options{
 		ConfigPath:          file.Name(),
-		InitConfigPath:      "testdata/init-config.toml",
+		InitConfigPath:      "testdata/config.toml",
 		Namespace:           testClusterNamespace,
 		ComponentKind:       string(v1alpha1.DatanodeComponentKind),
 		DatanodeRPCPort:     testRPCPort,
