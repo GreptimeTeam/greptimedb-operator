@@ -31,11 +31,10 @@ import (
 )
 
 const (
-	GreptimeComponentName = "app.greptime.io/component"
-
-	DefaultConfigDir      = "/etc/greptimedb"
-	DefaultInitConfigDir  = "/etc/greptimedb-init"
-	DefaultConfigFileName = "config.toml"
+	GreptimeDBComponentName  = "app.greptime.io/component"
+	GreptimeDBConfigDir      = "/etc/greptimedb"
+	GreptimeDBInitConfigDir  = "/etc/greptimedb-init"
+	GreptimeDBConfigFileName = "config.toml"
 )
 
 func UpdateStatus(ctx context.Context, input *v1alpha1.GreptimeDBCluster, kc client.Client, opts ...client.UpdateOption) error {
@@ -143,7 +142,7 @@ func (c *CommonDeployer) GenerateConfigMap(cluster *v1alpha1.GreptimeDBCluster, 
 			Namespace: cluster.Namespace,
 		},
 		Data: map[string]string{
-			DefaultConfigFileName: string(configData),
+			GreptimeDBConfigFileName: string(configData),
 		},
 	}
 

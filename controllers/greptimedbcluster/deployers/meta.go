@@ -181,7 +181,7 @@ func (d *MetaDeployer) generateSvc(cluster *v1alpha1.GreptimeDBCluster) (*corev1
 		Spec: corev1.ServiceSpec{
 			Type: corev1.ServiceTypeClusterIP,
 			Selector: map[string]string{
-				GreptimeComponentName: d.ResourceName(cluster.Name, v1alpha1.MetaComponentKind),
+				GreptimeDBComponentName: d.ResourceName(cluster.Name, v1alpha1.MetaComponentKind),
 			},
 			Ports: []corev1.ServicePort{
 				{
@@ -219,7 +219,7 @@ func (d *MetaDeployer) generateDeployment(cluster *v1alpha1.GreptimeDBCluster) (
 			Replicas: &cluster.Spec.Meta.Replicas,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					GreptimeComponentName: d.ResourceName(cluster.Name, v1alpha1.MetaComponentKind),
+					GreptimeDBComponentName: d.ResourceName(cluster.Name, v1alpha1.MetaComponentKind),
 				},
 			},
 			Template: *d.generatePodTemplateSpec(cluster),
@@ -255,7 +255,7 @@ func (d *MetaDeployer) generatePodMonitor(cluster *v1alpha1.GreptimeDBCluster) (
 			},
 			Selector: metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					GreptimeComponentName: d.ResourceName(cluster.Name, v1alpha1.MetaComponentKind),
+					GreptimeDBComponentName: d.ResourceName(cluster.Name, v1alpha1.MetaComponentKind),
 				},
 			},
 			NamespaceSelector: monitoringv1.NamespaceSelector{
@@ -289,7 +289,7 @@ func (d *MetaDeployer) mountConfigMapVolume(deployment *appsv1.Deployment, name 
 		if container.Name == string(v1alpha1.MetaComponentKind) {
 			deployment.Spec.Template.Spec.Containers[i].VolumeMounts = append(deployment.Spec.Template.Spec.Containers[i].VolumeMounts, corev1.VolumeMount{
 				Name:      "config",
-				MountPath: DefaultConfigDir,
+				MountPath: GreptimeDBConfigDir,
 			})
 		}
 	}
@@ -344,7 +344,7 @@ func (d *MetaDeployer) buildMetaArgs(cluster *v1alpha1.GreptimeDBCluster) []stri
 		"--bind-addr", fmt.Sprintf("0.0.0.0:%d", cluster.Spec.Meta.ServicePort),
 		"--server-addr", fmt.Sprintf("%s.%s:%d", d.ResourceName(cluster.Name, v1alpha1.MetaComponentKind), cluster.Namespace, cluster.Spec.Meta.ServicePort),
 		"--store-addr", cluster.Spec.Meta.EtcdEndpoints[0],
-		"--config-file", path.Join(DefaultConfigDir, DefaultConfigFileName),
+		"--config-file", path.Join(GreptimeDBConfigDir, GreptimeDBConfigFileName),
 	}
 }
 
@@ -370,7 +370,7 @@ func (d *MetaDeployer) generatePodTemplateSpec(cluster *v1alpha1.GreptimeDBClust
 	}
 
 	podTemplateSpec.ObjectMeta.Labels = deployer.MergeStringMap(podTemplateSpec.ObjectMeta.Labels, map[string]string{
-		GreptimeComponentName: d.ResourceName(cluster.Name, v1alpha1.MetaComponentKind),
+		GreptimeDBComponentName: d.ResourceName(cluster.Name, v1alpha1.MetaComponentKind),
 	})
 
 	return podTemplateSpec

@@ -172,7 +172,7 @@ func (d *FrontendDeployer) generateSvc(cluster *v1alpha1.GreptimeDBCluster) (*co
 		Spec: corev1.ServiceSpec{
 			Type: cluster.Spec.Frontend.Service.Type,
 			Selector: map[string]string{
-				GreptimeComponentName: d.ResourceName(cluster.Name, v1alpha1.FrontendComponentKind),
+				GreptimeDBComponentName: d.ResourceName(cluster.Name, v1alpha1.FrontendComponentKind),
 			},
 			Ports:             ports,
 			LoadBalancerClass: cluster.Spec.Frontend.Service.LoadBalancerClass,
@@ -200,7 +200,7 @@ func (d *FrontendDeployer) generateDeployment(cluster *v1alpha1.GreptimeDBCluste
 			Replicas: &cluster.Spec.Frontend.Replicas,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					GreptimeComponentName: d.ResourceName(cluster.Name, v1alpha1.FrontendComponentKind),
+					GreptimeDBComponentName: d.ResourceName(cluster.Name, v1alpha1.FrontendComponentKind),
 				},
 			},
 			Template: *d.generatePodTemplateSpec(cluster),
@@ -258,7 +258,7 @@ func (d *FrontendDeployer) generatePodMonitor(cluster *v1alpha1.GreptimeDBCluste
 			},
 			Selector: metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					GreptimeComponentName: d.ResourceName(cluster.Name, v1alpha1.FrontendComponentKind),
+					GreptimeDBComponentName: d.ResourceName(cluster.Name, v1alpha1.FrontendComponentKind),
 				},
 			},
 			NamespaceSelector: monitoringv1.NamespaceSelector{
@@ -293,7 +293,7 @@ func (d *FrontendDeployer) mountConfigMapVolume(deployment *appsv1.Deployment, n
 		if container.Name == string(v1alpha1.FrontendComponentKind) {
 			deployment.Spec.Template.Spec.Containers[i].VolumeMounts = append(deployment.Spec.Template.Spec.Containers[i].VolumeMounts, corev1.VolumeMount{
 				Name:      volumeName,
-				MountPath: DefaultConfigDir,
+				MountPath: GreptimeDBConfigDir,
 			})
 		}
 	}
@@ -308,7 +308,7 @@ func (d *FrontendDeployer) generatePodTemplateSpec(cluster *v1alpha1.GreptimeDBC
 	}
 
 	podTemplateSpec.ObjectMeta.Labels = deployer.MergeStringMap(podTemplateSpec.ObjectMeta.Labels, map[string]string{
-		GreptimeComponentName: d.ResourceName(cluster.Name, v1alpha1.FrontendComponentKind),
+		GreptimeDBComponentName: d.ResourceName(cluster.Name, v1alpha1.FrontendComponentKind),
 	})
 
 	podTemplateSpec.Spec.Containers[0].Ports = []corev1.ContainerPort{
