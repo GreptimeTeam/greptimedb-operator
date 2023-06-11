@@ -1,0 +1,43 @@
+mode = 'distributed'
+enable_memory_catalog = false
+node_id = 42
+rpc_addr = '127.0.0.1:3001'
+rpc_hostname = '127.0.0.1'
+rpc_runtime_size = 8
+
+[meta_client_options]
+metasrv_addrs = ['127.0.0.1:3002']
+timeout_millis = 3000
+connect_timeout_millis = 5000
+tcp_nodelay = true
+
+[wal]
+file_size = '1GB'
+purge_threshold = '50GB'
+purge_interval = '10m'
+read_batch_size = 128
+sync_write = false
+
+[storage]
+type = 'File'
+data_home = '/tmp/greptimedb/'
+
+[storage.manifest]
+checkpoint_margin = 10
+gc_duration = '30s'
+checkpoint_on_startup = false
+
+[storage.flush]
+max_flush_tasks = 8
+region_write_buffer_size = '32MB'
+picker_schedule_interval = '5m'
+auto_flush_interval = '1h'
+global_write_buffer_size = '1GB'
+
+[procedure]
+max_retry_times = 3
+retry_delay = '500ms'
+
+[logging]
+dir = '/tmp/greptimedb/logs'
+level = 'info'
