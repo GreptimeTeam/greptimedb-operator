@@ -323,7 +323,6 @@ func (d *DatanodeDeployer) buildDatanodeArgs(cluster *v1alpha1.GreptimeDBCluster
 	return []string{
 		"datanode", "start",
 		"--metasrv-addr", fmt.Sprintf("%s.%s:%d", d.ResourceName(cluster.Name, v1alpha1.MetaComponentKind), cluster.Namespace, cluster.Spec.Meta.ServicePort),
-		"--mysql-addr", fmt.Sprintf("0.0.0.0:%d", cluster.Spec.MySQLServicePort),
 		"--config-file", path.Join(DefaultConfigDir, DefaultConfigFileName),
 	}
 }

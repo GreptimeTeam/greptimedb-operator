@@ -17,6 +17,7 @@ package deployers
 import (
 	"context"
 	"fmt"
+	"path"
 	"strings"
 	"time"
 
@@ -343,6 +344,7 @@ func (d *MetaDeployer) buildMetaArgs(cluster *v1alpha1.GreptimeDBCluster) []stri
 		"--bind-addr", fmt.Sprintf("0.0.0.0:%d", cluster.Spec.Meta.ServicePort),
 		"--server-addr", fmt.Sprintf("%s.%s:%d", d.ResourceName(cluster.Name, v1alpha1.MetaComponentKind), cluster.Namespace, cluster.Spec.Meta.ServicePort),
 		"--store-addr", cluster.Spec.Meta.EtcdEndpoints[0],
+		"--config-file", path.Join(DefaultConfigDir, DefaultConfigFileName),
 	}
 }
 

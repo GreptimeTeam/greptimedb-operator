@@ -277,8 +277,9 @@ func (d *FrontendDeployer) generatePodMonitor(cluster *v1alpha1.GreptimeDBCluste
 }
 
 func (d *FrontendDeployer) mountConfigMapVolume(deployment *appsv1.Deployment, name string) {
+	volumeName := "config"
 	deployment.Spec.Template.Spec.Volumes = append(deployment.Spec.Template.Spec.Volumes, corev1.Volume{
-		Name: "config",
+		Name: volumeName,
 		VolumeSource: corev1.VolumeSource{
 			ConfigMap: &corev1.ConfigMapVolumeSource{
 				LocalObjectReference: corev1.LocalObjectReference{
@@ -291,7 +292,7 @@ func (d *FrontendDeployer) mountConfigMapVolume(deployment *appsv1.Deployment, n
 	for i, container := range deployment.Spec.Template.Spec.Containers {
 		if container.Name == string(v1alpha1.FrontendComponentKind) {
 			deployment.Spec.Template.Spec.Containers[i].VolumeMounts = append(deployment.Spec.Template.Spec.Containers[i].VolumeMounts, corev1.VolumeMount{
-				Name:      "config",
+				Name:      volumeName,
 				MountPath: DefaultConfigDir,
 			})
 		}
@@ -345,8 +346,9 @@ func (d *FrontendDeployer) generatePodTemplateSpec(cluster *v1alpha1.GreptimeDBC
 	)
 
 	if cluster.Spec.Frontend.TLS != nil {
+		volumeName := "tls"
 		podTemplateSpec.Spec.Volumes = append(podTemplateSpec.Spec.Volumes, corev1.Volume{
-			Name: "frontend-tls",
+			Name: volumeName,
 			VolumeSource: corev1.VolumeSource{
 				Secret: &corev1.SecretVolumeSource{
 					SecretName: cluster.Spec.Frontend.TLS.SecretName,
@@ -355,7 +357,7 @@ func (d *FrontendDeployer) generatePodTemplateSpec(cluster *v1alpha1.GreptimeDBC
 		})
 
 		podTemplateSpec.Spec.Containers[0].VolumeMounts = append(podTemplateSpec.Spec.Containers[0].VolumeMounts, corev1.VolumeMount{
-			Name:      "frontend-tls",
+			Name:      volumeName,
 			MountPath: cluster.Spec.Frontend.TLS.CertificateMountPath,
 			ReadOnly:  true,
 		})
