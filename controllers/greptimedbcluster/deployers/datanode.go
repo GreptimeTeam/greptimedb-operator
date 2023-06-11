@@ -17,6 +17,7 @@ package deployers
 import (
 	"context"
 	"fmt"
+	"path"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	appsv1 "k8s.io/api/apps/v1"
@@ -30,12 +31,6 @@ import (
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/deployer"
-)
-
-const (
-	defaultConfigName      = "config.toml"
-	defaultInputConfigFile = "/etc/greptimedb-init/"
-	defaultConfigDir       = "/etc/greptimedb/"
 )
 
 // DatanodeDeployer is the deployer for datanode.
@@ -318,7 +313,7 @@ func (d *DatanodeDeployer) mountConfigMapVolume(sts *appsv1.StatefulSet, name st
 		if container.Name == string(v1alpha1.DatanodeComponentKind) {
 			sts.Spec.Template.Spec.Containers[i].VolumeMounts = append(sts.Spec.Template.Spec.Containers[i].VolumeMounts, corev1.VolumeMount{
 				Name:      "config",
-				MountPath: DefaultConfigPath,
+				MountPath: DefaultConfigDir,
 			})
 		}
 	}
@@ -329,7 +324,7 @@ func (d *DatanodeDeployer) buildDatanodeArgs(cluster *v1alpha1.GreptimeDBCluster
 		"datanode", "start",
 		"--metasrv-addr", fmt.Sprintf("%s.%s:%d", d.ResourceName(cluster.Name, v1alpha1.MetaComponentKind), cluster.Namespace, cluster.Spec.Meta.ServicePort),
 		"--mysql-addr", fmt.Sprintf("0.0.0.0:%d", cluster.Spec.MySQLServicePort),
-		"--config-file", defaultConfigDir + defaultConfigName,
+		"--config-file", path.Join(DefaultConfigDir, DefaultConfigFileName),
 	}
 }
 
@@ -357,7 +352,7 @@ func (d *DatanodeDeployer) generatePodTemplateSpec(cluster *v1alpha1.GreptimeDBC
 		},
 		{
 			Name:      "config",
-			MountPath: defaultConfigDir,
+			MountPath: DefaultConfigDir,
 		},
 	}
 
@@ -420,8 +415,8 @@ func (d *DatanodeDeployer) generateInitializer(cluster *v1alpha1.GreptimeDBClust
 			"greptimedb-initializer",
 		},
 		Args: []string{
-			"--config-path", defaultConfigDir + defaultConfigName,
-			"--init-config-path", defaultInputConfigFile + "init-config.toml",
+			"--config-path", path.Join(DefaultConfigDir, DefaultConfigFileName),
+			"--init-config-path", path.Join(DefaultInitConfigDir, DefaultConfigFileName),
 			"--datanode-rpc-port", fmt.Sprintf("%d", cluster.Spec.GRPCServicePort),
 			"--datanode-service-name", d.ResourceName(cluster.Name, v1alpha1.DatanodeComponentKind),
 			"--namespace", cluster.Namespace,
@@ -430,11 +425,11 @@ func (d *DatanodeDeployer) generateInitializer(cluster *v1alpha1.GreptimeDBClust
 		VolumeMounts: []corev1.VolumeMount{
 			{
 				Name:      "config",
-				MountPath: defaultConfigDir,
+				MountPath: DefaultConfigDir,
 			},
 			{
 				Name:      "init-config",
-				MountPath: defaultInputConfigFile,
+				MountPath: DefaultInitConfigDir,
 			},
 		},
 		// TODO(zyy17): the datanode don't support to accept hostname.

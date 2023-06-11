@@ -32,10 +32,10 @@ import (
 
 const (
 	GreptimeComponentName = "app.greptime.io/component"
-)
 
-var (
-	DefaultConfigPath = "/etc/greptimedb"
+	DefaultConfigDir      = "/etc/greptimedb"
+	DefaultInitConfigDir  = "/etc/greptimedb-init"
+	DefaultConfigFileName = "config.toml"
 )
 
 func UpdateStatus(ctx context.Context, input *v1alpha1.GreptimeDBCluster, kc client.Client, opts ...client.UpdateOption) error {
@@ -143,7 +143,7 @@ func (c *CommonDeployer) GenerateConfigMap(cluster *v1alpha1.GreptimeDBCluster, 
 			Namespace: cluster.Namespace,
 		},
 		Data: map[string]string{
-			"init-config.toml": string(configData),
+			DefaultConfigFileName: string(configData),
 		},
 	}
 
