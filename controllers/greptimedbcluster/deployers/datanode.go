@@ -297,28 +297,6 @@ func (d *DatanodeDeployer) generatePodMonitor(cluster *v1alpha1.GreptimeDBCluste
 	return pm, nil
 }
 
-func (d *DatanodeDeployer) mountConfigMapVolume(sts *appsv1.StatefulSet, name string) {
-	sts.Spec.Template.Spec.Volumes = append(sts.Spec.Template.Spec.Volumes, corev1.Volume{
-		Name: "config",
-		VolumeSource: corev1.VolumeSource{
-			ConfigMap: &corev1.ConfigMapVolumeSource{
-				LocalObjectReference: corev1.LocalObjectReference{
-					Name: name,
-				},
-			},
-		},
-	})
-
-	for i, container := range sts.Spec.Template.Spec.Containers {
-		if container.Name == string(v1alpha1.DatanodeComponentKind) {
-			sts.Spec.Template.Spec.Containers[i].VolumeMounts = append(sts.Spec.Template.Spec.Containers[i].VolumeMounts, corev1.VolumeMount{
-				Name:      "config",
-				MountPath: GreptimeDBConfigDir,
-			})
-		}
-	}
-}
-
 func (d *DatanodeDeployer) buildDatanodeArgs(cluster *v1alpha1.GreptimeDBCluster) []string {
 	return []string{
 		"datanode", "start",
