@@ -30,7 +30,7 @@ func main() {
 	pflag.StringVar(&opts.ConfigPath, "config-path", "/etc/greptimedb/config.toml", "the config path")
 	pflag.StringVar(&opts.InitConfigPath, "init-config-path", "/etc/greptimedb/init-config.toml", "the init config path")
 	pflag.StringVar(&opts.Namespace, "namespace", "", "the namespace of greptimedb cluster")
-	pflag.StringVar(&opts.ComponentKind, "componentKind", "", "the component kind")
+	pflag.StringVar(&opts.ComponentKind, "component-kind", "", "the component kind")
 
 	pflag.StringVar(&opts.DatanodeServiceName, "datanode-service-name", "", "the name of datanode service")
 	pflag.Int32Var(&opts.DatanodeRPCPort, "datanode-rpc-port", 4001, "the datanode RPC port")

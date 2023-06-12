@@ -419,7 +419,7 @@ func (d *DatanodeDeployer) generateInitializer(cluster *v1alpha1.GreptimeDBClust
 			"--datanode-rpc-port", fmt.Sprintf("%d", cluster.Spec.GRPCServicePort),
 			"--datanode-service-name", d.ResourceName(cluster.Name, v1alpha1.DatanodeComponentKind),
 			"--namespace", cluster.Namespace,
-			"--componentKind", string(v1alpha1.DatanodeComponentKind),
+			"--component-kind", string(v1alpha1.DatanodeComponentKind),
 		},
 		VolumeMounts: []corev1.VolumeMount{
 			{
