@@ -17,6 +17,7 @@ package deployers
 import (
 	"context"
 	"fmt"
+	"path"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	appsv1 "k8s.io/api/apps/v1"
@@ -24,24 +25,12 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/deployer"
-)
-
-const (
-	defaultConfigName      = "datanode.toml"
-	defaultInputConfigFile = "/config/datanode/defaults/"
-	defaultConfigDir       = "/etc/datanode/"
-)
-
-const (
-	AccessKeyIDSecretKey     = "access-key-id"
-	SecretAccessKeySecretKey = "secret-access-key"
 )
 
 // DatanodeDeployer is the deployer for datanode.
@@ -78,19 +67,11 @@ func (d *DatanodeDeployer) Render(crdObject client.Object) ([]client.Object, err
 		}
 		renderObjects = append(renderObjects, sts)
 
-		if len(cluster.Spec.Datanode.Config) > 0 {
-			cm, err := d.GenerateConfigMap(cluster, v1alpha1.DatanodeComponentKind)
-			if err != nil {
-				return nil, err
-			}
-			renderObjects = append(renderObjects, cm)
-
-			for _, object := range renderObjects {
-				if sts, ok := object.(*appsv1.StatefulSet); ok {
-					d.mountConfigMapVolume(sts, cm.Name)
-				}
-			}
+		cm, err := d.GenerateConfigMap(cluster, v1alpha1.DatanodeComponentKind)
+		if err != nil {
+			return nil, err
 		}
+		renderObjects = append(renderObjects, cm)
 
 		if cluster.Spec.PrometheusMonitor != nil {
 			if cluster.Spec.PrometheusMonitor.Enabled {
@@ -160,7 +141,7 @@ func (d *DatanodeDeployer) deleteStorage(ctx context.Context, cluster *v1alpha1.
 
 	selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
 		MatchLabels: map[string]string{
-			GreptimeComponentName: d.ResourceName(cluster.Name, v1alpha1.DatanodeComponentKind),
+			GreptimeDBComponentName: d.ResourceName(cluster.Name, v1alpha1.DatanodeComponentKind),
 		},
 	})
 	if err != nil {
@@ -200,7 +181,7 @@ func (d *DatanodeDeployer) generateSvc(cluster *v1alpha1.GreptimeDBCluster) (*co
 		Spec: corev1.ServiceSpec{
 			ClusterIP: corev1.ClusterIPNone,
 			Selector: map[string]string{
-				GreptimeComponentName: d.ResourceName(cluster.Name, v1alpha1.DatanodeComponentKind),
+				GreptimeDBComponentName: d.ResourceName(cluster.Name, v1alpha1.DatanodeComponentKind),
 			},
 			Ports: []corev1.ServicePort{
 				{
@@ -217,21 +198,6 @@ func (d *DatanodeDeployer) generateSvc(cluster *v1alpha1.GreptimeDBCluster) (*co
 					Name:     "mysql",
 					Protocol: corev1.ProtocolTCP,
 					Port:     cluster.Spec.MySQLServicePort,
-				},
-				{
-					Name:     "postgres",
-					Protocol: corev1.ProtocolTCP,
-					Port:     cluster.Spec.PostgresServicePort,
-				},
-				{
-					Name:     "opentsdb",
-					Protocol: corev1.ProtocolTCP,
-					Port:     cluster.Spec.OpenTSDBServicePort,
-				},
-				{
-					Name:     "prometheus",
-					Protocol: corev1.ProtocolTCP,
-					Port:     cluster.Spec.PrometheusServicePort,
 				},
 			},
 		},
@@ -259,7 +225,7 @@ func (d *DatanodeDeployer) generateSts(cluster *v1alpha1.GreptimeDBCluster) (*ap
 			Replicas:    &cluster.Spec.Datanode.Replicas,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					GreptimeComponentName: d.ResourceName(cluster.Name, v1alpha1.DatanodeComponentKind),
+					GreptimeDBComponentName: d.ResourceName(cluster.Name, v1alpha1.DatanodeComponentKind),
 				},
 			},
 			Template: *d.generatePodTemplateSpec(cluster),
@@ -313,7 +279,7 @@ func (d *DatanodeDeployer) generatePodMonitor(cluster *v1alpha1.GreptimeDBCluste
 			},
 			Selector: metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					GreptimeComponentName: d.ResourceName(cluster.Name, v1alpha1.DatanodeComponentKind),
+					GreptimeDBComponentName: d.ResourceName(cluster.Name, v1alpha1.DatanodeComponentKind),
 				},
 			},
 			NamespaceSelector: monitoringv1.NamespaceSelector{
@@ -331,34 +297,11 @@ func (d *DatanodeDeployer) generatePodMonitor(cluster *v1alpha1.GreptimeDBCluste
 	return pm, nil
 }
 
-func (d *DatanodeDeployer) mountConfigMapVolume(sts *appsv1.StatefulSet, name string) {
-	sts.Spec.Template.Spec.Volumes = append(sts.Spec.Template.Spec.Volumes, corev1.Volume{
-		Name: "config",
-		VolumeSource: corev1.VolumeSource{
-			ConfigMap: &corev1.ConfigMapVolumeSource{
-				LocalObjectReference: corev1.LocalObjectReference{
-					Name: name,
-				},
-			},
-		},
-	})
-
-	for i, container := range sts.Spec.Template.Spec.Containers {
-		if container.Name == string(v1alpha1.DatanodeComponentKind) {
-			sts.Spec.Template.Spec.Containers[i].VolumeMounts = append(sts.Spec.Template.Spec.Containers[i].VolumeMounts, corev1.VolumeMount{
-				Name:      "config",
-				MountPath: DefaultConfigPath,
-			})
-		}
-	}
-}
-
 func (d *DatanodeDeployer) buildDatanodeArgs(cluster *v1alpha1.GreptimeDBCluster) []string {
 	return []string{
 		"datanode", "start",
 		"--metasrv-addr", fmt.Sprintf("%s.%s:%d", d.ResourceName(cluster.Name, v1alpha1.MetaComponentKind), cluster.Namespace, cluster.Spec.Meta.ServicePort),
-		"--mysql-addr", fmt.Sprintf("0.0.0.0:%d", cluster.Spec.MySQLServicePort),
-		"--config-file", defaultConfigDir + defaultConfigName,
+		"--config-file", path.Join(GreptimeDBConfigDir, GreptimeDBConfigFileName),
 	}
 }
 
@@ -386,7 +329,7 @@ func (d *DatanodeDeployer) generatePodTemplateSpec(cluster *v1alpha1.GreptimeDBC
 		},
 		{
 			Name:      "config",
-			MountPath: defaultConfigDir,
+			MountPath: GreptimeDBConfigDir,
 		},
 	}
 
@@ -411,16 +354,6 @@ func (d *DatanodeDeployer) generatePodTemplateSpec(cluster *v1alpha1.GreptimeDBC
 			Protocol:      corev1.ProtocolTCP,
 			ContainerPort: cluster.Spec.PostgresServicePort,
 		},
-		{
-			Name:          "opentsdb",
-			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: cluster.Spec.OpenTSDBServicePort,
-		},
-		{
-			Name:          "prometheus",
-			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: cluster.Spec.PrometheusServicePort,
-		},
 	}
 
 	podTemplateSpec.Spec.Volumes = []corev1.Volume{
@@ -430,12 +363,22 @@ func (d *DatanodeDeployer) generatePodTemplateSpec(cluster *v1alpha1.GreptimeDBC
 				EmptyDir: &corev1.EmptyDirVolumeSource{},
 			},
 		},
+		{
+			Name: "init-config",
+			VolumeSource: corev1.VolumeSource{
+				ConfigMap: &corev1.ConfigMapVolumeSource{
+					LocalObjectReference: corev1.LocalObjectReference{
+						Name: d.ResourceName(cluster.Name, v1alpha1.DatanodeComponentKind),
+					},
+				},
+			},
+		},
 	}
 
 	podTemplateSpec.Spec.InitContainers = append(podTemplateSpec.Spec.InitContainers, *d.generateInitializer(cluster))
 
 	podTemplateSpec.ObjectMeta.Labels = deployer.MergeStringMap(podTemplateSpec.ObjectMeta.Labels, map[string]string{
-		GreptimeComponentName: d.ResourceName(cluster.Name, v1alpha1.DatanodeComponentKind),
+		GreptimeDBComponentName: d.ResourceName(cluster.Name, v1alpha1.DatanodeComponentKind),
 	})
 
 	return podTemplateSpec
@@ -443,22 +386,27 @@ func (d *DatanodeDeployer) generatePodTemplateSpec(cluster *v1alpha1.GreptimeDBC
 
 func (d *DatanodeDeployer) generateInitializer(cluster *v1alpha1.GreptimeDBCluster) *corev1.Container {
 	initializer := &corev1.Container{
-		Name:  "greptimedb-initializer",
+		Name:  "initializer",
 		Image: cluster.Spec.Initializer.Image,
 		Command: []string{
 			"greptimedb-initializer",
 		},
 		Args: []string{
-			"--config-path", defaultConfigDir + defaultConfigName,
-			"--input-config-file", defaultInputConfigFile + defaultConfigName,
+			"--config-path", path.Join(GreptimeDBConfigDir, GreptimeDBConfigFileName),
+			"--init-config-path", path.Join(GreptimeDBInitConfigDir, GreptimeDBConfigFileName),
 			"--datanode-rpc-port", fmt.Sprintf("%d", cluster.Spec.GRPCServicePort),
 			"--datanode-service-name", d.ResourceName(cluster.Name, v1alpha1.DatanodeComponentKind),
 			"--namespace", cluster.Namespace,
+			"--component-kind", string(v1alpha1.DatanodeComponentKind),
 		},
 		VolumeMounts: []corev1.VolumeMount{
 			{
 				Name:      "config",
-				MountPath: defaultConfigDir,
+				MountPath: GreptimeDBConfigDir,
+			},
+			{
+				Name:      "init-config",
+				MountPath: GreptimeDBInitConfigDir,
 			},
 		},
 		// TODO(zyy17): the datanode don't support to accept hostname.
@@ -480,35 +428,6 @@ func (d *DatanodeDeployer) generateInitializer(cluster *v1alpha1.GreptimeDBClust
 				},
 			},
 		},
-	}
-
-	if cluster.Spec.StorageProvider != nil {
-		if cluster.Spec.StorageProvider.Local != nil {
-			storageArgs := []string{
-				"--storage-type", "Local",
-				"--local-storage-dir", cluster.Spec.StorageProvider.Local.Directory,
-			}
-			initializer.Args = append(initializer.Args, storageArgs...)
-		}
-
-		if cluster.Spec.StorageProvider.S3 != nil {
-			var s3Credentials corev1.Secret
-			if err := d.Get(context.Background(), types.NamespacedName{Namespace: cluster.Namespace, Name: cluster.Spec.StorageProvider.S3.SecretName}, &s3Credentials); err != nil {
-				klog.Errorf("failed to get s3 secret: %v", err)
-				return nil
-			}
-
-			storageArgs := []string{
-				"--storage-type", "S3",
-				"--bucket", cluster.Spec.StorageProvider.S3.Bucket,
-				"--prefix", cluster.Spec.StorageProvider.S3.Prefix,
-				"--access-key-id", string(s3Credentials.Data[AccessKeyIDSecretKey]),
-				"--secret-access-key", string(s3Credentials.Data[SecretAccessKeySecretKey]),
-				"--endpoint", cluster.Spec.StorageProvider.S3.Endpoint,
-				"--region", cluster.Spec.StorageProvider.S3.Region,
-			}
-			initializer.Args = append(initializer.Args, storageArgs...)
-		}
 	}
 
 	return initializer

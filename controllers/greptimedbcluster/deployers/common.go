@@ -26,15 +26,15 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
+	"github.com/GreptimeTeam/greptimedb-operator/pkg/dbconfig"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/deployer"
 )
 
 const (
-	GreptimeComponentName = "app.greptime.io/component"
-)
-
-var (
-	DefaultConfigPath = "/etc/greptimedb"
+	GreptimeDBComponentName  = "app.greptime.io/component"
+	GreptimeDBConfigDir      = "/etc/greptimedb"
+	GreptimeDBInitConfigDir  = "/etc/greptimedb-init"
+	GreptimeDBConfigFileName = "config.toml"
 )
 
 func UpdateStatus(ctx context.Context, input *v1alpha1.GreptimeDBCluster, kc client.Client, opts ...client.UpdateOption) error {
@@ -82,15 +82,9 @@ func (c *CommonDeployer) GetCluster(crdObject client.Object) (*v1alpha1.Greptime
 }
 
 func (c *CommonDeployer) GenerateConfigMap(cluster *v1alpha1.GreptimeDBCluster, componentKind v1alpha1.ComponentKind) (*corev1.ConfigMap, error) {
-	var config string
-
-	switch componentKind {
-	case v1alpha1.MetaComponentKind:
-		config = cluster.Spec.Meta.Config
-	case v1alpha1.FrontendComponentKind:
-		config = cluster.Spec.Frontend.Config
-	case v1alpha1.DatanodeComponentKind:
-		config = cluster.Spec.Datanode.Config
+	configData, err := dbconfig.FromCluster(cluster, componentKind)
+	if err != nil {
+		return nil, err
 	}
 
 	configmap := &corev1.ConfigMap{
@@ -103,7 +97,7 @@ func (c *CommonDeployer) GenerateConfigMap(cluster *v1alpha1.GreptimeDBCluster, 
 			Namespace: cluster.Namespace,
 		},
 		Data: map[string]string{
-			"config.toml": config,
+			GreptimeDBConfigFileName: string(configData),
 		},
 	}
 
