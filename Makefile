@@ -105,7 +105,11 @@ e2e: setup-e2e ## Run e2e tests.
 
 .PHONY: test
 test: manifests generate fmt vet envtest ## Run tests.
-	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test ./controllers/... ./apis/... -coverprofile cover.out
+	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test \
+	./controllers/... \
+	./apis/...        \
+	./pkg/...         \
+	-coverprofile cover.out
 
 .PHONY: kind-up
 kind-up: ## Create the kind cluster for developing.
