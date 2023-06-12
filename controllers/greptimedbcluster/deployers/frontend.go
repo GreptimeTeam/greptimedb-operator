@@ -17,7 +17,7 @@ package deployers
 import (
 	"context"
 	"fmt"
-	"path/filepath"
+	"path"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	appsv1 "k8s.io/api/apps/v1"
@@ -223,13 +223,14 @@ func (d *FrontendDeployer) buildFrontendArgs(cluster *v1alpha1.GreptimeDBCluster
 		"--mysql-addr", fmt.Sprintf("0.0.0.0:%d", cluster.Spec.MySQLServicePort),
 		"--postgres-addr", fmt.Sprintf("0.0.0.0:%d", cluster.Spec.PostgresServicePort),
 		"--opentsdb-addr", fmt.Sprintf("0.0.0.0:%d", cluster.Spec.OpenTSDBServicePort),
+		"--config-file", path.Join(GreptimeDBConfigDir, GreptimeDBConfigFileName),
 	}
 
 	if cluster.Spec.Frontend != nil && cluster.Spec.Frontend.TLS != nil {
 		args = append(args, []string{
 			"--tls-mode", "require",
-			"--tls-cert-path", filepath.Join(cluster.Spec.Frontend.TLS.CertificateMountPath, TLSCrtSecretKey),
-			"--tls-key-path", filepath.Join(cluster.Spec.Frontend.TLS.CertificateMountPath, TLSKeySecretKey),
+			"--tls-cert-path", path.Join(cluster.Spec.Frontend.TLS.CertificateMountPath, TLSCrtSecretKey),
+			"--tls-key-path", path.Join(cluster.Spec.Frontend.TLS.CertificateMountPath, TLSKeySecretKey),
 		}...)
 	}
 
