@@ -15,20 +15,16 @@
 apiVersion: greptime.io/v1alpha1
 kind: GreptimeDBCluster
 metadata:
-  name: basic
+  name: cluster-with-tls
   namespace: default
 spec:
   base:
     main:
-      image: greptime/greptimedb:0.1.0-alpha-20230213-weekly
+      image: greptime/greptimedb:latest
   frontend:
     replicas: 1
-    service:
-      type: LoadBalancer
-      loadBalancerClass: service.k8s.aws/nlb
-      annotations:
-        service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
-        external-dns.alpha.kubernetes.io/hostname: "test.greptime.io"
+    tls:
+      secretName: frontend-tls
   meta:
     replicas: 1
     etcdEndpoints:
