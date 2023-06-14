@@ -51,7 +51,7 @@ func (d *DatanodeDeployer) NewBuilder(crdObject client.Object) deployer.Builder 
 	}
 }
 
-func (d *DatanodeDeployer) Render(crdObject client.Object) ([]client.Object, error) {
+func (d *DatanodeDeployer) Generate(crdObject client.Object) ([]client.Object, error) {
 	objects, err := d.NewBuilder(crdObject).
 		BuildService().
 		BuildConfigMap().

@@ -85,7 +85,7 @@ func (d *MetaDeployer) NewBuilder(crdObject client.Object) deployer.Builder {
 	}
 }
 
-func (d *MetaDeployer) Render(crdObject client.Object) ([]client.Object, error) {
+func (d *MetaDeployer) Generate(crdObject client.Object) ([]client.Object, error) {
 	objects, err := d.NewBuilder(crdObject).
 		BuildService().
 		BuildConfigMap().

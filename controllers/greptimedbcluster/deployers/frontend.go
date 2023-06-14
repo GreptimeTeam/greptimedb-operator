@@ -55,7 +55,7 @@ func (d *FrontendDeployer) NewBuilder(crdObject client.Object) deployer.Builder 
 	}
 }
 
-func (d *FrontendDeployer) Render(crdObject client.Object) ([]client.Object, error) {
+func (d *FrontendDeployer) Generate(crdObject client.Object) ([]client.Object, error) {
 	objects, err := d.NewBuilder(crdObject).
 		BuildService().
 		BuildConfigMap().
