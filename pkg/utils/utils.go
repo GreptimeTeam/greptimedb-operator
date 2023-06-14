@@ -34,3 +34,16 @@ func GetK8sResource(namespace, name string, obj client.Object) error {
 
 	return nil
 }
+
+// MergeStringMap merges two string maps.
+func MergeStringMap(origin, new map[string]string) map[string]string {
+	if origin == nil {
+		origin = make(map[string]string)
+	}
+
+	for k, v := range new {
+		origin[k] = v
+	}
+
+	return origin
+}

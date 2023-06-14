@@ -30,6 +30,7 @@ import (
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/deployer"
+	"github.com/GreptimeTeam/greptimedb-operator/pkg/utils"
 )
 
 // DatanodeDeployer is the deployer for datanode.
@@ -57,6 +58,7 @@ func (d *DatanodeDeployer) Generate(crdObject client.Object) ([]client.Object, e
 		BuildConfigMap().
 		BuildStatefulSet().
 		BuildPodMonitor().
+		SetControllerAndAnnotation().
 		Generate()
 
 	if err != nil {
@@ -180,11 +182,6 @@ func (b *datanodeBuilder) BuildService() deployer.Builder {
 		},
 	}
 
-	if err := deployer.SetControllerAndAnnotation(b.Cluster, svc, b.Scheme, svc.Spec); err != nil {
-		b.Err = err
-		return b
-	}
-
 	b.Objects = append(b.Objects, svc)
 
 	return b
@@ -241,10 +238,7 @@ func (b *datanodeBuilder) BuildStatefulSet() deployer.Builder {
 		},
 	}
 
-	if err := deployer.SetControllerAndAnnotation(b.Cluster, sts, b.Scheme, sts.Spec); err != nil {
-		b.Err = err
-		return b
-	}
+	b.Objects = append(b.Objects, sts)
 
 	return b
 }
@@ -272,7 +266,7 @@ func (b *datanodeBuilder) generatePodTemplateSpec() corev1.PodTemplateSpec {
 
 	podTemplateSpec.Spec.Containers[MainContainerIndex].Ports = b.containerPorts()
 	podTemplateSpec.Spec.InitContainers = append(podTemplateSpec.Spec.InitContainers, *b.generateInitializer())
-	podTemplateSpec.ObjectMeta.Labels = deployer.MergeStringMap(podTemplateSpec.ObjectMeta.Labels, map[string]string{
+	podTemplateSpec.ObjectMeta.Labels = utils.MergeStringMap(podTemplateSpec.ObjectMeta.Labels, map[string]string{
 		GreptimeDBComponentName: ResourceName(b.Cluster.Name, b.ComponentKind),
 	})
 

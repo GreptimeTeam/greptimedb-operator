@@ -29,6 +29,7 @@ import (
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/deployer"
+	"github.com/GreptimeTeam/greptimedb-operator/pkg/utils"
 )
 
 const (
@@ -138,11 +139,6 @@ func (b *frontendBuilder) BuildService() deployer.Builder {
 		},
 	}
 
-	if err := deployer.SetControllerAndAnnotation(b.Cluster, svc, b.Scheme, svc.Spec); err != nil {
-		b.Err = err
-		return b
-	}
-
 	b.Objects = append(b.Objects, svc)
 
 	return b
@@ -175,11 +171,6 @@ func (b *frontendBuilder) BuildDeployment() deployer.Builder {
 			},
 			Template: *b.generatePodTemplateSpec(),
 		},
-	}
-
-	if err := deployer.SetControllerAndAnnotation(b.Cluster, deployment, b.Scheme, deployment.Spec.Template.Spec); err != nil {
-		b.Err = err
-		return b
 	}
 
 	b.Objects = append(b.Objects, deployment)
@@ -267,7 +258,7 @@ func (b *frontendBuilder) generatePodTemplateSpec() *corev1.PodTemplateSpec {
 		podTemplateSpec.Spec.Containers[MainContainerIndex].Args = b.generateMainContainerArgs()
 	}
 
-	podTemplateSpec.ObjectMeta.Labels = deployer.MergeStringMap(podTemplateSpec.ObjectMeta.Labels, map[string]string{
+	podTemplateSpec.ObjectMeta.Labels = utils.MergeStringMap(podTemplateSpec.ObjectMeta.Labels, map[string]string{
 		GreptimeDBComponentName: ResourceName(b.Cluster.Name, b.ComponentKind),
 	})
 

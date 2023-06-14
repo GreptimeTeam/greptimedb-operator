@@ -83,6 +83,7 @@ func (c *CommonDeployer) NewCommonBuilder(crdObject client.Object, componentKind
 	cb := &CommonBuilder{
 		DefaultBuilder: &deployer.DefaultBuilder{
 			Scheme: c.Scheme,
+			Owner:  crdObject,
 		},
 		ComponentKind: componentKind,
 	}
@@ -114,10 +115,6 @@ func (c *CommonBuilder) GenerateConfigMap() (*corev1.ConfigMap, error) {
 		Data: map[string]string{
 			GreptimeDBConfigFileName: string(configData),
 		},
-	}
-
-	if err := deployer.SetControllerAndAnnotation(c.Cluster, configmap, c.Scheme, configmap.Data); err != nil {
-		return nil, err
 	}
 
 	return configmap, nil
@@ -205,10 +202,6 @@ func (c *CommonBuilder) GeneratePodMonitor() (*monitoringv1.PodMonitor, error) {
 				},
 			},
 		},
-	}
-
-	if err := deployer.SetControllerAndAnnotation(c.Cluster, pm, c.Scheme, pm.Spec); err != nil {
-		return nil, err
 	}
 
 	return pm, nil
