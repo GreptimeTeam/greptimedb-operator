@@ -43,8 +43,7 @@ var (
 	defaultDataNodeStorageMountPath = "/tmp/greptimedb"
 	defaultStorageRetainPolicyType  = RetainStorageRetainPolicyTypeRetain
 
-	defaultCertificateMountPath = "/etc/greptimedb-frontend-tls"
-	defaultInitializer          = "greptime/greptimedb-initializer:latest"
+	defaultInitializer = "greptime/greptimedb-initializer:latest"
 )
 
 func (in *GreptimeDBCluster) SetDefaults() error {
@@ -85,10 +84,6 @@ func (in *GreptimeDBCluster) SetDefaults() error {
 			Service: ServiceSpec{
 				Type: corev1.ServiceTypeClusterIP,
 			},
-		}
-
-		if in.Spec.Frontend.TLS != nil && len(in.Spec.Frontend.TLS.CertificateMountPath) == 0 {
-			in.Spec.Frontend.TLS.CertificateMountPath = defaultCertificateMountPath
 		}
 	}
 

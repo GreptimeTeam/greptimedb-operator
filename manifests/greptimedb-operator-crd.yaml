@@ -8011,8 +8011,6 @@ spec:
                     type: object
                   tls:
                     properties:
-                      certificateMountPath:
-                        type: string
                       secretName:
                         type: string
                     type: object
@@ -10727,9 +10725,9 @@ spec:
                         type: string
                       endpoint:
                         type: string
-                      prefix:
-                        type: string
                       region:
+                        type: string
+                      root:
                         type: string
                       secretName:
                         type: string
