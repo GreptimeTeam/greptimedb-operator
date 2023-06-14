@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"path"
 
-	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -50,51 +49,25 @@ func NewFrontendDeployer(mgr ctrl.Manager) *FrontendDeployer {
 	}
 }
 
-func (d *FrontendDeployer) Render(crdObject client.Object) ([]client.Object, error) {
-	var renderObjects []client.Object
+func (d *FrontendDeployer) NewBuilder(crdObject client.Object) deployer.Builder {
+	return &frontendBuilder{
+		CommonBuilder: d.NewCommonBuilder(crdObject, v1alpha1.FrontendComponentKind),
+	}
+}
 
-	cluster, err := d.GetCluster(crdObject)
+func (d *FrontendDeployer) Render(crdObject client.Object) ([]client.Object, error) {
+	objects, err := d.NewBuilder(crdObject).
+		BuildService().
+		BuildConfigMap().
+		BuildDeployment().
+		BuildPodMonitor().
+		Generate()
+
 	if err != nil {
 		return nil, err
 	}
 
-	if cluster.Spec.Frontend != nil {
-		svc, err := d.generateSvc(cluster)
-		if err != nil {
-			return nil, err
-		}
-		renderObjects = append(renderObjects, svc)
-
-		deployment, err := d.generateDeployment(cluster)
-		if err != nil {
-			return nil, err
-		}
-		renderObjects = append(renderObjects, deployment)
-
-		cm, err := d.GenerateConfigMap(cluster, v1alpha1.FrontendComponentKind)
-		if err != nil {
-			return nil, err
-		}
-		renderObjects = append(renderObjects, cm)
-
-		for _, object := range renderObjects {
-			if deployment, ok := object.(*appsv1.Deployment); ok {
-				d.mountConfigMapVolume(deployment, cm.Name)
-			}
-		}
-
-		if cluster.Spec.PrometheusMonitor != nil {
-			if cluster.Spec.PrometheusMonitor.Enabled {
-				pm, err := d.generatePodMonitor(cluster)
-				if err != nil {
-					return nil, err
-				}
-				renderObjects = append(renderObjects, pm)
-			}
-		}
-	}
-
-	return renderObjects, nil
+	return objects, nil
 }
 
 func (d *FrontendDeployer) CheckAndUpdateStatus(ctx context.Context, crdObject client.Object) (bool, error) {
@@ -108,7 +81,7 @@ func (d *FrontendDeployer) CheckAndUpdateStatus(ctx context.Context, crdObject c
 
 		objectKey = client.ObjectKey{
 			Namespace: cluster.Namespace,
-			Name:      d.ResourceName(cluster.Name, v1alpha1.FrontendComponentKind),
+			Name:      ResourceName(cluster.Name, v1alpha1.FrontendComponentKind),
 		}
 	)
 
@@ -129,33 +102,19 @@ func (d *FrontendDeployer) CheckAndUpdateStatus(ctx context.Context, crdObject c
 	return deployer.IsDeploymentReady(deployment), nil
 }
 
-func (d *FrontendDeployer) generateSvc(cluster *v1alpha1.GreptimeDBCluster) (*corev1.Service, error) {
-	ports := []corev1.ServicePort{
-		{
-			Name:     "grpc",
-			Protocol: corev1.ProtocolTCP,
-			Port:     cluster.Spec.GRPCServicePort,
-		},
-		{
-			Name:     "http",
-			Protocol: corev1.ProtocolTCP,
-			Port:     cluster.Spec.HTTPServicePort,
-		},
-		{
-			Name:     "mysql",
-			Protocol: corev1.ProtocolTCP,
-			Port:     cluster.Spec.MySQLServicePort,
-		},
-		{
-			Name:     "postgres",
-			Protocol: corev1.ProtocolTCP,
-			Port:     cluster.Spec.PostgresServicePort,
-		},
-		{
-			Name:     "opentsdb",
-			Protocol: corev1.ProtocolTCP,
-			Port:     cluster.Spec.OpenTSDBServicePort,
-		},
+var _ deployer.Builder = &frontendBuilder{}
+
+type frontendBuilder struct {
+	*CommonBuilder
+}
+
+func (b *frontendBuilder) BuildService() deployer.Builder {
+	if b.Err != nil {
+		return b
+	}
+
+	if b.Cluster.Spec.Frontend == nil {
+		return b
 	}
 
 	svc := &corev1.Service{
@@ -164,208 +123,241 @@ func (d *FrontendDeployer) generateSvc(cluster *v1alpha1.GreptimeDBCluster) (*co
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace:   cluster.Namespace,
-			Name:        d.ResourceName(cluster.Name, v1alpha1.FrontendComponentKind),
-			Annotations: cluster.Spec.Frontend.Service.Annotations,
-			Labels:      cluster.Spec.Frontend.Service.Labels,
+			Namespace:   b.Cluster.Namespace,
+			Name:        ResourceName(b.Cluster.Name, b.ComponentKind),
+			Annotations: b.Cluster.Spec.Frontend.Service.Annotations,
+			Labels:      b.Cluster.Spec.Frontend.Service.Labels,
 		},
 		Spec: corev1.ServiceSpec{
-			Type: cluster.Spec.Frontend.Service.Type,
+			Type: b.Cluster.Spec.Frontend.Service.Type,
 			Selector: map[string]string{
-				GreptimeDBComponentName: d.ResourceName(cluster.Name, v1alpha1.FrontendComponentKind),
+				GreptimeDBComponentName: ResourceName(b.Cluster.Name, b.ComponentKind),
 			},
-			Ports:             ports,
-			LoadBalancerClass: cluster.Spec.Frontend.Service.LoadBalancerClass,
+			Ports:             b.servicePorts(),
+			LoadBalancerClass: b.Cluster.Spec.Frontend.Service.LoadBalancerClass,
 		},
 	}
 
-	if err := deployer.SetControllerAndAnnotation(cluster, svc, d.Scheme, svc.Spec); err != nil {
-		return nil, err
+	if err := deployer.SetControllerAndAnnotation(b.Cluster, svc, b.Scheme, svc.Spec); err != nil {
+		b.Err = err
+		return b
 	}
 
-	return svc, nil
+	b.Objects = append(b.Objects, svc)
+
+	return b
 }
 
-func (d *FrontendDeployer) generateDeployment(cluster *v1alpha1.GreptimeDBCluster) (*appsv1.Deployment, error) {
+func (b *frontendBuilder) BuildDeployment() deployer.Builder {
+	if b.Err != nil {
+		return b
+	}
+
+	if b.Cluster.Spec.Frontend == nil {
+		return b
+	}
+
 	deployment := &appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Deployment",
 			APIVersion: "apps/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      d.ResourceName(cluster.Name, v1alpha1.FrontendComponentKind),
-			Namespace: cluster.Namespace,
+			Name:      ResourceName(b.Cluster.Name, b.ComponentKind),
+			Namespace: b.Cluster.Namespace,
 		},
 		Spec: appsv1.DeploymentSpec{
-			Replicas: &cluster.Spec.Frontend.Replicas,
+			Replicas: &b.Cluster.Spec.Frontend.Replicas,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					GreptimeDBComponentName: d.ResourceName(cluster.Name, v1alpha1.FrontendComponentKind),
+					GreptimeDBComponentName: ResourceName(b.Cluster.Name, b.ComponentKind),
 				},
 			},
-			Template: *d.generatePodTemplateSpec(cluster),
+			Template: *b.generatePodTemplateSpec(),
 		},
 	}
 
-	if err := deployer.SetControllerAndAnnotation(cluster, deployment, d.Scheme, deployment.Spec); err != nil {
-		return nil, err
+	if err := deployer.SetControllerAndAnnotation(b.Cluster, deployment, b.Scheme, deployment.Spec.Template.Spec); err != nil {
+		b.Err = err
+		return b
 	}
 
-	return deployment, nil
+	b.Objects = append(b.Objects, deployment)
+
+	return b
 }
 
-func (d *FrontendDeployer) buildFrontendArgs(cluster *v1alpha1.GreptimeDBCluster) []string {
+func (b *frontendBuilder) BuildConfigMap() deployer.Builder {
+	if b.Err != nil {
+		return b
+	}
+
+	if b.Cluster.Spec.Frontend == nil {
+		return b
+	}
+
+	cm, err := b.GenerateConfigMap()
+	if err != nil {
+		b.Err = err
+		return b
+	}
+
+	b.Objects = append(b.Objects, cm)
+
+	return b
+}
+
+func (b *frontendBuilder) BuildPodMonitor() deployer.Builder {
+	if b.Err != nil {
+		return b
+	}
+
+	if b.Cluster.Spec.Frontend == nil {
+		return b
+	}
+
+	if b.Cluster.Spec.PrometheusMonitor == nil || !b.Cluster.Spec.PrometheusMonitor.Enabled {
+		return b
+	}
+
+	pm, err := b.GeneratePodMonitor()
+	if err != nil {
+		b.Err = err
+		return b
+	}
+
+	b.Objects = append(b.Objects, pm)
+
+	return b
+}
+
+func (b *frontendBuilder) Generate() ([]client.Object, error) {
+	return b.Objects, b.Err
+}
+
+func (b *frontendBuilder) generateMainContainerArgs() []string {
 	var args = []string{
 		"frontend", "start",
-		"--grpc-addr", fmt.Sprintf("0.0.0.0:%d", cluster.Spec.GRPCServicePort),
-		"--metasrv-addr", fmt.Sprintf("%s.%s:%d", d.ResourceName(cluster.Name, v1alpha1.MetaComponentKind), cluster.Namespace, cluster.Spec.Meta.ServicePort),
-		"--http-addr", fmt.Sprintf("0.0.0.0:%d", cluster.Spec.HTTPServicePort),
-		"--mysql-addr", fmt.Sprintf("0.0.0.0:%d", cluster.Spec.MySQLServicePort),
-		"--postgres-addr", fmt.Sprintf("0.0.0.0:%d", cluster.Spec.PostgresServicePort),
-		"--opentsdb-addr", fmt.Sprintf("0.0.0.0:%d", cluster.Spec.OpenTSDBServicePort),
+		"--grpc-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.GRPCServicePort),
+		"--metasrv-addr", fmt.Sprintf("%s.%s:%d", ResourceName(b.Cluster.Name, v1alpha1.MetaComponentKind),
+			b.Cluster.Namespace, b.Cluster.Spec.Meta.ServicePort),
+		"--http-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.HTTPServicePort),
+		"--mysql-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.MySQLServicePort),
+		"--postgres-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.PostgresServicePort),
+		"--opentsdb-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.OpenTSDBServicePort),
 		"--config-file", path.Join(GreptimeDBConfigDir, GreptimeDBConfigFileName),
 	}
 
-	if cluster.Spec.Frontend != nil && cluster.Spec.Frontend.TLS != nil {
+	if b.Cluster.Spec.Frontend != nil && b.Cluster.Spec.Frontend.TLS != nil {
 		args = append(args, []string{
 			"--tls-mode", "require",
-			"--tls-cert-path", path.Join(cluster.Spec.Frontend.TLS.CertificateMountPath, TLSCrtSecretKey),
-			"--tls-key-path", path.Join(cluster.Spec.Frontend.TLS.CertificateMountPath, TLSKeySecretKey),
+			"--tls-cert-path", path.Join(b.Cluster.Spec.Frontend.TLS.CertificateMountPath, TLSCrtSecretKey),
+			"--tls-key-path", path.Join(b.Cluster.Spec.Frontend.TLS.CertificateMountPath, TLSKeySecretKey),
 		}...)
 	}
 
 	return args
 }
 
-func (d *FrontendDeployer) generatePodMonitor(cluster *v1alpha1.GreptimeDBCluster) (*monitoringv1.PodMonitor, error) {
-	pm := &monitoringv1.PodMonitor{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       monitoringv1.PodMonitorsKind,
-			APIVersion: monitoringv1.SchemeGroupVersion.String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      d.ResourceName(cluster.Name, v1alpha1.FrontendComponentKind),
-			Namespace: cluster.Namespace,
-			Labels:    cluster.Spec.PrometheusMonitor.LabelsSelector,
-		},
-		Spec: monitoringv1.PodMonitorSpec{
-			PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
-				{
-					Path:        cluster.Spec.PrometheusMonitor.Path,
-					Port:        cluster.Spec.PrometheusMonitor.Port,
-					Interval:    cluster.Spec.PrometheusMonitor.Interval,
-					HonorLabels: cluster.Spec.PrometheusMonitor.HonorLabels,
-				},
-			},
-			Selector: metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					GreptimeDBComponentName: d.ResourceName(cluster.Name, v1alpha1.FrontendComponentKind),
-				},
-			},
-			NamespaceSelector: monitoringv1.NamespaceSelector{
-				MatchNames: []string{
-					cluster.Namespace,
-				},
-			},
-		},
-	}
+func (b *frontendBuilder) generatePodTemplateSpec() *corev1.PodTemplateSpec {
+	podTemplateSpec := b.GeneratePodTemplateSpec(b.Cluster.Spec.Frontend.Template)
 
-	if err := deployer.SetControllerAndAnnotation(cluster, pm, d.Scheme, pm.Spec); err != nil {
-		return nil, err
-	}
-
-	return pm, nil
-}
-
-func (d *FrontendDeployer) mountConfigMapVolume(deployment *appsv1.Deployment, name string) {
-	volumeName := "config"
-	deployment.Spec.Template.Spec.Volumes = append(deployment.Spec.Template.Spec.Volumes, corev1.Volume{
-		Name: volumeName,
-		VolumeSource: corev1.VolumeSource{
-			ConfigMap: &corev1.ConfigMapVolumeSource{
-				LocalObjectReference: corev1.LocalObjectReference{
-					Name: name,
-				},
-			},
-		},
-	})
-
-	for i, container := range deployment.Spec.Template.Spec.Containers {
-		if container.Name == string(v1alpha1.FrontendComponentKind) {
-			deployment.Spec.Template.Spec.Containers[i].VolumeMounts = append(deployment.Spec.Template.Spec.Containers[i].VolumeMounts, corev1.VolumeMount{
-				Name:      volumeName,
-				MountPath: GreptimeDBConfigDir,
-			})
-		}
-	}
-}
-
-func (d *FrontendDeployer) generatePodTemplateSpec(cluster *v1alpha1.GreptimeDBCluster) *corev1.PodTemplateSpec {
-	podTemplateSpec := deployer.GeneratePodTemplateSpec(cluster.Spec.Frontend.Template, string(v1alpha1.FrontendComponentKind))
-
-	if len(cluster.Spec.Frontend.Template.MainContainer.Args) == 0 {
+	if len(b.Cluster.Spec.Frontend.Template.MainContainer.Args) == 0 {
 		// Setup main container args.
-		podTemplateSpec.Spec.Containers[0].Args = d.buildFrontendArgs(cluster)
+		podTemplateSpec.Spec.Containers[MainContainerIndex].Args = b.generateMainContainerArgs()
 	}
 
 	podTemplateSpec.ObjectMeta.Labels = deployer.MergeStringMap(podTemplateSpec.ObjectMeta.Labels, map[string]string{
-		GreptimeDBComponentName: d.ResourceName(cluster.Name, v1alpha1.FrontendComponentKind),
+		GreptimeDBComponentName: ResourceName(b.Cluster.Name, b.ComponentKind),
 	})
 
-	podTemplateSpec.Spec.Containers[0].Ports = []corev1.ContainerPort{
+	podTemplateSpec.Spec.Containers[MainContainerIndex].Ports = b.containerPorts()
+
+	b.MountConfigDir(podTemplateSpec)
+
+	if b.Cluster.Spec.Frontend.TLS != nil {
+		b.mountTLSSecret(podTemplateSpec)
+	}
+
+	return podTemplateSpec
+}
+
+func (b *frontendBuilder) mountTLSSecret(template *corev1.PodTemplateSpec) {
+	template.Spec.Volumes = append(template.Spec.Volumes, corev1.Volume{
+		Name: TLSVolumeName,
+		VolumeSource: corev1.VolumeSource{
+			Secret: &corev1.SecretVolumeSource{
+				SecretName: b.Cluster.Spec.Frontend.TLS.SecretName,
+			},
+		},
+	})
+
+	template.Spec.Containers[MainContainerIndex].VolumeMounts =
+		append(template.Spec.Containers[MainContainerIndex].VolumeMounts,
+			corev1.VolumeMount{
+				Name:      TLSVolumeName,
+				MountPath: GreptimeDBTLSDir,
+				ReadOnly:  true,
+			},
+		)
+}
+
+func (b *frontendBuilder) servicePorts() []corev1.ServicePort {
+	return []corev1.ServicePort{
+		{
+			Name:     "grpc",
+			Protocol: corev1.ProtocolTCP,
+			Port:     b.Cluster.Spec.GRPCServicePort,
+		},
+		{
+			Name:     "http",
+			Protocol: corev1.ProtocolTCP,
+			Port:     b.Cluster.Spec.HTTPServicePort,
+		},
+		{
+			Name:     "mysql",
+			Protocol: corev1.ProtocolTCP,
+			Port:     b.Cluster.Spec.MySQLServicePort,
+		},
+		{
+			Name:     "postgres",
+			Protocol: corev1.ProtocolTCP,
+			Port:     b.Cluster.Spec.PostgresServicePort,
+		},
+		{
+			Name:     "opentsdb",
+			Protocol: corev1.ProtocolTCP,
+			Port:     b.Cluster.Spec.OpenTSDBServicePort,
+		},
+	}
+}
+
+func (b *frontendBuilder) containerPorts() []corev1.ContainerPort {
+	return []corev1.ContainerPort{
 		{
 			Name:          "grpc",
 			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: cluster.Spec.GRPCServicePort,
+			ContainerPort: b.Cluster.Spec.GRPCServicePort,
 		},
 		{
 			Name:          "http",
 			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: cluster.Spec.HTTPServicePort,
+			ContainerPort: b.Cluster.Spec.HTTPServicePort,
 		},
 		{
 			Name:          "mysql",
 			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: cluster.Spec.MySQLServicePort,
+			ContainerPort: b.Cluster.Spec.MySQLServicePort,
 		},
 		{
 			Name:          "postgres",
 			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: cluster.Spec.PostgresServicePort,
+			ContainerPort: b.Cluster.Spec.PostgresServicePort,
 		},
 		{
 			Name:          "opentsdb",
 			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: cluster.Spec.OpenTSDBServicePort,
+			ContainerPort: b.Cluster.Spec.OpenTSDBServicePort,
 		},
 	}
-
-	// Setup frontend tls configurations.
-	var (
-		tlsConfigVolumes []corev1.Volume
-		tlsConfigMounts  []corev1.VolumeMount
-	)
-
-	if cluster.Spec.Frontend.TLS != nil {
-		volumeName := "tls"
-		podTemplateSpec.Spec.Volumes = append(podTemplateSpec.Spec.Volumes, corev1.Volume{
-			Name: volumeName,
-			VolumeSource: corev1.VolumeSource{
-				Secret: &corev1.SecretVolumeSource{
-					SecretName: cluster.Spec.Frontend.TLS.SecretName,
-				},
-			},
-		})
-
-		podTemplateSpec.Spec.Containers[0].VolumeMounts = append(podTemplateSpec.Spec.Containers[0].VolumeMounts, corev1.VolumeMount{
-			Name:      volumeName,
-			MountPath: cluster.Spec.Frontend.TLS.CertificateMountPath,
-			ReadOnly:  true,
-		})
-	}
-
-	podTemplateSpec.Spec.Volumes = append(podTemplateSpec.Spec.Volumes, tlsConfigVolumes...)
-	podTemplateSpec.Spec.Containers[0].VolumeMounts = append(podTemplateSpec.Spec.Containers[0].VolumeMounts, tlsConfigMounts...)
-
-	return podTemplateSpec
 }

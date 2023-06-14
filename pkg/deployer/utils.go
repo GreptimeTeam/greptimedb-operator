@@ -21,14 +21,8 @@ import (
 	"reflect"
 
 	appsv1 "k8s.io/api/apps/v1"
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
-
-	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 )
 
 const (
@@ -83,56 +77,6 @@ func IsObjectSpecEqual(objectA, objectB client.Object) (bool, error) {
 	return reflect.DeepEqual(objectASpec, objectBSpec), nil
 }
 
-func GeneratePodTemplateSpec(template *v1alpha1.PodTemplateSpec, mainContainerName string) *corev1.PodTemplateSpec {
-	if template == nil || template.MainContainer == nil {
-		return nil
-	}
-
-	spec := &corev1.PodTemplateSpec{
-		ObjectMeta: metav1.ObjectMeta{
-			Annotations: template.Annotations,
-			Labels:      template.Labels,
-		},
-		Spec: corev1.PodSpec{
-			Containers: []corev1.Container{
-				{
-					Name:            mainContainerName,
-					Resources:       *template.MainContainer.Resources,
-					Image:           template.MainContainer.Image,
-					Command:         template.MainContainer.Command,
-					Args:            template.MainContainer.Args,
-					WorkingDir:      template.MainContainer.WorkingDir,
-					Env:             template.MainContainer.Env,
-					LivenessProbe:   template.MainContainer.LivenessProbe,
-					ReadinessProbe:  template.MainContainer.ReadinessProbe,
-					Lifecycle:       template.MainContainer.Lifecycle,
-					ImagePullPolicy: template.MainContainer.ImagePullPolicy,
-					VolumeMounts:    template.MainContainer.VolumeMounts,
-				},
-			},
-			NodeSelector:                  template.NodeSelector,
-			InitContainers:                template.InitContainers,
-			RestartPolicy:                 template.RestartPolicy,
-			TerminationGracePeriodSeconds: template.TerminationGracePeriodSeconds,
-			ActiveDeadlineSeconds:         template.ActiveDeadlineSeconds,
-			DNSPolicy:                     template.DNSPolicy,
-			ServiceAccountName:            template.ServiceAccountName,
-			HostNetwork:                   template.HostNetwork,
-			ImagePullSecrets:              template.ImagePullSecrets,
-			Affinity:                      template.Affinity,
-			SchedulerName:                 template.SchedulerName,
-			Volumes:                       template.Volumes,
-			Tolerations:                   template.Tolerations,
-		},
-	}
-
-	if len(template.AdditionalContainers) > 0 {
-		spec.Spec.Containers = append(spec.Spec.Containers, template.AdditionalContainers...)
-	}
-
-	return spec
-}
-
 // IsDeploymentReady checks if the deployment is ready.
 // TODO(zyy17): Maybe it's not a accurate way to detect the statefulset is ready.
 func IsDeploymentReady(deployment *appsv1.Deployment) bool {
@@ -160,42 +104,4 @@ func IsStatefulSetReady(sts *appsv1.StatefulSet) bool {
 	}
 
 	return sts.Status.ReadyReplicas == *sts.Spec.Replicas
-}
-
-// SetControllerAndAnnotation sets the controller reference and annotation for the object.
-func SetControllerAndAnnotation(owner, controlled client.Object, scheme *runtime.Scheme, spec interface{}) error {
-	if err := controllerutil.SetControllerReference(owner, controlled, scheme); err != nil {
-		return err
-	}
-
-	if err := setLastAppliedResourceSpecAnnotation(controlled, spec); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func MergeStringMap(origin, new map[string]string) map[string]string {
-	if origin == nil {
-		origin = make(map[string]string)
-	}
-
-	for k, v := range new {
-		origin[k] = v
-	}
-
-	return origin
-}
-
-// setLastAppliedResourceSpecAnnotation sets the last applied resource spec as annotation for updating purpose.
-func setLastAppliedResourceSpecAnnotation(object client.Object, spec interface{}) error {
-	data, err := json.Marshal(spec)
-	if err != nil {
-		return err
-	}
-
-	annotations := MergeStringMap(object.GetAnnotations(), map[string]string{LastAppliedResourceSpec: string(data)})
-	object.SetAnnotations(annotations)
-
-	return nil
 }
