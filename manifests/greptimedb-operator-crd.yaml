@@ -8032,6 +8032,8 @@ spec:
                 properties:
                   config:
                     type: string
+                  enableCheckEtcdService:
+                    type: boolean
                   etcdEndpoints:
                     items:
                       type: string

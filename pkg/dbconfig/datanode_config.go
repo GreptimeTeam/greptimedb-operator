@@ -142,7 +142,7 @@ func (c *DatanodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster)
 
 			c.Storage.Type = "S3"
 			c.Storage.Bucket = cluster.Spec.StorageProvider.S3.Bucket
-			c.Storage.Root = cluster.Spec.StorageProvider.S3.Prefix
+			c.Storage.Root = cluster.Spec.StorageProvider.S3.Root
 			c.Storage.Endpoint = cluster.Spec.StorageProvider.S3.Endpoint
 			c.Storage.Region = cluster.Spec.StorageProvider.S3.Region
 		}

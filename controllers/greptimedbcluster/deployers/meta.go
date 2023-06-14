@@ -45,8 +45,6 @@ type EtcdMaintenanceBuilder func(etcdEndpoints []string) (clientv3.Maintenance, 
 type MetaDeployer struct {
 	*CommonDeployer
 
-	enableCheckEtcdService bool
-
 	etcdMaintenanceBuilder func(etcdEndpoints []string) (clientv3.Maintenance, error)
 }
 
@@ -58,7 +56,6 @@ func NewMetaDeployer(mgr ctrl.Manager, opts ...MetaDeployerOption) *MetaDeployer
 	md := &MetaDeployer{
 		CommonDeployer:         NewFromManager(mgr),
 		etcdMaintenanceBuilder: buildEtcdMaintenance,
-		enableCheckEtcdService: true,
 	}
 
 	for _, opt := range opts {
@@ -71,12 +68,6 @@ func NewMetaDeployer(mgr ctrl.Manager, opts ...MetaDeployerOption) *MetaDeployer
 func WithEtcdMaintenanceBuilder(builder EtcdMaintenanceBuilder) func(*MetaDeployer) {
 	return func(d *MetaDeployer) {
 		d.etcdMaintenanceBuilder = builder
-	}
-}
-
-func WithCheckEtcdService(enableCheckEtcdService bool) func(*MetaDeployer) {
-	return func(d *MetaDeployer) {
-		d.enableCheckEtcdService = enableCheckEtcdService
 	}
 }
 
@@ -104,9 +95,7 @@ func (d *MetaDeployer) Generate(crdObject client.Object) ([]client.Object, error
 
 func (d *MetaDeployer) PreSyncHooks() []deployer.Hook {
 	var hooks []deployer.Hook
-	if d.enableCheckEtcdService {
-		hooks = append(hooks, d.checkEtcdService)
-	}
+	hooks = append(hooks, d.checkEtcdService)
 	return hooks
 }
 
@@ -147,6 +136,10 @@ func (d *MetaDeployer) checkEtcdService(ctx context.Context, crdObject client.Ob
 	cluster, err := d.GetCluster(crdObject)
 	if err != nil {
 		return err
+	}
+
+	if cluster.Spec.Meta == nil || !cluster.Spec.Meta.EnableCheckEtcdService {
+		return nil
 	}
 
 	maintainer, err := d.etcdMaintenanceBuilder(cluster.Spec.Meta.EtcdEndpoints)

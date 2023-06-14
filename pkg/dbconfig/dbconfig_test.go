@@ -45,7 +45,7 @@ func TestFromClusterForDatanodeConfig(t *testing.T) {
 		Spec: v1alpha1.GreptimeDBClusterSpec{
 			StorageProvider: &v1alpha1.StorageProvider{
 				S3: &v1alpha1.S3StorageProvider{
-					Prefix: "testcluster",
+					Root:   "testcluster",
 					Bucket: "testbucket",
 				},
 			},
@@ -81,7 +81,7 @@ level = 'error'
 		Spec: v1alpha1.GreptimeDBClusterSpec{
 			StorageProvider: &v1alpha1.StorageProvider{
 				S3: &v1alpha1.S3StorageProvider{
-					Prefix: "testcluster",
+					Root:   "testcluster",
 					Bucket: "testbucket",
 				},
 			},

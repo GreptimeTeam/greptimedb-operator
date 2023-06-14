@@ -294,6 +294,10 @@ type MetaSpec struct {
 	// +optional
 	EtcdEndpoints []string `json:"etcdEndpoints,omitempty"`
 
+	// EnableCheckEtcdService indicates whether to check etcd cluster health when starting meta.
+	// +optional
+	EnableCheckEtcdService bool `json:"enableCheckEtcdService,omitempty"`
+
 	// More meta settings can be added here...
 }
 
