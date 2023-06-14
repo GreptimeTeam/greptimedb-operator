@@ -47,7 +47,7 @@ func NewDatanodeDeployer(mgr ctrl.Manager) *DatanodeDeployer {
 }
 
 func (d *DatanodeDeployer) NewBuilder(crdObject client.Object) deployer.Builder {
-	return &frontendBuilder{
+	return &datanodeBuilder{
 		CommonBuilder: d.NewCommonBuilder(crdObject, v1alpha1.DatanodeComponentKind),
 	}
 }
@@ -192,7 +192,7 @@ func (b *datanodeBuilder) BuildConfigMap() deployer.Builder {
 		return b
 	}
 
-	if b.Cluster.Spec.Frontend == nil {
+	if b.Cluster.Spec.Datanode == nil {
 		return b
 	}
 
@@ -260,9 +260,9 @@ func (b *datanodeBuilder) generatePodTemplateSpec() corev1.PodTemplateSpec {
 		podTemplateSpec.Spec.Containers[MainContainerIndex].Args = b.generateMainContainerArgs()
 	}
 
-	b.mountStorageDir(podTemplateSpec)
 	b.mountConfigDir(podTemplateSpec)
-	b.mountInitConfigDir(podTemplateSpec)
+	b.addStorageDirMounts(podTemplateSpec)
+	b.addInitConfigDirVolume(podTemplateSpec)
 
 	podTemplateSpec.Spec.Containers[MainContainerIndex].Ports = b.containerPorts()
 	podTemplateSpec.Spec.InitContainers = append(podTemplateSpec.Spec.InitContainers, *b.generateInitializer())
@@ -316,6 +316,7 @@ func (b *datanodeBuilder) generateInitializer() *corev1.Container {
 				MountPath: GreptimeDBInitConfigDir,
 			},
 		},
+
 		// TODO(zyy17): the datanode don't support to accept hostname.
 		Env: []corev1.EnvVar{
 			{
@@ -340,16 +341,6 @@ func (b *datanodeBuilder) generateInitializer() *corev1.Container {
 	return initializer
 }
 
-func (b *datanodeBuilder) mountStorageDir(template *corev1.PodTemplateSpec) {
-	template.Spec.Containers[MainContainerIndex].VolumeMounts =
-		append(template.Spec.Containers[MainContainerIndex].VolumeMounts,
-			corev1.VolumeMount{
-				Name:      b.Cluster.Spec.Datanode.Storage.Name,
-				MountPath: b.Cluster.Spec.Datanode.Storage.MountPath,
-			},
-		)
-}
-
 func (b *datanodeBuilder) mountConfigDir(template *corev1.PodTemplateSpec) {
 	// The empty-dir will be modified by initializer.
 	template.Spec.Volumes = append(template.Spec.Volumes, corev1.Volume{
@@ -368,10 +359,23 @@ func (b *datanodeBuilder) mountConfigDir(template *corev1.PodTemplateSpec) {
 		)
 }
 
-func (b *datanodeBuilder) mountInitConfigDir(template *corev1.PodTemplateSpec) {
+func (b *datanodeBuilder) addStorageDirMounts(template *corev1.PodTemplateSpec) {
+	// The volume is defined in the PVC.
+	template.Spec.Containers[MainContainerIndex].VolumeMounts =
+		append(template.Spec.Containers[MainContainerIndex].VolumeMounts,
+			corev1.VolumeMount{
+				Name:      b.Cluster.Spec.Datanode.Storage.Name,
+				MountPath: b.Cluster.Spec.Datanode.Storage.MountPath,
+			},
+		)
+}
+
+// The init-config volume is used for initializer.
+func (b *datanodeBuilder) addInitConfigDirVolume(template *corev1.PodTemplateSpec) {
 	template.Spec.Volumes = append(template.Spec.Volumes, corev1.Volume{
 		Name: InitConfigVolumeName,
 		VolumeSource: corev1.VolumeSource{
+			// Mount the configmap as init-config.
 			ConfigMap: &corev1.ConfigMapVolumeSource{
 				LocalObjectReference: corev1.LocalObjectReference{
 					Name: ResourceName(b.Cluster.Name, b.ComponentKind),
@@ -379,14 +383,6 @@ func (b *datanodeBuilder) mountInitConfigDir(template *corev1.PodTemplateSpec) {
 			},
 		},
 	})
-
-	template.Spec.Containers[MainContainerIndex].VolumeMounts =
-		append(template.Spec.Containers[MainContainerIndex].VolumeMounts,
-			corev1.VolumeMount{
-				Name:      InitConfigVolumeName,
-				MountPath: GreptimeDBInitConfigDir,
-			},
-		)
 }
 
 func (b *datanodeBuilder) servicePorts() []corev1.ServicePort {

@@ -54,6 +54,7 @@ type CommonDeployer struct {
 	deployer.DefaultDeployer
 }
 
+// NewFromManager creates a new CommonDeployer from controller manager.
 func NewFromManager(mgr ctrl.Manager) *CommonDeployer {
 	return &CommonDeployer{
 		Client: mgr.GetClient(),
@@ -76,6 +77,7 @@ func (c *CommonDeployer) GetCluster(crdObject client.Object) (*v1alpha1.Greptime
 type CommonBuilder struct {
 	Cluster       *v1alpha1.GreptimeDBCluster
 	ComponentKind v1alpha1.ComponentKind
+
 	*deployer.DefaultBuilder
 }
 
@@ -134,6 +136,7 @@ func (c *CommonBuilder) GeneratePodTemplateSpec(template *v1alpha1.PodTemplateSp
 			// containers[0] is the main container.
 			Containers: []corev1.Container{
 				{
+					// The main container name is the same as the component kind.
 					Name:            string(c.ComponentKind),
 					Resources:       *template.MainContainer.Resources,
 					Image:           template.MainContainer.Image,
@@ -207,6 +210,7 @@ func (c *CommonBuilder) GeneratePodMonitor() (*monitoringv1.PodMonitor, error) {
 	return pm, nil
 }
 
+// MountConfigDir mounts the configmap to the main container as '/etc/greptimedb/config.toml'.
 func (c *CommonBuilder) MountConfigDir(template *corev1.PodTemplateSpec) {
 	template.Spec.Volumes = append(template.Spec.Volumes, corev1.Volume{
 		Name: ConfigVolumeName,

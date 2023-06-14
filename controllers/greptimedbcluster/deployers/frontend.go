@@ -62,6 +62,7 @@ func (d *FrontendDeployer) Generate(crdObject client.Object) ([]client.Object, e
 		BuildConfigMap().
 		BuildDeployment().
 		BuildPodMonitor().
+		SetControllerAndAnnotation().
 		Generate()
 
 	if err != nil {

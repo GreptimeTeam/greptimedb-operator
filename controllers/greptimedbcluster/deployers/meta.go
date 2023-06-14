@@ -92,6 +92,7 @@ func (d *MetaDeployer) Generate(crdObject client.Object) ([]client.Object, error
 		BuildConfigMap().
 		BuildDeployment().
 		BuildPodMonitor().
+		SetControllerAndAnnotation().
 		Generate()
 
 	if err != nil {
@@ -262,7 +263,7 @@ func (b *metaBuilder) BuildConfigMap() deployer.Builder {
 		return b
 	}
 
-	if b.Cluster.Spec.Frontend == nil {
+	if b.Cluster.Spec.Meta == nil {
 		return b
 	}
 
@@ -282,7 +283,7 @@ func (b *metaBuilder) BuildPodMonitor() deployer.Builder {
 		return b
 	}
 
-	if b.Cluster.Spec.Frontend == nil {
+	if b.Cluster.Spec.Meta == nil {
 		return b
 	}
 
