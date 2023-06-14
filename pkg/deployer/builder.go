@@ -16,6 +16,7 @@ package deployer
 
 import (
 	"encoding/json"
+	"fmt"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	appsv1 "k8s.io/api/apps/v1"
@@ -90,27 +91,24 @@ func (b *DefaultBuilder) SetControllerAndAnnotation() Builder {
 	)
 
 	for _, obj := range b.Objects {
-		switch obj.(type) {
+		switch v := obj.(type) {
 		case *corev1.Service:
-			svc := obj.(*corev1.Service)
-			spec = svc.Spec
-			controlled = svc
+			spec = v.Spec
+			controlled = v
 		case *corev1.ConfigMap:
-			cm := obj.(*corev1.ConfigMap)
-			spec = cm.Data
-			controlled = cm
+			spec = v.Data
+			controlled = v
 		case *appsv1.StatefulSet:
-			sts := obj.(*appsv1.StatefulSet)
-			spec = sts.Spec
-			controlled = sts
+			spec = v.Spec
+			controlled = v
 		case *appsv1.Deployment:
-			dp := obj.(*appsv1.Deployment)
-			spec = dp.Spec.Template.Spec
-			controlled = dp
+			spec = v.Spec.Template.Spec
+			controlled = v
 		case *monitoringv1.PodMonitor:
-			pm := obj.(*monitoringv1.PodMonitor)
-			spec = pm.Spec
-			controlled = pm
+			spec = v.Spec
+			controlled = v
+		default:
+			b.Err = fmt.Errorf("unsupported object type: %T", obj)
 		}
 
 		if err := b.doSetControllerAndAnnotation(b.Owner, controlled, b.Scheme, spec); err != nil {
