@@ -157,7 +157,7 @@ func (c *DatanodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster)
 	return nil
 }
 
-// Kind returns the component kind of the frontend.
+// Kind returns the component kind of the datanode.
 func (c *DatanodeConfig) Kind() v1alpha1.ComponentKind {
 	return v1alpha1.DatanodeComponentKind
 }
@@ -175,19 +175,19 @@ func (c *DatanodeConfig) getS3Credentials(namespace, name string) (accessKeyID, 
 	}
 
 	if s3Credentials.Data == nil {
-		err = fmt.Errorf("secret %s/%s is empty", namespace, name)
+		err = fmt.Errorf("secret '%s/%s' is empty", namespace, name)
 		return
 	}
 
 	accessKeyID = s3Credentials.Data[AccessKeyIDSecretKey]
 	if accessKeyID == nil {
-		err = fmt.Errorf("secret '%s/%s' does not have key '%s'", namespace, name, AccessKeyIDSecretKey)
+		err = fmt.Errorf("secret '%s/%s' does not have access key id '%s'", namespace, name, AccessKeyIDSecretKey)
 		return
 	}
 
 	secretAccessKey = s3Credentials.Data[SecretAccessKeySecretKey]
 	if secretAccessKey == nil {
-		err = fmt.Errorf("secret '%s/%s' does not have key '%s'", namespace, name, SecretAccessKeySecretKey)
+		err = fmt.Errorf("secret '%s/%s' does not have secret access key '%s'", namespace, name, SecretAccessKeySecretKey)
 		return
 	}
 
