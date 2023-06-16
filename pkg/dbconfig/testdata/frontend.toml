@@ -1,0 +1,46 @@
+mode = 'distributed'
+
+[http_options]
+addr = '127.0.0.1:4000'
+timeout = '30s'
+
+[grpc_options]
+addr = '127.0.0.1:4001'
+runtime_size = 8
+
+[mysql_options]
+addr = '127.0.0.1:4002'
+runtime_size = 2
+
+[mysql_options.tls]
+mode = 'disable'
+
+[postgres_options]
+addr = '127.0.0.1:4003'
+runtime_size = 2
+
+[postgres_options.tls]
+mode = 'disable'
+
+[opentsdb_options]
+addr = '127.0.0.1:4242'
+runtime_size = 2
+
+[influxdb_options]
+enable = true
+
+[prometheus_options]
+enable = true
+
+[prom_options]
+addr = '127.0.0.1:4004'
+
+[meta_client_options]
+metasrv_addrs = ['127.0.0.1:3002']
+timeout_millis = 3000
+connect_timeout_millis = 5000
+tcp_nodelay = true
+
+[logging]
+dir = '/tmp/greptimedb/logs'
+level = 'info'

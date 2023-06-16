@@ -1,0 +1,9 @@
+bind_addr = '127.0.0.1:3002'
+server_addr = '127.0.0.1:3002'
+store_addr = '127.0.0.1:2379'
+selector = 'LeaseBased'
+use_memory_store = false
+
+[logging]
+dir = '/tmp/greptimedb/logs'
+level = 'info'
