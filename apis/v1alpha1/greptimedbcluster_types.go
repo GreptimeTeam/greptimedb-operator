@@ -49,6 +49,9 @@ const (
 	// ClusterRunning means all the components of cluster is ready.
 	ClusterRunning ClusterPhase = "Running"
 
+	// ClusterUpdating means the cluster is updating.
+	ClusterUpdating ClusterPhase = "Updating"
+
 	// ClusterError means some kind of error happen in reconcile.
 	ClusterError ClusterPhase = "Error"
 
