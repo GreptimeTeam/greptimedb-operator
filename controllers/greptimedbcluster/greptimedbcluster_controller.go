@@ -149,18 +149,28 @@ func (r *Reconciler) sync(ctx context.Context, cluster *v1alpha1.GreptimeDBClust
 	for _, d := range r.Deployers {
 		err := d.Sync(ctx, cluster, d)
 		if err == deployer.ErrSyncNotReady {
-			if cluster.Status.ClusterPhase == v1alpha1.ClusterRunning {
-				if err := r.setClusterPhase(ctx, cluster, v1alpha1.ClusterUpdating); err != nil {
-					return ctrl.Result{}, err
-				}
+			var (
+				currentPhase = cluster.Status.ClusterPhase
+				nextPhase    = currentPhase
+			)
+
+			// If the cluster is already running, we will set it to updating phase.
+			if currentPhase == v1alpha1.ClusterRunning {
+				nextPhase = v1alpha1.ClusterUpdating
 			}
-			if cluster.Status.ClusterPhase == v1alpha1.ClusterError {
-				if err := r.setClusterPhase(ctx, cluster, v1alpha1.ClusterStarting); err != nil {
-					return ctrl.Result{}, err
-				}
+
+			// If the cluster is in error phase, we will set it to starting phase.
+			if currentPhase == v1alpha1.ClusterError {
+				nextPhase = v1alpha1.ClusterStarting
 			}
+
+			if err := r.setClusterPhase(ctx, cluster, nextPhase); err != nil {
+				return ctrl.Result{}, err
+			}
+
 			return ctrl.Result{}, nil
 		}
+
 		if err != nil {
 			return ctrl.Result{RequeueAfter: defaultRequeueAfter}, err
 		}
@@ -169,8 +179,7 @@ func (r *Reconciler) sync(ctx context.Context, cluster *v1alpha1.GreptimeDBClust
 	if cluster.Status.ClusterPhase == v1alpha1.ClusterStarting ||
 		cluster.Status.ClusterPhase == v1alpha1.ClusterUpdating {
 		cluster.Status.SetCondition(*v1alpha1.NewCondition(v1alpha1.GreptimeDBClusterReady, corev1.ConditionTrue, "ClusterReady", "the cluster is ready"))
-		cluster.Status.ClusterPhase = v1alpha1.ClusterRunning
-		if err := deployers.UpdateStatus(ctx, cluster, r.Client); err != nil {
+		if err := r.setClusterPhase(ctx, cluster, v1alpha1.ClusterRunning); err != nil {
 			return ctrl.Result{}, err
 		}
 	}
@@ -225,6 +234,11 @@ func (r *Reconciler) delete(ctx context.Context, cluster *v1alpha1.GreptimeDBClu
 }
 
 func (r *Reconciler) setClusterPhase(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster, phase v1alpha1.ClusterPhase) error {
+	// If the cluster is already in the phase, we will not update it.
+	if cluster.Status.ClusterPhase == phase {
+		return nil
+	}
+
 	cluster.Status.ClusterPhase = phase
 	return deployers.UpdateStatus(ctx, cluster, r.Client)
 }
