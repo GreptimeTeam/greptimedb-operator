@@ -106,7 +106,7 @@ func (b *DefaultBuilder) SetControllerAndAnnotation() Builder {
 			spec = v.Spec
 			controlled = v
 		case *appsv1.Deployment:
-			spec = v.Spec.Template.Spec
+			spec = v.Spec
 			controlled = v
 		case *monitoringv1.PodMonitor:
 			spec = v.Spec
