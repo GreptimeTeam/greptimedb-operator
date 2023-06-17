@@ -323,6 +323,8 @@ func (b *metaBuilder) generateMainContainerArgs() []string {
 	return []string{
 		"metasrv", "start",
 		"--bind-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.Meta.ServicePort),
+		// TODO(zyy17): Should we add the new field of the CRD for meta http port?
+		"--http-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.HTTPServicePort),
 		"--server-addr", fmt.Sprintf("%s.%s:%d", ResourceName(b.Cluster.Name, v1alpha1.MetaComponentKind), b.Cluster.Namespace, b.Cluster.Spec.Meta.ServicePort),
 		"--store-addr", b.Cluster.Spec.Meta.EtcdEndpoints[0],
 		"--config-file", path.Join(GreptimeDBConfigDir, GreptimeDBConfigFileName),

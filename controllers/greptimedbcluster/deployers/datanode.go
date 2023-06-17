@@ -249,6 +249,8 @@ func (b *datanodeBuilder) generateMainContainerArgs() []string {
 		"datanode", "start",
 		"--metasrv-addr", fmt.Sprintf("%s.%s:%d", ResourceName(b.Cluster.Name, v1alpha1.MetaComponentKind),
 			b.Cluster.Namespace, b.Cluster.Spec.Meta.ServicePort),
+		// TODO(zyy17): Should we add the new field of the CRD for datanode http port?
+		"--http-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.HTTPServicePort),
 		"--config-file", path.Join(GreptimeDBConfigDir, GreptimeDBConfigFileName),
 	}
 }
