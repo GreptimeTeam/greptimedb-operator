@@ -52,10 +52,9 @@ var (
 type Reconciler struct {
 	client.Client
 
-	Scheme   *runtime.Scheme
-	Recorder record.EventRecorder
-
+	Scheme    *runtime.Scheme
 	Deployers []deployer.Deployer
+	Recorder  record.EventRecorder
 }
 
 func Setup(mgr ctrl.Manager, _ *options.Options) error {
@@ -110,7 +109,8 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (result ct
 
 	defer func() {
 		if err != nil {
-			if err := r.setClusterPhase(ctx, cluster, v1alpha1.ClusterError); err != nil {
+			r.Recorder.Eventf(cluster, corev1.EventTypeWarning, "ReconcileError", fmt.Sprintf("Reconcile error: %v", err))
+			if err := r.setClusterPhase(ctx, cluster, v1alpha1.ClusterError); err != nil && !errors.IsNotFound(err) {
 				klog.Errorf("Failed to update status: %v", err)
 				return
 			}
@@ -123,14 +123,17 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (result ct
 	}
 
 	if err = r.addFinalizer(ctx, cluster); err != nil {
+		r.Recorder.Eventf(cluster, corev1.EventTypeWarning, "AddFinalizerFailed", fmt.Sprintf("Add finalizer failed: %v", err))
 		return
 	}
 
 	if err = r.validate(ctx, cluster); err != nil {
+		r.Recorder.Eventf(cluster, corev1.EventTypeWarning, "InvalidCluster", fmt.Sprintf("Invalid cluster: %v", err))
 		return
 	}
 
 	if err = cluster.SetDefaults(); err != nil {
+		r.Recorder.Eventf(cluster, corev1.EventTypeWarning, "SetDefaultValuesFailed", fmt.Sprintf("Set default values failed: %v", err))
 		return
 	}
 
@@ -240,6 +243,8 @@ func (r *Reconciler) setClusterPhase(ctx context.Context, cluster *v1alpha1.Grep
 	}
 
 	cluster.Status.ClusterPhase = phase
+	r.recordNormalEventByPhase(cluster)
+
 	return deployers.UpdateStatus(ctx, cluster, r.Client)
 }
 
@@ -334,4 +339,17 @@ func (r *Reconciler) checkPodMonitorCRDInstall(ctx context.Context, groupKind me
 		return err
 	}
 	return nil
+}
+
+func (r *Reconciler) recordNormalEventByPhase(cluster *v1alpha1.GreptimeDBCluster) {
+	switch cluster.Status.ClusterPhase {
+	case v1alpha1.ClusterStarting:
+		r.Recorder.Eventf(cluster, corev1.EventTypeNormal, "StartingCluster", "Cluster is starting")
+	case v1alpha1.ClusterRunning:
+		r.Recorder.Eventf(cluster, corev1.EventTypeNormal, "ClusterIsReady", "Cluster is ready")
+	case v1alpha1.ClusterUpdating:
+		r.Recorder.Eventf(cluster, corev1.EventTypeNormal, "UpdatingCluster", "Cluster is updating")
+	case v1alpha1.ClusterTerminating:
+		r.Recorder.Eventf(cluster, corev1.EventTypeNormal, "TerminatingCluster", "Cluster is terminating")
+	}
 }
