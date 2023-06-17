@@ -20,6 +20,8 @@ import (
 
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	k8sutils "github.com/GreptimeTeam/greptimedb-operator/pkg/utils/k8s"
 )
 
 var (
@@ -110,13 +112,13 @@ func (d *DefaultDeployer) Generate(_ client.Object) ([]client.Object, error) {
 
 func (d *DefaultDeployer) Apply(ctx context.Context, objects []client.Object) error {
 	for _, newObject := range objects {
-		oldObject, err := CreateObjectIfNotExist(ctx, d.Client, d.sourceObject(newObject), newObject)
+		oldObject, err := k8sutils.CreateObjectIfNotExist(ctx, d.Client, d.sourceObject(newObject), newObject)
 		if err != nil {
 			return err
 		}
 
 		if oldObject != nil {
-			equal, err := IsObjectSpecEqual(oldObject, newObject)
+			equal, err := k8sutils.IsObjectSpecEqual(oldObject, newObject, LastAppliedResourceSpec)
 			if err != nil {
 				return err
 			}

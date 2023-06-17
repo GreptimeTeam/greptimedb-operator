@@ -30,6 +30,7 @@ import (
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/deployer"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/utils"
+	k8sutils "github.com/GreptimeTeam/greptimedb-operator/pkg/utils/k8s"
 )
 
 const (
@@ -101,7 +102,7 @@ func (d *FrontendDeployer) CheckAndUpdateStatus(ctx context.Context, crdObject c
 		klog.Errorf("Failed to update status: %s", err)
 	}
 
-	return deployer.IsDeploymentReady(deployment), nil
+	return k8sutils.IsDeploymentReady(deployment), nil
 }
 
 var _ deployer.Builder = &frontendBuilder{}

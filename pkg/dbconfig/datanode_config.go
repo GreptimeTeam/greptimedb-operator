@@ -20,7 +20,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
-	"github.com/GreptimeTeam/greptimedb-operator/pkg/utils"
+	k8sutils "github.com/GreptimeTeam/greptimedb-operator/pkg/utils/k8s"
 )
 
 var _ Config = &DatanodeConfig{}
@@ -170,7 +170,7 @@ const (
 func (c *DatanodeConfig) getS3Credentials(namespace, name string) (accessKeyID, secretAccessKey []byte, err error) {
 	var s3Credentials corev1.Secret
 
-	if err = utils.GetK8sResource(namespace, name, &s3Credentials); err != nil {
+	if err = k8sutils.GetK8sResource(namespace, name, &s3Credentials); err != nil {
 		return
 	}
 

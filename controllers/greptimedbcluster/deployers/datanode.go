@@ -31,6 +31,7 @@ import (
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/deployer"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/utils"
+	k8sutils "github.com/GreptimeTeam/greptimedb-operator/pkg/utils/k8s"
 )
 
 // DatanodeDeployer is the deployer for datanode.
@@ -114,7 +115,7 @@ func (d *DatanodeDeployer) CheckAndUpdateStatus(ctx context.Context, crdObject c
 		klog.Errorf("Failed to update status: %s", err)
 	}
 
-	return deployer.IsStatefulSetReady(sts), nil
+	return k8sutils.IsStatefulSetReady(sts), nil
 }
 
 func (d *DatanodeDeployer) deleteStorage(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster) error {

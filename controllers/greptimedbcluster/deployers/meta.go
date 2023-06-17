@@ -34,6 +34,7 @@ import (
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/deployer"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/utils"
+	k8sutils "github.com/GreptimeTeam/greptimedb-operator/pkg/utils/k8s"
 )
 
 var (
@@ -129,7 +130,7 @@ func (d *MetaDeployer) CheckAndUpdateStatus(ctx context.Context, highLevelObject
 		klog.Errorf("Failed to update status: %s", err)
 	}
 
-	return deployer.IsDeploymentReady(deployment), nil
+	return k8sutils.IsDeploymentReady(deployment), nil
 }
 
 func (d *MetaDeployer) checkEtcdService(ctx context.Context, crdObject client.Object) error {

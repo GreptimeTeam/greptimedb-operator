@@ -28,6 +28,10 @@ import (
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/utils"
 )
 
+const (
+	LastAppliedResourceSpec = "controller.greptime.io/last-applied-resource-spec"
+)
+
 // Builder is the interface for building K8s resources.
 type Builder interface {
 	// BuildService builds a K8s service.

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package deployer
+package k8s
 
 import (
 	"context"
@@ -22,11 +22,8 @@ import (
 
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-)
-
-const (
-	LastAppliedResourceSpec = "controller.greptime.io/last-applied-resource-spec"
 )
 
 // CreateObjectIfNotExist creates Kubernetes object if it does not exist, otherwise returns the existing object.
@@ -51,17 +48,17 @@ func CreateObjectIfNotExist(ctx context.Context, c client.Client, source, newObj
 }
 
 // IsObjectSpecEqual checks if the spec of the object is equal to other one.
-func IsObjectSpecEqual(objectA, objectB client.Object) (bool, error) {
-	objectASpecStr, ok := objectA.GetAnnotations()[LastAppliedResourceSpec]
+func IsObjectSpecEqual(objectA, objectB client.Object, annotationKey string) (bool, error) {
+	objectASpecStr, ok := objectA.GetAnnotations()[annotationKey]
 	if !ok {
 		return false, fmt.Errorf("the objectA object '%s' does not have annotation '%s'",
-			client.ObjectKeyFromObject(objectA), LastAppliedResourceSpec)
+			client.ObjectKeyFromObject(objectA), annotationKey)
 	}
 
-	objectBSpecStr, ok := objectB.GetAnnotations()[LastAppliedResourceSpec]
+	objectBSpecStr, ok := objectB.GetAnnotations()[annotationKey]
 	if !ok {
 		return false, fmt.Errorf("the objectB object '%s' does not have annotation '%s'",
-			client.ObjectKeyFromObject(objectB), LastAppliedResourceSpec)
+			client.ObjectKeyFromObject(objectB), annotationKey)
 	}
 
 	var objectASpec, objectBSpec interface{}
@@ -104,4 +101,18 @@ func IsStatefulSetReady(sts *appsv1.StatefulSet) bool {
 	}
 
 	return sts.Status.ReadyReplicas == *sts.Spec.Replicas
+}
+
+// GetK8sResource returns a native K8s resource by namespace and name.
+func GetK8sResource(namespace, name string, obj client.Object) error {
+	c, err := client.New(ctrl.GetConfigOrDie(), client.Options{})
+	if err != nil {
+		return err
+	}
+
+	if err := c.Get(context.Background(), client.ObjectKey{Namespace: namespace, Name: name}, obj); err != nil {
+		return err
+	}
+
+	return nil
 }

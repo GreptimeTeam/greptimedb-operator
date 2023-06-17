@@ -14,27 +14,6 @@
 
 package utils
 
-import (
-	"context"
-
-	ctrl "sigs.k8s.io/controller-runtime"
-	"sigs.k8s.io/controller-runtime/pkg/client"
-)
-
-// GetK8sResource returns a native K8s resource by namespace and name.
-func GetK8sResource(namespace, name string, obj client.Object) error {
-	c, err := client.New(ctrl.GetConfigOrDie(), client.Options{})
-	if err != nil {
-		return err
-	}
-
-	if err := c.Get(context.Background(), client.ObjectKey{Namespace: namespace, Name: name}, obj); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // MergeStringMap merges two string maps.
 func MergeStringMap(origin, new map[string]string) map[string]string {
 	if origin == nil {
