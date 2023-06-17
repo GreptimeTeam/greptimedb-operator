@@ -243,6 +243,7 @@ func (r *Reconciler) setClusterPhase(ctx context.Context, cluster *v1alpha1.Grep
 	}
 
 	cluster.Status.ClusterPhase = phase
+	cluster.Status.Version = cluster.Spec.Version
 	r.recordNormalEventByPhase(cluster)
 
 	return deployers.UpdateStatus(ctx, cluster, r.Client)
