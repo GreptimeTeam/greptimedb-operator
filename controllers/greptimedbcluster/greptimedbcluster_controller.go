@@ -134,6 +134,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (result ct
 		return
 	}
 
+	// Means the cluster is just created.
 	if len(cluster.Status.ClusterPhase) == 0 {
 		klog.Infof("Start to create the cluster '%s/%s'", cluster.Namespace, cluster.Name)
 		if err = r.setClusterPhase(ctx, cluster, v1alpha1.ClusterStarting); err != nil {
@@ -148,7 +149,12 @@ func (r *Reconciler) sync(ctx context.Context, cluster *v1alpha1.GreptimeDBClust
 	for _, d := range r.Deployers {
 		err := d.Sync(ctx, cluster, d)
 		if err == deployer.ErrSyncNotReady {
-			if cluster.Status.ClusterPhase != v1alpha1.ClusterStarting {
+			if cluster.Status.ClusterPhase == v1alpha1.ClusterRunning {
+				if err := r.setClusterPhase(ctx, cluster, v1alpha1.ClusterUpdating); err != nil {
+					return ctrl.Result{}, err
+				}
+			}
+			if cluster.Status.ClusterPhase == v1alpha1.ClusterError {
 				if err := r.setClusterPhase(ctx, cluster, v1alpha1.ClusterStarting); err != nil {
 					return ctrl.Result{}, err
 				}
@@ -160,9 +166,8 @@ func (r *Reconciler) sync(ctx context.Context, cluster *v1alpha1.GreptimeDBClust
 		}
 	}
 
-	if cluster.Status.ClusterPhase != v1alpha1.ClusterRunning {
-		// FIXME(zyy17): The logging maybe duplicated because the status update will trigger another reconcile.
-		klog.Infof("The GreptimeDB cluster '%s/%s' is ready", cluster.Namespace, cluster.Name)
+	if cluster.Status.ClusterPhase == v1alpha1.ClusterStarting ||
+		cluster.Status.ClusterPhase == v1alpha1.ClusterUpdating {
 		cluster.Status.SetCondition(*v1alpha1.NewCondition(v1alpha1.GreptimeDBClusterReady, corev1.ConditionTrue, "ClusterReady", "the cluster is ready"))
 		cluster.Status.ClusterPhase = v1alpha1.ClusterRunning
 		if err := deployers.UpdateStatus(ctx, cluster, r.Client); err != nil {
@@ -190,6 +195,15 @@ func (r *Reconciler) delete(ctx context.Context, cluster *v1alpha1.GreptimeDBClu
 	if !controllerutil.ContainsFinalizer(cluster, greptimedbClusterFinalizer) {
 		klog.V(2).Info("Skipping as it does not have a finalizer")
 		return ctrl.Result{}, nil
+	}
+
+	if cluster.Status.ClusterPhase != v1alpha1.ClusterTerminating {
+		if err := r.setClusterPhase(ctx, cluster, v1alpha1.ClusterTerminating); err != nil {
+			return ctrl.Result{}, err
+		}
+
+		// Trigger the next reconcile.
+		return ctrl.Result{Requeue: true}, nil
 	}
 
 	for _, d := range r.Deployers {
