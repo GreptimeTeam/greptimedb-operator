@@ -15,6 +15,7 @@
 package v1alpha1
 
 import (
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"reflect"
 	"testing"
 
@@ -69,6 +70,14 @@ func TestSetDefaults(t *testing.T) {
 									"memory": resource.MustParse(defaultLimitMemory),
 								},
 							},
+							ReadinessProbe: &corev1.Probe{
+								ProbeHandler: corev1.ProbeHandler{
+									HTTPGet: &corev1.HTTPGetAction{
+										Path: "/health",
+										Port: intstr.FromInt(defaultHTTPServicePort),
+									},
+								},
+							},
 						},
 					},
 					Frontend: &FrontendSpec{
@@ -85,6 +94,14 @@ func TestSetDefaults(t *testing.T) {
 										Limits: map[corev1.ResourceName]resource.Quantity{
 											"cpu":    resource.MustParse(defaultLimitCPU),
 											"memory": resource.MustParse(defaultLimitMemory),
+										},
+									},
+									ReadinessProbe: &corev1.Probe{
+										ProbeHandler: corev1.ProbeHandler{
+											HTTPGet: &corev1.HTTPGetAction{
+												Path: "/health",
+												Port: intstr.FromInt(defaultHTTPServicePort),
+											},
 										},
 									},
 								},
@@ -110,6 +127,14 @@ func TestSetDefaults(t *testing.T) {
 											"memory": resource.MustParse(defaultLimitMemory),
 										},
 									},
+									ReadinessProbe: &corev1.Probe{
+										ProbeHandler: corev1.ProbeHandler{
+											HTTPGet: &corev1.HTTPGetAction{
+												Path: "/health",
+												Port: intstr.FromInt(defaultHTTPServicePort),
+											},
+										},
+									},
 								},
 							},
 						},
@@ -129,6 +154,14 @@ func TestSetDefaults(t *testing.T) {
 										Limits: map[corev1.ResourceName]resource.Quantity{
 											"cpu":    resource.MustParse(defaultLimitCPU),
 											"memory": resource.MustParse(defaultLimitMemory),
+										},
+									},
+									ReadinessProbe: &corev1.Probe{
+										ProbeHandler: corev1.ProbeHandler{
+											HTTPGet: &corev1.HTTPGetAction{
+												Path: "/health",
+												Port: intstr.FromInt(defaultHTTPServicePort),
+											},
 										},
 									},
 								},
@@ -230,6 +263,14 @@ func TestSetDefaults(t *testing.T) {
 									"memory": resource.MustParse("1024Mi"),
 								},
 							},
+							ReadinessProbe: &corev1.Probe{
+								ProbeHandler: corev1.ProbeHandler{
+									HTTPGet: &corev1.HTTPGetAction{
+										Path: "/health",
+										Port: intstr.FromInt(defaultHTTPServicePort),
+									},
+								},
+							},
 						},
 					},
 					Frontend: &FrontendSpec{
@@ -250,6 +291,14 @@ func TestSetDefaults(t *testing.T) {
 										Limits: map[corev1.ResourceName]resource.Quantity{
 											"cpu":    resource.MustParse("1000m"),
 											"memory": resource.MustParse("1024Mi"),
+										},
+									},
+									ReadinessProbe: &corev1.Probe{
+										ProbeHandler: corev1.ProbeHandler{
+											HTTPGet: &corev1.HTTPGetAction{
+												Path: "/health",
+												Port: intstr.FromInt(defaultHTTPServicePort),
+											},
 										},
 									},
 								},
@@ -279,6 +328,14 @@ func TestSetDefaults(t *testing.T) {
 											"memory": resource.MustParse("1024Mi"),
 										},
 									},
+									ReadinessProbe: &corev1.Probe{
+										ProbeHandler: corev1.ProbeHandler{
+											HTTPGet: &corev1.HTTPGetAction{
+												Path: "/health",
+												Port: intstr.FromInt(defaultHTTPServicePort),
+											},
+										},
+									},
 								},
 							},
 						},
@@ -301,6 +358,14 @@ func TestSetDefaults(t *testing.T) {
 										Limits: map[corev1.ResourceName]resource.Quantity{
 											"cpu":    resource.MustParse("1000m"),
 											"memory": resource.MustParse("1024Mi"),
+										},
+									},
+									ReadinessProbe: &corev1.Probe{
+										ProbeHandler: corev1.ProbeHandler{
+											HTTPGet: &corev1.HTTPGetAction{
+												Path: "/health",
+												Port: intstr.FromInt(defaultHTTPServicePort),
+											},
 										},
 									},
 								},
@@ -357,6 +422,14 @@ func TestSetDefaults(t *testing.T) {
 									"memory": resource.MustParse(defaultLimitMemory),
 								},
 							},
+							ReadinessProbe: &corev1.Probe{
+								ProbeHandler: corev1.ProbeHandler{
+									HTTPGet: &corev1.HTTPGetAction{
+										Path: "/health",
+										Port: intstr.FromInt(defaultHTTPServicePort),
+									},
+								},
+							},
 						},
 					},
 					Datanode: &DatanodeSpec{
@@ -373,6 +446,14 @@ func TestSetDefaults(t *testing.T) {
 										Limits: map[corev1.ResourceName]resource.Quantity{
 											"cpu":    resource.MustParse(defaultLimitCPU),
 											"memory": resource.MustParse(defaultLimitMemory),
+										},
+									},
+									ReadinessProbe: &corev1.Probe{
+										ProbeHandler: corev1.ProbeHandler{
+											HTTPGet: &corev1.HTTPGetAction{
+												Path: "/health",
+												Port: intstr.FromInt(defaultHTTPServicePort),
+											},
 										},
 									},
 								},
