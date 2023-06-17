@@ -25,7 +25,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
-	"github.com/GreptimeTeam/greptimedb-operator/pkg/utils"
+	"github.com/GreptimeTeam/greptimedb-operator/pkg/util"
 )
 
 const (
@@ -148,7 +148,7 @@ func (b *DefaultBuilder) setLastAppliedResourceSpecAnnotation(object client.Obje
 		return err
 	}
 
-	annotations := utils.MergeStringMap(object.GetAnnotations(), map[string]string{LastAppliedResourceSpec: string(data)})
+	annotations := util.MergeStringMap(object.GetAnnotations(), map[string]string{LastAppliedResourceSpec: string(data)})
 	object.SetAnnotations(annotations)
 
 	return nil

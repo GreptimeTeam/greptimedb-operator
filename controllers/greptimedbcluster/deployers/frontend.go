@@ -29,8 +29,8 @@ import (
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/deployer"
-	"github.com/GreptimeTeam/greptimedb-operator/pkg/utils"
-	k8sutils "github.com/GreptimeTeam/greptimedb-operator/pkg/utils/k8s"
+	"github.com/GreptimeTeam/greptimedb-operator/pkg/util"
+	k8sutil "github.com/GreptimeTeam/greptimedb-operator/pkg/util/k8s"
 )
 
 const (
@@ -102,7 +102,7 @@ func (d *FrontendDeployer) CheckAndUpdateStatus(ctx context.Context, crdObject c
 		klog.Errorf("Failed to update status: %s", err)
 	}
 
-	return k8sutils.IsDeploymentReady(deployment), nil
+	return k8sutil.IsDeploymentReady(deployment), nil
 }
 
 var _ deployer.Builder = &frontendBuilder{}
@@ -260,7 +260,7 @@ func (b *frontendBuilder) generatePodTemplateSpec() *corev1.PodTemplateSpec {
 		podTemplateSpec.Spec.Containers[MainContainerIndex].Args = b.generateMainContainerArgs()
 	}
 
-	podTemplateSpec.ObjectMeta.Labels = utils.MergeStringMap(podTemplateSpec.ObjectMeta.Labels, map[string]string{
+	podTemplateSpec.ObjectMeta.Labels = util.MergeStringMap(podTemplateSpec.ObjectMeta.Labels, map[string]string{
 		GreptimeDBComponentName: ResourceName(b.Cluster.Name, b.ComponentKind),
 	})
 

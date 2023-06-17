@@ -30,8 +30,8 @@ import (
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/deployer"
-	"github.com/GreptimeTeam/greptimedb-operator/pkg/utils"
-	k8sutils "github.com/GreptimeTeam/greptimedb-operator/pkg/utils/k8s"
+	"github.com/GreptimeTeam/greptimedb-operator/pkg/util"
+	k8sutil "github.com/GreptimeTeam/greptimedb-operator/pkg/util/k8s"
 )
 
 // DatanodeDeployer is the deployer for datanode.
@@ -115,7 +115,7 @@ func (d *DatanodeDeployer) CheckAndUpdateStatus(ctx context.Context, crdObject c
 		klog.Errorf("Failed to update status: %s", err)
 	}
 
-	return k8sutils.IsStatefulSetReady(sts), nil
+	return k8sutil.IsStatefulSetReady(sts), nil
 }
 
 func (d *DatanodeDeployer) deleteStorage(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster) error {
@@ -267,7 +267,7 @@ func (b *datanodeBuilder) generatePodTemplateSpec() corev1.PodTemplateSpec {
 
 	podTemplateSpec.Spec.Containers[MainContainerIndex].Ports = b.containerPorts()
 	podTemplateSpec.Spec.InitContainers = append(podTemplateSpec.Spec.InitContainers, *b.generateInitializer())
-	podTemplateSpec.ObjectMeta.Labels = utils.MergeStringMap(podTemplateSpec.ObjectMeta.Labels, map[string]string{
+	podTemplateSpec.ObjectMeta.Labels = util.MergeStringMap(podTemplateSpec.ObjectMeta.Labels, map[string]string{
 		GreptimeDBComponentName: ResourceName(b.Cluster.Name, b.ComponentKind),
 	})
 

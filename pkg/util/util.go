@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package utils
+package util
 
 // MergeStringMap merges two string maps.
 func MergeStringMap(origin, new map[string]string) map[string]string {

@@ -21,7 +21,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	k8sutils "github.com/GreptimeTeam/greptimedb-operator/pkg/utils/k8s"
+	k8sutils "github.com/GreptimeTeam/greptimedb-operator/pkg/util/k8s"
 )
 
 var (
