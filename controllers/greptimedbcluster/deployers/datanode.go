@@ -194,11 +194,6 @@ func (d *DatanodeDeployer) generateSvc(cluster *v1alpha1.GreptimeDBCluster) (*co
 					Protocol: corev1.ProtocolTCP,
 					Port:     cluster.Spec.HTTPServicePort,
 				},
-				{
-					Name:     "mysql",
-					Protocol: corev1.ProtocolTCP,
-					Port:     cluster.Spec.MySQLServicePort,
-				},
 			},
 		},
 	}
@@ -343,16 +338,6 @@ func (d *DatanodeDeployer) generatePodTemplateSpec(cluster *v1alpha1.GreptimeDBC
 			Name:          "http",
 			Protocol:      corev1.ProtocolTCP,
 			ContainerPort: cluster.Spec.HTTPServicePort,
-		},
-		{
-			Name:          "mysql",
-			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: cluster.Spec.MySQLServicePort,
-		},
-		{
-			Name:          "postgres",
-			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: cluster.Spec.PostgresServicePort,
 		},
 	}
 
