@@ -279,6 +279,9 @@ func (b *datanodeBuilder) generatePodTemplateSpec() corev1.PodTemplateSpec {
 func (b *datanodeBuilder) generatePVC() []corev1.PersistentVolumeClaim {
 	return []corev1.PersistentVolumeClaim{
 		{
+			ObjectMeta: metav1.ObjectMeta{
+				Name: b.Cluster.Spec.Datanode.Storage.Name,
+			},
 			Spec: corev1.PersistentVolumeClaimSpec{
 				StorageClassName: b.Cluster.Spec.Datanode.Storage.StorageClassName,
 				AccessModes: []corev1.PersistentVolumeAccessMode{
