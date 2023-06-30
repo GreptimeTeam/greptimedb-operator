@@ -106,9 +106,10 @@ e2e: setup-e2e ## Run e2e tests.
 .PHONY: test
 test: manifests generate fmt vet envtest ## Run tests.
 	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test \
-	./controllers/... \
-	./apis/...        \
-	./pkg/...         \
+	./controllers/...     \
+	./apis/...            \
+	./pkg/...             \
+	./cmd/initializer/... \
 	-coverprofile cover.out
 
 .PHONY: kind-up
@@ -123,7 +124,7 @@ build: generate fmt vet ## Build greptimedb-operator binary.
 
 .PHONY: initializer
 initializer: ## Build greptimedb-initializer binary.
-	go build -ldflags '${LDFLAGS}' -o bin/greptimedb-initializer ./cmd/initializer/...
+	go build -ldflags '${LDFLAGS}' -o bin/greptimedb-initializer ./cmd/initializer/main.go
 
 .PHONY: run
 run: manifests generate fmt vet ## Run a controller from your host.

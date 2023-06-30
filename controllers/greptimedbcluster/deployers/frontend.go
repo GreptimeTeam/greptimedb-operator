@@ -17,7 +17,7 @@ package deployers
 import (
 	"context"
 	"fmt"
-	"path/filepath"
+	"path"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	appsv1 "k8s.io/api/apps/v1"
@@ -71,17 +71,15 @@ func (d *FrontendDeployer) Render(crdObject client.Object) ([]client.Object, err
 		}
 		renderObjects = append(renderObjects, deployment)
 
-		if len(cluster.Spec.Frontend.Config) > 0 {
-			cm, err := d.GenerateConfigMap(cluster, v1alpha1.FrontendComponentKind)
-			if err != nil {
-				return nil, err
-			}
-			renderObjects = append(renderObjects, cm)
+		cm, err := d.GenerateConfigMap(cluster, v1alpha1.FrontendComponentKind)
+		if err != nil {
+			return nil, err
+		}
+		renderObjects = append(renderObjects, cm)
 
-			for _, object := range renderObjects {
-				if deployment, ok := object.(*appsv1.Deployment); ok {
-					d.mountConfigMapVolume(deployment, cm.Name)
-				}
+		for _, object := range renderObjects {
+			if deployment, ok := object.(*appsv1.Deployment); ok {
+				d.mountConfigMapVolume(deployment, cm.Name)
 			}
 		}
 
@@ -158,11 +156,6 @@ func (d *FrontendDeployer) generateSvc(cluster *v1alpha1.GreptimeDBCluster) (*co
 			Protocol: corev1.ProtocolTCP,
 			Port:     cluster.Spec.OpenTSDBServicePort,
 		},
-		{
-			Name:     "prometheus",
-			Protocol: corev1.ProtocolTCP,
-			Port:     cluster.Spec.PrometheusServicePort,
-		},
 	}
 
 	svc := &corev1.Service{
@@ -179,7 +172,7 @@ func (d *FrontendDeployer) generateSvc(cluster *v1alpha1.GreptimeDBCluster) (*co
 		Spec: corev1.ServiceSpec{
 			Type: cluster.Spec.Frontend.Service.Type,
 			Selector: map[string]string{
-				GreptimeComponentName: d.ResourceName(cluster.Name, v1alpha1.FrontendComponentKind),
+				GreptimeDBComponentName: d.ResourceName(cluster.Name, v1alpha1.FrontendComponentKind),
 			},
 			Ports:             ports,
 			LoadBalancerClass: cluster.Spec.Frontend.Service.LoadBalancerClass,
@@ -207,7 +200,7 @@ func (d *FrontendDeployer) generateDeployment(cluster *v1alpha1.GreptimeDBCluste
 			Replicas: &cluster.Spec.Frontend.Replicas,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					GreptimeComponentName: d.ResourceName(cluster.Name, v1alpha1.FrontendComponentKind),
+					GreptimeDBComponentName: d.ResourceName(cluster.Name, v1alpha1.FrontendComponentKind),
 				},
 			},
 			Template: *d.generatePodTemplateSpec(cluster),
@@ -230,13 +223,14 @@ func (d *FrontendDeployer) buildFrontendArgs(cluster *v1alpha1.GreptimeDBCluster
 		"--mysql-addr", fmt.Sprintf("0.0.0.0:%d", cluster.Spec.MySQLServicePort),
 		"--postgres-addr", fmt.Sprintf("0.0.0.0:%d", cluster.Spec.PostgresServicePort),
 		"--opentsdb-addr", fmt.Sprintf("0.0.0.0:%d", cluster.Spec.OpenTSDBServicePort),
+		"--config-file", path.Join(GreptimeDBConfigDir, GreptimeDBConfigFileName),
 	}
 
 	if cluster.Spec.Frontend != nil && cluster.Spec.Frontend.TLS != nil {
 		args = append(args, []string{
 			"--tls-mode", "require",
-			"--tls-cert-path", filepath.Join(cluster.Spec.Frontend.TLS.CertificateMountPath, TLSCrtSecretKey),
-			"--tls-key-path", filepath.Join(cluster.Spec.Frontend.TLS.CertificateMountPath, TLSKeySecretKey),
+			"--tls-cert-path", path.Join(cluster.Spec.Frontend.TLS.CertificateMountPath, TLSCrtSecretKey),
+			"--tls-key-path", path.Join(cluster.Spec.Frontend.TLS.CertificateMountPath, TLSKeySecretKey),
 		}...)
 	}
 
@@ -265,7 +259,7 @@ func (d *FrontendDeployer) generatePodMonitor(cluster *v1alpha1.GreptimeDBCluste
 			},
 			Selector: metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					GreptimeComponentName: d.ResourceName(cluster.Name, v1alpha1.FrontendComponentKind),
+					GreptimeDBComponentName: d.ResourceName(cluster.Name, v1alpha1.FrontendComponentKind),
 				},
 			},
 			NamespaceSelector: monitoringv1.NamespaceSelector{
@@ -284,8 +278,9 @@ func (d *FrontendDeployer) generatePodMonitor(cluster *v1alpha1.GreptimeDBCluste
 }
 
 func (d *FrontendDeployer) mountConfigMapVolume(deployment *appsv1.Deployment, name string) {
+	volumeName := "config"
 	deployment.Spec.Template.Spec.Volumes = append(deployment.Spec.Template.Spec.Volumes, corev1.Volume{
-		Name: "config",
+		Name: volumeName,
 		VolumeSource: corev1.VolumeSource{
 			ConfigMap: &corev1.ConfigMapVolumeSource{
 				LocalObjectReference: corev1.LocalObjectReference{
@@ -298,8 +293,8 @@ func (d *FrontendDeployer) mountConfigMapVolume(deployment *appsv1.Deployment, n
 	for i, container := range deployment.Spec.Template.Spec.Containers {
 		if container.Name == string(v1alpha1.FrontendComponentKind) {
 			deployment.Spec.Template.Spec.Containers[i].VolumeMounts = append(deployment.Spec.Template.Spec.Containers[i].VolumeMounts, corev1.VolumeMount{
-				Name:      "config",
-				MountPath: DefaultConfigPath,
+				Name:      volumeName,
+				MountPath: GreptimeDBConfigDir,
 			})
 		}
 	}
@@ -314,7 +309,7 @@ func (d *FrontendDeployer) generatePodTemplateSpec(cluster *v1alpha1.GreptimeDBC
 	}
 
 	podTemplateSpec.ObjectMeta.Labels = deployer.MergeStringMap(podTemplateSpec.ObjectMeta.Labels, map[string]string{
-		GreptimeComponentName: d.ResourceName(cluster.Name, v1alpha1.FrontendComponentKind),
+		GreptimeDBComponentName: d.ResourceName(cluster.Name, v1alpha1.FrontendComponentKind),
 	})
 
 	podTemplateSpec.Spec.Containers[0].Ports = []corev1.ContainerPort{
@@ -343,11 +338,6 @@ func (d *FrontendDeployer) generatePodTemplateSpec(cluster *v1alpha1.GreptimeDBC
 			Protocol:      corev1.ProtocolTCP,
 			ContainerPort: cluster.Spec.OpenTSDBServicePort,
 		},
-		{
-			Name:          "prometheus",
-			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: cluster.Spec.PrometheusServicePort,
-		},
 	}
 
 	// Setup frontend tls configurations.
@@ -357,8 +347,9 @@ func (d *FrontendDeployer) generatePodTemplateSpec(cluster *v1alpha1.GreptimeDBC
 	)
 
 	if cluster.Spec.Frontend.TLS != nil {
+		volumeName := "tls"
 		podTemplateSpec.Spec.Volumes = append(podTemplateSpec.Spec.Volumes, corev1.Volume{
-			Name: "frontend-tls",
+			Name: volumeName,
 			VolumeSource: corev1.VolumeSource{
 				Secret: &corev1.SecretVolumeSource{
 					SecretName: cluster.Spec.Frontend.TLS.SecretName,
@@ -367,7 +358,7 @@ func (d *FrontendDeployer) generatePodTemplateSpec(cluster *v1alpha1.GreptimeDBC
 		})
 
 		podTemplateSpec.Spec.Containers[0].VolumeMounts = append(podTemplateSpec.Spec.Containers[0].VolumeMounts, corev1.VolumeMount{
-			Name:      "frontend-tls",
+			Name:      volumeName,
 			MountPath: cluster.Spec.Frontend.TLS.CertificateMountPath,
 			ReadOnly:  true,
 		})
