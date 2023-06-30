@@ -29,6 +29,9 @@ spec:
     - jsonPath: .status.clusterPhase
       name: PHASE
       type: string
+    - jsonPath: .status.version
+      name: VERSION
+      type: string
     - jsonPath: .metadata.creationTimestamp
       name: AGE
       type: date
@@ -10804,6 +10807,8 @@ spec:
                 - readyReplicas
                 - replicas
                 type: object
+              version:
+                type: string
             type: object
         type: object
     served: true

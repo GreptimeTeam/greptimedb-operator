@@ -15,6 +15,8 @@
 package v1alpha1
 
 import (
+	"strings"
+
 	"github.com/imdario/mergo"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -27,7 +29,7 @@ var (
 	defaultLimitCPU      = "500m"
 	defaultLimitMemory   = "128Mi"
 
-	defaultVersion = "v0.1.0"
+	defaultVersion = "Unknown"
 
 	// The default settings for GreptimeDBClusterSpec.
 	defaultHTTPServicePort       = 4000
@@ -87,6 +89,13 @@ func (in *GreptimeDBCluster) SetDefaults() error {
 		Version:               defaultVersion,
 	}
 
+	if in.Spec.Version == "" &&
+		in.Spec.Base != nil &&
+		in.Spec.Base.MainContainer != nil &&
+		in.Spec.Base.MainContainer.Image != "" {
+		in.Spec.Version = getVersionFromImage(in.Spec.Base.MainContainer.Image)
+	}
+
 	if in.Spec.Frontend != nil {
 		defaultGreptimeDBClusterSpec.Frontend = &FrontendSpec{
 			ComponentSpec: ComponentSpec{
@@ -144,4 +153,16 @@ func (in *GreptimeDBCluster) SetDefaults() error {
 	}
 
 	return nil
+}
+
+func getVersionFromImage(imageURL string) string {
+	tokens := strings.Split(imageURL, "/")
+	if len(tokens) > 0 {
+		imageTag := tokens[len(tokens)-1]
+		tokens = strings.Split(imageTag, ":")
+		if len(tokens) == 2 {
+			return tokens[1]
+		}
+	}
+	return defaultVersion
 }

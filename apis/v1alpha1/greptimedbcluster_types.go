@@ -49,6 +49,9 @@ const (
 	// ClusterRunning means all the components of cluster is ready.
 	ClusterRunning ClusterPhase = "Running"
 
+	// ClusterUpdating means the cluster is updating.
+	ClusterUpdating ClusterPhase = "Updating"
+
 	// ClusterError means some kind of error happen in reconcile.
 	ClusterError ClusterPhase = "Error"
 
@@ -501,6 +504,7 @@ type GreptimeDBClusterStatus struct {
 	Frontend FrontendStatus `json:"frontend,omitempty"`
 	Meta     MetaStatus     `json:"meta,omitempty"`
 	Datanode DatanodeStatus `json:"datanode,omitempty"`
+	Version  string         `json:"version,omitempty"`
 
 	// +optional
 	ClusterPhase ClusterPhase `json:"clusterPhase,omitempty"`
@@ -621,6 +625,7 @@ func (in *GreptimeDBClusterStatus) filterOutCondition(conditions []GreptimeDBClu
 // +kubebuilder:printcolumn:name="DATANODE",type="integer",JSONPath=".status.datanode.readyReplicas"
 // +kubebuilder:printcolumn:name="META",type="integer",JSONPath=".status.meta.readyReplicas"
 // +kubebuilder:printcolumn:name="PHASE",type=string,JSONPath=".status.clusterPhase"
+// +kubebuilder:printcolumn:name="VERSION",type=string,JSONPath=".status.version"
 // +kubebuilder:printcolumn:name="AGE",type=date,JSONPath=".metadata.creationTimestamp"
 
 // GreptimeDBCluster is the Schema for the greptimedbclusters API
