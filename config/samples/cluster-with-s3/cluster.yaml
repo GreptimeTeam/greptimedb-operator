@@ -1,4 +1,4 @@
-# Copyright 2023 Greptime Team
+# Copyright 2022 Greptime Team
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,13 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: v1
-data:
-  GREPTIMEDB_ACCESS_KEY_ID: QUNDRVNTX0tFWV9JRAo=
-  GREPTIMEDB_SECRET_ACCESS_KEY: U0VDUkVUX0FDQ0VTU19LRVkK
-  greptimedb-frontend.toml: W3ByZXNldHNdCltwcmVzZXRzLnRhYmxlX25hbWUxXQpmaWxlX2xvY2F0aW9uID0gInMzOi8vbW9uaXRvci5kYXRhIgoiIiIKW3ByZXNldHMudHNic10KZmlsZV9sb2NhdGlvbiA9ICJzMzovL3RzYnMuZGF0YSIKCltzM19jb25maWddCiJlbmRwb2ludF91cmwiID0gImh0dHBzOi8vczMuYW1hem9uYXdzLmNvbSIK
-kind: Secret
+apiVersion: greptime.io/v1alpha1
+kind: GreptimeDBCluster
 metadata:
-  name: greptiemdb-frontend-secret
-  namespace: default # create secret in default namespace
-type: Opaque
+  name: cluster-with-s3
+  namespace: default
+spec:
+  base:
+    main:
+      image: greptime/greptimedb:latest
+  frontend:
+    replicas: 1
+  meta:
+    replicas: 1
+    etcdEndpoints:
+      - "etcd.default:2379"
+  datanode:
+    replicas: 3
+  storage:
+    s3:
+      bucket: "greptimedb"
+      region: "ap-southeast-1"
+      secretName: "s3-credentials"
+      root: "/data"

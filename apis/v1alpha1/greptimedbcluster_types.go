@@ -294,6 +294,10 @@ type MetaSpec struct {
 	// +optional
 	EtcdEndpoints []string `json:"etcdEndpoints,omitempty"`
 
+	// EnableCheckEtcdService indicates whether to check etcd cluster health when starting meta.
+	// +optional
+	EnableCheckEtcdService bool `json:"enableCheckEtcdService,omitempty"`
+
 	// More meta settings can be added here...
 }
 
@@ -360,10 +364,6 @@ type TLSSpec struct {
 	// The secret must contain keys named ca.crt, tls.crt and tls.key.
 	// +optional
 	SecretName string `json:"secretName,omitempty"`
-
-	// The mouth path of certificate in frontend container.
-	// +optional
-	CertificateMountPath string `json:"certificateMountPath,omitempty"`
 }
 
 // DatanodeSpec is the specification for datanode component.
@@ -404,9 +404,9 @@ type S3StorageProvider struct {
 	// +optional
 	SecretName string `json:"secretName,omitempty"`
 
-	// The prefix path of the data in the bucket.
+	// The S3 directory path.
 	// +optional
-	Prefix string `json:"prefix,omitempty"`
+	Root string `json:"root,omitempty"`
 }
 
 type LocalStorageProvider struct {

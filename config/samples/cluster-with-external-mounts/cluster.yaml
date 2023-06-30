@@ -1,4 +1,4 @@
-# Copyright 2022 Greptime Team
+# Copyright 2023 Greptime Team
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
 apiVersion: greptime.io/v1alpha1
 kind: GreptimeDBCluster
 metadata:
-  name: basic
+  name: cluster-with-external-mounts
   namespace: default
 spec:
   base:
@@ -23,6 +23,26 @@ spec:
       image: greptime/greptimedb:latest
   frontend:
     replicas: 1
+    tls:
+      secretName: frontend-tls
+    template:
+      main:
+        # Use template.main.volumeMounts to support external mounts that defined in template.volumes.
+        volumeMounts:
+          - name: user-config
+            mountPath: /etc/greptimedb/user-config/
+        env:
+          # Use template.main.env to support external env that defined in secrets.
+          - name: GREPTIMEDB_USER_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: user-secrets
+                key: password
+      # Use template.volumes to support external mounts.
+      volumes:
+        - name: user-config
+          configMap:
+            name: user-config
   meta:
     replicas: 1
     etcdEndpoints:

@@ -21,7 +21,6 @@ import (
 	"strings"
 	"time"
 
-	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"go.etcd.io/etcd/client/v3"
 	"google.golang.org/grpc"
 	appsv1 "k8s.io/api/apps/v1"
@@ -34,6 +33,8 @@ import (
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/deployer"
+	"github.com/GreptimeTeam/greptimedb-operator/pkg/util"
+	k8sutil "github.com/GreptimeTeam/greptimedb-operator/pkg/util/k8s"
 )
 
 var (
@@ -44,8 +45,6 @@ type EtcdMaintenanceBuilder func(etcdEndpoints []string) (clientv3.Maintenance, 
 
 type MetaDeployer struct {
 	*CommonDeployer
-
-	enableCheckEtcdService bool
 
 	etcdMaintenanceBuilder func(etcdEndpoints []string) (clientv3.Maintenance, error)
 }
@@ -58,7 +57,6 @@ func NewMetaDeployer(mgr ctrl.Manager, opts ...MetaDeployerOption) *MetaDeployer
 	md := &MetaDeployer{
 		CommonDeployer:         NewFromManager(mgr),
 		etcdMaintenanceBuilder: buildEtcdMaintenance,
-		enableCheckEtcdService: true,
 	}
 
 	for _, opt := range opts {
@@ -74,64 +72,31 @@ func WithEtcdMaintenanceBuilder(builder EtcdMaintenanceBuilder) func(*MetaDeploy
 	}
 }
 
-func WithCheckEtcdService(enableCheckEtcdService bool) func(*MetaDeployer) {
-	return func(d *MetaDeployer) {
-		d.enableCheckEtcdService = enableCheckEtcdService
+func (d *MetaDeployer) NewBuilder(crdObject client.Object) deployer.Builder {
+	return &metaBuilder{
+		CommonBuilder: d.NewCommonBuilder(crdObject, v1alpha1.MetaComponentKind),
 	}
 }
 
-func (d *MetaDeployer) Render(crdObject client.Object) ([]client.Object, error) {
-	var renderObjects []client.Object
+func (d *MetaDeployer) Generate(crdObject client.Object) ([]client.Object, error) {
+	objects, err := d.NewBuilder(crdObject).
+		BuildService().
+		BuildConfigMap().
+		BuildDeployment().
+		BuildPodMonitor().
+		SetControllerAndAnnotation().
+		Generate()
 
-	cluster, err := d.GetCluster(crdObject)
 	if err != nil {
 		return nil, err
 	}
 
-	if cluster.Spec.Meta != nil {
-		svc, err := d.generateSvc(cluster)
-		if err != nil {
-			return nil, err
-		}
-		renderObjects = append(renderObjects, svc)
-
-		deployment, err := d.generateDeployment(cluster)
-		if err != nil {
-			return nil, err
-		}
-		renderObjects = append(renderObjects, deployment)
-
-		cm, err := d.GenerateConfigMap(cluster, v1alpha1.MetaComponentKind)
-		if err != nil {
-			return nil, err
-		}
-		renderObjects = append(renderObjects, cm)
-
-		for _, object := range renderObjects {
-			if deployment, ok := object.(*appsv1.Deployment); ok {
-				d.mountConfigMapVolume(deployment, cm.Name)
-			}
-		}
-
-		if cluster.Spec.PrometheusMonitor != nil {
-			if cluster.Spec.PrometheusMonitor.Enabled {
-				pm, err := d.generatePodMonitor(cluster)
-				if err != nil {
-					return nil, err
-				}
-				renderObjects = append(renderObjects, pm)
-			}
-		}
-	}
-
-	return renderObjects, nil
+	return objects, nil
 }
 
 func (d *MetaDeployer) PreSyncHooks() []deployer.Hook {
 	var hooks []deployer.Hook
-	if d.enableCheckEtcdService {
-		hooks = append(hooks, d.checkEtcdService)
-	}
+	hooks = append(hooks, d.checkEtcdService)
 	return hooks
 }
 
@@ -146,7 +111,7 @@ func (d *MetaDeployer) CheckAndUpdateStatus(ctx context.Context, highLevelObject
 
 		objectKey = client.ObjectKey{
 			Namespace: cluster.Namespace,
-			Name:      d.ResourceName(cluster.Name, v1alpha1.MetaComponentKind),
+			Name:      ResourceName(cluster.Name, v1alpha1.MetaComponentKind),
 		}
 	)
 
@@ -165,140 +130,17 @@ func (d *MetaDeployer) CheckAndUpdateStatus(ctx context.Context, highLevelObject
 		klog.Errorf("Failed to update status: %s", err)
 	}
 
-	return deployer.IsDeploymentReady(deployment), nil
-}
-
-func (d *MetaDeployer) generateSvc(cluster *v1alpha1.GreptimeDBCluster) (*corev1.Service, error) {
-	svc := &corev1.Service{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Service",
-			APIVersion: "v1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: cluster.Namespace,
-			Name:      d.ResourceName(cluster.Name, v1alpha1.MetaComponentKind),
-		},
-		Spec: corev1.ServiceSpec{
-			Type: corev1.ServiceTypeClusterIP,
-			Selector: map[string]string{
-				GreptimeDBComponentName: d.ResourceName(cluster.Name, v1alpha1.MetaComponentKind),
-			},
-			Ports: []corev1.ServicePort{
-				{
-					Name:     "meta",
-					Protocol: corev1.ProtocolTCP,
-					Port:     cluster.Spec.Meta.ServicePort,
-				},
-				{
-					Name:     "http",
-					Protocol: corev1.ProtocolTCP,
-					Port:     cluster.Spec.HTTPServicePort,
-				},
-			},
-		},
-	}
-
-	if err := deployer.SetControllerAndAnnotation(cluster, svc, d.Scheme, svc.Spec); err != nil {
-		return nil, err
-	}
-
-	return svc, nil
-}
-
-func (d *MetaDeployer) generateDeployment(cluster *v1alpha1.GreptimeDBCluster) (*appsv1.Deployment, error) {
-	deployment := &appsv1.Deployment{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Deployment",
-			APIVersion: "apps/v1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      d.ResourceName(cluster.Name, v1alpha1.MetaComponentKind),
-			Namespace: cluster.Namespace,
-		},
-		Spec: appsv1.DeploymentSpec{
-			Replicas: &cluster.Spec.Meta.Replicas,
-			Selector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					GreptimeDBComponentName: d.ResourceName(cluster.Name, v1alpha1.MetaComponentKind),
-				},
-			},
-			Template: *d.generatePodTemplateSpec(cluster),
-		},
-	}
-
-	if err := deployer.SetControllerAndAnnotation(cluster, deployment, d.Scheme, deployment.Spec); err != nil {
-		return nil, err
-	}
-
-	return deployment, nil
-}
-
-func (d *MetaDeployer) generatePodMonitor(cluster *v1alpha1.GreptimeDBCluster) (*monitoringv1.PodMonitor, error) {
-	pm := &monitoringv1.PodMonitor{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       monitoringv1.PodMonitorsKind,
-			APIVersion: monitoringv1.SchemeGroupVersion.String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      d.ResourceName(cluster.Name, v1alpha1.MetaComponentKind),
-			Namespace: cluster.Namespace,
-			Labels:    cluster.Spec.PrometheusMonitor.LabelsSelector,
-		},
-		Spec: monitoringv1.PodMonitorSpec{
-			PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
-				{
-					Path:        cluster.Spec.PrometheusMonitor.Path,
-					Port:        cluster.Spec.PrometheusMonitor.Port,
-					Interval:    cluster.Spec.PrometheusMonitor.Interval,
-					HonorLabels: cluster.Spec.PrometheusMonitor.HonorLabels,
-				},
-			},
-			Selector: metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					GreptimeDBComponentName: d.ResourceName(cluster.Name, v1alpha1.MetaComponentKind),
-				},
-			},
-			NamespaceSelector: monitoringv1.NamespaceSelector{
-				MatchNames: []string{
-					cluster.Namespace,
-				},
-			},
-		},
-	}
-
-	if err := deployer.SetControllerAndAnnotation(cluster, pm, d.Scheme, pm.Spec); err != nil {
-		return nil, err
-	}
-
-	return pm, nil
-}
-
-func (d *MetaDeployer) mountConfigMapVolume(deployment *appsv1.Deployment, name string) {
-	deployment.Spec.Template.Spec.Volumes = append(deployment.Spec.Template.Spec.Volumes, corev1.Volume{
-		Name: "config",
-		VolumeSource: corev1.VolumeSource{
-			ConfigMap: &corev1.ConfigMapVolumeSource{
-				LocalObjectReference: corev1.LocalObjectReference{
-					Name: name,
-				},
-			},
-		},
-	})
-
-	for i, container := range deployment.Spec.Template.Spec.Containers {
-		if container.Name == string(v1alpha1.MetaComponentKind) {
-			deployment.Spec.Template.Spec.Containers[i].VolumeMounts = append(deployment.Spec.Template.Spec.Containers[i].VolumeMounts, corev1.VolumeMount{
-				Name:      "config",
-				MountPath: GreptimeDBConfigDir,
-			})
-		}
-	}
+	return k8sutil.IsDeploymentReady(deployment), nil
 }
 
 func (d *MetaDeployer) checkEtcdService(ctx context.Context, crdObject client.Object) error {
 	cluster, err := d.GetCluster(crdObject)
 	if err != nil {
 		return err
+	}
+
+	if cluster.Spec.Meta == nil || !cluster.Spec.Meta.EnableCheckEtcdService {
+		return nil
 	}
 
 	maintainer, err := d.etcdMaintenanceBuilder(cluster.Spec.Meta.EtcdEndpoints)
@@ -338,40 +180,183 @@ func buildEtcdMaintenance(etcdEndpoints []string) (clientv3.Maintenance, error) 
 	return etcdClient, nil
 }
 
-func (d *MetaDeployer) buildMetaArgs(cluster *v1alpha1.GreptimeDBCluster) []string {
+var _ deployer.Builder = &metaBuilder{}
+
+type metaBuilder struct {
+	*CommonBuilder
+}
+
+func (b *metaBuilder) BuildService() deployer.Builder {
+	if b.Err != nil {
+		return b
+	}
+
+	if b.Cluster.Spec.Meta == nil {
+		return b
+	}
+
+	svc := &corev1.Service{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Service",
+			APIVersion: "v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: b.Cluster.Namespace,
+			Name:      ResourceName(b.Cluster.Name, b.ComponentKind),
+		},
+		Spec: corev1.ServiceSpec{
+			Type: corev1.ServiceTypeClusterIP,
+			Selector: map[string]string{
+				GreptimeDBComponentName: ResourceName(b.Cluster.Name, b.ComponentKind),
+			},
+			Ports: b.servicePorts(),
+		},
+	}
+
+	b.Objects = append(b.Objects, svc)
+
+	return b
+}
+
+func (b *metaBuilder) BuildDeployment() deployer.Builder {
+	if b.Err != nil {
+		return b
+	}
+
+	if b.Cluster.Spec.Meta == nil {
+		return b
+	}
+
+	deployment := &appsv1.Deployment{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Deployment",
+			APIVersion: "apps/v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      ResourceName(b.Cluster.Name, b.ComponentKind),
+			Namespace: b.Cluster.Namespace,
+		},
+		Spec: appsv1.DeploymentSpec{
+			Replicas: &b.Cluster.Spec.Meta.Replicas,
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					GreptimeDBComponentName: ResourceName(b.Cluster.Name, b.ComponentKind),
+				},
+			},
+			Template: *b.generatePodTemplateSpec(),
+		},
+	}
+
+	b.Objects = append(b.Objects, deployment)
+
+	return b
+}
+
+func (b *metaBuilder) BuildConfigMap() deployer.Builder {
+	if b.Err != nil {
+		return b
+	}
+
+	if b.Cluster.Spec.Meta == nil {
+		return b
+	}
+
+	cm, err := b.GenerateConfigMap()
+	if err != nil {
+		b.Err = err
+		return b
+	}
+
+	b.Objects = append(b.Objects, cm)
+
+	return b
+}
+
+func (b *metaBuilder) BuildPodMonitor() deployer.Builder {
+	if b.Err != nil {
+		return b
+	}
+
+	if b.Cluster.Spec.Meta == nil {
+		return b
+	}
+
+	if b.Cluster.Spec.PrometheusMonitor == nil || !b.Cluster.Spec.PrometheusMonitor.Enabled {
+		return b
+	}
+
+	pm, err := b.GeneratePodMonitor()
+	if err != nil {
+		b.Err = err
+		return b
+	}
+
+	b.Objects = append(b.Objects, pm)
+
+	return b
+}
+
+func (b *metaBuilder) Generate() ([]client.Object, error) {
+	return b.Objects, b.Err
+}
+
+func (b *metaBuilder) generatePodTemplateSpec() *corev1.PodTemplateSpec {
+	podTemplateSpec := b.GeneratePodTemplateSpec(b.Cluster.Spec.Meta.Template)
+
+	if len(b.Cluster.Spec.Meta.Template.MainContainer.Args) == 0 {
+		// Setup main container args.
+		podTemplateSpec.Spec.Containers[MainContainerIndex].Args = b.generateMainContainerArgs()
+	}
+
+	podTemplateSpec.Spec.Containers[MainContainerIndex].Ports = b.containerPorts()
+
+	b.MountConfigDir(podTemplateSpec)
+
+	podTemplateSpec.ObjectMeta.Labels = util.MergeStringMap(podTemplateSpec.ObjectMeta.Labels, map[string]string{
+		GreptimeDBComponentName: ResourceName(b.Cluster.Name, b.ComponentKind),
+	})
+
+	return podTemplateSpec
+}
+
+func (b *metaBuilder) generateMainContainerArgs() []string {
 	return []string{
 		"metasrv", "start",
-		"--bind-addr", fmt.Sprintf("0.0.0.0:%d", cluster.Spec.Meta.ServicePort),
-		"--server-addr", fmt.Sprintf("%s.%s:%d", d.ResourceName(cluster.Name, v1alpha1.MetaComponentKind), cluster.Namespace, cluster.Spec.Meta.ServicePort),
-		"--store-addr", cluster.Spec.Meta.EtcdEndpoints[0],
+		"--bind-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.Meta.ServicePort),
+		// TODO(zyy17): Should we add the new field of the CRD for meta http port?
+		"--http-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.HTTPServicePort),
+		"--server-addr", fmt.Sprintf("%s.%s:%d", ResourceName(b.Cluster.Name, v1alpha1.MetaComponentKind), b.Cluster.Namespace, b.Cluster.Spec.Meta.ServicePort),
+		"--store-addr", b.Cluster.Spec.Meta.EtcdEndpoints[0],
 		"--config-file", path.Join(GreptimeDBConfigDir, GreptimeDBConfigFileName),
 	}
 }
 
-func (d *MetaDeployer) generatePodTemplateSpec(cluster *v1alpha1.GreptimeDBCluster) *corev1.PodTemplateSpec {
-	podTemplateSpec := deployer.GeneratePodTemplateSpec(cluster.Spec.Meta.Template, string(v1alpha1.MetaComponentKind))
-
-	if len(cluster.Spec.Meta.Template.MainContainer.Args) == 0 {
-		// Setup main container args.
-		podTemplateSpec.Spec.Containers[0].Args = d.buildMetaArgs(cluster)
-	}
-
-	podTemplateSpec.Spec.Containers[0].Ports = []corev1.ContainerPort{
+func (b *metaBuilder) servicePorts() []corev1.ServicePort {
+	return []corev1.ServicePort{
 		{
-			Name:          "meta",
+			Name:     "grpc",
+			Protocol: corev1.ProtocolTCP,
+			Port:     b.Cluster.Spec.Meta.ServicePort,
+		},
+		{
+			Name:     "http",
+			Protocol: corev1.ProtocolTCP,
+			Port:     b.Cluster.Spec.HTTPServicePort,
+		},
+	}
+}
+
+func (b *metaBuilder) containerPorts() []corev1.ContainerPort {
+	return []corev1.ContainerPort{
+		{
+			Name:          "grpc",
 			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: cluster.Spec.Meta.ServicePort,
+			ContainerPort: b.Cluster.Spec.Meta.ServicePort,
 		},
 		{
 			Name:          "http",
 			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: cluster.Spec.HTTPServicePort,
+			ContainerPort: b.Cluster.Spec.HTTPServicePort,
 		},
 	}
-
-	podTemplateSpec.ObjectMeta.Labels = deployer.MergeStringMap(podTemplateSpec.ObjectMeta.Labels, map[string]string{
-		GreptimeDBComponentName: d.ResourceName(cluster.Name, v1alpha1.MetaComponentKind),
-	})
-
-	return podTemplateSpec
 }

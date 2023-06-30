@@ -18,6 +18,7 @@ import (
 	"github.com/imdario/mergo"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 var (
@@ -43,8 +44,7 @@ var (
 	defaultDataNodeStorageMountPath = "/tmp/greptimedb"
 	defaultStorageRetainPolicyType  = RetainStorageRetainPolicyTypeRetain
 
-	defaultCertificateMountPath = "/etc/greptimedb-frontend-tls"
-	defaultInitializer          = "greptime/greptimedb-initializer:latest"
+	defaultInitializer = "greptime/greptimedb-initializer:latest"
 )
 
 func (in *GreptimeDBCluster) SetDefaults() error {
@@ -63,6 +63,16 @@ func (in *GreptimeDBCluster) SetDefaults() error {
 					Limits: map[corev1.ResourceName]resource.Quantity{
 						"cpu":    resource.MustParse(defaultLimitCPU),
 						"memory": resource.MustParse(defaultLimitMemory),
+					},
+				},
+
+				// The default readiness probe for the main container of GreptimeDBCluster.
+				ReadinessProbe: &corev1.Probe{
+					ProbeHandler: corev1.ProbeHandler{
+						HTTPGet: &corev1.HTTPGetAction{
+							Path: "/health",
+							Port: intstr.FromInt(defaultHTTPServicePort),
+						},
 					},
 				},
 			},
@@ -85,10 +95,6 @@ func (in *GreptimeDBCluster) SetDefaults() error {
 			Service: ServiceSpec{
 				Type: corev1.ServiceTypeClusterIP,
 			},
-		}
-
-		if in.Spec.Frontend.TLS != nil && len(in.Spec.Frontend.TLS.CertificateMountPath) == 0 {
-			in.Spec.Frontend.TLS.CertificateMountPath = defaultCertificateMountPath
 		}
 	}
 

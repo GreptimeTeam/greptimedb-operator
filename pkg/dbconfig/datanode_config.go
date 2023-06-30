@@ -20,7 +20,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
-	"github.com/GreptimeTeam/greptimedb-operator/pkg/utils"
+	k8sutil "github.com/GreptimeTeam/greptimedb-operator/pkg/util/k8s"
 )
 
 var _ Config = &DatanodeConfig{}
@@ -142,7 +142,7 @@ func (c *DatanodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster)
 
 			c.Storage.Type = "S3"
 			c.Storage.Bucket = cluster.Spec.StorageProvider.S3.Bucket
-			c.Storage.Root = cluster.Spec.StorageProvider.S3.Prefix
+			c.Storage.Root = cluster.Spec.StorageProvider.S3.Root
 			c.Storage.Endpoint = cluster.Spec.StorageProvider.S3.Endpoint
 			c.Storage.Region = cluster.Spec.StorageProvider.S3.Region
 		}
@@ -170,7 +170,7 @@ const (
 func (c *DatanodeConfig) getS3Credentials(namespace, name string) (accessKeyID, secretAccessKey []byte, err error) {
 	var s3Credentials corev1.Secret
 
-	if err = utils.GetK8sResource(namespace, name, &s3Credentials); err != nil {
+	if err = k8sutil.GetK8sResource(namespace, name, &s3Credentials); err != nil {
 		return
 	}
 

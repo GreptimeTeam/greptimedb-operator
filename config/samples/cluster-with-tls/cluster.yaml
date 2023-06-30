@@ -15,25 +15,19 @@
 apiVersion: greptime.io/v1alpha1
 kind: GreptimeDBCluster
 metadata:
-  name: basic
+  name: cluster-with-tls
   namespace: default
 spec:
   base:
     main:
-      image: greptime/greptimedb:0.1.2
+      image: greptime/greptimedb:latest
   frontend:
     replicas: 1
+    tls:
+      secretName: frontend-tls
   meta:
     replicas: 1
     etcdEndpoints:
       - "etcd.default:2379"
   datanode:
     replicas: 3
-  prometheusMonitor:
-    enabled: true
-    path: "/metrics"
-    port: "http"
-    interval: "20s"
-    honorLabels: true
-    labelsSelector:
-      release: prometheus

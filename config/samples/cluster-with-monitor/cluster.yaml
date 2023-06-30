@@ -15,7 +15,7 @@
 apiVersion: greptime.io/v1alpha1
 kind: GreptimeDBCluster
 metadata:
-  name: basic
+  name: cluster-with-monitor
   namespace: default
 spec:
   base:
@@ -29,3 +29,11 @@ spec:
       - "etcd.default:2379"
   datanode:
     replicas: 3
+  prometheusMonitor:
+    enabled: true
+    path: "/metrics"
+    port: "http"
+    interval: "20s"
+    honorLabels: true
+    labelsSelector:
+      release: prometheus

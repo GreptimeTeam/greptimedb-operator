@@ -111,7 +111,7 @@ func Setup(mgr ctrl.Manager, _ *options.Options) error {
 
 	// sync will execute the sync logic of multiple deployers in order.
 	reconciler.Deployers = []deployer.Deployer{
-		deployers.NewMetaDeployer(mgr, deployers.WithCheckEtcdService(false)),
+		deployers.NewMetaDeployer(mgr),
 		deployers.NewDatanodeDeployer(mgr),
 		deployers.NewFrontendDeployer(mgr),
 	}

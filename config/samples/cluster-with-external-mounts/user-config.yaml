@@ -1,4 +1,4 @@
-# Copyright 2022 Greptime Team
+# Copyright 2023 Greptime Team
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,28 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: greptime.io/v1alpha1
-kind: GreptimeDBCluster
+apiVersion: v1
+kind: ConfigMap
 metadata:
-  name: basic
+  name: user-config
   namespace: default
-spec:
-  base:
-    main:
-      image: greptime/greptimedb:0.1.0-alpha-20230207-weekly
-  initializer:
-    image: localhost:5001/greptime/greptimedb-initializer:latest
-  frontend:
-    replicas: 1
-  meta:
-    replicas: 1
-    etcdEndpoints:
-      - "etcd.default:2379"
-  datanode:
-    replicas: 3
-  storage:
-    s3:
-      bucket: "greptimedb"
-      region: "ap-southeast-1"
-      secretName: "s3-credentials"
-      prefix: "/data"
+data:
+  external.toml: |
+    [user]
+    file = "/etc/greptimedb/user-secrets/password"
