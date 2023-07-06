@@ -24,10 +24,8 @@ import (
 )
 
 var (
-	defaultRequestCPU    = "250m"
-	defaultRequestMemory = "64Mi"
-	defaultLimitCPU      = "500m"
-	defaultLimitMemory   = "128Mi"
+	defaultCPU    = "500m"
+	defaultMemory = "512Mi"
 
 	defaultVersion = "Unknown"
 
@@ -58,13 +56,14 @@ func (in *GreptimeDBCluster) SetDefaults() error {
 		Base: &PodTemplateSpec{
 			MainContainer: &MainContainerSpec{
 				Resources: &corev1.ResourceRequirements{
+					// Let Requests == Limits by default.
 					Requests: map[corev1.ResourceName]resource.Quantity{
-						"cpu":    resource.MustParse(defaultRequestCPU),
-						"memory": resource.MustParse(defaultRequestMemory),
+						"cpu":    resource.MustParse(defaultCPU),
+						"memory": resource.MustParse(defaultMemory),
 					},
 					Limits: map[corev1.ResourceName]resource.Quantity{
-						"cpu":    resource.MustParse(defaultLimitCPU),
-						"memory": resource.MustParse(defaultLimitMemory),
+						"cpu":    resource.MustParse(defaultCPU),
+						"memory": resource.MustParse(defaultMemory),
 					},
 				},
 

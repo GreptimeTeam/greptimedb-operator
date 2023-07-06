@@ -62,12 +62,12 @@ func TestSetDefaults(t *testing.T) {
 							Image: "greptime/greptimedb:latest",
 							Resources: &corev1.ResourceRequirements{
 								Requests: map[corev1.ResourceName]resource.Quantity{
-									"cpu":    resource.MustParse(defaultRequestCPU),
-									"memory": resource.MustParse(defaultRequestMemory),
+									"cpu":    resource.MustParse(defaultCPU),
+									"memory": resource.MustParse(defaultMemory),
 								},
 								Limits: map[corev1.ResourceName]resource.Quantity{
-									"cpu":    resource.MustParse(defaultLimitCPU),
-									"memory": resource.MustParse(defaultLimitMemory),
+									"cpu":    resource.MustParse(defaultCPU),
+									"memory": resource.MustParse(defaultMemory),
 								},
 							},
 							ReadinessProbe: &corev1.Probe{
@@ -88,12 +88,12 @@ func TestSetDefaults(t *testing.T) {
 									Image: "greptime/greptimedb:latest",
 									Resources: &corev1.ResourceRequirements{
 										Requests: map[corev1.ResourceName]resource.Quantity{
-											"cpu":    resource.MustParse(defaultRequestCPU),
-											"memory": resource.MustParse(defaultRequestMemory),
+											"cpu":    resource.MustParse(defaultCPU),
+											"memory": resource.MustParse(defaultMemory),
 										},
 										Limits: map[corev1.ResourceName]resource.Quantity{
-											"cpu":    resource.MustParse(defaultLimitCPU),
-											"memory": resource.MustParse(defaultLimitMemory),
+											"cpu":    resource.MustParse(defaultCPU),
+											"memory": resource.MustParse(defaultMemory),
 										},
 									},
 									ReadinessProbe: &corev1.Probe{
@@ -119,12 +119,12 @@ func TestSetDefaults(t *testing.T) {
 									Image: "greptime/greptimedb:latest",
 									Resources: &corev1.ResourceRequirements{
 										Requests: map[corev1.ResourceName]resource.Quantity{
-											"cpu":    resource.MustParse(defaultRequestCPU),
-											"memory": resource.MustParse(defaultRequestMemory),
+											"cpu":    resource.MustParse(defaultCPU),
+											"memory": resource.MustParse(defaultMemory),
 										},
 										Limits: map[corev1.ResourceName]resource.Quantity{
-											"cpu":    resource.MustParse(defaultLimitCPU),
-											"memory": resource.MustParse(defaultLimitMemory),
+											"cpu":    resource.MustParse(defaultCPU),
+											"memory": resource.MustParse(defaultMemory),
 										},
 									},
 									ReadinessProbe: &corev1.Probe{
@@ -148,12 +148,12 @@ func TestSetDefaults(t *testing.T) {
 									Image: "greptime/greptimedb:latest",
 									Resources: &corev1.ResourceRequirements{
 										Requests: map[corev1.ResourceName]resource.Quantity{
-											"cpu":    resource.MustParse(defaultRequestCPU),
-											"memory": resource.MustParse(defaultRequestMemory),
+											"cpu":    resource.MustParse(defaultCPU),
+											"memory": resource.MustParse(defaultMemory),
 										},
 										Limits: map[corev1.ResourceName]resource.Quantity{
-											"cpu":    resource.MustParse(defaultLimitCPU),
-											"memory": resource.MustParse(defaultLimitMemory),
+											"cpu":    resource.MustParse(defaultCPU),
+											"memory": resource.MustParse(defaultMemory),
 										},
 									},
 									ReadinessProbe: &corev1.Probe{
@@ -414,12 +414,12 @@ func TestSetDefaults(t *testing.T) {
 							Image: "greptime/greptimedb:latest",
 							Resources: &corev1.ResourceRequirements{
 								Requests: map[corev1.ResourceName]resource.Quantity{
-									"cpu":    resource.MustParse(defaultRequestCPU),
-									"memory": resource.MustParse(defaultRequestMemory),
+									"cpu":    resource.MustParse(defaultCPU),
+									"memory": resource.MustParse(defaultMemory),
 								},
 								Limits: map[corev1.ResourceName]resource.Quantity{
-									"cpu":    resource.MustParse(defaultLimitCPU),
-									"memory": resource.MustParse(defaultLimitMemory),
+									"cpu":    resource.MustParse(defaultCPU),
+									"memory": resource.MustParse(defaultMemory),
 								},
 							},
 							ReadinessProbe: &corev1.Probe{
@@ -440,12 +440,12 @@ func TestSetDefaults(t *testing.T) {
 									Image: "greptime/greptimedb:latest",
 									Resources: &corev1.ResourceRequirements{
 										Requests: map[corev1.ResourceName]resource.Quantity{
-											"cpu":    resource.MustParse(defaultRequestCPU),
-											"memory": resource.MustParse(defaultRequestMemory),
+											"cpu":    resource.MustParse(defaultCPU),
+											"memory": resource.MustParse(defaultMemory),
 										},
 										Limits: map[corev1.ResourceName]resource.Quantity{
-											"cpu":    resource.MustParse(defaultLimitCPU),
-											"memory": resource.MustParse(defaultLimitMemory),
+											"cpu":    resource.MustParse(defaultCPU),
+											"memory": resource.MustParse(defaultMemory),
 										},
 									},
 									ReadinessProbe: &corev1.Probe{
