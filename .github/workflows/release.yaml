@@ -42,7 +42,7 @@ jobs:
       - name: Login to AliCloud Container Registry
         uses: docker/login-action@v2
         with:
-          registry: registry.cn-hangzhou.aliyuncs.com
+          registry: greptime-registry.cn-hangzhou.cr.aliyuncs.com
           username: ${{ secrets.ALICLOUD_USERNAME }}
           password: ${{ secrets.ALICLOUD_PASSWORD }}
 
@@ -61,8 +61,8 @@ jobs:
           tags: |
             greptime/greptimedb-operator:latest
             greptime/greptimedb-operator:${{ env.VERSION }}
-            registry.cn-hangzhou.aliyuncs.com/greptime/greptimedb-operator:latest
-            registry.cn-hangzhou.aliyuncs.com/greptime/greptimedb-operator:${{ env.VERSION }}
+            greptime-registry.cn-hangzhou.cr.aliyuncs.com/greptime/greptimedb-operator:latest
+            greptime-registry.cn-hangzhou.cr.aliyuncs.com/greptime/greptimedb-operator:${{ env.VERSION }}
 
       - name: Build and push initializer
         uses: docker/build-push-action@v3
@@ -73,8 +73,8 @@ jobs:
           tags: |
             greptime/greptimedb-initializer:latest
             greptime/greptimedb-initializer:${{ env.VERSION }}
-            registry.cn-hangzhou.aliyuncs.com/greptime/greptimedb-initializer:latest
-            registry.cn-hangzhou.aliyuncs.com/greptime/greptimedb-initializer:${{ env.VERSION }}
+            greptime-registry.cn-hangzhou.cr.aliyuncs.com/greptime/greptimedb-initializer:latest
+            greptime-registry.cn-hangzhou.cr.aliyuncs.com/greptime/greptimedb-initializer:${{ env.VERSION }}
 
   release:
     name: Release the artifacts
