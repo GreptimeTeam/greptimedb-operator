@@ -244,6 +244,30 @@ func (b *datanodeBuilder) BuildStatefulSet() deployer.Builder {
 	return b
 }
 
+func (b *datanodeBuilder) BuildPodMonitor() deployer.Builder {
+	if b.Err != nil {
+		return b
+	}
+
+	if b.Cluster.Spec.Datanode == nil {
+		return b
+	}
+
+	if b.Cluster.Spec.PrometheusMonitor == nil || !b.Cluster.Spec.PrometheusMonitor.Enabled {
+		return b
+	}
+
+	pm, err := b.GeneratePodMonitor()
+	if err != nil {
+		b.Err = err
+		return b
+	}
+
+	b.Objects = append(b.Objects, pm)
+
+	return b
+}
+
 func (b *datanodeBuilder) generateMainContainerArgs() []string {
 	return []string{
 		"datanode", "start",
