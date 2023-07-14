@@ -71,13 +71,13 @@ type (
 			Enable *bool `toml:"enable,omitempty"`
 		} `toml:"influxdb_options,omitempty"`
 
-		PrometheusOptions struct {
+		PromStoreOptions struct {
 			Enable *bool `toml:"enable,omitempty"`
-		} `toml:"prometheus_options,omitempty"`
+		} `toml:"prom_store_options,omitempty"`
 
-		PromOptions struct {
+		PrometheusOptions struct {
 			Addr string `toml:"addr,omitempty"`
-		} `toml:"prom_options,omitempty"`
+		} `toml:"prometheus_options,omitempty"`
 
 		MetaClientOptions struct {
 			// Metasrv address list.

@@ -29,10 +29,10 @@ runtime_size = 2
 [influxdb_options]
 enable = true
 
-[prometheus_options]
+[prom_store_options]
 enable = true
 
-[prom_options]
+[prometheus_options]
 addr = '127.0.0.1:4004'
 
 [meta_client_options]
