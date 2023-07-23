@@ -206,7 +206,6 @@ func TestSetDefaults(t *testing.T) {
 					},
 					Frontend: &FrontendSpec{
 						ComponentSpec: ComponentSpec{
-							Replicas: 3,
 							Template: &PodTemplateSpec{
 								MainContainer: &MainContainerSpec{
 									Image: "greptime/frontend:latest",
@@ -220,7 +219,6 @@ func TestSetDefaults(t *testing.T) {
 					},
 					Meta: &MetaSpec{
 						ComponentSpec: ComponentSpec{
-							Replicas: 3,
 							Template: &PodTemplateSpec{
 								MainContainer: &MainContainerSpec{
 									Image: "greptime/meta:latest",
@@ -237,7 +235,6 @@ func TestSetDefaults(t *testing.T) {
 					},
 					Datanode: &DatanodeSpec{
 						ComponentSpec: ComponentSpec{
-							Replicas: 1,
 							Template: &PodTemplateSpec{
 								MainContainer: &MainContainerSpec{
 									Image: "greptime/greptimedb:latest",
@@ -275,7 +272,7 @@ func TestSetDefaults(t *testing.T) {
 					},
 					Frontend: &FrontendSpec{
 						ComponentSpec: ComponentSpec{
-							Replicas: 3,
+							Replicas: 1,
 							Template: &PodTemplateSpec{
 								MainContainer: &MainContainerSpec{
 									Image: "greptime/frontend:latest",
@@ -310,7 +307,7 @@ func TestSetDefaults(t *testing.T) {
 					},
 					Meta: &MetaSpec{
 						ComponentSpec: ComponentSpec{
-							Replicas: 3,
+							Replicas: 1,
 							Template: &PodTemplateSpec{
 								MainContainer: &MainContainerSpec{
 									Image: "greptime/meta:latest",
@@ -346,7 +343,7 @@ func TestSetDefaults(t *testing.T) {
 					},
 					Datanode: &DatanodeSpec{
 						ComponentSpec: ComponentSpec{
-							Replicas: 1,
+							Replicas: 3,
 							Template: &PodTemplateSpec{
 								MainContainer: &MainContainerSpec{
 									Image: "greptime/greptimedb:latest",
