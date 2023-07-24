@@ -2691,7 +2691,7 @@ spec:
                     type: string
                   replicas:
                     format: int32
-                    minimum: 1
+                    minimum: 0
                     type: integer
                   storage:
                     properties:
@@ -5348,8 +5348,6 @@ spec:
                           type: object
                         type: array
                     type: object
-                required:
-                - replicas
                 type: object
               enableInfluxDBProtocol:
                 type: boolean
@@ -5359,7 +5357,7 @@ spec:
                     type: string
                   replicas:
                     format: int32
-                    minimum: 1
+                    minimum: 0
                     type: integer
                   service:
                     properties:
@@ -8018,8 +8016,6 @@ spec:
                       secretName:
                         type: string
                     type: object
-                required:
-                - replicas
                 type: object
               grpcServicePort:
                 format: int32
@@ -8044,7 +8040,7 @@ spec:
                     type: array
                   replicas:
                     format: int32
-                    minimum: 1
+                    minimum: 0
                     type: integer
                   servicePort:
                     format: int32
@@ -10686,8 +10682,6 @@ spec:
                           type: object
                         type: array
                     type: object
-                required:
-                - replicas
                 type: object
               mysqlServicePort:
                 format: int32

@@ -98,6 +98,7 @@ func (in *GreptimeDBCluster) SetDefaults() error {
 	if in.Spec.Frontend != nil {
 		defaultGreptimeDBClusterSpec.Frontend = &FrontendSpec{
 			ComponentSpec: ComponentSpec{
+				Replicas: 1,
 				Template: &PodTemplateSpec{},
 			},
 			Service: ServiceSpec{
@@ -109,6 +110,7 @@ func (in *GreptimeDBCluster) SetDefaults() error {
 	if in.Spec.Meta != nil {
 		defaultGreptimeDBClusterSpec.Meta = &MetaSpec{
 			ComponentSpec: ComponentSpec{
+				Replicas: 1,
 				Template: &PodTemplateSpec{},
 			},
 			ServicePort: int32(defaultMetaServicePort),
@@ -118,6 +120,7 @@ func (in *GreptimeDBCluster) SetDefaults() error {
 	if in.Spec.Datanode != nil {
 		defaultGreptimeDBClusterSpec.Datanode = &DatanodeSpec{
 			ComponentSpec: ComponentSpec{
+				Replicas: 3,
 				Template: &PodTemplateSpec{},
 			},
 			Storage: StorageSpec{
