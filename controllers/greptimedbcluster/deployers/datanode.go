@@ -350,7 +350,7 @@ func (b *datanodeBuilder) generateInitializer() *corev1.Container {
 		// TODO(zyy17): the datanode don't support to accept hostname.
 		Env: []corev1.EnvVar{
 			{
-				Name: "POD_IP",
+				Name: deployer.EnvPodIP,
 				ValueFrom: &corev1.EnvVarSource{
 					FieldRef: &corev1.ObjectFieldSelector{
 						FieldPath: "status.podIP",
@@ -358,7 +358,7 @@ func (b *datanodeBuilder) generateInitializer() *corev1.Container {
 				},
 			},
 			{
-				Name: "POD_NAME",
+				Name: deployer.EnvPodName,
 				ValueFrom: &corev1.EnvVarSource{
 					FieldRef: &corev1.ObjectFieldSelector{
 						FieldPath: "metadata.name",

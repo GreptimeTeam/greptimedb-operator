@@ -23,6 +23,7 @@ import (
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/dbconfig"
+	"github.com/GreptimeTeam/greptimedb-operator/pkg/deployer"
 )
 
 var (
@@ -52,8 +53,8 @@ func TestConfigGenerator(t *testing.T) {
 		DatanodeServiceName: testClusterService,
 	}
 
-	t.Setenv("POD_IP", testPodIP)
-	t.Setenv("POD_NAME", testPodName)
+	t.Setenv(deployer.EnvPodIP, testPodIP)
+	t.Setenv(deployer.EnvPodName, testPodName)
 
 	cg := NewConfigGenerator(opts, hostname)
 	if err = cg.Generate(); err != nil {

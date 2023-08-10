@@ -24,6 +24,7 @@ import (
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/dbconfig"
+	"github.com/GreptimeTeam/greptimedb-operator/pkg/deployer"
 )
 
 type Options struct {
@@ -95,13 +96,13 @@ func (c *ConfigGenerator) generateDatanodeConfig(initConfig []byte) ([]byte, err
 	}
 	datanodeCfg.NodeID = &nodeID
 
-	podIP := os.Getenv("POD_IP")
+	podIP := os.Getenv(deployer.EnvPodIP)
 	if len(podIP) == 0 {
 		return nil, fmt.Errorf("empty pod ip")
 	}
 	datanodeCfg.RPCAddr = fmt.Sprintf("%s:%d", podIP, c.DatanodeRPCPort)
 
-	podName := os.Getenv("POD_NAME")
+	podName := os.Getenv(deployer.EnvPodName)
 	if len(podName) == 0 {
 		return nil, fmt.Errorf("empty pod name")
 	}
