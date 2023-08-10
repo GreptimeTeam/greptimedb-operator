@@ -326,7 +326,7 @@ func (b *metaBuilder) generateMainContainerArgs() []string {
 		"--bind-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.Meta.ServicePort),
 		// TODO(zyy17): Should we add the new field of the CRD for meta http port?
 		"--http-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.HTTPServicePort),
-		"--server-addr", fmt.Sprintf("$(POD_IP):%d", b.Cluster.Spec.Meta.ServicePort),
+		"--server-addr", fmt.Sprintf("$(%s):%d", deployer.EnvPodIP, b.Cluster.Spec.Meta.ServicePort),
 		"--store-addr", b.Cluster.Spec.Meta.EtcdEndpoints[0],
 		"--config-file", path.Join(GreptimeDBConfigDir, GreptimeDBConfigFileName),
 	}
@@ -365,7 +365,7 @@ func (b *metaBuilder) containerPorts() []corev1.ContainerPort {
 func (b *metaBuilder) env() []corev1.EnvVar {
 	return []corev1.EnvVar{
 		{
-			Name: "POD_IP",
+			Name: deployer.EnvPodIP,
 			ValueFrom: &corev1.EnvVarSource{
 				FieldRef: &corev1.ObjectFieldSelector{
 					FieldPath: "status.podIP",
