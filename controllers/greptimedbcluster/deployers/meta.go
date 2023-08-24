@@ -309,7 +309,7 @@ func (b *metaBuilder) generatePodTemplateSpec() *corev1.PodTemplateSpec {
 	}
 
 	podTemplateSpec.Spec.Containers[MainContainerIndex].Ports = b.containerPorts()
-	podTemplateSpec.Spec.Containers[MainContainerIndex].Env = b.env()
+	podTemplateSpec.Spec.Containers[MainContainerIndex].Env = append(podTemplateSpec.Spec.Containers[MainContainerIndex].Env, b.env()...)
 
 	b.MountConfigDir(podTemplateSpec)
 
