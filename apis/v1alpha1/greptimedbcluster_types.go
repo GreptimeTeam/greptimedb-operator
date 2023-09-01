@@ -328,6 +328,9 @@ type StorageSpec struct {
 	// +kubebuilder:validation:Enum:={"Retain", "Delete"}
 	// +kubebuilder:default:="Retain"
 	StorageRetainPolicy StorageRetainPolicyType `json:"storageRetainPolicy,omitempty"`
+
+	// The wal directory of the storage.
+	WalDir string `json:"walDir,omitempty"`
 }
 
 type ServiceSpec struct {
@@ -385,11 +388,37 @@ type InitializerSpec struct {
 
 // StorageProvider defines the storage provider for the cluster. The data will be stored in the storage.
 type StorageProvider struct {
-	S3    *S3StorageProvider    `json:"s3,omitempty"`
-	Local *LocalStorageProvider `json:"local,omitempty"`
+	S3            *S3StorageProvider    `json:"s3,omitempty"`
+	OSS           *OSSStorageProvider   `json:"oss,omitempty"`
+	Local         *LocalStorageProvider `json:"local,omitempty"`
+	CachePath     string                `json:"cachePath,omitempty"`
+	CacheCapacity string                `json:"cacheCapacity,omitempty"`
 }
 
 type S3StorageProvider struct {
+	// The data will be stored in the bucket.
+	// +optional
+	Bucket string `json:"bucket,omitempty"`
+
+	// The region of the bucket.
+	// +optional
+	Region string `json:"region,omitempty"`
+
+	// The endpoint of the bucket.
+	// +optional
+	Endpoint string `json:"endpoint,omitempty"`
+
+	// The secret of storing the credentials of access key id and secret access key.
+	// The secret must be the same namespace with the GreptimeDBCluster resource.
+	// +optional
+	SecretName string `json:"secretName,omitempty"`
+
+	// The S3 directory path.
+	// +optional
+	Root string `json:"root,omitempty"`
+}
+
+type OSSStorageProvider struct {
 	// The data will be stored in the bucket.
 	// +optional
 	Bucket string `json:"bucket,omitempty"`

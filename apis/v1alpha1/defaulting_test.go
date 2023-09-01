@@ -172,6 +172,7 @@ func TestSetDefaults(t *testing.T) {
 							StorageSize:         defaultDataNodeStorageSize,
 							MountPath:           defaultDataNodeStorageMountPath,
 							StorageRetainPolicy: defaultStorageRetainPolicyType,
+							WalDir:              defaultDataNodeStorageMountPath + "/wal",
 						},
 					},
 					HTTPServicePort:       int32(defaultHTTPServicePort),
@@ -373,6 +374,7 @@ func TestSetDefaults(t *testing.T) {
 							StorageSize:         defaultDataNodeStorageSize,
 							MountPath:           defaultDataNodeStorageMountPath,
 							StorageRetainPolicy: defaultStorageRetainPolicyType,
+							WalDir:              defaultDataNodeStorageMountPath + "/wal",
 						},
 					},
 
@@ -461,6 +463,7 @@ func TestSetDefaults(t *testing.T) {
 							StorageSize:         defaultDataNodeStorageSize,
 							MountPath:           defaultDataNodeStorageMountPath,
 							StorageRetainPolicy: defaultStorageRetainPolicyType,
+							WalDir:              defaultDataNodeStorageMountPath + "/wal",
 						},
 					},
 

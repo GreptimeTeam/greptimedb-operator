@@ -15,7 +15,7 @@
 apiVersion: greptime.io/v1alpha1
 kind: GreptimeDBCluster
 metadata:
-  name: cluster-with-s3
+  name: cluster-with-oss
   namespace: default
 spec:
   base:
@@ -30,8 +30,9 @@ spec:
   datanode:
     replicas: 3
   storage:
-    s3:
+    oss:
       bucket: "greptimedb"
-      region: "ap-southeast-1"
-      secretName: "s3-credentials"
-      root: "cluster-with-s3-data"
+      secretName: "oss-credentials"
+      root: "cluster-with-oss-data"
+      endpoint: "oss-cn-hangzhou.aliyuncs.com"
+      region: "cn-hangzhou"

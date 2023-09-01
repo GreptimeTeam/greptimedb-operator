@@ -2710,6 +2710,8 @@ spec:
                       storageSize:
                         pattern: (^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$)
                         type: string
+                      walDir:
+                        type: string
                     type: object
                   template:
                     properties:
@@ -10714,9 +10716,26 @@ spec:
                 type: integer
               storage:
                 properties:
+                  cacheCapacity:
+                    type: string
+                  cachePath:
+                    type: string
                   local:
                     properties:
                       directory:
+                        type: string
+                    type: object
+                  oss:
+                    properties:
+                      bucket:
+                        type: string
+                      endpoint:
+                        type: string
+                      region:
+                        type: string
+                      root:
+                        type: string
+                      secretName:
                         type: string
                     type: object
                   s3:
