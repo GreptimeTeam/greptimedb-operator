@@ -61,6 +61,7 @@ type (
 		} `toml:"meta_client_options,omitempty"`
 
 		Wal struct {
+			Dir            string `toml:"dir,omitempty"`
 			FileSize       string `toml:"file_size,omitempty"`
 			PurgeThreshold string `toml:"purge_threshold,omitempty"`
 			PurgeInterval  string `toml:"purge_interval,omitempty"`
@@ -76,6 +77,7 @@ type (
 			Root            string `toml:"root,omitempty"`
 			AccessKeyID     string `toml:"access_key_id,omitempty"`
 			SecretAccessKey string `toml:"secret_access_key,omitempty"`
+			AccessKeySecret string `toml:"access_key_secret,omitempty"`
 			Endpoint        string `toml:"endpoint,omitempty"`
 			Region          string `toml:"region,omitempty"`
 			CachePath       string `toml:"cache_path,omitempty"`
@@ -126,13 +128,14 @@ type (
 
 // ConfigureByCluster configures the datanode config by the given cluster.
 func (c *DatanodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster) error {
+	// TODO(zyy17): need to refactor the following code. It's too ugly.
 	if cluster.Spec.StorageProvider != nil {
 		if cluster.Spec.StorageProvider.Local != nil {
 			c.Storage.Type = "File"
 			c.Storage.DataHome = cluster.Spec.StorageProvider.Local.Directory
 		} else if cluster.Spec.StorageProvider.S3 != nil {
 			if cluster.Spec.StorageProvider.S3.SecretName != "" {
-				accessKeyID, secretAccessKey, err := c.getS3Credentials(cluster.Namespace, cluster.Spec.StorageProvider.S3.SecretName)
+				accessKeyID, secretAccessKey, err := c.getOCSCredentials(cluster.Namespace, cluster.Spec.StorageProvider.S3.SecretName)
 				if err != nil {
 					return err
 				}
@@ -145,12 +148,31 @@ func (c *DatanodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster)
 			c.Storage.Root = cluster.Spec.StorageProvider.S3.Root
 			c.Storage.Endpoint = cluster.Spec.StorageProvider.S3.Endpoint
 			c.Storage.Region = cluster.Spec.StorageProvider.S3.Region
+		} else if cluster.Spec.StorageProvider.OSS != nil {
+			if cluster.Spec.StorageProvider.OSS.SecretName != "" {
+				accessKeyID, secretAccessKey, err := c.getOCSCredentials(cluster.Namespace, cluster.Spec.StorageProvider.OSS.SecretName)
+				if err != nil {
+					return err
+				}
+				c.Storage.AccessKeyID = string(accessKeyID)
+				c.Storage.AccessKeySecret = string(secretAccessKey)
+			}
+
+			c.Storage.Type = "Oss"
+			c.Storage.Bucket = cluster.Spec.StorageProvider.OSS.Bucket
+			c.Storage.Root = cluster.Spec.StorageProvider.OSS.Root
+			c.Storage.Endpoint = cluster.Spec.StorageProvider.OSS.Endpoint
+			c.Storage.Region = cluster.Spec.StorageProvider.OSS.Region
 		}
 	}
 
-	if cluster.Spec.Datanode != nil && len(cluster.Spec.Datanode.Config) > 0 {
-		if err := Merge([]byte(cluster.Spec.Datanode.Config), c); err != nil {
-			return err
+	if cluster.Spec.Datanode != nil {
+		c.Wal.Dir = cluster.Spec.Datanode.Storage.WalDir
+
+		if len(cluster.Spec.Datanode.Config) > 0 {
+			if err := Merge([]byte(cluster.Spec.Datanode.Config), c); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -167,25 +189,25 @@ const (
 	SecretAccessKeySecretKey = "secret-access-key"
 )
 
-func (c *DatanodeConfig) getS3Credentials(namespace, name string) (accessKeyID, secretAccessKey []byte, err error) {
-	var s3Credentials corev1.Secret
+func (c *DatanodeConfig) getOCSCredentials(namespace, name string) (accessKeyID, secretAccessKey []byte, err error) {
+	var ocsCredentials corev1.Secret
 
-	if err = k8sutil.GetK8sResource(namespace, name, &s3Credentials); err != nil {
+	if err = k8sutil.GetK8sResource(namespace, name, &ocsCredentials); err != nil {
 		return
 	}
 
-	if s3Credentials.Data == nil {
+	if ocsCredentials.Data == nil {
 		err = fmt.Errorf("secret '%s/%s' is empty", namespace, name)
 		return
 	}
 
-	accessKeyID = s3Credentials.Data[AccessKeyIDSecretKey]
+	accessKeyID = ocsCredentials.Data[AccessKeyIDSecretKey]
 	if accessKeyID == nil {
 		err = fmt.Errorf("secret '%s/%s' does not have access key id '%s'", namespace, name, AccessKeyIDSecretKey)
 		return
 	}
 
-	secretAccessKey = s3Credentials.Data[SecretAccessKeySecretKey]
+	secretAccessKey = ocsCredentials.Data[SecretAccessKeySecretKey]
 	if secretAccessKey == nil {
 		err = fmt.Errorf("secret '%s/%s' does not have secret access key '%s'", namespace, name, SecretAccessKeySecretKey)
 		return

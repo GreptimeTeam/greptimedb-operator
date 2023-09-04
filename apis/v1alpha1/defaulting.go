@@ -128,6 +128,7 @@ func (in *GreptimeDBCluster) SetDefaults() error {
 				StorageSize:         defaultDataNodeStorageSize,
 				MountPath:           defaultDataNodeStorageMountPath,
 				StorageRetainPolicy: defaultStorageRetainPolicyType,
+				WalDir:              defaultDataNodeStorageMountPath + "/wal",
 			},
 		}
 	}
