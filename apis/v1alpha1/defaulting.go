@@ -113,7 +113,8 @@ func (in *GreptimeDBCluster) SetDefaults() error {
 				Replicas: 1,
 				Template: &PodTemplateSpec{},
 			},
-			ServicePort: int32(defaultMetaServicePort),
+			ServicePort:          int32(defaultMetaServicePort),
+			EnableRegionFailover: false,
 		}
 	}
 
