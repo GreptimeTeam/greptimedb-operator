@@ -301,6 +301,10 @@ type MetaSpec struct {
 	// +optional
 	EnableCheckEtcdService bool `json:"enableCheckEtcdService,omitempty"`
 
+	// EnableRegionFailover indicates whether to enable region failover.
+	// +optional
+	EnableRegionFailover bool `json:"enableRegionFailover,omitempty"`
+
 	// More meta settings can be added here...
 }
 

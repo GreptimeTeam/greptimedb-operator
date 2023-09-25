@@ -8036,6 +8036,8 @@ spec:
                     type: string
                   enableCheckEtcdService:
                     type: boolean
+                  enableRegionFailover:
+                    type: boolean
                   etcdEndpoints:
                     items:
                       type: string

@@ -40,6 +40,9 @@ type MetasrvConfig struct {
 	// Store data in memory.
 	UseMemoryStore *bool `toml:"use_memory_store,omitempty"`
 
+	// Enable region failover.
+	EnableRegionFailover *bool `toml:"enable_region_failover"`
+
 	Logging struct {
 		Dir   string `toml:"dir,omitempty"`
 		Level string `toml:"level,omitempty"`
@@ -48,11 +51,16 @@ type MetasrvConfig struct {
 
 // ConfigureByCluster configures the metasrv config by the given cluster.
 func (c *MetasrvConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster) error {
-	if cluster.Spec.Meta != nil && len(cluster.Spec.Meta.Config) > 0 {
-		if err := Merge([]byte(cluster.Spec.Meta.Config), c); err != nil {
-			return err
+	if cluster.Spec.Meta != nil {
+		c.EnableRegionFailover = &cluster.Spec.Meta.EnableRegionFailover
+
+		if len(cluster.Spec.Meta.Config) > 0 {
+			if err := Merge([]byte(cluster.Spec.Meta.Config), c); err != nil {
+				return err
+			}
 		}
 	}
+
 	return nil
 }
 
