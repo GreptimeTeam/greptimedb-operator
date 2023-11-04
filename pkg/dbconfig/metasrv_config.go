@@ -31,9 +31,6 @@ type MetasrvConfig struct {
 	// Etcd server address.
 	StoreAddr string `toml:"store_addr,omitempty"`
 
-	// Datanode lease in seconds.
-	DatanodeLeaseSec int32 `toml:"datanode_lease_sec,omitempty"`
-
 	// Datanode selector type, can be "LeaseBased" or "LoadBased".
 	Selector string `toml:"selector,omitempty"`
 
@@ -43,10 +40,19 @@ type MetasrvConfig struct {
 	// Enable region failover.
 	EnableRegionFailover *bool `toml:"enable_region_failover"`
 
-	Logging struct {
-		Dir   string `toml:"dir,omitempty"`
-		Level string `toml:"level,omitempty"`
-	} `toml:"logging,omitempty"`
+	HTTPOptions HTTPOptions `toml:"http,omitempty"`
+
+	LoggingOptions LoggingOptions `toml:"logging,omitempty"`
+
+	ProcedureConfig ProcedureConfig `toml:"procedure,omitempty"`
+
+	DatanodeOptions struct {
+		DatanodeClientOptions DatanodeClientOptions `toml:"client,omitempty"`
+	} `toml:"datanode,omitempty"`
+
+	EnableTelemetry *bool `toml:"enable_telemetry,omitempty"`
+
+	DataHome string `toml:"data_home,omitempty"`
 }
 
 // ConfigureByCluster configures the metasrv config by the given cluster.

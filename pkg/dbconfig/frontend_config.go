@@ -85,11 +85,7 @@ type (
 		LoggingOptions LoggingOptions `toml:"logging,omitempty"`
 
 		DatanodeOptions struct {
-			DatanodeClientOptions struct {
-				Timeout        string `toml:"timeout,omitempty"`
-				ConnectTimeout string `toml:"connect_timeout,omitempty"`
-				TcpNoDelay     bool   `toml:"tcp_nodelay,omitempty"`
-			} `toml:"client,omitempty"`
+			DatanodeClientOptions DatanodeClientOptions `toml:"client,omitempty"`
 		} `toml:"datanode,omitempty"`
 
 		UserProvider string `toml:"user_provider,omitempty"`

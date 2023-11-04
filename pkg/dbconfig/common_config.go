@@ -48,3 +48,17 @@ type LoggingOptions struct {
 	Level               string `toml:"level,omitempty"`
 	EnableJaegerTracing bool   `toml:"enable_jaeger_tracing,omitempty"`
 }
+
+type ProcedureConfig struct {
+	// Max retry times of procedure.
+	MaxRetryTimes int32 `toml:"max_retry_times,omitempty"`
+
+	// Initial retry delay of procedures, increases exponentially.
+	RetryDelay string `toml:"retry_delay,omitempty"`
+}
+
+type DatanodeClientOptions struct {
+	Timeout        string `toml:"timeout,omitempty"`
+	ConnectTimeout string `toml:"connect_timeout,omitempty"`
+	TcpNoDelay     bool   `toml:"tcp_nodelay,omitempty"`
+}
