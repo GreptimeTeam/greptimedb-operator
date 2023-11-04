@@ -31,11 +31,13 @@ type (
 		// Node running mode.
 		Mode string `toml:"mode,omitempty"`
 
+		// The datanode identifier, should be unique.
+		NodeID *uint64 `toml:"node_id,omitempty"`
+
 		// Whether to use in-memory catalog.
 		EnableMemoryCatalog *bool `toml:"enable_memory_catalog,omitempty"`
 
-		// The datanode identifier, should be unique.
-		NodeID *uint64 `toml:"node_id,omitempty"`
+		RequireLeaseBeforeStartup *bool `toml:"require_lease_before_startup,omitempty"`
 
 		// gRPC server address.
 		RPCAddr string `toml:"rpc_addr,omitempty"`
@@ -46,19 +48,17 @@ type (
 		// The number of gRPC server worker threads.
 		RPCRuntimeSize int32 `toml:"rpc_runtime_size,omitempty"`
 
-		MetaClientOptions struct {
-			// Metasrv address list.
-			MetaSrvAddrs []string `toml:"metasrv_addrs,omitempty"`
+		// Max gRPC receiving(decoding) message size.
+		RPCMaxRecvMessageSize string `toml:"rpc_max_recv_message_size,omitempty"`
 
-			// Operation timeout in milliseconds.
-			TimeoutMillis int32 `toml:"timeout_millis,omitempty"`
+		// Max gRPC sending(encoding) message size.
+		RPCMaxSendMessageSize string `toml:"rpc_max_send_message_size,omitempty"`
 
-			// Connect server timeout in milliseconds.
-			ConnectTimeoutMillis int32 `toml:"connect_timeout_millis,omitempty"`
+		HeartbeatOptions HeartbeatOptions `toml:"heartbeat,omitempty"`
 
-			// `TCP_NODELAY` option for accepted connections.
-			TCPNoDelay *bool `toml:"tcp_nodelay,omitempty"`
-		} `toml:"meta_client_options,omitempty"`
+		HTTPOptions HTTPOptions `toml:"http,omitempty"`
+
+		MetaClientOptions MetaClientOptions `toml:"meta_client,omitempty"`
 
 		Wal struct {
 			Dir            string `toml:"dir,omitempty"`
@@ -70,9 +70,11 @@ type (
 		} `toml:"wal,omitempty"`
 
 		Storage struct {
+			DataHome  string `toml:"data_home,omitempty"`
+			GlobalTTL string `toml:"global_ttl,omitempty"`
+
 			// Storage options.
 			Type            string `toml:"type,omitempty"`
-			DataHome        string `toml:"data_home,omitempty"`
 			Bucket          string `toml:"bucket,omitempty"`
 			Root            string `toml:"root,omitempty"`
 			AccessKeyID     string `toml:"access_key_id,omitempty"`
@@ -83,6 +85,20 @@ type (
 			CachePath       string `toml:"cache_path,omitempty"`
 			CacheCapacity   string `toml:"cache_capacity,omitempty"`
 
+			Compaction struct {
+				// Max task number that can concurrently run.
+				MaxInflightTasks int32 `toml:"max_inflight_tasks,omitempty"`
+
+				// Max files in level 0 to trigger compaction.
+				MaxFilesInLevel0 int32 `toml:"max_files_in_level0,omitempty"`
+
+				// Max task number for SST purge task after compaction.
+				MaxPurgeTasks int32 `toml:"max_purge_tasks,omitempty"`
+
+				// Buffer threshold while writing SST files.
+				SSTWriteBufferSize string `toml:"sst_write_buffer_size,omitempty"`
+			} `toml:"compaction,omitempty"`
+
 			// Storage manifest options.
 			Manifest struct {
 				// Region checkpoint actions margin.
@@ -92,7 +108,7 @@ type (
 				GCDuration string `toml:"gc_duration,omitempty"`
 
 				// Whether to try creating a manifest checkpoint on region opening.
-				CheckpointOnStartup *bool `toml:"checkpoint_on_startup,omitempty"`
+				Compress *bool `toml:"compress,omitempty"`
 			} `toml:"manifest,omitempty"`
 
 			// Storage flush options.
@@ -114,15 +130,25 @@ type (
 			} `toml:"flush,omitempty"`
 		} `toml:"storage,omitempty"`
 
-		Procedure struct {
-			MaxRetryTimes int32  `toml:"max_retry_times,omitempty"`
-			RetryDelay    string `toml:"retry_delay,omitempty"`
-		} `toml:"procedure,omitempty"`
+		RegionEngine []struct {
+			MitoConfig struct {
+				NumWorkers                  int    `toml:"num_workers"`
+				WorkerChannelSize           int    `toml:"worker_channel_size"`
+				WorkerRequestBatchSize      int    `toml:"worker_request_batch_size"`
+				ManifestCheckpointDistance  int    `toml:"manifest_checkpoint_distance"`
+				ManifestCompressType        string `toml:"manifest_compress_type"`
+				MaxBackgroundJobs           int    `toml:"max_background_jobs"`
+				AutoFlushInterval           string `toml:"auto_flush_interval"`
+				GlobalWriteBufferSize       string `toml:"global_write_buffer_size"`
+				GlobalWriteBufferRejectSize string `toml:"global_write_buffer_reject_size"`
+				SstMetaCacheSize            string `toml:"sst_meta_cache_size"`
+				VectorCacheSize             string `toml:"vector_cache_size"`
+			} `toml:"mito,omitempty"`
+		} `toml:"region_engine,omitempty"`
 
-		Logging struct {
-			Dir   string `toml:"dir,omitempty"`
-			Level string `toml:"level,omitempty"`
-		} `toml:"logging,omitempty"`
+		LoggingOptions LoggingOptions `toml:"logging,omitempty"`
+
+		EnableTelemetry *bool `toml:"enable_telemetry,omitempty"`
 	}
 )
 

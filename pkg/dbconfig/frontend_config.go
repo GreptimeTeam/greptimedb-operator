@@ -28,16 +28,9 @@ type (
 
 		NodeID string `toml:"node_id,omitempty"`
 
-		HeartbeatOptions struct {
-			Interval      string `toml:"interval,omitempty"`
-			RetryInterval string `toml:"retry_interval,omitempty"`
-		} `toml:"heartbeat,omitempty"`
+		HeartbeatOptions HeartbeatOptions `toml:"heartbeat,omitempty"`
 
-		HTTPOptions struct {
-			Addr      string `toml:"addr,omitempty"`
-			Timeout   string `toml:"timeout,omitempty"`
-			BodyLimit string `toml:"body_limit,omitempty"`
-		} `toml:"http,omitempty"`
+		HTTPOptions HTTPOptions `toml:"http,omitempty"`
 
 		GRPCOptions struct {
 			Addr        string `toml:"addr,omitempty"`
@@ -87,28 +80,9 @@ type (
 			Enable *bool `toml:"enable,omitempty"`
 		} `toml:"oltp,omitempty"`
 
-		MetaClientOptions struct {
-			// Metasrv address list.
-			MetaSrvAddrs []string `toml:"metasrv_addrs,omitempty"`
+		MetaClientOptions MetaClientOptions `toml:"meta_client,omitempty"`
 
-			// Operation timeout in milliseconds.
-			Timeout string `toml:"timeout,omitempty"`
-
-			// Connect server timeout in milliseconds.
-			ConnectTimeout string `toml:"connect_timeout,omitempty"`
-
-			// DDL operation timeout.
-			DDLTimeout string `toml:"ddl_timeout,omitempty"`
-
-			// `TCP_NODELAY` option for accepted connections.
-			TCPNoDelay *bool `toml:"tcp_nodelay,omitempty"`
-		} `toml:"meta_client,omitempty"`
-
-		LoggingOptions struct {
-			Dir                 string `toml:"dir,omitempty"`
-			Level               string `toml:"level,omitempty"`
-			EnableJaegerTracing bool   `toml:"enable_jaeger_tracing,omitempty"`
-		} `toml:"logging,omitempty"`
+		LoggingOptions LoggingOptions `toml:"logging,omitempty"`
 
 		DatanodeOptions struct {
 			DatanodeClientOptions struct {
