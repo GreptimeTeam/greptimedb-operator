@@ -135,12 +135,12 @@ level = 'error'
 
 	frontendCfg := cfg.(*FrontendConfig)
 	frontendExtraCfg := extraCfg.(*FrontendConfig)
-	if !reflect.DeepEqual(frontendCfg.Logging.Level, frontendExtraCfg.Logging.Level) {
-		t.Errorf("logging.level is not equal: want %s, got %s", frontendExtraCfg.Logging.Level, frontendCfg.Logging.Level)
+	if !reflect.DeepEqual(frontendCfg.LoggingOptions.Level, frontendExtraCfg.LoggingOptions.Level) {
+		t.Errorf("logging.level is not equal: want %s, got %s", frontendExtraCfg.LoggingOptions.Level, frontendCfg.LoggingOptions.Level)
 	}
 
-	if !reflect.DeepEqual(frontendCfg.Logging.Dir, frontendExtraCfg.Logging.Dir) {
-		t.Errorf("logging.dir is not equal: want %s, got %s", frontendExtraCfg.Logging.Dir, frontendCfg.Logging.Dir)
+	if !reflect.DeepEqual(frontendCfg.LoggingOptions.Dir, frontendExtraCfg.LoggingOptions.Dir) {
+		t.Errorf("logging.dir is not equal: want %s, got %s", frontendExtraCfg.LoggingOptions.Dir, frontendCfg.LoggingOptions.Dir)
 	}
 }
 

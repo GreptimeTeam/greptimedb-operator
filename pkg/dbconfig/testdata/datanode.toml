@@ -1,31 +1,38 @@
 mode = 'distributed'
-enable_memory_catalog = false
 node_id = 42
+require_lease_before_startup = false
 rpc_addr = '127.0.0.1:3001'
 rpc_hostname = '127.0.0.1'
 rpc_runtime_size = 8
 
-[meta_client_options]
+[heartbeat]
+interval = '3s'
+
+[meta_client]
 metasrv_addrs = ['127.0.0.1:3002']
-timeout_millis = 3000
-connect_timeout_millis = 5000
+timeout = '3s'
+connect_timeout = '1s'
 tcp_nodelay = true
 
 [wal]
-file_size = '1GB'
-purge_threshold = '50GB'
+file_size = '256MB'
+purge_threshold = '4GB'
 purge_interval = '10m'
 read_batch_size = 128
 sync_write = false
 
 [storage]
-type = 'File'
 data_home = '/tmp/greptimedb/'
+type = 'File'
+
+[storage.compaction]
+max_inflight_tasks = 4
+max_files_in_level0 = 8
+max_purge_tasks = 32
 
 [storage.manifest]
 checkpoint_margin = 10
-gc_duration = '30s'
-checkpoint_on_startup = false
+gc_duration = '10m'
 
 [storage.flush]
 max_flush_tasks = 8
@@ -34,10 +41,16 @@ picker_schedule_interval = '5m'
 auto_flush_interval = '1h'
 global_write_buffer_size = '1GB'
 
-[procedure]
-max_retry_times = 3
-retry_delay = '500ms'
-
-[logging]
-dir = '/tmp/greptimedb/logs'
-level = 'info'
+[[region_engine]]
+[region_engine.mito]
+num_workers = 8
+worker_channel_size = 128
+worker_request_batch_size = 64
+manifest_checkpoint_distance = 10
+manifest_compress_type = 'Uncompressed'
+max_background_jobs = 4
+auto_flush_interval = '1h'
+global_write_buffer_size = '1GB'
+global_write_buffer_reject_size = '2GB'
+sst_meta_cache_size = '128MB'
+vector_cache_size = '512MB'

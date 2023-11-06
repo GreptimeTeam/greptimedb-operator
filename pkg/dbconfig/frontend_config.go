@@ -26,15 +26,16 @@ type (
 		// Node running mode.
 		Mode string `toml:"mode,omitempty"`
 
-		HTTPOptions struct {
-			Addr    string `toml:"addr,omitempty"`
-			Timeout string `toml:"timeout,omitempty"`
-		} `toml:"http_options,omitempty"`
+		NodeID string `toml:"node_id,omitempty"`
+
+		HeartbeatOptions HeartbeatOptions `toml:"heartbeat,omitempty"`
+
+		HTTPOptions HTTPOptions `toml:"http,omitempty"`
 
 		GRPCOptions struct {
 			Addr        string `toml:"addr,omitempty"`
 			RuntimeSize int32  `toml:"runtime_size,omitempty"`
-		} `toml:"grpc_options,omitempty"`
+		} `toml:"grpc,omitempty"`
 
 		// MySQL server options.
 		MySQLOptions struct {
@@ -47,7 +48,7 @@ type (
 				CertPath string `toml:"cert_path,omitempty"`
 				KeyPath  string `toml:"key_path,omitempty"`
 			} `toml:"tls,omitempty"`
-		} `toml:"mysql_options,omitempty"`
+		} `toml:"mysql,omitempty"`
 
 		// Postgres server options.
 		PostgresOptions struct {
@@ -60,43 +61,34 @@ type (
 				CertPath string `toml:"cert_path,omitempty"`
 				KeyPath  string `toml:"key_path,omitempty"`
 			} `toml:"tls,omitempty"`
-		} `toml:"postgres_options,omitempty"`
+		} `toml:"postgres,omitempty"`
 
 		OpenTSDBOptions struct {
 			Addr        string `toml:"addr,omitempty"`
 			RuntimeSize int32  `toml:"runtime_size,omitempty"`
-		} `toml:"opentsdb_options,omitempty"`
+		} `toml:"opentsdb,omitempty"`
 
 		InfluxDBOptions struct {
 			Enable *bool `toml:"enable,omitempty"`
-		} `toml:"influxdb_options,omitempty"`
+		} `toml:"influxdb,omitempty"`
 
 		PromStoreOptions struct {
 			Enable *bool `toml:"enable,omitempty"`
-		} `toml:"prom_store_options,omitempty"`
+		} `toml:"prom_store,omitempty"`
 
-		PrometheusOptions struct {
-			Addr string `toml:"addr,omitempty"`
-		} `toml:"prometheus_options,omitempty"`
+		OLTPOptions struct {
+			Enable *bool `toml:"enable,omitempty"`
+		} `toml:"oltp,omitempty"`
 
-		MetaClientOptions struct {
-			// Metasrv address list.
-			MetaSrvAddrs []string `toml:"metasrv_addrs,omitempty"`
+		MetaClientOptions MetaClientOptions `toml:"meta_client,omitempty"`
 
-			// Operation timeout in milliseconds.
-			TimeoutMillis int32 `toml:"timeout_millis,omitempty"`
+		LoggingOptions LoggingOptions `toml:"logging,omitempty"`
 
-			// Connect server timeout in milliseconds.
-			ConnectTimeoutMillis int32 `toml:"connect_timeout_millis,omitempty"`
+		DatanodeOptions struct {
+			DatanodeClientOptions DatanodeClientOptions `toml:"client,omitempty"`
+		} `toml:"datanode,omitempty"`
 
-			// `TCP_NODELAY` option for accepted connections.
-			TCPNoDelay *bool `toml:"tcp_nodelay,omitempty"`
-		} `toml:"meta_client_options,omitempty"`
-
-		Logging struct {
-			Dir   string `toml:"dir,omitempty"`
-			Level string `toml:"level,omitempty"`
-		} `toml:"logging,omitempty"`
+		UserProvider string `toml:"user_provider,omitempty"`
 	}
 )
 
