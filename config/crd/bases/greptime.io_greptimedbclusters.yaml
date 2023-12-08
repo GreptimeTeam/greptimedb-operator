@@ -10724,12 +10724,15 @@ spec:
                     type: string
                   local:
                     properties:
-                      directory:
+                      dataHome:
                         type: string
                     type: object
                   oss:
                     properties:
                       bucket:
+                        type: string
+                      dataHome:
+                        default: /data/greptimedb
                         type: string
                       endpoint:
                         type: string
@@ -10743,6 +10746,9 @@ spec:
                   s3:
                     properties:
                       bucket:
+                        type: string
+                      dataHome:
+                        default: /data/greptimedb
                         type: string
                       endpoint:
                         type: string

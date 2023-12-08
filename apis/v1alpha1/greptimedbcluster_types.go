@@ -420,6 +420,11 @@ type S3StorageProvider struct {
 	// The S3 directory path.
 	// +optional
 	Root string `json:"root,omitempty"`
+
+	// The datahome directory
+	// +optional
+	// +kubebuilder:default:="/data/greptimedb"
+	DataHome string `json:"dataHome,omitempty"`
 }
 
 type OSSStorageProvider struct {
@@ -440,14 +445,19 @@ type OSSStorageProvider struct {
 	// +optional
 	SecretName string `json:"secretName,omitempty"`
 
-	// The S3 directory path.
+	// The OSS directory path.
 	// +optional
 	Root string `json:"root,omitempty"`
+
+	// The datahome directory
+	// +optional
+	// +kubebuilder:default:="/data/greptimedb"
+	DataHome string `json:"dataHome,omitempty"`
 }
 
 type LocalStorageProvider struct {
 	// The local directory to store the data.
-	Directory string `json:"directory,omitempty"`
+	DataHome string `json:"dataHome,omitempty"`
 }
 
 // GreptimeDBClusterSpec defines the desired state of GreptimeDBCluster
