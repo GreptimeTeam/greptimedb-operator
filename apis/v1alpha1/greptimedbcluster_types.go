@@ -457,7 +457,7 @@ type OSSStorageProvider struct {
 
 type LocalStorageProvider struct {
 	// The local directory to store the data.
-	Directory string `json:"directory,omitempty"`
+	DataHome string `json:"dataHome,omitempty"`
 }
 
 // GreptimeDBClusterSpec defines the desired state of GreptimeDBCluster

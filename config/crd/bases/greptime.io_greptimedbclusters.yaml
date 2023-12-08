@@ -10724,7 +10724,7 @@ spec:
                     type: string
                   local:
                     properties:
-                      directory:
+                      dataHome:
                         type: string
                     type: object
                   oss:
