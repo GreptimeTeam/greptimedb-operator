@@ -174,6 +174,7 @@ func (c *DatanodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster)
 			c.Storage.Root = cluster.Spec.StorageProvider.S3.Root
 			c.Storage.Endpoint = cluster.Spec.StorageProvider.S3.Endpoint
 			c.Storage.Region = cluster.Spec.StorageProvider.S3.Region
+			c.Storage.DataHome = cluster.Spec.StorageProvider.S3.DataHome
 		} else if cluster.Spec.StorageProvider.OSS != nil {
 			if cluster.Spec.StorageProvider.OSS.SecretName != "" {
 				accessKeyID, secretAccessKey, err := c.getOCSCredentials(cluster.Namespace, cluster.Spec.StorageProvider.OSS.SecretName)
@@ -189,6 +190,7 @@ func (c *DatanodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster)
 			c.Storage.Root = cluster.Spec.StorageProvider.OSS.Root
 			c.Storage.Endpoint = cluster.Spec.StorageProvider.OSS.Endpoint
 			c.Storage.Region = cluster.Spec.StorageProvider.OSS.Region
+			c.Storage.DataHome = cluster.Spec.StorageProvider.OSS.DataHome
 		}
 	}
 

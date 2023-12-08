@@ -41,7 +41,7 @@ var (
 	// The default storage settings for datanode.
 	defaultDataNodeStorageName      = "datanode"
 	defaultDataNodeStorageSize      = "10Gi"
-	defaultDataNodeStorageMountPath = "/tmp/greptimedb"
+	defaultDataNodeStorageMountPath = "/data/greptimedb"
 	defaultStorageRetainPolicyType  = RetainStorageRetainPolicyTypeRetain
 
 	defaultInitializer = "greptime/greptimedb-initializer:latest"

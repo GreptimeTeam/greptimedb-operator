@@ -10731,6 +10731,9 @@ spec:
                     properties:
                       bucket:
                         type: string
+                      dataHome:
+                        default: /data/greptimedb
+                        type: string
                       endpoint:
                         type: string
                       region:
@@ -10743,6 +10746,9 @@ spec:
                   s3:
                     properties:
                       bucket:
+                        type: string
+                      dataHome:
+                        default: /data/greptimedb
                         type: string
                       endpoint:
                         type: string
