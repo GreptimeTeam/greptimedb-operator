@@ -21,13 +21,13 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
+	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
+	"google.golang.org/protobuf/proto"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
-
-	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 )
 
 var _ = Describe("Test greptimedbcluster controller", func() {
@@ -124,12 +124,12 @@ func createCluster(name, namespace string) *v1alpha1.GreptimeDBCluster {
 			},
 			Frontend: &v1alpha1.FrontendSpec{
 				ComponentSpec: v1alpha1.ComponentSpec{
-					Replicas: 1,
+					Replicas: proto.Int32(1),
 				},
 			},
 			Meta: &v1alpha1.MetaSpec{
 				ComponentSpec: v1alpha1.ComponentSpec{
-					Replicas: 3,
+					Replicas: proto.Int32(1),
 				},
 				EtcdEndpoints: []string{
 					"etcd.default:2379",
@@ -137,7 +137,7 @@ func createCluster(name, namespace string) *v1alpha1.GreptimeDBCluster {
 			},
 			Datanode: &v1alpha1.DatanodeSpec{
 				ComponentSpec: v1alpha1.ComponentSpec{
-					Replicas: 1,
+					Replicas: proto.Int32(3),
 				},
 			},
 		},
@@ -158,15 +158,15 @@ func checkResource(namespace, name string, object client.Object, request reconci
 	}, 30*time.Second, time.Second).Should(BeNil())
 }
 
-func makeStatefulSetReady(statefulSet *appsv1.StatefulSet, replicas int32) error {
-	statefulSet.Status.ReadyReplicas = replicas
-	statefulSet.Status.Replicas = replicas
+func makeStatefulSetReady(statefulSet *appsv1.StatefulSet, replicas *int32) error {
+	statefulSet.Status.ReadyReplicas = *replicas
+	statefulSet.Status.Replicas = *replicas
 	return reconciler.Status().Update(ctx, statefulSet)
 }
 
-func makeDeploymentReady(deployment *appsv1.Deployment, replicas int32) error {
-	deployment.Status.Replicas = replicas
-	deployment.Status.ReadyReplicas = replicas
+func makeDeploymentReady(deployment *appsv1.Deployment, replicas *int32) error {
+	deployment.Status.Replicas = *replicas
+	deployment.Status.ReadyReplicas = *replicas
 	deployment.Status.Conditions = append(deployment.Status.Conditions, appsv1.DeploymentCondition{
 		Type:               appsv1.DeploymentProgressing,
 		Status:             corev1.ConditionTrue,

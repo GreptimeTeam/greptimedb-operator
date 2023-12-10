@@ -274,9 +274,8 @@ type PodTemplateSpec struct {
 // ComponentSpec is the common specification for all components(frontend/meta/datanode).
 type ComponentSpec struct {
 	// The number of replicas of the components.
-	// +kubebuilder:validation:Minimum=0
 	// +optional
-	Replicas int32 `json:"replicas"`
+	Replicas *int32 `json:"replicas"`
 
 	// The content of the configuration file of the component in TOML format.
 	// +optional
