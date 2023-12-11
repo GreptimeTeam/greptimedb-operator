@@ -275,6 +275,7 @@ type PodTemplateSpec struct {
 type ComponentSpec struct {
 	// The number of replicas of the components.
 	// +optional
+	// +kubebuilder:validation:Minimum=0
 	Replicas *int32 `json:"replicas"`
 
 	// The content of the configuration file of the component in TOML format.

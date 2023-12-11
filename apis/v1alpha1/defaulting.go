@@ -110,7 +110,7 @@ func (in *GreptimeDBCluster) SetDefaults() error {
 				Type: corev1.ServiceTypeClusterIP,
 			},
 		}
-		if in.Spec.Frontend.Replicas == nil || *in.Spec.Frontend.Replicas < 0 {
+		if in.Spec.Frontend.Replicas == nil {
 			in.Spec.Frontend.Replicas = proto.Int32(defaultFrontendReplicas)
 		}
 	}
@@ -123,7 +123,7 @@ func (in *GreptimeDBCluster) SetDefaults() error {
 			ServicePort:          int32(defaultMetaServicePort),
 			EnableRegionFailover: false,
 		}
-		if in.Spec.Meta.Replicas == nil || *in.Spec.Meta.Replicas < 0 {
+		if in.Spec.Meta.Replicas == nil {
 			in.Spec.Meta.Replicas = proto.Int32(defaultMetaReplicas)
 		}
 	}
@@ -141,7 +141,7 @@ func (in *GreptimeDBCluster) SetDefaults() error {
 				WalDir:              defaultDataNodeStorageMountPath + "/wal",
 			},
 		}
-		if in.Spec.Datanode.Replicas == nil || *in.Spec.Datanode.Replicas < 0 {
+		if in.Spec.Datanode.Replicas == nil {
 			in.Spec.Datanode.Replicas = proto.Int32(defaultDatanodeReplicas)
 		}
 	}

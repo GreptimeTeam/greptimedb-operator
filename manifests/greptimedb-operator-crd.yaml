@@ -2690,6 +2690,7 @@ spec:
                     type: string
                   replicas:
                     format: int32
+                    minimum: 0
                     type: integer
                   storage:
                     properties:
@@ -5357,6 +5358,7 @@ spec:
                     type: string
                   replicas:
                     format: int32
+                    minimum: 0
                     type: integer
                   service:
                     properties:
@@ -8041,6 +8043,7 @@ spec:
                     type: array
                   replicas:
                     format: int32
+                    minimum: 0
                     type: integer
                   servicePort:
                     format: int32
