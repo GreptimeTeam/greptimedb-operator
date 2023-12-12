@@ -165,7 +165,7 @@ func (b *frontendBuilder) BuildDeployment() deployer.Builder {
 			Namespace: b.Cluster.Namespace,
 		},
 		Spec: appsv1.DeploymentSpec{
-			Replicas: &b.Cluster.Spec.Frontend.Replicas,
+			Replicas: b.Cluster.Spec.Frontend.Replicas,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					GreptimeDBComponentName: ResourceName(b.Cluster.Name, b.ComponentKind),

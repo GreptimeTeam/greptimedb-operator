@@ -228,7 +228,7 @@ func (b *datanodeBuilder) BuildStatefulSet() deployer.Builder {
 		},
 		Spec: appsv1.StatefulSetSpec{
 			ServiceName: ResourceName(b.Cluster.Name, b.ComponentKind),
-			Replicas:    &b.Cluster.Spec.Datanode.Replicas,
+			Replicas:    b.Cluster.Spec.Datanode.Replicas,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					GreptimeDBComponentName: ResourceName(b.Cluster.Name, b.ComponentKind),

@@ -15,12 +15,13 @@
 package v1alpha1
 
 import (
-	"k8s.io/apimachinery/pkg/util/intstr"
 	"reflect"
 	"testing"
 
+	"google.golang.org/protobuf/proto"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
+	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 func TestSetDefaults(t *testing.T) {
@@ -39,17 +40,17 @@ func TestSetDefaults(t *testing.T) {
 					},
 					Frontend: &FrontendSpec{
 						ComponentSpec: ComponentSpec{
-							Replicas: 3,
+							Replicas: proto.Int32(3),
 						},
 					},
 					Meta: &MetaSpec{
 						ComponentSpec: ComponentSpec{
-							Replicas: 3,
+							Replicas: proto.Int32(3),
 						},
 					},
 					Datanode: &DatanodeSpec{
 						ComponentSpec: ComponentSpec{
-							Replicas: 1,
+							Replicas: proto.Int32(1),
 						},
 					},
 				},
@@ -82,7 +83,7 @@ func TestSetDefaults(t *testing.T) {
 					},
 					Frontend: &FrontendSpec{
 						ComponentSpec: ComponentSpec{
-							Replicas: 3,
+							Replicas: proto.Int32(3),
 							Template: &PodTemplateSpec{
 								MainContainer: &MainContainerSpec{
 									Image: "greptime/greptimedb:latest",
@@ -113,7 +114,7 @@ func TestSetDefaults(t *testing.T) {
 					},
 					Meta: &MetaSpec{
 						ComponentSpec: ComponentSpec{
-							Replicas: 3,
+							Replicas: proto.Int32(3),
 							Template: &PodTemplateSpec{
 								MainContainer: &MainContainerSpec{
 									Image: "greptime/greptimedb:latest",
@@ -142,7 +143,7 @@ func TestSetDefaults(t *testing.T) {
 					},
 					Datanode: &DatanodeSpec{
 						ComponentSpec: ComponentSpec{
-							Replicas: 1,
+							Replicas: proto.Int32(1),
 							Template: &PodTemplateSpec{
 								MainContainer: &MainContainerSpec{
 									Image: "greptime/greptimedb:latest",
@@ -273,7 +274,7 @@ func TestSetDefaults(t *testing.T) {
 					},
 					Frontend: &FrontendSpec{
 						ComponentSpec: ComponentSpec{
-							Replicas: 1,
+							Replicas: proto.Int32(defaultFrontendReplicas),
 							Template: &PodTemplateSpec{
 								MainContainer: &MainContainerSpec{
 									Image: "greptime/frontend:latest",
@@ -308,7 +309,7 @@ func TestSetDefaults(t *testing.T) {
 					},
 					Meta: &MetaSpec{
 						ComponentSpec: ComponentSpec{
-							Replicas: 1,
+							Replicas: proto.Int32(defaultMetaReplicas),
 							Template: &PodTemplateSpec{
 								MainContainer: &MainContainerSpec{
 									Image: "greptime/meta:latest",
@@ -344,7 +345,7 @@ func TestSetDefaults(t *testing.T) {
 					},
 					Datanode: &DatanodeSpec{
 						ComponentSpec: ComponentSpec{
-							Replicas: 3,
+							Replicas: proto.Int32(defaultDatanodeReplicas),
 							Template: &PodTemplateSpec{
 								MainContainer: &MainContainerSpec{
 									Image: "greptime/greptimedb:latest",
@@ -400,7 +401,17 @@ func TestSetDefaults(t *testing.T) {
 					},
 					Datanode: &DatanodeSpec{
 						ComponentSpec: ComponentSpec{
-							Replicas: 3,
+							Replicas: proto.Int32(0),
+						},
+					},
+					Frontend: &FrontendSpec{
+						ComponentSpec: ComponentSpec{
+							Replicas: proto.Int32(0),
+						},
+					},
+					Meta: &MetaSpec{
+						ComponentSpec: ComponentSpec{
+							Replicas: proto.Int32(0),
 						},
 					},
 				},
@@ -431,9 +442,69 @@ func TestSetDefaults(t *testing.T) {
 							},
 						},
 					},
+					Frontend: &FrontendSpec{
+						ComponentSpec: ComponentSpec{
+							Replicas: proto.Int32(0),
+							Template: &PodTemplateSpec{
+								MainContainer: &MainContainerSpec{
+									Image: "greptime/greptimedb:latest",
+									Resources: &corev1.ResourceRequirements{
+										Requests: map[corev1.ResourceName]resource.Quantity{
+											"cpu":    resource.MustParse(defaultCPU),
+											"memory": resource.MustParse(defaultMemory),
+										},
+										Limits: map[corev1.ResourceName]resource.Quantity{
+											"cpu":    resource.MustParse(defaultCPU),
+											"memory": resource.MustParse(defaultMemory),
+										},
+									},
+									ReadinessProbe: &corev1.Probe{
+										ProbeHandler: corev1.ProbeHandler{
+											HTTPGet: &corev1.HTTPGetAction{
+												Path: "/health",
+												Port: intstr.FromInt(defaultHTTPServicePort),
+											},
+										},
+									},
+								},
+							},
+						},
+						Service: ServiceSpec{
+							Type: corev1.ServiceTypeClusterIP,
+						},
+					},
+					Meta: &MetaSpec{
+						ComponentSpec: ComponentSpec{
+							Replicas: proto.Int32(0),
+							Template: &PodTemplateSpec{
+								MainContainer: &MainContainerSpec{
+									Image: "greptime/greptimedb:latest",
+									Resources: &corev1.ResourceRequirements{
+										Requests: map[corev1.ResourceName]resource.Quantity{
+											"cpu":    resource.MustParse(defaultCPU),
+											"memory": resource.MustParse(defaultMemory),
+										},
+										Limits: map[corev1.ResourceName]resource.Quantity{
+											"cpu":    resource.MustParse(defaultCPU),
+											"memory": resource.MustParse(defaultMemory),
+										},
+									},
+									ReadinessProbe: &corev1.Probe{
+										ProbeHandler: corev1.ProbeHandler{
+											HTTPGet: &corev1.HTTPGetAction{
+												Path: "/health",
+												Port: intstr.FromInt(defaultHTTPServicePort),
+											},
+										},
+									},
+								},
+							},
+						},
+						ServicePort: int32(defaultMetaServicePort),
+					},
 					Datanode: &DatanodeSpec{
 						ComponentSpec: ComponentSpec{
-							Replicas: 3,
+							Replicas: proto.Int32(0),
 							Template: &PodTemplateSpec{
 								MainContainer: &MainContainerSpec{
 									Image: "greptime/greptimedb:latest",

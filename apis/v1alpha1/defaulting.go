@@ -18,6 +18,7 @@ import (
 	"strings"
 
 	"github.com/imdario/mergo"
+	"google.golang.org/protobuf/proto"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -37,6 +38,11 @@ var (
 	defaultPrometheusServicePort = 4004
 	defaultOpenTSDBServicePort   = 4242
 	defaultMetaServicePort       = 3002
+
+	// The default replicas for frontend/meta/datanode.
+	defaultFrontendReplicas int32 = 1
+	defaultMetaReplicas     int32 = 1
+	defaultDatanodeReplicas int32 = 3
 
 	// The default storage settings for datanode.
 	defaultDataNodeStorageName      = "datanode"
@@ -98,30 +104,33 @@ func (in *GreptimeDBCluster) SetDefaults() error {
 	if in.Spec.Frontend != nil {
 		defaultGreptimeDBClusterSpec.Frontend = &FrontendSpec{
 			ComponentSpec: ComponentSpec{
-				Replicas: 1,
 				Template: &PodTemplateSpec{},
 			},
 			Service: ServiceSpec{
 				Type: corev1.ServiceTypeClusterIP,
 			},
 		}
+		if in.Spec.Frontend.Replicas == nil {
+			in.Spec.Frontend.Replicas = proto.Int32(defaultFrontendReplicas)
+		}
 	}
 
 	if in.Spec.Meta != nil {
 		defaultGreptimeDBClusterSpec.Meta = &MetaSpec{
 			ComponentSpec: ComponentSpec{
-				Replicas: 1,
 				Template: &PodTemplateSpec{},
 			},
 			ServicePort:          int32(defaultMetaServicePort),
 			EnableRegionFailover: false,
+		}
+		if in.Spec.Meta.Replicas == nil {
+			in.Spec.Meta.Replicas = proto.Int32(defaultMetaReplicas)
 		}
 	}
 
 	if in.Spec.Datanode != nil {
 		defaultGreptimeDBClusterSpec.Datanode = &DatanodeSpec{
 			ComponentSpec: ComponentSpec{
-				Replicas: 3,
 				Template: &PodTemplateSpec{},
 			},
 			Storage: StorageSpec{
@@ -131,6 +140,9 @@ func (in *GreptimeDBCluster) SetDefaults() error {
 				StorageRetainPolicy: defaultStorageRetainPolicyType,
 				WalDir:              defaultDataNodeStorageMountPath + "/wal",
 			},
+		}
+		if in.Spec.Datanode.Replicas == nil {
+			in.Spec.Datanode.Replicas = proto.Int32(defaultDatanodeReplicas)
 		}
 	}
 
