@@ -31,9 +31,6 @@ spec:
     replicas: 3
   prometheusMonitor:
     enabled: true
-    path: "/metrics"
-    port: "http"
-    interval: "20s"
-    honorLabels: true
+    interval: "30s"
     labelsSelector:
       release: prometheus
