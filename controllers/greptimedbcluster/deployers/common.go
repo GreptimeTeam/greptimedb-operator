@@ -183,15 +183,15 @@ func (c *CommonBuilder) GeneratePodMonitor() (*monitoringv1.PodMonitor, error) {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      ResourceName(c.Cluster.Name, c.ComponentKind),
 			Namespace: c.Cluster.Namespace,
-			Labels:    c.Cluster.Spec.PrometheusMonitor.LabelsSelector,
+			Labels:    c.Cluster.Spec.PrometheusMonitor.Labels,
 		},
 		Spec: monitoringv1.PodMonitorSpec{
 			PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 				{
-					Path:        c.Cluster.Spec.PrometheusMonitor.Path,
-					Port:        c.Cluster.Spec.PrometheusMonitor.Port,
+					Path:        "/metrics",
+					Port:        "http",
 					Interval:    c.Cluster.Spec.PrometheusMonitor.Interval,
-					HonorLabels: c.Cluster.Spec.PrometheusMonitor.HonorLabels,
+					HonorLabels: true,
 				},
 			},
 			Selector: metav1.LabelSelector{
