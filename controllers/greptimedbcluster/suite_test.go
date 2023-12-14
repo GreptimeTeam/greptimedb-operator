@@ -61,7 +61,7 @@ var _ = BeforeSuite(func() {
 	By("bootstrapping test environment")
 	useExistingCluster := false
 	testEnv = &envtest.Environment{
-		CRDDirectoryPaths:     []string{filepath.Join("..", "..", "config", "crd", "bases")},
+		CRDDirectoryPaths:     []string{filepath.Join("..", "..", "config", "crd", "resources")},
 		ErrorIfCRDPathMissing: true,
 		UseExistingCluster:    &useExistingCluster,
 	}
