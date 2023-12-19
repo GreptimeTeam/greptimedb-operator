@@ -10706,18 +10706,12 @@ spec:
                 properties:
                   enabled:
                     type: boolean
-                  honorLabels:
-                    type: boolean
                   interval:
                     type: string
-                  labelsSelector:
+                  labels:
                     additionalProperties:
                       type: string
                     type: object
-                  path:
-                    type: string
-                  port:
-                    type: string
                 type: object
               prometheusServicePort:
                 format: int32
