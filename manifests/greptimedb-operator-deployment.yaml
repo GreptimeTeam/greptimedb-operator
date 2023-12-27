@@ -2701,6 +2701,8 @@ spec:
                     type: integer
                   storage:
                     properties:
+                      dataHome:
+                        type: string
                       mountPath:
                         type: string
                       name:
@@ -2708,7 +2710,6 @@ spec:
                       storageClassName:
                         type: string
                       storageRetainPolicy:
-                        default: Retain
                         enum:
                         - Retain
                         - Delete
@@ -10696,6 +10697,39 @@ spec:
               mysqlServicePort:
                 format: int32
                 type: integer
+              objectStorage:
+                properties:
+                  cacheCapacity:
+                    type: string
+                  cachePath:
+                    type: string
+                  oss:
+                    properties:
+                      bucket:
+                        type: string
+                      endpoint:
+                        type: string
+                      region:
+                        type: string
+                      root:
+                        type: string
+                      secretName:
+                        type: string
+                    type: object
+                  s3:
+                    properties:
+                      bucket:
+                        type: string
+                      endpoint:
+                        type: string
+                      region:
+                        type: string
+                      root:
+                        type: string
+                      secretName:
+                        type: string
+                    type: object
+                type: object
               openTSDBServicePort:
                 format: int32
                 type: integer
@@ -10716,50 +10750,6 @@ spec:
               prometheusServicePort:
                 format: int32
                 type: integer
-              storage:
-                properties:
-                  cacheCapacity:
-                    type: string
-                  cachePath:
-                    type: string
-                  local:
-                    properties:
-                      dataHome:
-                        type: string
-                    type: object
-                  oss:
-                    properties:
-                      bucket:
-                        type: string
-                      dataHome:
-                        default: /data/greptimedb
-                        type: string
-                      endpoint:
-                        type: string
-                      region:
-                        type: string
-                      root:
-                        type: string
-                      secretName:
-                        type: string
-                    type: object
-                  s3:
-                    properties:
-                      bucket:
-                        type: string
-                      dataHome:
-                        default: /data/greptimedb
-                        type: string
-                      endpoint:
-                        type: string
-                      region:
-                        type: string
-                      root:
-                        type: string
-                      secretName:
-                        type: string
-                    type: object
-                type: object
               version:
                 type: string
             type: object

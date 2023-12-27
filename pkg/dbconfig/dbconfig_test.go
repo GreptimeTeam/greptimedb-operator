@@ -43,7 +43,7 @@ func TestFromClusterForDatanodeConfig(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: v1alpha1.GreptimeDBClusterSpec{
-			StorageProvider: &v1alpha1.StorageProvider{
+			ObjectStorageProvider: &v1alpha1.ObjectStorageProvider{
 				S3: &v1alpha1.S3StorageProvider{
 					Root:   "testcluster",
 					Bucket: "testbucket",
@@ -79,7 +79,7 @@ level = 'error'
 			Namespace: "default",
 		},
 		Spec: v1alpha1.GreptimeDBClusterSpec{
-			StorageProvider: &v1alpha1.StorageProvider{
+			ObjectStorageProvider: &v1alpha1.ObjectStorageProvider{
 				S3: &v1alpha1.S3StorageProvider{
 					Root:   "testcluster",
 					Bucket: "testbucket",

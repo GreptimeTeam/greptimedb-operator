@@ -155,13 +155,10 @@ type (
 // ConfigureByCluster configures the datanode config by the given cluster.
 func (c *DatanodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster) error {
 	// TODO(zyy17): need to refactor the following code. It's too ugly.
-	if cluster.Spec.StorageProvider != nil {
-		if cluster.Spec.StorageProvider.Local != nil {
-			c.Storage.Type = "File"
-			c.Storage.DataHome = cluster.Spec.StorageProvider.Local.DataHome
-		} else if cluster.Spec.StorageProvider.S3 != nil {
-			if cluster.Spec.StorageProvider.S3.SecretName != "" {
-				accessKeyID, secretAccessKey, err := c.getOCSCredentials(cluster.Namespace, cluster.Spec.StorageProvider.S3.SecretName)
+	if cluster.Spec.ObjectStorageProvider != nil {
+		if cluster.Spec.ObjectStorageProvider.S3 != nil {
+			if cluster.Spec.ObjectStorageProvider.S3.SecretName != "" {
+				accessKeyID, secretAccessKey, err := c.getOCSCredentials(cluster.Namespace, cluster.Spec.ObjectStorageProvider.S3.SecretName)
 				if err != nil {
 					return err
 				}
@@ -170,15 +167,14 @@ func (c *DatanodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster)
 			}
 
 			c.Storage.Type = "S3"
-			c.Storage.Bucket = cluster.Spec.StorageProvider.S3.Bucket
-			c.Storage.Root = cluster.Spec.StorageProvider.S3.Root
-			c.Storage.Endpoint = cluster.Spec.StorageProvider.S3.Endpoint
-			c.Storage.Region = cluster.Spec.StorageProvider.S3.Region
-			c.Storage.DataHome = cluster.Spec.StorageProvider.S3.DataHome
+			c.Storage.Bucket = cluster.Spec.ObjectStorageProvider.S3.Bucket
+			c.Storage.Root = cluster.Spec.ObjectStorageProvider.S3.Root
+			c.Storage.Endpoint = cluster.Spec.ObjectStorageProvider.S3.Endpoint
+			c.Storage.Region = cluster.Spec.ObjectStorageProvider.S3.Region
 
-		} else if cluster.Spec.StorageProvider.OSS != nil {
-			if cluster.Spec.StorageProvider.OSS.SecretName != "" {
-				accessKeyID, secretAccessKey, err := c.getOCSCredentials(cluster.Namespace, cluster.Spec.StorageProvider.OSS.SecretName)
+		} else if cluster.Spec.ObjectStorageProvider.OSS != nil {
+			if cluster.Spec.ObjectStorageProvider.OSS.SecretName != "" {
+				accessKeyID, secretAccessKey, err := c.getOCSCredentials(cluster.Namespace, cluster.Spec.ObjectStorageProvider.OSS.SecretName)
 				if err != nil {
 					return err
 				}
@@ -187,16 +183,16 @@ func (c *DatanodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster)
 			}
 
 			c.Storage.Type = "Oss"
-			c.Storage.Bucket = cluster.Spec.StorageProvider.OSS.Bucket
-			c.Storage.Root = cluster.Spec.StorageProvider.OSS.Root
-			c.Storage.Endpoint = cluster.Spec.StorageProvider.OSS.Endpoint
-			c.Storage.Region = cluster.Spec.StorageProvider.OSS.Region
-			c.Storage.DataHome = cluster.Spec.StorageProvider.OSS.DataHome
+			c.Storage.Bucket = cluster.Spec.ObjectStorageProvider.OSS.Bucket
+			c.Storage.Root = cluster.Spec.ObjectStorageProvider.OSS.Root
+			c.Storage.Endpoint = cluster.Spec.ObjectStorageProvider.OSS.Endpoint
+			c.Storage.Region = cluster.Spec.ObjectStorageProvider.OSS.Region
 		}
 	}
 
 	if cluster.Spec.Datanode != nil {
 		c.Wal.Dir = cluster.Spec.Datanode.Storage.WalDir
+		c.Storage.DataHome = cluster.Spec.Datanode.Storage.DataHome
 
 		if len(cluster.Spec.Datanode.Config) > 0 {
 			if err := Merge([]byte(cluster.Spec.Datanode.Config), c); err != nil {

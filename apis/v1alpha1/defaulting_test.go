@@ -174,6 +174,7 @@ func TestSetDefaults(t *testing.T) {
 							MountPath:           defaultDataNodeStorageMountPath,
 							StorageRetainPolicy: defaultStorageRetainPolicyType,
 							WalDir:              defaultDataNodeStorageMountPath + "/wal",
+							DataHome:            defaultDataNodeStorageMountPath,
 						},
 					},
 					HTTPServicePort:       int32(defaultHTTPServicePort),
@@ -376,6 +377,7 @@ func TestSetDefaults(t *testing.T) {
 							MountPath:           defaultDataNodeStorageMountPath,
 							StorageRetainPolicy: defaultStorageRetainPolicyType,
 							WalDir:              defaultDataNodeStorageMountPath + "/wal",
+							DataHome:            defaultDataNodeStorageMountPath,
 						},
 					},
 
@@ -402,6 +404,15 @@ func TestSetDefaults(t *testing.T) {
 					Datanode: &DatanodeSpec{
 						ComponentSpec: ComponentSpec{
 							Replicas: proto.Int32(0),
+						},
+						Storage: StorageSpec{
+							Name:                "data",
+							StorageClassName:    proto.String("ebs-gp3"),
+							StorageSize:         "20Gi",
+							MountPath:           "/tmp/greptimedb",
+							StorageRetainPolicy: StorageRetainPolicyTypeDelete,
+							WalDir:              "tmp/greptimedb/wal",
+							DataHome:            "/tmp/greptimedb",
 						},
 					},
 					Frontend: &FrontendSpec{
@@ -530,11 +541,13 @@ func TestSetDefaults(t *testing.T) {
 							},
 						},
 						Storage: StorageSpec{
-							Name:                defaultDataNodeStorageName,
-							StorageSize:         defaultDataNodeStorageSize,
-							MountPath:           defaultDataNodeStorageMountPath,
-							StorageRetainPolicy: defaultStorageRetainPolicyType,
-							WalDir:              defaultDataNodeStorageMountPath + "/wal",
+							Name:                "data",
+							StorageClassName:    proto.String("ebs-gp3"),
+							StorageSize:         "20Gi",
+							MountPath:           "/tmp/greptimedb",
+							StorageRetainPolicy: StorageRetainPolicyTypeDelete,
+							WalDir:              "tmp/greptimedb/wal",
+							DataHome:            "/tmp/greptimedb",
 						},
 					},
 
