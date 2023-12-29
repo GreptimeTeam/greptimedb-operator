@@ -315,9 +315,9 @@ func (r *Reconciler) validate(ctx context.Context, cluster *v1alpha1.GreptimeDBC
 		}
 	}
 
-	if cluster.Spec.StorageProvider != nil {
-		if cluster.Spec.StorageProvider.Local != nil && cluster.Spec.StorageProvider.S3 != nil {
-			return fmt.Errorf("only one storage provider can be specified")
+	if cluster.Spec.ObjectStorageProvider != nil {
+		if cluster.Spec.ObjectStorageProvider.S3 != nil && cluster.Spec.ObjectStorageProvider.OSS != nil {
+			return fmt.Errorf("only one object storage provider can be specified")
 		}
 	}
 

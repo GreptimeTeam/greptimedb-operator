@@ -48,7 +48,7 @@ var (
 	defaultDataNodeStorageName      = "datanode"
 	defaultDataNodeStorageSize      = "10Gi"
 	defaultDataNodeStorageMountPath = "/data/greptimedb"
-	defaultStorageRetainPolicyType  = RetainStorageRetainPolicyTypeRetain
+	defaultStorageRetainPolicyType  = StorageRetainPolicyTypeRetain
 
 	defaultInitializer = "greptime/greptimedb-initializer:latest"
 )
@@ -139,6 +139,7 @@ func (in *GreptimeDBCluster) SetDefaults() error {
 				MountPath:           defaultDataNodeStorageMountPath,
 				StorageRetainPolicy: defaultStorageRetainPolicyType,
 				WalDir:              defaultDataNodeStorageMountPath + "/wal",
+				DataHome:            defaultDataNodeStorageMountPath,
 			},
 		}
 		if in.Spec.Datanode.Replicas == nil {

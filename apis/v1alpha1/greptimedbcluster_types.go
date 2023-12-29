@@ -22,12 +22,12 @@ import (
 type StorageRetainPolicyType string
 
 const (
-	// RetainStorageRetainPolicyTypeRetain is the default options.
+	// StorageRetainPolicyTypeRetain is the default options.
 	// The storage(PVCs) will be retained when the cluster is deleted.
-	RetainStorageRetainPolicyTypeRetain StorageRetainPolicyType = "Retain"
+	StorageRetainPolicyTypeRetain StorageRetainPolicyType = "Retain"
 
-	// RetainStorageRetainPolicyTypeDelete specify that the storage will be deleted when the associated StatefulSet delete.
-	RetainStorageRetainPolicyTypeDelete StorageRetainPolicyType = "Delete"
+	// StorageRetainPolicyTypeDelete specify that the storage will be deleted when the associated StatefulSet delete.
+	StorageRetainPolicyTypeDelete StorageRetainPolicyType = "Delete"
 )
 
 // ComponentKind is the kind of the component in the cluster.
@@ -330,11 +330,14 @@ type StorageSpec struct {
 	// The PVCs will retain or delete when the cluster is deleted, default to Retain.
 	// +optional
 	// +kubebuilder:validation:Enum:={"Retain", "Delete"}
-	// +kubebuilder:default:="Retain"
 	StorageRetainPolicy StorageRetainPolicyType `json:"storageRetainPolicy,omitempty"`
 
 	// The wal directory of the storage.
 	WalDir string `json:"walDir,omitempty"`
+
+	// The datahome directory.
+	// +optional
+	DataHome string `json:"dataHome,omitempty"`
 }
 
 type ServiceSpec struct {
@@ -390,13 +393,12 @@ type InitializerSpec struct {
 	Image string `json:"image,omitempty"`
 }
 
-// StorageProvider defines the storage provider for the cluster. The data will be stored in the storage.
-type StorageProvider struct {
-	S3            *S3StorageProvider    `json:"s3,omitempty"`
-	OSS           *OSSStorageProvider   `json:"oss,omitempty"`
-	Local         *LocalStorageProvider `json:"local,omitempty"`
-	CachePath     string                `json:"cachePath,omitempty"`
-	CacheCapacity string                `json:"cacheCapacity,omitempty"`
+// ObjectStorageProvider defines the storage provider for the cluster. The data will be stored in the storage.
+type ObjectStorageProvider struct {
+	S3            *S3StorageProvider  `json:"s3,omitempty"`
+	OSS           *OSSStorageProvider `json:"oss,omitempty"`
+	CachePath     string              `json:"cachePath,omitempty"`
+	CacheCapacity string              `json:"cacheCapacity,omitempty"`
 }
 
 type S3StorageProvider struct {
@@ -420,11 +422,6 @@ type S3StorageProvider struct {
 	// The S3 directory path.
 	// +optional
 	Root string `json:"root,omitempty"`
-
-	// The datahome directory
-	// +optional
-	// +kubebuilder:default:="/data/greptimedb"
-	DataHome string `json:"dataHome,omitempty"`
 }
 
 type OSSStorageProvider struct {
@@ -448,16 +445,6 @@ type OSSStorageProvider struct {
 	// The OSS directory path.
 	// +optional
 	Root string `json:"root,omitempty"`
-
-	// The datahome directory
-	// +optional
-	// +kubebuilder:default:="/data/greptimedb"
-	DataHome string `json:"dataHome,omitempty"`
-}
-
-type LocalStorageProvider struct {
-	// The local directory to store the data.
-	DataHome string `json:"dataHome,omitempty"`
 }
 
 // GreptimeDBClusterSpec defines the desired state of GreptimeDBCluster
@@ -510,7 +497,7 @@ type GreptimeDBClusterSpec struct {
 	Initializer *InitializerSpec `json:"initializer,omitempty"`
 
 	// +optional
-	StorageProvider *StorageProvider `json:"storage,omitempty"`
+	ObjectStorageProvider *ObjectStorageProvider `json:"objectStorage,omitempty"`
 
 	// More cluster settings can be added here.
 }

@@ -29,7 +29,7 @@ spec:
       - "etcd.default:2379"
   datanode:
     replicas: 3
-  storage:
+  objectStorage:
     oss:
       bucket: "greptimedb"
       secretName: "oss-credentials"

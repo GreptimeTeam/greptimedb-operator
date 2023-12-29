@@ -76,7 +76,7 @@ func (d *DatanodeDeployer) CleanUp(ctx context.Context, crdObject client.Object)
 	}
 
 	if cluster.Spec.Datanode != nil {
-		if cluster.Spec.Datanode.Storage.StorageRetainPolicy == v1alpha1.RetainStorageRetainPolicyTypeDelete {
+		if cluster.Spec.Datanode.Storage.StorageRetainPolicy == v1alpha1.StorageRetainPolicyTypeDelete {
 			if err := d.deleteStorage(ctx, cluster); err != nil {
 				return err
 			}
