@@ -8049,6 +8049,8 @@ spec:
                   servicePort:
                     format: int32
                     type: integer
+                  storeKeyPrefix:
+                    type: string
                   template:
                     properties:
                       activeDeadlineSeconds:
