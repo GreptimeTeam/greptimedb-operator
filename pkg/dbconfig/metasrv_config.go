@@ -53,12 +53,18 @@ type MetasrvConfig struct {
 	EnableTelemetry *bool `toml:"enable_telemetry,omitempty"`
 
 	DataHome string `toml:"data_home,omitempty"`
+
+	StoreKeyPrefix string `toml:"store_key_prefix,omitempty"`
 }
 
 // ConfigureByCluster configures the metasrv config by the given cluster.
 func (c *MetasrvConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster) error {
 	if cluster.Spec.Meta != nil {
 		c.EnableRegionFailover = &cluster.Spec.Meta.EnableRegionFailover
+
+		if len(cluster.Spec.Meta.StoreKeyPrefix) > 0 {
+			c.StoreKeyPrefix = cluster.Spec.Meta.StoreKeyPrefix
+		}
 
 		if len(cluster.Spec.Meta.Config) > 0 {
 			if err := Merge([]byte(cluster.Spec.Meta.Config), c); err != nil {

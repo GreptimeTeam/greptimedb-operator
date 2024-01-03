@@ -305,6 +305,10 @@ type MetaSpec struct {
 	// +optional
 	EnableRegionFailover bool `json:"enableRegionFailover,omitempty"`
 
+	// The meta will store data with this key prefix.
+	// +optional
+	StoreKeyPrefix string `json:"storeKeyPrefix,omitempty"`
+
 	// More meta settings can be added here...
 }
 

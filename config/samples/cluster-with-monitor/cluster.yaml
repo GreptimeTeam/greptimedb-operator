@@ -32,5 +32,5 @@ spec:
   prometheusMonitor:
     enabled: true
     interval: "30s"
-    labelsSelector:
+    labels:
       release: prometheus
