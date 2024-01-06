@@ -21,81 +21,15 @@ import (
 var _ Config = &FrontendConfig{}
 
 // FrontendConfig is the configuration for the frontend.
-type (
-	FrontendConfig struct {
-		// Node running mode.
-		Mode string `toml:"mode,omitempty"`
-
-		NodeID string `toml:"node_id,omitempty"`
-
-		HeartbeatOptions HeartbeatOptions `toml:"heartbeat,omitempty"`
-
-		HTTPOptions HTTPOptions `toml:"http,omitempty"`
-
-		GRPCOptions struct {
-			Addr        string `toml:"addr,omitempty"`
-			RuntimeSize int32  `toml:"runtime_size,omitempty"`
-		} `toml:"grpc,omitempty"`
-
-		// MySQL server options.
-		MySQLOptions struct {
-			Addr        string `toml:"addr,omitempty"`
-			RuntimeSize int32  `toml:"runtime_size,omitempty"`
-
-			// MySQL server TLS options.
-			TLS struct {
-				Mode     string `toml:"mode,omitempty"`
-				CertPath string `toml:"cert_path,omitempty"`
-				KeyPath  string `toml:"key_path,omitempty"`
-			} `toml:"tls,omitempty"`
-		} `toml:"mysql,omitempty"`
-
-		// Postgres server options.
-		PostgresOptions struct {
-			Addr        string `toml:"addr,omitempty"`
-			RuntimeSize int32  `toml:"runtime_size,omitempty"`
-
-			// MySQL server TLS options.
-			TLS struct {
-				Mode     string `toml:"mode,omitempty"`
-				CertPath string `toml:"cert_path,omitempty"`
-				KeyPath  string `toml:"key_path,omitempty"`
-			} `toml:"tls,omitempty"`
-		} `toml:"postgres,omitempty"`
-
-		OpenTSDBOptions struct {
-			Addr        string `toml:"addr,omitempty"`
-			RuntimeSize int32  `toml:"runtime_size,omitempty"`
-		} `toml:"opentsdb,omitempty"`
-
-		InfluxDBOptions struct {
-			Enable *bool `toml:"enable,omitempty"`
-		} `toml:"influxdb,omitempty"`
-
-		PromStoreOptions struct {
-			Enable *bool `toml:"enable,omitempty"`
-		} `toml:"prom_store,omitempty"`
-
-		OLTPOptions struct {
-			Enable *bool `toml:"enable,omitempty"`
-		} `toml:"oltp,omitempty"`
-
-		MetaClientOptions MetaClientOptions `toml:"meta_client,omitempty"`
-
-		LoggingOptions LoggingOptions `toml:"logging,omitempty"`
-
-		DatanodeOptions struct {
-			DatanodeClientOptions DatanodeClientOptions `toml:"client,omitempty"`
-		} `toml:"datanode,omitempty"`
-
-		UserProvider string `toml:"user_provider,omitempty"`
-	}
-)
+type FrontendConfig struct {
+	// InputConfig is from config field of cluster spec.
+	InputConfig string
+}
 
 // ConfigureByCluster configures the frontend configuration by the given cluster.
 func (c *FrontendConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster) error {
 	if cluster.Spec.Frontend != nil && len(cluster.Spec.Frontend.Config) > 0 {
-		if err := Merge([]byte(cluster.Spec.Frontend.Config), c); err != nil {
+		if err := c.SetInputConfig(cluster.Spec.Frontend.Config); err != nil {
 			return err
 		}
 	}
@@ -106,4 +40,15 @@ func (c *FrontendConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster)
 // Kind returns the component kind of the frontend.
 func (c *FrontendConfig) Kind() v1alpha1.ComponentKind {
 	return v1alpha1.FrontendComponentKind
+}
+
+// GetInputConfig returns the input config of the frontend.
+func (c *FrontendConfig) GetInputConfig() string {
+	return c.InputConfig
+}
+
+// SetInputConfig sets the input config of the frontend.
+func (c *FrontendConfig) SetInputConfig(inputConfig string) error {
+	c.InputConfig = inputConfig
+	return nil
 }

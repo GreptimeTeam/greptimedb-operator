@@ -16,12 +16,15 @@ package dbconfig
 
 import (
 	"fmt"
-	"os"
+	"reflect"
 
-	"github.com/imdario/mergo"
-	"github.com/pelletier/go-toml/v2"
+	"github.com/pelletier/go-toml"
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
+)
+
+const (
+	TOMLMappingFieldTag = "tomlmapping"
 )
 
 // Config is the interface for the config of greptimedb.
@@ -31,6 +34,12 @@ type Config interface {
 
 	// ConfigureByCluster configures the config by the given cluster.
 	ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster) error
+
+	// GetInputConfig returns the input config.
+	GetInputConfig() string
+
+	// SetInputConfig sets the input config.
+	SetInputConfig(input string) error
 }
 
 // NewFromComponentKind creates config from the component kind.
@@ -47,51 +56,19 @@ func NewFromComponentKind(kind v1alpha1.ComponentKind) (Config, error) {
 	}
 }
 
-// FromFile creates config from the file.
-func FromFile(filename string, kind v1alpha1.ComponentKind) (Config, error) {
-	data, err := os.ReadFile(filename)
-	if err != nil {
-		return nil, err
-	}
-
-	return FromRawData(data, kind)
-}
-
-// FromRawData creates config from the raw input.
-func FromRawData(raw []byte, kind v1alpha1.ComponentKind) (Config, error) {
-	cfg, err := NewFromComponentKind(kind)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := toml.Unmarshal(raw, cfg); err != nil {
-		return nil, err
-	}
-
-	return cfg, nil
-}
-
 // Marshal marshals the input config to toml.
 func Marshal(config Config) ([]byte, error) {
-	ouput, err := toml.Marshal(config)
+	tree, err := toml.Load(config.GetInputConfig())
 	if err != nil {
 		return nil, err
 	}
-	return ouput, nil
-}
 
-// Merge merges the extra config to the input object.
-func Merge(extraConfigData []byte, baseConfig Config) error {
-	extraConfig, err := FromRawData(extraConfigData, baseConfig.Kind())
+	ouput, err := setConfig(tree, config)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	if err := mergo.Merge(baseConfig, extraConfig, mergo.WithOverride); err != nil {
-		return err
-	}
-
-	return nil
+	return []byte(ouput), nil
 }
 
 // FromCluster creates config data from the cluster CRD.
@@ -106,4 +83,47 @@ func FromCluster(cluster *v1alpha1.GreptimeDBCluster, componentKind v1alpha1.Com
 	}
 
 	return Marshal(cfg)
+}
+
+func setConfig(input *toml.Tree, config interface{}) (string, error) {
+	valueOf := reflect.ValueOf(config)
+
+	if valueOf.Kind() == reflect.Ptr {
+		config = valueOf.Elem().Interface()
+		valueOf = reflect.ValueOf(config)
+	}
+
+	// The 'config' will override the 'input'.
+	typeOf := reflect.TypeOf(config)
+	for i := 0; i < valueOf.NumField(); i++ {
+		tag := typeOf.Field(i).Tag.Get(TOMLMappingFieldTag)
+		if tag == "" {
+			continue
+		}
+		field := valueOf.Field(i)
+		switch field.Kind() {
+		case reflect.Ptr:
+			if !field.IsNil() {
+				elem := field.Elem()
+				switch elem.Kind() {
+				case reflect.Uint64, reflect.Uint32, reflect.Uint16, reflect.Uint8, reflect.Uint:
+					input.Set(tag, elem.Uint())
+				case reflect.Int32, reflect.Int16, reflect.Int8, reflect.Int:
+					input.Set(tag, elem.Int())
+				case reflect.Float64, reflect.Float32:
+					input.Set(tag, elem.Float())
+				case reflect.String:
+					input.Set(tag, elem.String())
+				case reflect.Bool:
+					input.Set(tag, elem.Bool())
+				default:
+					return "", fmt.Errorf("tag '%s' with type '%s is not supported", tag, elem.Kind())
+				}
+			}
+		default:
+			return "", fmt.Errorf("field %s is not a pointer", tag)
+		}
+	}
+
+	return input.String(), nil
 }

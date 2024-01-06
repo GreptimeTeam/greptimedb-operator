@@ -22,39 +22,14 @@ var _ Config = &MetasrvConfig{}
 
 // MetasrvConfig is the configuration for the metasrv.
 type MetasrvConfig struct {
-	// The bind address of metasrv.
-	BindAddr string `toml:"bind_addr,omitempty"`
-
-	// The communication server address for frontend and datanode to connect to metasrv.
-	ServerAddr string `toml:"server_addr,omitempty"`
-
-	// Etcd server address.
-	StoreAddr string `toml:"store_addr,omitempty"`
-
-	// Datanode selector type, can be "LeaseBased" or "LoadBased".
-	Selector string `toml:"selector,omitempty"`
-
-	// Store data in memory.
-	UseMemoryStore *bool `toml:"use_memory_store,omitempty"`
-
 	// Enable region failover.
-	EnableRegionFailover *bool `toml:"enable_region_failover"`
+	EnableRegionFailover *bool `tomlmapping:"enable_region_failover"`
 
-	HTTPOptions HTTPOptions `toml:"http,omitempty"`
+	// If it's not empty, the metasrv will store all data with this key prefix.
+	StoreKeyPrefix *string `tomlmapping:"store_key_prefix"`
 
-	LoggingOptions LoggingOptions `toml:"logging,omitempty"`
-
-	ProcedureConfig ProcedureConfig `toml:"procedure,omitempty"`
-
-	DatanodeOptions struct {
-		DatanodeClientOptions DatanodeClientOptions `toml:"client,omitempty"`
-	} `toml:"datanode,omitempty"`
-
-	EnableTelemetry *bool `toml:"enable_telemetry,omitempty"`
-
-	DataHome string `toml:"data_home,omitempty"`
-
-	StoreKeyPrefix string `toml:"store_key_prefix,omitempty"`
+	// InputConfig is from config field of cluster spec.
+	InputConfig string
 }
 
 // ConfigureByCluster configures the metasrv config by the given cluster.
@@ -63,11 +38,11 @@ func (c *MetasrvConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster) 
 		c.EnableRegionFailover = &cluster.Spec.Meta.EnableRegionFailover
 
 		if len(cluster.Spec.Meta.StoreKeyPrefix) > 0 {
-			c.StoreKeyPrefix = cluster.Spec.Meta.StoreKeyPrefix
+			c.StoreKeyPrefix = &cluster.Spec.Meta.StoreKeyPrefix
 		}
 
 		if len(cluster.Spec.Meta.Config) > 0 {
-			if err := Merge([]byte(cluster.Spec.Meta.Config), c); err != nil {
+			if err := c.SetInputConfig(cluster.Spec.Meta.Config); err != nil {
 				return err
 			}
 		}
@@ -79,4 +54,15 @@ func (c *MetasrvConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster) 
 // Kind returns the component kind of the metasrv.
 func (c *MetasrvConfig) Kind() v1alpha1.ComponentKind {
 	return v1alpha1.MetaComponentKind
+}
+
+// GetInputConfig returns the input config of the metasrv.
+func (c *MetasrvConfig) GetInputConfig() string {
+	return c.InputConfig
+}
+
+// SetInputConfig sets the input config of the metasrv.
+func (c *MetasrvConfig) SetInputConfig(inputConfig string) error {
+	c.InputConfig = inputConfig
+	return nil
 }

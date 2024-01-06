@@ -21,8 +21,9 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/pelletier/go-toml"
+
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
-	"github.com/GreptimeTeam/greptimedb-operator/pkg/dbconfig"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/deployer"
 )
 
@@ -37,7 +38,6 @@ var (
 )
 
 func TestConfigGenerator(t *testing.T) {
-
 	file, err := os.CreateTemp("", "config-*.toml")
 	if err != nil {
 		log.Fatal(err)
@@ -61,28 +61,40 @@ func TestConfigGenerator(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	cfg, err := dbconfig.FromFile(opts.ConfigPath, v1alpha1.DatanodeComponentKind)
+	tomlData, err := os.ReadFile(opts.ConfigPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	tree, err := toml.Load(string(tomlData))
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	datanodeCfg, ok := cfg.(*dbconfig.DatanodeConfig)
+	nodeID, ok := tree.Get("node_id").(int64)
 	if !ok {
-		t.Fatal(fmt.Errorf("invalid config type"))
+		t.Fatalf("node_id is not int64")
 	}
 
-	if !reflect.DeepEqual(testPodIndex, *datanodeCfg.NodeID) {
-		t.Fatalf("nodeID is not equal, want: '%d', got: '%d'", testPodIndex, datanodeCfg.NodeID)
+	if !reflect.DeepEqual(testPodIndex, uint64(nodeID)) {
+		t.Fatalf("nodeID is not equal, want: '%d', got: '%d'", testPodIndex, nodeID)
 	}
 
+	rpcAddr, ok := tree.Get("rpc_addr").(string)
+	if !ok {
+		t.Fatalf("rpc_addr is not string")
+	}
 	wantRPCAddr := fmt.Sprintf("%s:%d", testPodIP, testRPCPort)
-	if !reflect.DeepEqual(wantRPCAddr, datanodeCfg.RPCAddr) {
-		t.Fatalf("RPCAddr is not equal, want: '%s', got: '%s'", wantRPCAddr, datanodeCfg.RPCAddr)
+	if !reflect.DeepEqual(wantRPCAddr, rpcAddr) {
+		t.Fatalf("RPCAddr is not equal, want: '%s', got: '%s'", wantRPCAddr, rpcAddr)
 	}
 
+	rpcHostName, ok := tree.Get("rpc_hostname").(string)
+	if !ok {
+		t.Fatalf("rpc_hostname is not string")
+	}
 	wantRPCHostname := fmt.Sprintf("%s.%s.%s:%d", testPodName, testClusterService, testClusterNamespace, testRPCPort)
-	if !reflect.DeepEqual(wantRPCHostname, datanodeCfg.RPCHostName) {
-		t.Fatalf("RPCHostName is not equal, want: '%s', got: '%s'", wantRPCHostname, datanodeCfg.RPCHostName)
+	if !reflect.DeepEqual(wantRPCHostname, rpcHostName) {
+		t.Fatalf("RPCHostName is not equal, want: '%s', got: '%s'", wantRPCHostname, rpcHostName)
 	}
 }
 

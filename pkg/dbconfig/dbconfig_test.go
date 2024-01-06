@@ -15,7 +15,6 @@
 package dbconfig
 
 import (
-	"os"
 	"reflect"
 	"testing"
 
@@ -23,18 +22,6 @@ import (
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 )
-
-func TestMetasrvConfigFromFile(t *testing.T) {
-	testFromFile("testdata/metasrv.toml", v1alpha1.MetaComponentKind, t)
-}
-
-func TestFrontendConfigFromFile(t *testing.T) {
-	testFromFile("testdata/frontend.toml", v1alpha1.FrontendComponentKind, t)
-}
-
-func TestDatanodeConfigFromFile(t *testing.T) {
-	testFromFile("testdata/datanode.toml", v1alpha1.DatanodeComponentKind, t)
-}
 
 func TestFromClusterForDatanodeConfig(t *testing.T) {
 	testCluster := &v1alpha1.GreptimeDBCluster{
@@ -52,10 +39,11 @@ func TestFromClusterForDatanodeConfig(t *testing.T) {
 		},
 	}
 
-	testConfig := `[storage]
-type = 'S3'
-bucket = 'testbucket'
-root = 'testcluster'
+	testConfig := `
+[storage]
+  bucket = "testbucket"
+  root = "testcluster"
+  type = "S3"
 `
 
 	data, err := FromCluster(testCluster, v1alpha1.DatanodeComponentKind)
@@ -93,14 +81,15 @@ level = 'error'
 		},
 	}
 
-	testConfig := `[storage]
-type = 'S3'
-bucket = 'testbucket'
-root = 'testcluster'
-
+	testConfig := `
 [logging]
-dir = '/other/dir'
-level = 'error'
+  dir = "/other/dir"
+  level = "error"
+
+[storage]
+  bucket = "testbucket"
+  root = "testcluster"
+  type = "S3"
 `
 
 	data, err := FromCluster(testCluster, v1alpha1.DatanodeComponentKind)
@@ -110,58 +99,5 @@ level = 'error'
 
 	if !reflect.DeepEqual([]byte(testConfig), data) {
 		t.Errorf("generated config is not equal to wanted config:\n, want: %s\n, got: %s\n", testConfig, string(data))
-	}
-}
-
-func TestMerge(t *testing.T) {
-	extraInput := `
-[logging]
-dir = '/other/dir'
-level = 'error'
-`
-	extraCfg, err := FromRawData([]byte(extraInput), v1alpha1.FrontendComponentKind)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	cfg, err := FromFile("testdata/frontend.toml", v1alpha1.FrontendComponentKind)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if err := Merge([]byte(extraInput), cfg); err != nil {
-		t.Fatal(err)
-	}
-
-	frontendCfg := cfg.(*FrontendConfig)
-	frontendExtraCfg := extraCfg.(*FrontendConfig)
-	if !reflect.DeepEqual(frontendCfg.LoggingOptions.Level, frontendExtraCfg.LoggingOptions.Level) {
-		t.Errorf("logging.level is not equal: want %s, got %s", frontendExtraCfg.LoggingOptions.Level, frontendCfg.LoggingOptions.Level)
-	}
-
-	if !reflect.DeepEqual(frontendCfg.LoggingOptions.Dir, frontendExtraCfg.LoggingOptions.Dir) {
-		t.Errorf("logging.dir is not equal: want %s, got %s", frontendExtraCfg.LoggingOptions.Dir, frontendCfg.LoggingOptions.Dir)
-	}
-}
-
-func testFromFile(filename string, kind v1alpha1.ComponentKind, t *testing.T) {
-	data, err := os.ReadFile(filename)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	cfg, err := FromFile(filename, kind)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	output, err := Marshal(cfg)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if !reflect.DeepEqual(data, output) {
-		t.Errorf("generated config is not equal to original config:\n, want: %s\n, got: %s\n",
-			string(data), string(output))
 	}
 }
