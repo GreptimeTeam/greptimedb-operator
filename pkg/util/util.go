@@ -26,3 +26,20 @@ func MergeStringMap(origin, new map[string]string) map[string]string {
 
 	return origin
 }
+
+// TODO(zyy17): Use generic to implement the following functions.
+
+func StringPtr(s string) *string {
+	if len(s) > 0 {
+		return &s
+	}
+	return nil
+}
+
+func BoolPtr(b bool) *bool {
+	return &b
+}
+
+func Uint64Ptr(i uint64) *uint64 {
+	return &i
+}

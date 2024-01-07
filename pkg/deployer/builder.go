@@ -30,6 +30,7 @@ import (
 
 const (
 	LastAppliedResourceSpec = "controller.greptime.io/last-applied-resource-spec"
+	ConfigmapReloader       = "configmap.reloader.stakater.com/reload"
 )
 
 // Builder is the interface for building K8s resources.

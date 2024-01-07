@@ -25,6 +25,7 @@ import (
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/dbconfig"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/deployer"
+	"github.com/GreptimeTeam/greptimedb-operator/pkg/util"
 )
 
 type Options struct {
@@ -80,8 +81,12 @@ func (c *ConfigGenerator) Generate() error {
 }
 
 func (c *ConfigGenerator) generateDatanodeConfig(initConfig []byte) ([]byte, error) {
-	cfg, err := dbconfig.FromRawData(initConfig, v1alpha1.DatanodeComponentKind)
+	cfg, err := dbconfig.NewFromComponentKind(v1alpha1.DatanodeComponentKind)
 	if err != nil {
+		return nil, err
+	}
+
+	if err := cfg.SetInputConfig(string(initConfig)); err != nil {
 		return nil, err
 	}
 
@@ -100,15 +105,15 @@ func (c *ConfigGenerator) generateDatanodeConfig(initConfig []byte) ([]byte, err
 	if len(podIP) == 0 {
 		return nil, fmt.Errorf("empty pod ip")
 	}
-	datanodeCfg.RPCAddr = fmt.Sprintf("%s:%d", podIP, c.DatanodeRPCPort)
+	datanodeCfg.RPCAddr = util.StringPtr(fmt.Sprintf("%s:%d", podIP, c.DatanodeRPCPort))
 
 	podName := os.Getenv(deployer.EnvPodName)
 	if len(podName) == 0 {
 		return nil, fmt.Errorf("empty pod name")
 	}
 
-	datanodeCfg.RPCHostName = fmt.Sprintf("%s.%s.%s:%d", podName,
-		c.DatanodeServiceName, c.Namespace, c.DatanodeRPCPort)
+	datanodeCfg.RPCHostName = util.StringPtr(fmt.Sprintf("%s.%s.%s:%d", podName,
+		c.DatanodeServiceName, c.Namespace, c.DatanodeRPCPort))
 
 	configData, err := dbconfig.Marshal(cfg)
 	if err != nil {

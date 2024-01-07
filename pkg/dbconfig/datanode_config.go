@@ -20,137 +20,34 @@ import (
 	corev1 "k8s.io/api/core/v1"
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
+	"github.com/GreptimeTeam/greptimedb-operator/pkg/util"
 	k8sutil "github.com/GreptimeTeam/greptimedb-operator/pkg/util/k8s"
 )
 
 var _ Config = &DatanodeConfig{}
 
 // DatanodeConfig is the configuration for the datanode.
-type (
-	DatanodeConfig struct {
-		// Node running mode.
-		Mode string `toml:"mode,omitempty"`
+type DatanodeConfig struct {
+	NodeID      *uint64 `tomlmapping:"node_id"`
+	RPCAddr     *string `tomlmapping:"rpc_addr"`
+	RPCHostName *string `tomlmapping:"rpc_hostname"`
 
-		// The datanode identifier, should be unique.
-		NodeID *uint64 `toml:"node_id,omitempty"`
+	// Storage options.
+	StorageType            *string `tomlmapping:"storage.type"`
+	StorageDataHome        *string `tomlmapping:"storage.data_home"`
+	StorageAccessKeyID     *string `tomlmapping:"storage.access_key_id"`
+	StorageSecretAccessKey *string `tomlmapping:"storage.secret_access_key"`
+	StorageAccessKeySecret *string `tomlmapping:"storage.access_key_secret"`
+	StorageBucket          *string `tomlmapping:"storage.bucket"`
+	StorageRoot            *string `tomlmapping:"storage.root"`
+	StorageRegion          *string `tomlmapping:"storage.region"`
+	StorageEndpoint        *string `tomlmapping:"storage.endpoint"`
 
-		// Whether to use in-memory catalog.
-		EnableMemoryCatalog *bool `toml:"enable_memory_catalog,omitempty"`
+	WalDir *string `tomlmapping:"wal.dir"`
 
-		RequireLeaseBeforeStartup *bool `toml:"require_lease_before_startup,omitempty"`
-
-		// gRPC server address.
-		RPCAddr string `toml:"rpc_addr,omitempty"`
-
-		// Hostname of this node.
-		RPCHostName string `toml:"rpc_hostname,omitempty"`
-
-		// The number of gRPC server worker threads.
-		RPCRuntimeSize int32 `toml:"rpc_runtime_size,omitempty"`
-
-		// Max gRPC receiving(decoding) message size.
-		RPCMaxRecvMessageSize string `toml:"rpc_max_recv_message_size,omitempty"`
-
-		// Max gRPC sending(encoding) message size.
-		RPCMaxSendMessageSize string `toml:"rpc_max_send_message_size,omitempty"`
-
-		HeartbeatOptions HeartbeatOptions `toml:"heartbeat,omitempty"`
-
-		HTTPOptions HTTPOptions `toml:"http,omitempty"`
-
-		MetaClientOptions MetaClientOptions `toml:"meta_client,omitempty"`
-
-		Wal struct {
-			Dir            string `toml:"dir,omitempty"`
-			FileSize       string `toml:"file_size,omitempty"`
-			PurgeThreshold string `toml:"purge_threshold,omitempty"`
-			PurgeInterval  string `toml:"purge_interval,omitempty"`
-			ReadBatchSize  int32  `toml:"read_batch_size,omitempty"`
-			SyncWrite      *bool  `toml:"sync_write,omitempty"`
-		} `toml:"wal,omitempty"`
-
-		Storage struct {
-			DataHome  string `toml:"data_home,omitempty"`
-			GlobalTTL string `toml:"global_ttl,omitempty"`
-
-			// Storage options.
-			Type            string `toml:"type,omitempty"`
-			Bucket          string `toml:"bucket,omitempty"`
-			Root            string `toml:"root,omitempty"`
-			AccessKeyID     string `toml:"access_key_id,omitempty"`
-			SecretAccessKey string `toml:"secret_access_key,omitempty"`
-			AccessKeySecret string `toml:"access_key_secret,omitempty"`
-			Endpoint        string `toml:"endpoint,omitempty"`
-			Region          string `toml:"region,omitempty"`
-			CachePath       string `toml:"cache_path,omitempty"`
-			CacheCapacity   string `toml:"cache_capacity,omitempty"`
-
-			Compaction struct {
-				// Max task number that can concurrently run.
-				MaxInflightTasks int32 `toml:"max_inflight_tasks,omitempty"`
-
-				// Max files in level 0 to trigger compaction.
-				MaxFilesInLevel0 int32 `toml:"max_files_in_level0,omitempty"`
-
-				// Max task number for SST purge task after compaction.
-				MaxPurgeTasks int32 `toml:"max_purge_tasks,omitempty"`
-
-				// Buffer threshold while writing SST files.
-				SSTWriteBufferSize string `toml:"sst_write_buffer_size,omitempty"`
-			} `toml:"compaction,omitempty"`
-
-			// Storage manifest options.
-			Manifest struct {
-				// Region checkpoint actions margin.
-				CheckpointMargin int32 `toml:"checkpoint_margin,omitempty"`
-
-				// Region manifest logs and checkpoints gc execution duration.
-				GCDuration string `toml:"gc_duration,omitempty"`
-
-				// Whether to try creating a manifest checkpoint on region opening.
-				Compress *bool `toml:"compress,omitempty"`
-			} `toml:"manifest,omitempty"`
-
-			// Storage flush options.
-			Flush struct {
-				// Max inflight flush tasks.
-				MaxFlushTasks int32 `toml:"max_flush_tasks,omitempty"`
-
-				// Default write buffer size for a region.
-				RegionWriteBufferSize string `toml:"region_write_buffer_size,omitempty"`
-
-				// Interval to check whether a region needs flush.
-				PickerScheduleInterval string `toml:"picker_schedule_interval,omitempty"`
-
-				// Interval to auto flush a region if it has not flushed yet.
-				AutoFlushInterval string `toml:"auto_flush_interval,omitempty"`
-
-				// Global write buffer size for all regions.
-				GlobalWriteBufferSize string `toml:"global_write_buffer_size,omitempty"`
-			} `toml:"flush,omitempty"`
-		} `toml:"storage,omitempty"`
-
-		RegionEngine []struct {
-			MitoConfig struct {
-				NumWorkers                  int    `toml:"num_workers"`
-				WorkerChannelSize           int    `toml:"worker_channel_size"`
-				WorkerRequestBatchSize      int    `toml:"worker_request_batch_size"`
-				ManifestCheckpointDistance  int    `toml:"manifest_checkpoint_distance"`
-				ManifestCompressType        string `toml:"manifest_compress_type"`
-				MaxBackgroundJobs           int    `toml:"max_background_jobs"`
-				AutoFlushInterval           string `toml:"auto_flush_interval"`
-				GlobalWriteBufferSize       string `toml:"global_write_buffer_size"`
-				GlobalWriteBufferRejectSize string `toml:"global_write_buffer_reject_size"`
-				SstMetaCacheSize            string `toml:"sst_meta_cache_size"`
-				VectorCacheSize             string `toml:"vector_cache_size"`
-			} `toml:"mito,omitempty"`
-		} `toml:"region_engine,omitempty"`
-
-		LoggingOptions LoggingOptions `toml:"logging,omitempty"`
-
-		EnableTelemetry *bool `toml:"enable_telemetry,omitempty"`
-	}
-)
+	// InputConfig is from config field of cluster spec.
+	InputConfig string
+}
 
 // ConfigureByCluster configures the datanode config by the given cluster.
 func (c *DatanodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster) error {
@@ -162,15 +59,15 @@ func (c *DatanodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster)
 				if err != nil {
 					return err
 				}
-				c.Storage.AccessKeyID = string(accessKeyID)
-				c.Storage.SecretAccessKey = string(secretAccessKey)
+				c.StorageAccessKeyID = util.StringPtr(string(accessKeyID))
+				c.StorageSecretAccessKey = util.StringPtr(string(secretAccessKey))
 			}
 
-			c.Storage.Type = "S3"
-			c.Storage.Bucket = cluster.Spec.ObjectStorageProvider.S3.Bucket
-			c.Storage.Root = cluster.Spec.ObjectStorageProvider.S3.Root
-			c.Storage.Endpoint = cluster.Spec.ObjectStorageProvider.S3.Endpoint
-			c.Storage.Region = cluster.Spec.ObjectStorageProvider.S3.Region
+			c.StorageType = util.StringPtr("S3")
+			c.StorageBucket = util.StringPtr(cluster.Spec.ObjectStorageProvider.S3.Bucket)
+			c.StorageRoot = util.StringPtr(cluster.Spec.ObjectStorageProvider.S3.Root)
+			c.StorageEndpoint = util.StringPtr(cluster.Spec.ObjectStorageProvider.S3.Endpoint)
+			c.StorageRegion = util.StringPtr(cluster.Spec.ObjectStorageProvider.S3.Region)
 
 		} else if cluster.Spec.ObjectStorageProvider.OSS != nil {
 			if cluster.Spec.ObjectStorageProvider.OSS.SecretName != "" {
@@ -178,24 +75,24 @@ func (c *DatanodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster)
 				if err != nil {
 					return err
 				}
-				c.Storage.AccessKeyID = string(accessKeyID)
-				c.Storage.AccessKeySecret = string(secretAccessKey)
+				c.StorageAccessKeyID = util.StringPtr(string(accessKeyID))
+				c.StorageAccessKeySecret = util.StringPtr(string(secretAccessKey))
 			}
 
-			c.Storage.Type = "Oss"
-			c.Storage.Bucket = cluster.Spec.ObjectStorageProvider.OSS.Bucket
-			c.Storage.Root = cluster.Spec.ObjectStorageProvider.OSS.Root
-			c.Storage.Endpoint = cluster.Spec.ObjectStorageProvider.OSS.Endpoint
-			c.Storage.Region = cluster.Spec.ObjectStorageProvider.OSS.Region
+			c.StorageType = util.StringPtr("Oss")
+			c.StorageBucket = util.StringPtr(cluster.Spec.ObjectStorageProvider.OSS.Bucket)
+			c.StorageRoot = util.StringPtr(cluster.Spec.ObjectStorageProvider.OSS.Root)
+			c.StorageEndpoint = util.StringPtr(cluster.Spec.ObjectStorageProvider.OSS.Endpoint)
+			c.StorageRegion = util.StringPtr(cluster.Spec.ObjectStorageProvider.OSS.Region)
 		}
 	}
 
 	if cluster.Spec.Datanode != nil {
-		c.Wal.Dir = cluster.Spec.Datanode.Storage.WalDir
-		c.Storage.DataHome = cluster.Spec.Datanode.Storage.DataHome
+		c.WalDir = util.StringPtr(cluster.Spec.Datanode.Storage.WalDir)
+		c.StorageDataHome = util.StringPtr(cluster.Spec.Datanode.Storage.DataHome)
 
 		if len(cluster.Spec.Datanode.Config) > 0 {
-			if err := Merge([]byte(cluster.Spec.Datanode.Config), c); err != nil {
+			if err := c.SetInputConfig(cluster.Spec.Datanode.Config); err != nil {
 				return err
 			}
 		}
@@ -207,6 +104,17 @@ func (c *DatanodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster)
 // Kind returns the component kind of the datanode.
 func (c *DatanodeConfig) Kind() v1alpha1.ComponentKind {
 	return v1alpha1.DatanodeComponentKind
+}
+
+// GetInputConfig returns the input config.
+func (c *DatanodeConfig) GetInputConfig() string {
+	return c.InputConfig
+}
+
+// SetInputConfig sets the input config.
+func (c *DatanodeConfig) SetInputConfig(input string) error {
+	c.InputConfig = input
+	return nil
 }
 
 const (
