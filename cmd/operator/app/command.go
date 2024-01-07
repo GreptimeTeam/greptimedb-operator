@@ -33,6 +33,7 @@ import (
 	"github.com/GreptimeTeam/greptimedb-operator/cmd/operator/app/options"
 	"github.com/GreptimeTeam/greptimedb-operator/cmd/operator/app/version"
 	"github.com/GreptimeTeam/greptimedb-operator/controllers/greptimedbcluster"
+	"github.com/GreptimeTeam/greptimedb-operator/controllers/greptimedbstandalone"
 )
 
 const (
@@ -87,6 +88,11 @@ func NewOperatorCommand() *cobra.Command {
 
 			if err := greptimedbcluster.Setup(mgr, o); err != nil {
 				setupLog.Error(err, "unable to setup controller", "controller", "greptimedbcluster")
+				os.Exit(1)
+			}
+
+			if err := greptimedbstandalone.Setup(mgr, o); err != nil {
+				setupLog.Error(err, "unable to setup controller", "controller", "greptimedbstandalone")
 				os.Exit(1)
 			}
 
