@@ -239,6 +239,11 @@ func (b *datanodeBuilder) BuildStatefulSet() deployer.Builder {
 		},
 	}
 
+	if b.Cluster.Spec.ReloadWhenConfigChange {
+		sts.SetAnnotations(util.MergeStringMap(sts.GetAnnotations(),
+			map[string]string{deployer.ConfigmapReloader: ResourceName(b.Cluster.Name, b.ComponentKind)}))
+	}
+
 	b.Objects = append(b.Objects, sts)
 
 	return b

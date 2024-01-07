@@ -247,6 +247,11 @@ func (b *metaBuilder) BuildDeployment() deployer.Builder {
 		},
 	}
 
+	if b.Cluster.Spec.ReloadWhenConfigChange {
+		deployment.SetAnnotations(util.MergeStringMap(deployment.GetAnnotations(),
+			map[string]string{deployer.ConfigmapReloader: ResourceName(b.Cluster.Name, b.ComponentKind)}))
+	}
+
 	b.Objects = append(b.Objects, deployment)
 
 	return b
