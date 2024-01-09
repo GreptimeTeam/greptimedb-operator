@@ -29,6 +29,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
+	"github.com/GreptimeTeam/greptimedb-operator/controllers/common"
+	"github.com/GreptimeTeam/greptimedb-operator/controllers/constant"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/deployer"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/util"
 	k8sutil "github.com/GreptimeTeam/greptimedb-operator/pkg/util/k8s"
@@ -97,7 +99,7 @@ func (d *DatanodeDeployer) CheckAndUpdateStatus(ctx context.Context, crdObject c
 
 		objectKey = client.ObjectKey{
 			Namespace: cluster.Namespace,
-			Name:      ResourceName(cluster.Name, v1alpha1.DatanodeComponentKind),
+			Name:      common.ResourceName(cluster.Name, v1alpha1.DatanodeComponentKind),
 		}
 	)
 
@@ -123,7 +125,7 @@ func (d *DatanodeDeployer) deleteStorage(ctx context.Context, cluster *v1alpha1.
 
 	selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
 		MatchLabels: map[string]string{
-			GreptimeDBComponentName: ResourceName(cluster.Name, v1alpha1.DatanodeComponentKind),
+			constant.GreptimeDBComponentName: common.ResourceName(cluster.Name, v1alpha1.DatanodeComponentKind),
 		},
 	})
 	if err != nil {
@@ -172,12 +174,12 @@ func (b *datanodeBuilder) BuildService() deployer.Builder {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: b.Cluster.Namespace,
-			Name:      ResourceName(b.Cluster.Name, b.ComponentKind),
+			Name:      common.ResourceName(b.Cluster.Name, b.ComponentKind),
 		},
 		Spec: corev1.ServiceSpec{
 			ClusterIP: corev1.ClusterIPNone,
 			Selector: map[string]string{
-				GreptimeDBComponentName: ResourceName(b.Cluster.Name, b.ComponentKind),
+				constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.ComponentKind),
 			},
 			Ports: b.servicePorts(),
 		},
@@ -223,15 +225,15 @@ func (b *datanodeBuilder) BuildStatefulSet() deployer.Builder {
 			APIVersion: "apps/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      ResourceName(b.Cluster.Name, b.ComponentKind),
+			Name:      common.ResourceName(b.Cluster.Name, b.ComponentKind),
 			Namespace: b.Cluster.Namespace,
 		},
 		Spec: appsv1.StatefulSetSpec{
-			ServiceName: ResourceName(b.Cluster.Name, b.ComponentKind),
+			ServiceName: common.ResourceName(b.Cluster.Name, b.ComponentKind),
 			Replicas:    b.Cluster.Spec.Datanode.Replicas,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					GreptimeDBComponentName: ResourceName(b.Cluster.Name, b.ComponentKind),
+					constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.ComponentKind),
 				},
 			},
 			Template:             b.generatePodTemplateSpec(),
@@ -241,7 +243,7 @@ func (b *datanodeBuilder) BuildStatefulSet() deployer.Builder {
 
 	if b.Cluster.Spec.ReloadWhenConfigChange {
 		sts.SetAnnotations(util.MergeStringMap(sts.GetAnnotations(),
-			map[string]string{deployer.ConfigmapReloader: ResourceName(b.Cluster.Name, b.ComponentKind)}))
+			map[string]string{deployer.ConfigmapReloader: common.ResourceName(b.Cluster.Name, b.ComponentKind)}))
 	}
 
 	b.Objects = append(b.Objects, sts)
@@ -276,11 +278,11 @@ func (b *datanodeBuilder) BuildPodMonitor() deployer.Builder {
 func (b *datanodeBuilder) generateMainContainerArgs() []string {
 	return []string{
 		"datanode", "start",
-		"--metasrv-addr", fmt.Sprintf("%s.%s:%d", ResourceName(b.Cluster.Name, v1alpha1.MetaComponentKind),
+		"--metasrv-addr", fmt.Sprintf("%s.%s:%d", common.ResourceName(b.Cluster.Name, v1alpha1.MetaComponentKind),
 			b.Cluster.Namespace, b.Cluster.Spec.Meta.ServicePort),
 		// TODO(zyy17): Should we add the new field of the CRD for datanode http port?
 		"--http-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.HTTPServicePort),
-		"--config-file", path.Join(GreptimeDBConfigDir, GreptimeDBConfigFileName),
+		"--config-file", path.Join(constant.GreptimeDBConfigDir, constant.GreptimeDBConfigFileName),
 	}
 }
 
@@ -289,17 +291,17 @@ func (b *datanodeBuilder) generatePodTemplateSpec() corev1.PodTemplateSpec {
 
 	if len(b.Cluster.Spec.Datanode.Template.MainContainer.Args) == 0 {
 		// Setup main container args.
-		podTemplateSpec.Spec.Containers[MainContainerIndex].Args = b.generateMainContainerArgs()
+		podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Args = b.generateMainContainerArgs()
 	}
 
 	b.mountConfigDir(podTemplateSpec)
 	b.addStorageDirMounts(podTemplateSpec)
 	b.addInitConfigDirVolume(podTemplateSpec)
 
-	podTemplateSpec.Spec.Containers[MainContainerIndex].Ports = b.containerPorts()
+	podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Ports = b.containerPorts()
 	podTemplateSpec.Spec.InitContainers = append(podTemplateSpec.Spec.InitContainers, *b.generateInitializer())
 	podTemplateSpec.ObjectMeta.Labels = util.MergeStringMap(podTemplateSpec.ObjectMeta.Labels, map[string]string{
-		GreptimeDBComponentName: ResourceName(b.Cluster.Name, b.ComponentKind),
+		constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.ComponentKind),
 	})
 
 	return *podTemplateSpec
@@ -334,21 +336,21 @@ func (b *datanodeBuilder) generateInitializer() *corev1.Container {
 			"greptimedb-initializer",
 		},
 		Args: []string{
-			"--config-path", path.Join(GreptimeDBConfigDir, GreptimeDBConfigFileName),
-			"--init-config-path", path.Join(GreptimeDBInitConfigDir, GreptimeDBConfigFileName),
+			"--config-path", path.Join(constant.GreptimeDBConfigDir, constant.GreptimeDBConfigFileName),
+			"--init-config-path", path.Join(constant.GreptimeDBInitConfigDir, constant.GreptimeDBConfigFileName),
 			"--datanode-rpc-port", fmt.Sprintf("%d", b.Cluster.Spec.GRPCServicePort),
-			"--datanode-service-name", ResourceName(b.Cluster.Name, b.ComponentKind),
+			"--datanode-service-name", common.ResourceName(b.Cluster.Name, b.ComponentKind),
 			"--namespace", b.Cluster.Namespace,
 			"--component-kind", string(b.ComponentKind),
 		},
 		VolumeMounts: []corev1.VolumeMount{
 			{
-				Name:      ConfigVolumeName,
-				MountPath: GreptimeDBConfigDir,
+				Name:      constant.ConfigVolumeName,
+				MountPath: constant.GreptimeDBConfigDir,
 			},
 			{
-				Name:      InitConfigVolumeName,
-				MountPath: GreptimeDBInitConfigDir,
+				Name:      constant.InitConfigVolumeName,
+				MountPath: constant.GreptimeDBInitConfigDir,
 			},
 		},
 
@@ -379,25 +381,25 @@ func (b *datanodeBuilder) generateInitializer() *corev1.Container {
 func (b *datanodeBuilder) mountConfigDir(template *corev1.PodTemplateSpec) {
 	// The empty-dir will be modified by initializer.
 	template.Spec.Volumes = append(template.Spec.Volumes, corev1.Volume{
-		Name: ConfigVolumeName,
+		Name: constant.ConfigVolumeName,
 		VolumeSource: corev1.VolumeSource{
 			EmptyDir: &corev1.EmptyDirVolumeSource{},
 		},
 	})
 
-	template.Spec.Containers[MainContainerIndex].VolumeMounts =
-		append(template.Spec.Containers[MainContainerIndex].VolumeMounts,
+	template.Spec.Containers[constant.MainContainerIndex].VolumeMounts =
+		append(template.Spec.Containers[constant.MainContainerIndex].VolumeMounts,
 			corev1.VolumeMount{
-				Name:      ConfigVolumeName,
-				MountPath: GreptimeDBConfigDir,
+				Name:      constant.ConfigVolumeName,
+				MountPath: constant.GreptimeDBConfigDir,
 			},
 		)
 }
 
 func (b *datanodeBuilder) addStorageDirMounts(template *corev1.PodTemplateSpec) {
 	// The volume is defined in the PVC.
-	template.Spec.Containers[MainContainerIndex].VolumeMounts =
-		append(template.Spec.Containers[MainContainerIndex].VolumeMounts,
+	template.Spec.Containers[constant.MainContainerIndex].VolumeMounts =
+		append(template.Spec.Containers[constant.MainContainerIndex].VolumeMounts,
 			corev1.VolumeMount{
 				Name:      b.Cluster.Spec.Datanode.Storage.Name,
 				MountPath: b.Cluster.Spec.Datanode.Storage.MountPath,
@@ -408,12 +410,12 @@ func (b *datanodeBuilder) addStorageDirMounts(template *corev1.PodTemplateSpec) 
 // The init-config volume is used for initializer.
 func (b *datanodeBuilder) addInitConfigDirVolume(template *corev1.PodTemplateSpec) {
 	template.Spec.Volumes = append(template.Spec.Volumes, corev1.Volume{
-		Name: InitConfigVolumeName,
+		Name: constant.InitConfigVolumeName,
 		VolumeSource: corev1.VolumeSource{
 			// Mount the configmap as init-config.
 			ConfigMap: &corev1.ConfigMapVolumeSource{
 				LocalObjectReference: corev1.LocalObjectReference{
-					Name: ResourceName(b.Cluster.Name, b.ComponentKind),
+					Name: common.ResourceName(b.Cluster.Name, b.ComponentKind),
 				},
 			},
 		},

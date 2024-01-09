@@ -32,6 +32,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
+	"github.com/GreptimeTeam/greptimedb-operator/controllers/common"
+	"github.com/GreptimeTeam/greptimedb-operator/controllers/constant"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/deployer"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/util"
 	k8sutil "github.com/GreptimeTeam/greptimedb-operator/pkg/util/k8s"
@@ -111,7 +113,7 @@ func (d *MetaDeployer) CheckAndUpdateStatus(ctx context.Context, highLevelObject
 
 		objectKey = client.ObjectKey{
 			Namespace: cluster.Namespace,
-			Name:      ResourceName(cluster.Name, v1alpha1.MetaComponentKind),
+			Name:      common.ResourceName(cluster.Name, v1alpha1.MetaComponentKind),
 		}
 	)
 
@@ -202,12 +204,12 @@ func (b *metaBuilder) BuildService() deployer.Builder {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: b.Cluster.Namespace,
-			Name:      ResourceName(b.Cluster.Name, b.ComponentKind),
+			Name:      common.ResourceName(b.Cluster.Name, b.ComponentKind),
 		},
 		Spec: corev1.ServiceSpec{
 			Type: corev1.ServiceTypeClusterIP,
 			Selector: map[string]string{
-				GreptimeDBComponentName: ResourceName(b.Cluster.Name, b.ComponentKind),
+				constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.ComponentKind),
 			},
 			Ports: b.servicePorts(),
 		},
@@ -233,14 +235,14 @@ func (b *metaBuilder) BuildDeployment() deployer.Builder {
 			APIVersion: "apps/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      ResourceName(b.Cluster.Name, b.ComponentKind),
+			Name:      common.ResourceName(b.Cluster.Name, b.ComponentKind),
 			Namespace: b.Cluster.Namespace,
 		},
 		Spec: appsv1.DeploymentSpec{
 			Replicas: b.Cluster.Spec.Meta.Replicas,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					GreptimeDBComponentName: ResourceName(b.Cluster.Name, b.ComponentKind),
+					constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.ComponentKind),
 				},
 			},
 			Template: *b.generatePodTemplateSpec(),
@@ -249,7 +251,7 @@ func (b *metaBuilder) BuildDeployment() deployer.Builder {
 
 	if b.Cluster.Spec.ReloadWhenConfigChange {
 		deployment.SetAnnotations(util.MergeStringMap(deployment.GetAnnotations(),
-			map[string]string{deployer.ConfigmapReloader: ResourceName(b.Cluster.Name, b.ComponentKind)}))
+			map[string]string{deployer.ConfigmapReloader: common.ResourceName(b.Cluster.Name, b.ComponentKind)}))
 	}
 
 	b.Objects = append(b.Objects, deployment)
@@ -310,16 +312,16 @@ func (b *metaBuilder) generatePodTemplateSpec() *corev1.PodTemplateSpec {
 
 	if len(b.Cluster.Spec.Meta.Template.MainContainer.Args) == 0 {
 		// Setup main container args.
-		podTemplateSpec.Spec.Containers[MainContainerIndex].Args = b.generateMainContainerArgs()
+		podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Args = b.generateMainContainerArgs()
 	}
 
-	podTemplateSpec.Spec.Containers[MainContainerIndex].Ports = b.containerPorts()
-	podTemplateSpec.Spec.Containers[MainContainerIndex].Env = append(podTemplateSpec.Spec.Containers[MainContainerIndex].Env, b.env()...)
+	podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Ports = b.containerPorts()
+	podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Env = append(podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Env, b.env()...)
 
 	b.MountConfigDir(podTemplateSpec)
 
 	podTemplateSpec.ObjectMeta.Labels = util.MergeStringMap(podTemplateSpec.ObjectMeta.Labels, map[string]string{
-		GreptimeDBComponentName: ResourceName(b.Cluster.Name, b.ComponentKind),
+		constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.ComponentKind),
 	})
 
 	return podTemplateSpec
@@ -333,7 +335,7 @@ func (b *metaBuilder) generateMainContainerArgs() []string {
 		"--http-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.HTTPServicePort),
 		"--server-addr", fmt.Sprintf("$(%s):%d", deployer.EnvPodIP, b.Cluster.Spec.Meta.ServicePort),
 		"--store-addr", b.Cluster.Spec.Meta.EtcdEndpoints[0],
-		"--config-file", path.Join(GreptimeDBConfigDir, GreptimeDBConfigFileName),
+		"--config-file", path.Join(constant.GreptimeDBConfigDir, constant.GreptimeDBConfigFileName),
 	}
 }
 

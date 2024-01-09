@@ -101,6 +101,11 @@ func (c *DatanodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster)
 	return nil
 }
 
+// ConfigureByStandalone is not need to implemenet in cluster mode.
+func (c *DatanodeConfig) ConfigureByStandalone(_ *v1alpha1.GreptimeDBStandalone) error {
+	return nil
+}
+
 // Kind returns the component kind of the datanode.
 func (c *DatanodeConfig) Kind() v1alpha1.ComponentKind {
 	return v1alpha1.DatanodeComponentKind

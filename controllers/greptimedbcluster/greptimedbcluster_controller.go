@@ -113,7 +113,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (result ct
 	defer func() {
 		if err != nil {
 			r.Recorder.Eventf(cluster, corev1.EventTypeWarning, "ReconcileError", fmt.Sprintf("Reconcile error: %v", err))
-			if err := r.setClusterPhase(ctx, cluster, v1alpha1.ClusterError); err != nil && !errors.IsNotFound(err) {
+			if err := r.setClusterPhase(ctx, cluster, v1alpha1.PhaseError); err != nil && !errors.IsNotFound(err) {
 				klog.Errorf("Failed to update status: %v", err)
 				return
 			}
@@ -143,7 +143,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (result ct
 	// Means the cluster is just created.
 	if len(cluster.Status.ClusterPhase) == 0 {
 		klog.Infof("Start to create the cluster '%s/%s'", cluster.Namespace, cluster.Name)
-		if err = r.setClusterPhase(ctx, cluster, v1alpha1.ClusterStarting); err != nil {
+		if err = r.setClusterPhase(ctx, cluster, v1alpha1.PhaseStarting); err != nil {
 			return
 		}
 	}
@@ -161,13 +161,13 @@ func (r *Reconciler) sync(ctx context.Context, cluster *v1alpha1.GreptimeDBClust
 			)
 
 			// If the cluster is already running, we will set it to updating phase.
-			if currentPhase == v1alpha1.ClusterRunning {
-				nextPhase = v1alpha1.ClusterUpdating
+			if currentPhase == v1alpha1.PhaseRunning {
+				nextPhase = v1alpha1.PhaseUpdating
 			}
 
 			// If the cluster is in error phase, we will set it to starting phase.
-			if currentPhase == v1alpha1.ClusterError {
-				nextPhase = v1alpha1.ClusterStarting
+			if currentPhase == v1alpha1.PhaseError {
+				nextPhase = v1alpha1.PhaseStarting
 			}
 
 			if err := r.setClusterPhase(ctx, cluster, nextPhase); err != nil {
@@ -182,10 +182,10 @@ func (r *Reconciler) sync(ctx context.Context, cluster *v1alpha1.GreptimeDBClust
 		}
 	}
 
-	if cluster.Status.ClusterPhase == v1alpha1.ClusterStarting ||
-		cluster.Status.ClusterPhase == v1alpha1.ClusterUpdating {
-		cluster.Status.SetCondition(*v1alpha1.NewCondition(v1alpha1.GreptimeDBClusterReady, corev1.ConditionTrue, "ClusterReady", "the cluster is ready"))
-		if err := r.setClusterPhase(ctx, cluster, v1alpha1.ClusterRunning); err != nil {
+	if cluster.Status.ClusterPhase == v1alpha1.PhaseStarting ||
+		cluster.Status.ClusterPhase == v1alpha1.PhaseUpdating {
+		cluster.Status.SetCondition(*v1alpha1.NewCondition(v1alpha1.ConditionTypeReady, corev1.ConditionTrue, "ClusterReady", "the cluster is ready"))
+		if err := r.setClusterPhase(ctx, cluster, v1alpha1.PhaseRunning); err != nil {
 			return ctrl.Result{}, err
 		}
 	}
@@ -212,8 +212,8 @@ func (r *Reconciler) delete(ctx context.Context, cluster *v1alpha1.GreptimeDBClu
 		return ctrl.Result{}, nil
 	}
 
-	if cluster.Status.ClusterPhase != v1alpha1.ClusterTerminating {
-		if err := r.setClusterPhase(ctx, cluster, v1alpha1.ClusterTerminating); err != nil {
+	if cluster.Status.ClusterPhase != v1alpha1.PhaseTerminating {
+		if err := r.setClusterPhase(ctx, cluster, v1alpha1.PhaseTerminating); err != nil {
 			return ctrl.Result{}, err
 		}
 
@@ -239,7 +239,7 @@ func (r *Reconciler) delete(ctx context.Context, cluster *v1alpha1.GreptimeDBClu
 	return ctrl.Result{}, nil
 }
 
-func (r *Reconciler) setClusterPhase(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster, phase v1alpha1.ClusterPhase) error {
+func (r *Reconciler) setClusterPhase(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster, phase v1alpha1.Phase) error {
 	// If the cluster is already in the phase, we will not update it.
 	if cluster.Status.ClusterPhase == phase {
 		return nil
@@ -347,13 +347,13 @@ func (r *Reconciler) checkPodMonitorCRDInstall(ctx context.Context, groupKind me
 
 func (r *Reconciler) recordNormalEventByPhase(cluster *v1alpha1.GreptimeDBCluster) {
 	switch cluster.Status.ClusterPhase {
-	case v1alpha1.ClusterStarting:
+	case v1alpha1.PhaseStarting:
 		r.Recorder.Eventf(cluster, corev1.EventTypeNormal, "StartingCluster", "Cluster is starting")
-	case v1alpha1.ClusterRunning:
+	case v1alpha1.PhaseRunning:
 		r.Recorder.Eventf(cluster, corev1.EventTypeNormal, "ClusterIsReady", "Cluster is ready")
-	case v1alpha1.ClusterUpdating:
+	case v1alpha1.PhaseUpdating:
 		r.Recorder.Eventf(cluster, corev1.EventTypeNormal, "UpdatingCluster", "Cluster is updating")
-	case v1alpha1.ClusterTerminating:
+	case v1alpha1.PhaseTerminating:
 		r.Recorder.Eventf(cluster, corev1.EventTypeNormal, "TerminatingCluster", "Cluster is terminating")
 	}
 }

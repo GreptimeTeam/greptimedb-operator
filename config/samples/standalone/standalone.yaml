@@ -18,4 +18,6 @@ metadata:
   name: basic
   namespace: default
 spec:
-  foo: bar
+  base:
+    main:
+      image: greptime/greptimedb:latest

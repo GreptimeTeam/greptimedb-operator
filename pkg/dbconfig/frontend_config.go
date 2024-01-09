@@ -37,6 +37,11 @@ func (c *FrontendConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster)
 	return nil
 }
 
+// ConfigureByStandalone is not need to implemenet in cluster mode.
+func (c *FrontendConfig) ConfigureByStandalone(_ *v1alpha1.GreptimeDBStandalone) error {
+	return nil
+}
+
 // Kind returns the component kind of the frontend.
 func (c *FrontendConfig) Kind() v1alpha1.ComponentKind {
 	return v1alpha1.FrontendComponentKind

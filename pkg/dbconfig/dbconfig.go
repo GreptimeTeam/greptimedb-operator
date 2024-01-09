@@ -35,6 +35,9 @@ type Config interface {
 	// ConfigureByCluster configures the config by the given cluster.
 	ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster) error
 
+	// ConfigureByStandalone configures the config by the given standalone.
+	ConfigureByStandalone(standalone *v1alpha1.GreptimeDBStandalone) error
+
 	// GetInputConfig returns the input config.
 	GetInputConfig() string
 
@@ -51,6 +54,8 @@ func NewFromComponentKind(kind v1alpha1.ComponentKind) (Config, error) {
 		return &DatanodeConfig{}, nil
 	case v1alpha1.FrontendComponentKind:
 		return &FrontendConfig{}, nil
+	case v1alpha1.StandaloneKind:
+		return &StandaloneConfig{}, nil
 	default:
 		return nil, fmt.Errorf("unknown component kind: %s", kind)
 	}
@@ -79,6 +84,20 @@ func FromCluster(cluster *v1alpha1.GreptimeDBCluster, componentKind v1alpha1.Com
 	}
 
 	if err := cfg.ConfigureByCluster(cluster); err != nil {
+		return nil, err
+	}
+
+	return Marshal(cfg)
+}
+
+// FromStandalone creates config data from the standalone CRD.
+func FromStandalone(standalone *v1alpha1.GreptimeDBStandalone) ([]byte, error) {
+	cfg, err := NewFromComponentKind(v1alpha1.StandaloneKind)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := cfg.ConfigureByStandalone(standalone); err != nil {
 		return nil, err
 	}
 

@@ -93,7 +93,7 @@ var _ = Describe("Test greptimedbcluster controller", func() {
 			}
 
 			for _, condition := range cluster.Status.Conditions {
-				if condition.Type == v1alpha1.GreptimeDBClusterReady && condition.Status == corev1.ConditionTrue {
+				if condition.Type == v1alpha1.ConditionTypeReady && condition.Status == corev1.ConditionTrue {
 					return true
 				}
 			}
