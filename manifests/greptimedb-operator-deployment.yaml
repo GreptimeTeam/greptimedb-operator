@@ -10921,6 +10921,9 @@ rules:
   verbs:
   - create
   - get
+  - list
+  - update
+  - watch
 - apiGroups:
   - ""
   resources:
@@ -10957,6 +10960,8 @@ rules:
   - secrets
   verbs:
   - get
+  - list
+  - watch
 - apiGroups:
   - ""
   resources:
