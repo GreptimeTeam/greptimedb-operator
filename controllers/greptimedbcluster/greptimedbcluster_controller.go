@@ -89,8 +89,8 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 // +kubebuilder:rbac:groups=greptime.io,resources=greptimedbclusters/finalizers,verbs=update
 // +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;watch;create;
 // +kubebuilder:rbac:groups=core,resources=services,verbs=get;list;watch;create;update;delete;
-// +kubebuilder:rbac:groups=core,resources=secrets,verbs=get;
-// +kubebuilder:rbac:groups=core,resources=configmaps,verbs=get;create;
+// +kubebuilder:rbac:groups=core,resources=secrets,verbs=get;list;watch;
+// +kubebuilder:rbac:groups=core,resources=configmaps,verbs=get;list;create;update;
 // +kubebuilder:rbac:groups=core,resources=events,verbs=get;list;watch;create;patch;
 // +kubebuilder:rbac:groups=core,resources=persistentvolumeclaims,verbs=get;list;watch;create;update;delete;
 // +kubebuilder:rbac:groups=apps,resources=statefulsets,verbs=get;list;watch;create;update;patch;delete
