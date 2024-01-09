@@ -15,13 +15,8 @@
 package dbconfig
 
 import (
-	"fmt"
-
-	corev1 "k8s.io/api/core/v1"
-
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/util"
-	k8sutil "github.com/GreptimeTeam/greptimedb-operator/pkg/util/k8s"
 )
 
 var _ Config = &DatanodeConfig{}
@@ -55,7 +50,7 @@ func (c *DatanodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster)
 	if cluster.Spec.ObjectStorageProvider != nil {
 		if cluster.Spec.ObjectStorageProvider.S3 != nil {
 			if cluster.Spec.ObjectStorageProvider.S3.SecretName != "" {
-				accessKeyID, secretAccessKey, err := c.getOCSCredentials(cluster.Namespace, cluster.Spec.ObjectStorageProvider.S3.SecretName)
+				accessKeyID, secretAccessKey, err := getOCSCredentials(cluster.Namespace, cluster.Spec.ObjectStorageProvider.S3.SecretName)
 				if err != nil {
 					return err
 				}
@@ -71,7 +66,7 @@ func (c *DatanodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster)
 
 		} else if cluster.Spec.ObjectStorageProvider.OSS != nil {
 			if cluster.Spec.ObjectStorageProvider.OSS.SecretName != "" {
-				accessKeyID, secretAccessKey, err := c.getOCSCredentials(cluster.Namespace, cluster.Spec.ObjectStorageProvider.OSS.SecretName)
+				accessKeyID, secretAccessKey, err := getOCSCredentials(cluster.Namespace, cluster.Spec.ObjectStorageProvider.OSS.SecretName)
 				if err != nil {
 					return err
 				}
@@ -120,36 +115,4 @@ func (c *DatanodeConfig) GetInputConfig() string {
 func (c *DatanodeConfig) SetInputConfig(input string) error {
 	c.InputConfig = input
 	return nil
-}
-
-const (
-	AccessKeyIDSecretKey     = "access-key-id"
-	SecretAccessKeySecretKey = "secret-access-key"
-)
-
-func (c *DatanodeConfig) getOCSCredentials(namespace, name string) (accessKeyID, secretAccessKey []byte, err error) {
-	var ocsCredentials corev1.Secret
-
-	if err = k8sutil.GetK8sResource(namespace, name, &ocsCredentials); err != nil {
-		return
-	}
-
-	if ocsCredentials.Data == nil {
-		err = fmt.Errorf("secret '%s/%s' is empty", namespace, name)
-		return
-	}
-
-	accessKeyID = ocsCredentials.Data[AccessKeyIDSecretKey]
-	if accessKeyID == nil {
-		err = fmt.Errorf("secret '%s/%s' does not have access key id '%s'", namespace, name, AccessKeyIDSecretKey)
-		return
-	}
-
-	secretAccessKey = ocsCredentials.Data[SecretAccessKeySecretKey]
-	if secretAccessKey == nil {
-		err = fmt.Errorf("secret '%s/%s' does not have secret access key '%s'", namespace, name, SecretAccessKeySecretKey)
-		return
-	}
-
-	return
 }

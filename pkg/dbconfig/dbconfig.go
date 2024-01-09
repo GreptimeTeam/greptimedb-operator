@@ -19,8 +19,10 @@ import (
 	"reflect"
 
 	"github.com/pelletier/go-toml"
+	corev1 "k8s.io/api/core/v1"
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
+	k8sutil "github.com/GreptimeTeam/greptimedb-operator/pkg/util/k8s"
 )
 
 const (
@@ -102,6 +104,38 @@ func FromStandalone(standalone *v1alpha1.GreptimeDBStandalone) ([]byte, error) {
 	}
 
 	return Marshal(cfg)
+}
+
+const (
+	AccessKeyIDSecretKey     = "access-key-id"
+	SecretAccessKeySecretKey = "secret-access-key"
+)
+
+func getOCSCredentials(namespace, name string) (accessKeyID, secretAccessKey []byte, err error) {
+	var ocsCredentials corev1.Secret
+
+	if err = k8sutil.GetK8sResource(namespace, name, &ocsCredentials); err != nil {
+		return
+	}
+
+	if ocsCredentials.Data == nil {
+		err = fmt.Errorf("secret '%s/%s' is empty", namespace, name)
+		return
+	}
+
+	accessKeyID = ocsCredentials.Data[AccessKeyIDSecretKey]
+	if accessKeyID == nil {
+		err = fmt.Errorf("secret '%s/%s' does not have access key id '%s'", namespace, name, AccessKeyIDSecretKey)
+		return
+	}
+
+	secretAccessKey = ocsCredentials.Data[SecretAccessKeySecretKey]
+	if secretAccessKey == nil {
+		err = fmt.Errorf("secret '%s/%s' does not have secret access key '%s'", namespace, name, SecretAccessKeySecretKey)
+		return
+	}
+
+	return
 }
 
 func setConfig(input *toml.Tree, config interface{}) (string, error) {
