@@ -25,6 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -90,6 +91,17 @@ func (s *StandaloneDeployer) Generate(crdObject client.Object) ([]client.Object,
 }
 
 func (s *StandaloneDeployer) CleanUp(ctx context.Context, crdObject client.Object) error {
+	cluster, err := s.getStandalone(crdObject)
+	if err != nil {
+		return err
+	}
+
+	if cluster.Spec.LocalStorage != nil && cluster.Spec.LocalStorage.StorageRetainPolicy == v1alpha1.StorageRetainPolicyTypeDelete {
+		if err := s.deleteStorage(ctx, cluster); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -127,6 +139,38 @@ func (s *StandaloneDeployer) getStandalone(crdObject client.Object) (*v1alpha1.G
 	return standalone, nil
 }
 
+func (d *StandaloneDeployer) deleteStorage(ctx context.Context, standalone *v1alpha1.GreptimeDBStandalone) error {
+	klog.Infof("Deleting standalone storage...")
+
+	selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			constant.GreptimeDBComponentName: common.ResourceName(standalone.Name, v1alpha1.StandaloneKind),
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	pvcList := new(corev1.PersistentVolumeClaimList)
+
+	err = d.List(ctx, pvcList, client.InNamespace(standalone.Namespace), client.MatchingLabelsSelector{Selector: selector})
+	if errors.IsNotFound(err) {
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+
+	for _, pvc := range pvcList.Items {
+		klog.Infof("Deleting standalone PVC: %s", pvc.Name)
+		if err := d.Delete(ctx, &pvc); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 var _ deployer.Builder = &standaloneBuilder{}
 
 type standaloneBuilder struct {
@@ -153,7 +197,7 @@ func (s *standaloneBuilder) BuildService() deployer.Builder {
 		Spec: corev1.ServiceSpec{
 			Type: s.standalone.Spec.Service.Type,
 			Selector: map[string]string{
-				constant.GreptimeDBComponentName: s.standalone.Name,
+				constant.GreptimeDBComponentName: common.ResourceName(s.standalone.Name, v1alpha1.StandaloneKind),
 			},
 			Ports:             s.servicePorts(),
 			LoadBalancerClass: s.standalone.Spec.Service.LoadBalancerClass,
@@ -201,14 +245,14 @@ func (s *standaloneBuilder) BuildStatefulSet() deployer.Builder {
 			APIVersion: "apps/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      s.standalone.Name,
+			Name:      common.ResourceName(s.standalone.Name, v1alpha1.StandaloneKind),
 			Namespace: s.standalone.Namespace,
 		},
 		Spec: appsv1.StatefulSetSpec{
 			Replicas: &replicas,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					constant.GreptimeDBComponentName: s.standalone.Name,
+					constant.GreptimeDBComponentName: common.ResourceName(s.standalone.Name, v1alpha1.StandaloneKind),
 				},
 			},
 			Template:             s.generatePodTemplateSpec(),
@@ -218,7 +262,7 @@ func (s *standaloneBuilder) BuildStatefulSet() deployer.Builder {
 
 	if s.standalone.Spec.ReloadWhenConfigChange {
 		sts.SetAnnotations(util.MergeStringMap(sts.GetAnnotations(),
-			map[string]string{deployer.ConfigmapReloader: s.standalone.Name}))
+			map[string]string{deployer.ConfigmapReloader: common.ResourceName(s.standalone.Name, v1alpha1.StandaloneKind)}))
 	}
 
 	s.Objects = append(s.Objects, sts)
@@ -245,7 +289,7 @@ func (s *standaloneBuilder) generatePodTemplateSpec() corev1.PodTemplateSpec {
 
 	template.Spec.Containers[constant.MainContainerIndex].Ports = s.containerPorts()
 	template.ObjectMeta.Labels = util.MergeStringMap(template.ObjectMeta.Labels, map[string]string{
-		constant.GreptimeDBComponentName: s.standalone.Name,
+		constant.GreptimeDBComponentName: common.ResourceName(s.standalone.Name, v1alpha1.StandaloneKind),
 	})
 
 	common.MountConfigDir(s.standalone.Name, v1alpha1.StandaloneKind, template)

@@ -46,6 +46,7 @@ var (
 
 	// The default storage settings for datanode.
 	defaultDataNodeStorageName      = "datanode"
+	defaultStandaloneStorageName    = "standalone"
 	defaultDataNodeStorageSize      = "10Gi"
 	defaultDataNodeStorageMountPath = "/data/greptimedb"
 	defaultStorageRetainPolicyType  = StorageRetainPolicyTypeRetain
@@ -211,7 +212,7 @@ func (in *GreptimeDBStandalone) SetDefaults() error {
 		OpenTSDBServicePort:   int32(defaultOpenTSDBServicePort),
 		Version:               defaultVersion,
 		LocalStorage: &StorageSpec{
-			Name:                defaultDataNodeStorageName,
+			Name:                defaultStandaloneStorageName,
 			StorageSize:         defaultDataNodeStorageSize,
 			MountPath:           defaultDataNodeStorageMountPath,
 			StorageRetainPolicy: defaultStorageRetainPolicyType,
