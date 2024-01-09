@@ -104,6 +104,14 @@ type GreptimeDBStandalone struct {
 	Status GreptimeDBStandaloneStatus `json:"status,omitempty"`
 }
 
+func (in *GreptimeDBStandaloneStatus) GetCondition(conditionType ConditionType) *Condition {
+	return GetCondition(in.Conditions, conditionType)
+}
+
+func (in *GreptimeDBStandaloneStatus) SetCondition(condition Condition) {
+	in.Conditions = SetCondition(in.Conditions, condition)
+}
+
 // +kubebuilder:object:root=true
 
 // GreptimeDBStandaloneList contains a list of GreptimeDBStandalone

@@ -65,7 +65,7 @@ func (s *StandaloneDeployer) NewBuilder(crdObject client.Object) deployer.Builde
 		},
 	}
 
-	standalone, err := s.getGreptimeDBStandalone(crdObject)
+	standalone, err := s.getStandalone(crdObject)
 	if err != nil {
 		sb.Err = err
 	}
@@ -94,7 +94,7 @@ func (s *StandaloneDeployer) CleanUp(ctx context.Context, crdObject client.Objec
 }
 
 func (s *StandaloneDeployer) CheckAndUpdateStatus(ctx context.Context, crdObject client.Object) (bool, error) {
-	standalone, err := s.getGreptimeDBStandalone(crdObject)
+	standalone, err := s.getStandalone(crdObject)
 	if err != nil {
 		return false, err
 	}
@@ -119,7 +119,7 @@ func (s *StandaloneDeployer) CheckAndUpdateStatus(ctx context.Context, crdObject
 	return k8sutil.IsStatefulSetReady(sts), nil
 }
 
-func (s *StandaloneDeployer) getGreptimeDBStandalone(crdObject client.Object) (*v1alpha1.GreptimeDBStandalone, error) {
+func (s *StandaloneDeployer) getStandalone(crdObject client.Object) (*v1alpha1.GreptimeDBStandalone, error) {
 	standalone, ok := crdObject.(*v1alpha1.GreptimeDBStandalone)
 	if !ok {
 		return nil, fmt.Errorf("the object is not a GreptimeDBStandalone")

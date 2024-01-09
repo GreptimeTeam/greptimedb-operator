@@ -16,15 +16,16 @@ package greptimedbcluster
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
 
-	"github.com/BurntSushi/toml"
+	"github.com/pelletier/go-toml"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -104,7 +105,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (result ct
 
 	cluster := new(v1alpha1.GreptimeDBCluster)
 	if err := r.Get(ctx, req.NamespacedName, cluster); err != nil {
-		if errors.IsNotFound(err) {
+		if k8serrors.IsNotFound(err) {
 			return ctrl.Result{}, nil
 		}
 		return ctrl.Result{}, err
@@ -112,8 +113,8 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (result ct
 
 	defer func() {
 		if err != nil {
-			r.Recorder.Eventf(cluster, corev1.EventTypeWarning, "ReconcileError", fmt.Sprintf("Reconcile error: %v", err))
-			if err := r.setClusterPhase(ctx, cluster, v1alpha1.PhaseError); err != nil && !errors.IsNotFound(err) {
+			r.Recorder.Event(cluster, corev1.EventTypeWarning, "ReconcileError", fmt.Sprintf("Reconcile error: %v", err))
+			if err := r.setClusterPhase(ctx, cluster, v1alpha1.PhaseError); err != nil && !k8serrors.IsNotFound(err) {
 				klog.Errorf("Failed to update status: %v", err)
 				return
 			}
@@ -126,17 +127,17 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (result ct
 	}
 
 	if err = r.addFinalizer(ctx, cluster); err != nil {
-		r.Recorder.Eventf(cluster, corev1.EventTypeWarning, "AddFinalizerFailed", fmt.Sprintf("Add finalizer failed: %v", err))
+		r.Recorder.Event(cluster, corev1.EventTypeWarning, "AddFinalizerFailed", fmt.Sprintf("Add finalizer failed: %v", err))
 		return
 	}
 
 	if err = r.validate(ctx, cluster); err != nil {
-		r.Recorder.Eventf(cluster, corev1.EventTypeWarning, "InvalidCluster", fmt.Sprintf("Invalid cluster: %v", err))
+		r.Recorder.Event(cluster, corev1.EventTypeWarning, "InvalidCluster", fmt.Sprintf("Invalid cluster: %v", err))
 		return
 	}
 
 	if err = cluster.SetDefaults(); err != nil {
-		r.Recorder.Eventf(cluster, corev1.EventTypeWarning, "SetDefaultValuesFailed", fmt.Sprintf("Set default values failed: %v", err))
+		r.Recorder.Event(cluster, corev1.EventTypeWarning, "SetDefaultValuesFailed", fmt.Sprintf("Set default values failed: %v", err))
 		return
 	}
 
@@ -154,7 +155,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (result ct
 func (r *Reconciler) sync(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster) (ctrl.Result, error) {
 	for _, d := range r.Deployers {
 		err := d.Sync(ctx, cluster, d)
-		if err == deployer.ErrSyncNotReady {
+		if errors.Is(err, deployer.ErrSyncNotReady) {
 			var (
 				currentPhase = cluster.Status.ClusterPhase
 				nextPhase    = currentPhase
@@ -288,7 +289,7 @@ func (r *Reconciler) validate(ctx context.Context, cluster *v1alpha1.GreptimeDBC
 				Kind:  "PodMonitor",
 			})
 			if err != nil {
-				if errors.IsNotFound(err) {
+				if k8serrors.IsNotFound(err) {
 					return fmt.Errorf("the crd podmonitors.monitoring.coreos.com is not installed")
 				} else {
 					return fmt.Errorf("check crd of podmonitors.monitoring.coreos.com is installed error: %v", err)
@@ -348,12 +349,12 @@ func (r *Reconciler) checkPodMonitorCRDInstall(ctx context.Context, groupKind me
 func (r *Reconciler) recordNormalEventByPhase(cluster *v1alpha1.GreptimeDBCluster) {
 	switch cluster.Status.ClusterPhase {
 	case v1alpha1.PhaseStarting:
-		r.Recorder.Eventf(cluster, corev1.EventTypeNormal, "StartingCluster", "Cluster is starting")
+		r.Recorder.Event(cluster, corev1.EventTypeNormal, "StartingCluster", "Cluster is starting")
 	case v1alpha1.PhaseRunning:
-		r.Recorder.Eventf(cluster, corev1.EventTypeNormal, "ClusterIsReady", "Cluster is ready")
+		r.Recorder.Event(cluster, corev1.EventTypeNormal, "ClusterIsReady", "Cluster is ready")
 	case v1alpha1.PhaseUpdating:
-		r.Recorder.Eventf(cluster, corev1.EventTypeNormal, "UpdatingCluster", "Cluster is updating")
+		r.Recorder.Event(cluster, corev1.EventTypeNormal, "UpdatingCluster", "Cluster is updating")
 	case v1alpha1.PhaseTerminating:
-		r.Recorder.Eventf(cluster, corev1.EventTypeNormal, "TerminatingCluster", "Cluster is terminating")
+		r.Recorder.Event(cluster, corev1.EventTypeNormal, "TerminatingCluster", "Cluster is terminating")
 	}
 }
