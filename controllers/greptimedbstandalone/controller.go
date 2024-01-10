@@ -70,7 +70,7 @@ func Setup(mgr ctrl.Manager, _ *options.Options) error {
 }
 
 // +kubebuilder:rbac:groups=greptime.io,resources=greptimedbstandalones,verbs=get;list;watch;create;update;patch;delete
-// +kubebuilder:rbac:groups=greptime.ioresources=greptimedbstandalones/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=greptime.io,resources=greptimedbstandalones/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=greptime.io,resources=greptimedbstandalones/finalizers,verbs=update
 // +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;watch;create;
 // +kubebuilder:rbac:groups=core,resources=services,verbs=get;list;watch;create;update;delete;
@@ -114,7 +114,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (result ct
 	}
 
 	if err = r.validate(ctx, standalone); err != nil {
-		r.Recorder.Event(standalone, corev1.EventTypeWarning, "InvalidCluster", fmt.Sprintf("Invalid cluster: %v", err))
+		r.Recorder.Event(standalone, corev1.EventTypeWarning, "InvalidStandalone", fmt.Sprintf("Invalid standalone: %v", err))
 		return
 	}
 
@@ -153,12 +153,12 @@ func (r *Reconciler) sync(ctx context.Context, standalone *v1alpha1.GreptimeDBSt
 			nextPhase    = currentPhase
 		)
 
-		// If the cluster is already running, we will set it to updating phase.
+		// If the standalone is already running, we will set it to updating phase.
 		if currentPhase == v1alpha1.PhaseRunning {
 			nextPhase = v1alpha1.PhaseUpdating
 		}
 
-		// If the cluster is in error phase, we will set it to starting phase.
+		// If the standalone is in error phase, we will set it to starting phase.
 		if currentPhase == v1alpha1.PhaseError {
 			nextPhase = v1alpha1.PhaseStarting
 		}
@@ -176,7 +176,7 @@ func (r *Reconciler) sync(ctx context.Context, standalone *v1alpha1.GreptimeDBSt
 
 	if standalone.Status.StandalonePhase == v1alpha1.PhaseStarting ||
 		standalone.Status.StandalonePhase == v1alpha1.PhaseUpdating {
-		standalone.Status.SetCondition(*v1alpha1.NewCondition(v1alpha1.ConditionTypeReady, corev1.ConditionTrue, "ClusterReady", "the cluster is ready"))
+		standalone.Status.SetCondition(*v1alpha1.NewCondition(v1alpha1.ConditionTypeReady, corev1.ConditionTrue, "StandaloneReady", "the standalone is ready"))
 		if err := r.setStandalonePhase(ctx, standalone, v1alpha1.PhaseRunning); err != nil {
 			return ctrl.Result{}, err
 		}
@@ -213,13 +213,13 @@ func (r *Reconciler) delete(ctx context.Context, standalone *v1alpha1.GreptimeDB
 		return ctrl.Result{}, err
 	}
 
-	klog.Infof("Delete GreptimeDB cluster '%s/%s'", standalone.Namespace, standalone.Name)
+	klog.Infof("Delete GreptimeDB standalone '%s/%s'", standalone.Namespace, standalone.Name)
 
 	return ctrl.Result{}, nil
 }
 
 func (r *Reconciler) setStandalonePhase(ctx context.Context, standalone *v1alpha1.GreptimeDBStandalone, phase v1alpha1.Phase) error {
-	// If the cluster is already in the phase, we will not update it.
+	// If the standalone is already in the phase, we will not update it.
 	if standalone.Status.StandalonePhase == phase {
 		return nil
 	}
