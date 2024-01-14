@@ -116,7 +116,7 @@ func (s *StandaloneDeployer) CheckAndUpdateStatus(ctx context.Context, crdObject
 
 		objectKey = client.ObjectKey{
 			Namespace: standalone.Namespace,
-			Name:      standalone.Name,
+			Name:      common.ResourceName(standalone.Name, v1alpha1.StandaloneKind),
 		}
 	)
 
