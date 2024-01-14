@@ -28,6 +28,8 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
+	"github.com/GreptimeTeam/greptimedb-operator/controllers/common"
+	"github.com/GreptimeTeam/greptimedb-operator/controllers/constant"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/deployer"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/util"
 	k8sutil "github.com/GreptimeTeam/greptimedb-operator/pkg/util/k8s"
@@ -84,7 +86,7 @@ func (d *FrontendDeployer) CheckAndUpdateStatus(ctx context.Context, crdObject c
 
 		objectKey = client.ObjectKey{
 			Namespace: cluster.Namespace,
-			Name:      ResourceName(cluster.Name, v1alpha1.FrontendComponentKind),
+			Name:      common.ResourceName(cluster.Name, v1alpha1.FrontendComponentKind),
 		}
 	)
 
@@ -127,14 +129,14 @@ func (b *frontendBuilder) BuildService() deployer.Builder {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace:   b.Cluster.Namespace,
-			Name:        ResourceName(b.Cluster.Name, b.ComponentKind),
+			Name:        common.ResourceName(b.Cluster.Name, b.ComponentKind),
 			Annotations: b.Cluster.Spec.Frontend.Service.Annotations,
 			Labels:      b.Cluster.Spec.Frontend.Service.Labels,
 		},
 		Spec: corev1.ServiceSpec{
 			Type: b.Cluster.Spec.Frontend.Service.Type,
 			Selector: map[string]string{
-				GreptimeDBComponentName: ResourceName(b.Cluster.Name, b.ComponentKind),
+				constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.ComponentKind),
 			},
 			Ports:             b.servicePorts(),
 			LoadBalancerClass: b.Cluster.Spec.Frontend.Service.LoadBalancerClass,
@@ -161,14 +163,14 @@ func (b *frontendBuilder) BuildDeployment() deployer.Builder {
 			APIVersion: "apps/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      ResourceName(b.Cluster.Name, b.ComponentKind),
+			Name:      common.ResourceName(b.Cluster.Name, b.ComponentKind),
 			Namespace: b.Cluster.Namespace,
 		},
 		Spec: appsv1.DeploymentSpec{
 			Replicas: b.Cluster.Spec.Frontend.Replicas,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					GreptimeDBComponentName: ResourceName(b.Cluster.Name, b.ComponentKind),
+					constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.ComponentKind),
 				},
 			},
 			Template: *b.generatePodTemplateSpec(),
@@ -177,7 +179,7 @@ func (b *frontendBuilder) BuildDeployment() deployer.Builder {
 
 	if b.Cluster.Spec.ReloadWhenConfigChange {
 		deployment.SetAnnotations(util.MergeStringMap(deployment.GetAnnotations(),
-			map[string]string{deployer.ConfigmapReloader: ResourceName(b.Cluster.Name, b.ComponentKind)}))
+			map[string]string{deployer.ConfigmapReloader: common.ResourceName(b.Cluster.Name, b.ComponentKind)}))
 	}
 
 	b.Objects = append(b.Objects, deployment)
@@ -237,20 +239,20 @@ func (b *frontendBuilder) generateMainContainerArgs() []string {
 	var args = []string{
 		"frontend", "start",
 		"--rpc-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.GRPCServicePort),
-		"--metasrv-addr", fmt.Sprintf("%s.%s:%d", ResourceName(b.Cluster.Name, v1alpha1.MetaComponentKind),
+		"--metasrv-addr", fmt.Sprintf("%s.%s:%d", common.ResourceName(b.Cluster.Name, v1alpha1.MetaComponentKind),
 			b.Cluster.Namespace, b.Cluster.Spec.Meta.ServicePort),
 		"--http-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.HTTPServicePort),
 		"--mysql-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.MySQLServicePort),
 		"--postgres-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.PostgresServicePort),
 		"--opentsdb-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.OpenTSDBServicePort),
-		"--config-file", path.Join(GreptimeDBConfigDir, GreptimeDBConfigFileName),
+		"--config-file", path.Join(constant.GreptimeDBConfigDir, constant.GreptimeDBConfigFileName),
 	}
 
 	if b.Cluster.Spec.Frontend != nil && b.Cluster.Spec.Frontend.TLS != nil {
 		args = append(args, []string{
 			"--tls-mode", "require",
-			"--tls-cert-path", path.Join(GreptimeDBTLSDir, TLSCrtSecretKey),
-			"--tls-key-path", path.Join(GreptimeDBTLSDir, TLSKeySecretKey),
+			"--tls-cert-path", path.Join(constant.GreptimeDBTLSDir, TLSCrtSecretKey),
+			"--tls-key-path", path.Join(constant.GreptimeDBTLSDir, TLSKeySecretKey),
 		}...)
 	}
 
@@ -262,14 +264,14 @@ func (b *frontendBuilder) generatePodTemplateSpec() *corev1.PodTemplateSpec {
 
 	if len(b.Cluster.Spec.Frontend.Template.MainContainer.Args) == 0 {
 		// Setup main container args.
-		podTemplateSpec.Spec.Containers[MainContainerIndex].Args = b.generateMainContainerArgs()
+		podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Args = b.generateMainContainerArgs()
 	}
 
 	podTemplateSpec.ObjectMeta.Labels = util.MergeStringMap(podTemplateSpec.ObjectMeta.Labels, map[string]string{
-		GreptimeDBComponentName: ResourceName(b.Cluster.Name, b.ComponentKind),
+		constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.ComponentKind),
 	})
 
-	podTemplateSpec.Spec.Containers[MainContainerIndex].Ports = b.containerPorts()
+	podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Ports = b.containerPorts()
 
 	b.MountConfigDir(podTemplateSpec)
 
@@ -282,7 +284,7 @@ func (b *frontendBuilder) generatePodTemplateSpec() *corev1.PodTemplateSpec {
 
 func (b *frontendBuilder) mountTLSSecret(template *corev1.PodTemplateSpec) {
 	template.Spec.Volumes = append(template.Spec.Volumes, corev1.Volume{
-		Name: TLSVolumeName,
+		Name: constant.TLSVolumeName,
 		VolumeSource: corev1.VolumeSource{
 			Secret: &corev1.SecretVolumeSource{
 				SecretName: b.Cluster.Spec.Frontend.TLS.SecretName,
@@ -290,11 +292,11 @@ func (b *frontendBuilder) mountTLSSecret(template *corev1.PodTemplateSpec) {
 		},
 	})
 
-	template.Spec.Containers[MainContainerIndex].VolumeMounts =
-		append(template.Spec.Containers[MainContainerIndex].VolumeMounts,
+	template.Spec.Containers[constant.MainContainerIndex].VolumeMounts =
+		append(template.Spec.Containers[constant.MainContainerIndex].VolumeMounts,
 			corev1.VolumeMount{
-				Name:      TLSVolumeName,
-				MountPath: GreptimeDBTLSDir,
+				Name:      constant.TLSVolumeName,
+				MountPath: constant.GreptimeDBTLSDir,
 				ReadOnly:  true,
 			},
 		)

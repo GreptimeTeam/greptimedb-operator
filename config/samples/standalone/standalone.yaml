@@ -1,4 +1,4 @@
-# Copyright 2023 Greptime Team
+# Copyright 2024 Greptime Team
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-apiVersion: v1
-kind: Secret
-type: Opaque
+apiVersion: greptime.io/v1alpha1
+kind: GreptimeDBStandalone
 metadata:
-  name: s3-credentials
+  name: basic
   namespace: default
-data:
-  access-key-id: "your-access-key-id-in-base64"
-  secret-access-key: "your-secret-access-key-in-base64"
+spec:
+  base:
+    main:
+      image: greptime/greptimedb:latest

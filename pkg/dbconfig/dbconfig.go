@@ -19,8 +19,10 @@ import (
 	"reflect"
 
 	"github.com/pelletier/go-toml"
+	corev1 "k8s.io/api/core/v1"
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
+	k8sutil "github.com/GreptimeTeam/greptimedb-operator/pkg/util/k8s"
 )
 
 const (
@@ -34,6 +36,9 @@ type Config interface {
 
 	// ConfigureByCluster configures the config by the given cluster.
 	ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster) error
+
+	// ConfigureByStandalone configures the config by the given standalone.
+	ConfigureByStandalone(standalone *v1alpha1.GreptimeDBStandalone) error
 
 	// GetInputConfig returns the input config.
 	GetInputConfig() string
@@ -51,6 +56,8 @@ func NewFromComponentKind(kind v1alpha1.ComponentKind) (Config, error) {
 		return &DatanodeConfig{}, nil
 	case v1alpha1.FrontendComponentKind:
 		return &FrontendConfig{}, nil
+	case v1alpha1.StandaloneKind:
+		return &StandaloneConfig{}, nil
 	default:
 		return nil, fmt.Errorf("unknown component kind: %s", kind)
 	}
@@ -83,6 +90,52 @@ func FromCluster(cluster *v1alpha1.GreptimeDBCluster, componentKind v1alpha1.Com
 	}
 
 	return Marshal(cfg)
+}
+
+// FromStandalone creates config data from the standalone CRD.
+func FromStandalone(standalone *v1alpha1.GreptimeDBStandalone) ([]byte, error) {
+	cfg, err := NewFromComponentKind(v1alpha1.StandaloneKind)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := cfg.ConfigureByStandalone(standalone); err != nil {
+		return nil, err
+	}
+
+	return Marshal(cfg)
+}
+
+const (
+	AccessKeyIDSecretKey     = "access-key-id"
+	SecretAccessKeySecretKey = "secret-access-key"
+)
+
+func getOCSCredentials(namespace, name string) (accessKeyID, secretAccessKey []byte, err error) {
+	var ocsCredentials corev1.Secret
+
+	if err = k8sutil.GetK8sResource(namespace, name, &ocsCredentials); err != nil {
+		return
+	}
+
+	if ocsCredentials.Data == nil {
+		err = fmt.Errorf("secret '%s/%s' is empty", namespace, name)
+		return
+	}
+
+	accessKeyID = ocsCredentials.Data[AccessKeyIDSecretKey]
+	if accessKeyID == nil {
+		err = fmt.Errorf("secret '%s/%s' does not have access key id '%s'", namespace, name, AccessKeyIDSecretKey)
+		return
+	}
+
+	secretAccessKey = ocsCredentials.Data[SecretAccessKeySecretKey]
+	if secretAccessKey == nil {
+		err = fmt.Errorf("secret '%s/%s' does not have secret access key '%s'", namespace, name, SecretAccessKeySecretKey)
+		return
+	}
+
+	return
 }
 
 func setConfig(input *toml.Tree, config interface{}) (string, error) {

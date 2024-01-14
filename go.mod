@@ -3,7 +3,6 @@ module github.com/GreptimeTeam/greptimedb-operator
 go 1.18
 
 require (
-	github.com/BurntSushi/toml v1.2.1
 	github.com/go-sql-driver/mysql v1.6.0
 	github.com/imdario/mergo v0.3.13
 	github.com/onsi/ginkgo/v2 v2.1.4

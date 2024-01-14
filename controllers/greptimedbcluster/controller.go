@@ -16,15 +16,16 @@ package greptimedbcluster
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
 
-	"github.com/BurntSushi/toml"
+	"github.com/pelletier/go-toml"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
@@ -104,7 +105,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (result ct
 
 	cluster := new(v1alpha1.GreptimeDBCluster)
 	if err := r.Get(ctx, req.NamespacedName, cluster); err != nil {
-		if errors.IsNotFound(err) {
+		if k8serrors.IsNotFound(err) {
 			return ctrl.Result{}, nil
 		}
 		return ctrl.Result{}, err
@@ -112,8 +113,8 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (result ct
 
 	defer func() {
 		if err != nil {
-			r.Recorder.Eventf(cluster, corev1.EventTypeWarning, "ReconcileError", fmt.Sprintf("Reconcile error: %v", err))
-			if err := r.setClusterPhase(ctx, cluster, v1alpha1.ClusterError); err != nil && !errors.IsNotFound(err) {
+			r.Recorder.Event(cluster, corev1.EventTypeWarning, "ReconcileError", fmt.Sprintf("Reconcile error: %v", err))
+			if err := r.setClusterPhase(ctx, cluster, v1alpha1.PhaseError); err != nil && !k8serrors.IsNotFound(err) {
 				klog.Errorf("Failed to update status: %v", err)
 				return
 			}
@@ -126,24 +127,24 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (result ct
 	}
 
 	if err = r.addFinalizer(ctx, cluster); err != nil {
-		r.Recorder.Eventf(cluster, corev1.EventTypeWarning, "AddFinalizerFailed", fmt.Sprintf("Add finalizer failed: %v", err))
+		r.Recorder.Event(cluster, corev1.EventTypeWarning, "AddFinalizerFailed", fmt.Sprintf("Add finalizer failed: %v", err))
 		return
 	}
 
 	if err = r.validate(ctx, cluster); err != nil {
-		r.Recorder.Eventf(cluster, corev1.EventTypeWarning, "InvalidCluster", fmt.Sprintf("Invalid cluster: %v", err))
+		r.Recorder.Event(cluster, corev1.EventTypeWarning, "InvalidCluster", fmt.Sprintf("Invalid cluster: %v", err))
 		return
 	}
 
 	if err = cluster.SetDefaults(); err != nil {
-		r.Recorder.Eventf(cluster, corev1.EventTypeWarning, "SetDefaultValuesFailed", fmt.Sprintf("Set default values failed: %v", err))
+		r.Recorder.Event(cluster, corev1.EventTypeWarning, "SetDefaultValuesFailed", fmt.Sprintf("Set default values failed: %v", err))
 		return
 	}
 
 	// Means the cluster is just created.
 	if len(cluster.Status.ClusterPhase) == 0 {
 		klog.Infof("Start to create the cluster '%s/%s'", cluster.Namespace, cluster.Name)
-		if err = r.setClusterPhase(ctx, cluster, v1alpha1.ClusterStarting); err != nil {
+		if err = r.setClusterPhase(ctx, cluster, v1alpha1.PhaseStarting); err != nil {
 			return
 		}
 	}
@@ -154,20 +155,20 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (result ct
 func (r *Reconciler) sync(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster) (ctrl.Result, error) {
 	for _, d := range r.Deployers {
 		err := d.Sync(ctx, cluster, d)
-		if err == deployer.ErrSyncNotReady {
+		if errors.Is(err, deployer.ErrSyncNotReady) {
 			var (
 				currentPhase = cluster.Status.ClusterPhase
 				nextPhase    = currentPhase
 			)
 
 			// If the cluster is already running, we will set it to updating phase.
-			if currentPhase == v1alpha1.ClusterRunning {
-				nextPhase = v1alpha1.ClusterUpdating
+			if currentPhase == v1alpha1.PhaseRunning {
+				nextPhase = v1alpha1.PhaseUpdating
 			}
 
 			// If the cluster is in error phase, we will set it to starting phase.
-			if currentPhase == v1alpha1.ClusterError {
-				nextPhase = v1alpha1.ClusterStarting
+			if currentPhase == v1alpha1.PhaseError {
+				nextPhase = v1alpha1.PhaseStarting
 			}
 
 			if err := r.setClusterPhase(ctx, cluster, nextPhase); err != nil {
@@ -182,10 +183,10 @@ func (r *Reconciler) sync(ctx context.Context, cluster *v1alpha1.GreptimeDBClust
 		}
 	}
 
-	if cluster.Status.ClusterPhase == v1alpha1.ClusterStarting ||
-		cluster.Status.ClusterPhase == v1alpha1.ClusterUpdating {
-		cluster.Status.SetCondition(*v1alpha1.NewCondition(v1alpha1.GreptimeDBClusterReady, corev1.ConditionTrue, "ClusterReady", "the cluster is ready"))
-		if err := r.setClusterPhase(ctx, cluster, v1alpha1.ClusterRunning); err != nil {
+	if cluster.Status.ClusterPhase == v1alpha1.PhaseStarting ||
+		cluster.Status.ClusterPhase == v1alpha1.PhaseUpdating {
+		cluster.Status.SetCondition(*v1alpha1.NewCondition(v1alpha1.ConditionTypeReady, corev1.ConditionTrue, "ClusterReady", "the cluster is ready"))
+		if err := r.setClusterPhase(ctx, cluster, v1alpha1.PhaseRunning); err != nil {
 			return ctrl.Result{}, err
 		}
 	}
@@ -212,8 +213,8 @@ func (r *Reconciler) delete(ctx context.Context, cluster *v1alpha1.GreptimeDBClu
 		return ctrl.Result{}, nil
 	}
 
-	if cluster.Status.ClusterPhase != v1alpha1.ClusterTerminating {
-		if err := r.setClusterPhase(ctx, cluster, v1alpha1.ClusterTerminating); err != nil {
+	if cluster.Status.ClusterPhase != v1alpha1.PhaseTerminating {
+		if err := r.setClusterPhase(ctx, cluster, v1alpha1.PhaseTerminating); err != nil {
 			return ctrl.Result{}, err
 		}
 
@@ -239,7 +240,7 @@ func (r *Reconciler) delete(ctx context.Context, cluster *v1alpha1.GreptimeDBClu
 	return ctrl.Result{}, nil
 }
 
-func (r *Reconciler) setClusterPhase(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster, phase v1alpha1.ClusterPhase) error {
+func (r *Reconciler) setClusterPhase(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster, phase v1alpha1.Phase) error {
 	// If the cluster is already in the phase, we will not update it.
 	if cluster.Status.ClusterPhase == phase {
 		return nil
@@ -288,7 +289,7 @@ func (r *Reconciler) validate(ctx context.Context, cluster *v1alpha1.GreptimeDBC
 				Kind:  "PodMonitor",
 			})
 			if err != nil {
-				if errors.IsNotFound(err) {
+				if k8serrors.IsNotFound(err) {
 					return fmt.Errorf("the crd podmonitors.monitoring.coreos.com is not installed")
 				} else {
 					return fmt.Errorf("check crd of podmonitors.monitoring.coreos.com is installed error: %v", err)
@@ -347,13 +348,13 @@ func (r *Reconciler) checkPodMonitorCRDInstall(ctx context.Context, groupKind me
 
 func (r *Reconciler) recordNormalEventByPhase(cluster *v1alpha1.GreptimeDBCluster) {
 	switch cluster.Status.ClusterPhase {
-	case v1alpha1.ClusterStarting:
-		r.Recorder.Eventf(cluster, corev1.EventTypeNormal, "StartingCluster", "Cluster is starting")
-	case v1alpha1.ClusterRunning:
-		r.Recorder.Eventf(cluster, corev1.EventTypeNormal, "ClusterIsReady", "Cluster is ready")
-	case v1alpha1.ClusterUpdating:
-		r.Recorder.Eventf(cluster, corev1.EventTypeNormal, "UpdatingCluster", "Cluster is updating")
-	case v1alpha1.ClusterTerminating:
-		r.Recorder.Eventf(cluster, corev1.EventTypeNormal, "TerminatingCluster", "Cluster is terminating")
+	case v1alpha1.PhaseStarting:
+		r.Recorder.Event(cluster, corev1.EventTypeNormal, "StartingCluster", "Cluster is starting")
+	case v1alpha1.PhaseRunning:
+		r.Recorder.Event(cluster, corev1.EventTypeNormal, "ClusterIsReady", "Cluster is ready")
+	case v1alpha1.PhaseUpdating:
+		r.Recorder.Event(cluster, corev1.EventTypeNormal, "UpdatingCluster", "Cluster is updating")
+	case v1alpha1.PhaseTerminating:
+		r.Recorder.Event(cluster, corev1.EventTypeNormal, "TerminatingCluster", "Cluster is terminating")
 	}
 }

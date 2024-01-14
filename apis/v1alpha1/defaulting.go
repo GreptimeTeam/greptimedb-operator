@@ -46,6 +46,7 @@ var (
 
 	// The default storage settings for datanode.
 	defaultDataNodeStorageName      = "datanode"
+	defaultStandaloneStorageName    = "standalone"
 	defaultDataNodeStorageSize      = "10Gi"
 	defaultDataNodeStorageMountPath = "/data/greptimedb"
 	defaultStorageRetainPolicyType  = StorageRetainPolicyTypeRetain
@@ -167,6 +168,71 @@ func (in *GreptimeDBCluster) SetDefaults() error {
 		if err := mergo.Merge(in.Spec.Datanode.Template, in.Spec.Base); err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+func (in *GreptimeDBStandalone) SetDefaults() error {
+	if in == nil {
+		return nil
+	}
+
+	var defaultGreptimeDBStandaloneSpec = &GreptimeDBStandaloneSpec{
+		Base: &PodTemplateSpec{
+			MainContainer: &MainContainerSpec{
+				Resources: &corev1.ResourceRequirements{
+					// Let Requests == Limits by default.
+					Requests: map[corev1.ResourceName]resource.Quantity{
+						"cpu":    resource.MustParse(defaultCPU),
+						"memory": resource.MustParse(defaultMemory),
+					},
+					Limits: map[corev1.ResourceName]resource.Quantity{
+						"cpu":    resource.MustParse(defaultCPU),
+						"memory": resource.MustParse(defaultMemory),
+					},
+				},
+
+				// The default readiness probe for the main container of GreptimeDBCluster.
+				ReadinessProbe: &corev1.Probe{
+					ProbeHandler: corev1.ProbeHandler{
+						HTTPGet: &corev1.HTTPGetAction{
+							Path: "/health",
+							Port: intstr.FromInt(defaultHTTPServicePort),
+						},
+					},
+				},
+			},
+		},
+		HTTPServicePort:       int32(defaultHTTPServicePort),
+		GRPCServicePort:       int32(defaultGRPCServicePort),
+		MySQLServicePort:      int32(defaultMySQLServicePort),
+		PostgresServicePort:   int32(defaultPostgresServicePort),
+		PrometheusServicePort: int32(defaultPrometheusServicePort),
+		OpenTSDBServicePort:   int32(defaultOpenTSDBServicePort),
+		Version:               defaultVersion,
+		LocalStorage: &StorageSpec{
+			Name:                defaultStandaloneStorageName,
+			StorageSize:         defaultDataNodeStorageSize,
+			MountPath:           defaultDataNodeStorageMountPath,
+			StorageRetainPolicy: defaultStorageRetainPolicyType,
+			WalDir:              defaultDataNodeStorageMountPath + "/wal",
+			DataHome:            defaultDataNodeStorageMountPath,
+		},
+		Service: &ServiceSpec{
+			Type: corev1.ServiceTypeClusterIP,
+		},
+	}
+
+	if in.Spec.Version == "" &&
+		in.Spec.Base != nil &&
+		in.Spec.Base.MainContainer != nil &&
+		in.Spec.Base.MainContainer.Image != "" {
+		in.Spec.Version = getVersionFromImage(in.Spec.Base.MainContainer.Image)
+	}
+
+	if err := mergo.Merge(&in.Spec, defaultGreptimeDBStandaloneSpec); err != nil {
+		return err
 	}
 
 	return nil

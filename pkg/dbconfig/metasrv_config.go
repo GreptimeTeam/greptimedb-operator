@@ -51,6 +51,11 @@ func (c *MetasrvConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster) 
 	return nil
 }
 
+// ConfigureByStandalone is not need to implemenet in cluster mode.
+func (c *MetasrvConfig) ConfigureByStandalone(_ *v1alpha1.GreptimeDBStandalone) error {
+	return nil
+}
+
 // Kind returns the component kind of the metasrv.
 func (c *MetasrvConfig) Kind() v1alpha1.ComponentKind {
 	return v1alpha1.MetaComponentKind

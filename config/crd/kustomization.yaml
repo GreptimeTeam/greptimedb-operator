@@ -17,6 +17,7 @@
 # It should be run by config/default
 resources:
 - resources/greptime.io_greptimedbclusters.yaml
+- resources/greptime.io_greptimedbstandalones.yaml
 #+kubebuilder:scaffold:crdkustomizeresource
 
 patchesStrategicMerge:

@@ -123,6 +123,32 @@ rules:
   - patch
   - update
 - apiGroups:
+  - greptime.io
+  resources:
+  - greptimedbstandalones
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - greptime.io
+  resources:
+  - greptimedbstandalones/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - greptime.io
+  resources:
+  - greptimedbstandalones/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
   - monitoring.coreos.com
   resources:
   - podmonitors
