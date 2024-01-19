@@ -32,6 +32,7 @@ import (
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 	"github.com/GreptimeTeam/greptimedb-operator/controllers/common"
 	"github.com/GreptimeTeam/greptimedb-operator/controllers/constant"
+	"github.com/GreptimeTeam/greptimedb-operator/controllers/greptimedbcluster/deployers"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/dbconfig"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/deployer"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/util"
@@ -294,7 +295,31 @@ func (s *standaloneBuilder) generatePodTemplateSpec() corev1.PodTemplateSpec {
 
 	common.MountConfigDir(s.standalone.Name, v1alpha1.StandaloneKind, template)
 
+	if s.standalone.Spec.TLS != nil {
+		s.mountTLSSecret(template)
+	}
+
 	return *template
+}
+
+func (s *standaloneBuilder) mountTLSSecret(template *corev1.PodTemplateSpec) {
+	template.Spec.Volumes = append(template.Spec.Volumes, corev1.Volume{
+		Name: constant.TLSVolumeName,
+		VolumeSource: corev1.VolumeSource{
+			Secret: &corev1.SecretVolumeSource{
+				SecretName: s.standalone.Spec.TLS.SecretName,
+			},
+		},
+	})
+
+	template.Spec.Containers[constant.MainContainerIndex].VolumeMounts =
+		append(template.Spec.Containers[constant.MainContainerIndex].VolumeMounts,
+			corev1.VolumeMount{
+				Name:      constant.TLSVolumeName,
+				MountPath: constant.GreptimeDBTLSDir,
+				ReadOnly:  true,
+			},
+		)
 }
 
 func (s *standaloneBuilder) generatePVC() []corev1.PersistentVolumeClaim {
@@ -379,7 +404,7 @@ func (s *standaloneBuilder) containerPorts() []corev1.ContainerPort {
 }
 
 func (s *standaloneBuilder) generateMainContainerArgs() []string {
-	return []string{
+	var args = []string{
 		"standalone", "start",
 		"--data-home", "/data",
 		"--rpc-addr", fmt.Sprintf("0.0.0.0:%d", s.standalone.Spec.GRPCServicePort),
@@ -388,4 +413,14 @@ func (s *standaloneBuilder) generateMainContainerArgs() []string {
 		"--postgres-addr", fmt.Sprintf("0.0.0.0:%d", s.standalone.Spec.PostgresServicePort),
 		"--config-file", path.Join(constant.GreptimeDBConfigDir, constant.GreptimeDBConfigFileName),
 	}
+
+	if s.standalone.Spec.TLS != nil {
+		args = append(args, []string{
+			"--tls-mode", "require",
+			"--tls-cert-path", path.Join(constant.GreptimeDBTLSDir, deployers.TLSCrtSecretKey),
+			"--tls-key-path", path.Join(constant.GreptimeDBTLSDir, deployers.TLSKeySecretKey),
+		}...)
+	}
+
+	return args
 }
