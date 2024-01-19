@@ -36,7 +36,6 @@ import (
 )
 
 const (
-	CASecretKey     = "ca.crt"
 	TLSCrtSecretKey = "tls.crt"
 	TLSKeySecretKey = "tls.key"
 )

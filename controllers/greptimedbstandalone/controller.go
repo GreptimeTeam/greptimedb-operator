@@ -244,10 +244,6 @@ func (r *Reconciler) validate(ctx context.Context, standalone *v1alpha1.Greptime
 				return fmt.Errorf("get tls secret '%s' failed, error: '%v'", standalone.Spec.TLS.SecretName, err)
 			}
 
-			if _, ok := tlsSecret.Data[deployers.CASecretKey]; !ok {
-				return fmt.Errorf("tls secret '%s' does not contain key '%s'", standalone.Spec.TLS.SecretName, deployers.CASecretKey)
-			}
-
 			if _, ok := tlsSecret.Data[deployers.TLSCrtSecretKey]; !ok {
 				return fmt.Errorf("tls secret '%s' does not contain key '%s'", standalone.Spec.TLS.SecretName, deployers.TLSCrtSecretKey)
 			}
