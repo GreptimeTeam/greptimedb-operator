@@ -125,7 +125,7 @@ func (d *DefaultDeployer) Apply(ctx context.Context, objects []client.Object) er
 
 			// If the spec is not equal, update the object.
 			if !equal {
-				if err := d.Client.Update(ctx, newObject); err != nil {
+				if err := d.Client.Patch(ctx, newObject, client.MergeFrom(oldObject)); err != nil {
 					return err
 				}
 			}
