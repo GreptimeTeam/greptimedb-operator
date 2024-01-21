@@ -261,10 +261,14 @@ func (s *standaloneBuilder) BuildStatefulSet() deployer.Builder {
 		},
 	}
 
-	if s.standalone.Spec.ReloadWhenConfigChange {
-		sts.SetAnnotations(util.MergeStringMap(sts.GetAnnotations(),
-			map[string]string{deployer.ConfigmapReloader: common.ResourceName(s.standalone.Name, v1alpha1.StandaloneKind)}))
+	configData, err := dbconfig.FromStandalone(s.standalone)
+	if err != nil {
+		s.Err = err
+		return s
 	}
+
+	sts.Spec.Template.Annotations = util.MergeStringMap(sts.Spec.Template.Annotations,
+		map[string]string{deployer.ConfigHash: util.CalculateConfigHash(configData)})
 
 	s.Objects = append(s.Objects, sts)
 

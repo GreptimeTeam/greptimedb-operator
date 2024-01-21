@@ -139,11 +139,6 @@ type GreptimeDBClusterSpec struct {
 	// +optional
 	ObjectStorageProvider *ObjectStorageProvider `json:"objectStorage,omitempty"`
 
-	// +optional
-	// Attention: This option need to be supported by the Reloader(https://github.com/stakater/Reloader).
-	// We may consider to implement the same feature inside the operator in the future.
-	ReloadWhenConfigChange bool `json:"reloadWhenConfigChange,omitempty"`
-
 	// More cluster settings can be added here.
 }
 

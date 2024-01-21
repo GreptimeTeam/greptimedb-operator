@@ -10752,8 +10752,6 @@ spec:
               prometheusServicePort:
                 format: int32
                 type: integer
-              reloadWhenConfigChange:
-                type: boolean
               version:
                 type: string
             type: object
@@ -13604,8 +13602,6 @@ spec:
               prometheusServicePort:
                 format: int32
                 type: integer
-              reloadWhenConfigChange:
-                type: boolean
               service:
                 properties:
                   annotations:
