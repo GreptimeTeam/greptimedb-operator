@@ -89,6 +89,7 @@ jobs:
       - name: Rename crd file
         run: |
           cp ./config/crd/resources/greptime.io_greptimedbclusters.yaml ./greptimedbcluster.yaml
+          cp ./config/crd/resources/greptime.io_greptimedbstandalones.yaml ./greptimedbstandalones.yaml
 
       - name: Publish release
         uses: softprops/action-gh-release@v1
@@ -96,3 +97,4 @@ jobs:
           name: "Release ${{ github.ref_name }}"
           files: |
             greptimedbcluster.yaml
+            greptimedbstandalones.yaml
