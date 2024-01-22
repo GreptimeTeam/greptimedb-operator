@@ -40,12 +40,12 @@ type StandaloneConfig struct {
 	InputConfig string
 }
 
-// ConfigureByCluster is not need to implemenet in standalone mode.
+// ConfigureByCluster is not need to implement in standalone mode.
 func (c *StandaloneConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster) error {
 	return nil
 }
 
-// ConfigureByStandalone is not need to implemenet in cluster mode.
+// ConfigureByStandalone is not need to implement in cluster mode.
 func (c *StandaloneConfig) ConfigureByStandalone(standalone *v1alpha1.GreptimeDBStandalone) error {
 	// TODO(zyy17): need to refactor the following code. It's too ugly.
 	if standalone.Spec.ObjectStorageProvider != nil {

@@ -37,7 +37,7 @@ func (c *FrontendConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster)
 	return nil
 }
 
-// ConfigureByStandalone is not need to implemenet in cluster mode.
+// ConfigureByStandalone is not need to implement in cluster mode.
 func (c *FrontendConfig) ConfigureByStandalone(_ *v1alpha1.GreptimeDBStandalone) error {
 	return nil
 }

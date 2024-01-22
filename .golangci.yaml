@@ -86,6 +86,10 @@ linters:
     - nakedret
 
 linters-settings:
+  nakedret:
+    # Make an issue if func has more lines of code than this setting, and it has naked returns.
+    # Default: 30
+    max-func-lines: 50
   goimports:
     # A comma-separated list of prefixes, which, if set, checks import paths
     # with the given prefixes are grouped after 3rd-party packages.

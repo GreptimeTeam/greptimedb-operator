@@ -96,7 +96,7 @@ func (c *DatanodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster)
 	return nil
 }
 
-// ConfigureByStandalone is not need to implemenet in cluster mode.
+// ConfigureByStandalone is not need to implement in cluster mode.
 func (c *DatanodeConfig) ConfigureByStandalone(_ *v1alpha1.GreptimeDBStandalone) error {
 	return nil
 }
