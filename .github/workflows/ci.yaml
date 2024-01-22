@@ -32,10 +32,6 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
 
-      - name: Make lint
-        run: |
-          make lint
-
       - name: Check code generation
         run: |
           make check-code-generation
@@ -43,6 +39,10 @@ jobs:
       - name: Compile the project
         run: |
           make
+
+      - name: Make lint
+        run: |
+          make lint
 
   unit-tests:
     name: Run unit tests
