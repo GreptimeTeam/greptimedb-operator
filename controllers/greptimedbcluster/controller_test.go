@@ -29,6 +29,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
+	"github.com/GreptimeTeam/greptimedb-operator/controllers/common"
 )
 
 var _ = Describe("Test greptimedbcluster controller", func() {
@@ -60,27 +61,27 @@ var _ = Describe("Test greptimedbcluster controller", func() {
 
 		By("Check meta resource")
 		svc = &corev1.Service{}
-		checkResource(testNamespace, testClusterName+"-meta", svc, req)
+		checkResource(testNamespace, common.ResourceName(testClusterName, v1alpha1.MetaComponentKind), svc, req)
 		deployment = &appsv1.Deployment{}
-		checkResource(testNamespace, testClusterName+"-meta", deployment, req)
+		checkResource(testNamespace, common.ResourceName(testClusterName, v1alpha1.MetaComponentKind), deployment, req)
 
 		// Move forward to sync datanode.
 		Expect(makeDeploymentReady(deployment, cluster.Spec.Meta.Replicas)).NotTo(HaveOccurred(), "failed to update meta deployment status")
 
 		By("Check datanode resource")
 		svc = &corev1.Service{}
-		checkResource(testNamespace, testClusterName+"-datanode", svc, req)
+		checkResource(testNamespace, common.ResourceName(testClusterName, v1alpha1.DatanodeComponentKind), svc, req)
 		statefulSet = &appsv1.StatefulSet{}
-		checkResource(testNamespace, testClusterName+"-datanode", statefulSet, req)
+		checkResource(testNamespace, common.ResourceName(testClusterName, v1alpha1.DatanodeComponentKind), statefulSet, req)
 
 		// Move forward to sync frontend.
 		Expect(makeStatefulSetReady(statefulSet, cluster.Spec.Datanode.Replicas)).NotTo(HaveOccurred(), "failed to update datanode statefulset status")
 
 		By("Check frontend resource")
 		svc = &corev1.Service{}
-		checkResource(testNamespace, testClusterName+"-frontend", svc, req)
+		checkResource(testNamespace, common.ResourceName(testClusterName, v1alpha1.FrontendComponentKind), svc, req)
 		deployment = &appsv1.Deployment{}
-		checkResource(testNamespace, testClusterName+"-frontend", deployment, req)
+		checkResource(testNamespace, common.ResourceName(testClusterName, v1alpha1.FrontendComponentKind), deployment, req)
 
 		// Move forward to complete status.
 		Expect(makeDeploymentReady(deployment, cluster.Spec.Frontend.Replicas)).NotTo(HaveOccurred(), "failed to update frontend deployment status")
@@ -162,12 +163,15 @@ func checkResource(namespace, name string, object client.Object, request reconci
 func makeStatefulSetReady(statefulSet *appsv1.StatefulSet, replicas *int32) error {
 	statefulSet.Status.ReadyReplicas = *replicas
 	statefulSet.Status.Replicas = *replicas
+	statefulSet.Status.CurrentReplicas = *replicas
+	statefulSet.Status.ObservedGeneration = statefulSet.Generation
 	return reconciler.Status().Update(ctx, statefulSet)
 }
 
 func makeDeploymentReady(deployment *appsv1.Deployment, replicas *int32) error {
 	deployment.Status.Replicas = *replicas
 	deployment.Status.ReadyReplicas = *replicas
+	deployment.Status.ObservedGeneration = deployment.Generation
 	deployment.Status.Conditions = append(deployment.Status.Conditions, appsv1.DeploymentCondition{
 		Type:               appsv1.DeploymentProgressing,
 		Status:             corev1.ConditionTrue,
