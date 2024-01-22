@@ -1,0 +1,95 @@
+# Options for analysis running.
+run:
+  # Timeout for analysis, e.g. 30s, 5m.
+  # Default: 1m
+  timeout: 10m
+
+  # The default concurrency value is the number of available CPU.
+  concurrency: 4
+
+  # Which dirs to skip: issues from them won't be reported.
+  # Can use regexp here: `generated.*`, regexp is applied on full path,
+  # including the path prefix if one is set.
+  # Default value is empty list,
+  # but default dirs are skipped independently of this option's value (see skip-dirs-use-default).
+  # "/" will be replaced by current OS file path separator to properly work on Windows.
+  skip-dirs:
+    - bin
+    - docs
+    - examples
+    - hack
+
+# output configuration options.
+output:
+  # Format: colored-line-number|line-number|json|colored-tab|tab|checkstyle|code-climate|junit-xml|github-actions|teamcity
+  #
+  # Multiple can be specified by separating them by comma, output can be provided
+  # for each of them by separating format name and path by colon symbol.
+  # Output path can be either `stdout`, `stderr` or path to the file to write to.
+  # Example: "checkstyle:report.xml,json:stdout,colored-line-number"
+  #
+  # Default: colored-line-number
+  format: colored-line-number
+
+  # Print lines of code with issue.
+  # Default: true
+  print-issued-lines: true
+
+  # Print linter name in the end of issue text.
+  # Default: true
+  print-linter-lines: true
+
+linters:
+  # Disable all linters.
+  disable-all: true
+
+  # Enable specific linter
+  # https://golangci-lint.run/usage/linters/#enabled-by-default
+  enable:
+    # Errcheck is a program for checking for unchecked errors in Go code. These unchecked errors can be critical bugs in some cases.
+    - errcheck
+
+    # Linter for Go source code that specializes in simplifying code.
+    - gosimple
+
+    # Vet examines Go source code and reports suspicious constructs, such as Printf calls whose arguments do not align with the format string.
+    - govet
+
+    # Detects when assignments to existing variables are not used.
+    - ineffassign
+
+    # It's a set of rules from staticcheck. It's not the same thing as the staticcheck binary.
+    # The author of staticcheck doesn't support or approve the use of staticcheck as a library inside golangci-lint.
+    - staticcheck
+
+    # Check import statements are formatted according to the 'goimport' command. Reformat imports in autofix mode.
+    - goimports
+
+    # Checks whether HTTP response body is closed successfully.
+    - bodyclose
+
+    # Provides diagnostics that check for bugs, performance and style issues.
+    # Extensible without recompilation through dynamic rules.
+    # Dynamic rules are written declaratively with AST patterns, filters, report message and optional suggestion.
+    - gocritic
+
+    # Gofmt checks whether code was gofmt-ed. By default, this tool runs with -s option to check for code simplification.
+    - gofmt
+
+    # Finds repeated strings that could be replaced by a constant.
+    - goconst
+
+    # Finds commonly misspelled English words in comments.
+    - misspell
+
+    # Finds naked returns in functions greater than a specified function length.
+    - nakedret
+
+linters-settings:
+  goimports:
+    # A comma-separated list of prefixes, which, if set, checks import paths
+    # with the given prefixes are grouped after 3rd-party packages.
+    # Default: ""
+    local-prefixes: github.com/GreptimeTeam/greptimedb-operator
+  linters-settings:
+    min-occurrences: 3
