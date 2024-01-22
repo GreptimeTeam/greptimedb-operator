@@ -70,12 +70,12 @@ func Marshal(config Config) ([]byte, error) {
 		return nil, err
 	}
 
-	ouput, err := setConfig(tree, config)
+	output, err := setConfig(tree, config)
 	if err != nil {
 		return nil, err
 	}
 
-	return []byte(ouput), nil
+	return []byte(output), nil
 }
 
 // FromCluster creates config data from the cluster CRD.

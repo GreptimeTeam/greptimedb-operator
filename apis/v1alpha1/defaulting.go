@@ -15,6 +15,7 @@
 package v1alpha1
 
 import (
+	"path"
 	"strings"
 
 	"github.com/imdario/mergo"
@@ -50,6 +51,7 @@ var (
 	defaultDataNodeStorageSize      = "10Gi"
 	defaultDataNodeStorageMountPath = "/data/greptimedb"
 	defaultStorageRetainPolicyType  = StorageRetainPolicyTypeRetain
+	defaultWalDir                   = path.Join(defaultDataNodeStorageMountPath, "wal")
 
 	defaultInitializer = "greptime/greptimedb-initializer:latest"
 )
@@ -139,7 +141,7 @@ func (in *GreptimeDBCluster) SetDefaults() error {
 				StorageSize:         defaultDataNodeStorageSize,
 				MountPath:           defaultDataNodeStorageMountPath,
 				StorageRetainPolicy: defaultStorageRetainPolicyType,
-				WalDir:              defaultDataNodeStorageMountPath + "/wal",
+				WalDir:              defaultWalDir,
 				DataHome:            defaultDataNodeStorageMountPath,
 			},
 		}
@@ -216,7 +218,7 @@ func (in *GreptimeDBStandalone) SetDefaults() error {
 			StorageSize:         defaultDataNodeStorageSize,
 			MountPath:           defaultDataNodeStorageMountPath,
 			StorageRetainPolicy: defaultStorageRetainPolicyType,
-			WalDir:              defaultDataNodeStorageMountPath + "/wal",
+			WalDir:              defaultWalDir,
 			DataHome:            defaultDataNodeStorageMountPath,
 		},
 		Service: &ServiceSpec{

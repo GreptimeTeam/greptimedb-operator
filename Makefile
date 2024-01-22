@@ -25,7 +25,7 @@ MANIFESTS_DIR = ./manifests
 # ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
 ENVTEST_K8S_VERSION = 1.24.1
 
-GOLANGCI_LINT_VERSION = v1.54.2
+GOLANGCI_LINT_VERSION = v1.55.2
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
@@ -60,7 +60,7 @@ all: build
 
 .PHONY: help
 help: ## Display this help.
-	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-25s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
 ##@ Development
 
@@ -78,14 +78,6 @@ generate: kustomize controller-gen ## Generate code containing DeepCopy, DeepCop
 fmt: ## Run go fmt against code.
 	go fmt ./...
 
-.PHONY: install-golint
-install-golint: ## Install golint
-	go install github.com/golangci/golangci-lint/cmd/golangci-lint@${GOLANGCI_LINT_VERSION}
-
-.PHONY: lint
-lint: install-golint ## Run golint
-	$(GOBIN)/golangci-lint run --timeout 5m0s
-
 .PHONY: check-code-generation
 check-code-generation: ## Check code generation.
 	echo "Checking code generation"
@@ -102,6 +94,10 @@ setup-e2e: ## Setup e2e test environment.
 .PHONY: e2e
 e2e: setup-e2e ## Run e2e tests.
 	go test -timeout 8m -v ./tests/e2e/... && kind delete clusters greptimedb-operator-e2e
+
+.PHONY: lint
+lint: golangci-lint ## Run lint.
+	$(GOLANGCI_LINT) run -v ./...
 
 .PHONY: test
 test: manifests generate fmt vet envtest ## Run tests.
@@ -180,6 +176,7 @@ $(LOCALBIN):
 KUSTOMIZE ?= $(LOCALBIN)/kustomize
 CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
 ENVTEST ?= $(LOCALBIN)/setup-envtest
+GOLANGCI_LINT ?= $(LOCALBIN)/golangci-lint
 
 ## Tool Versions
 KUSTOMIZE_VERSION ?= v4.5.3
@@ -200,3 +197,7 @@ $(CONTROLLER_GEN): $(LOCALBIN)
 envtest: $(ENVTEST) ## Download envtest-setup locally if necessary.
 $(ENVTEST): $(LOCALBIN)
 	GOBIN=$(LOCALBIN) go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
+
+.PHONY: golangci-lint
+golangci-lint: ## Install golangci-lint.
+	test -f $(GOLANGCI_LINT) || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(LOCALBIN) $(GOLANGCI_LINT_VERSION)

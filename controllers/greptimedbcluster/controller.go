@@ -361,9 +361,7 @@ func (r *Reconciler) setObservedGeneration(cluster *v1alpha1.GreptimeDBCluster) 
 	generation := cluster.Generation
 	if cluster.Status.ObservedGeneration == nil {
 		cluster.Status.ObservedGeneration = &generation
-	} else {
-		if *cluster.Status.ObservedGeneration != generation {
-			cluster.Status.ObservedGeneration = &generation
-		}
+	} else if *cluster.Status.ObservedGeneration != generation {
+		cluster.Status.ObservedGeneration = &generation
 	}
 }

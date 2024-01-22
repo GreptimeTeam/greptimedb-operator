@@ -327,10 +327,8 @@ func (r *Reconciler) setObservedGeneration(standalone *v1alpha1.GreptimeDBStanda
 	generation := standalone.Generation
 	if standalone.Status.ObservedGeneration == nil {
 		standalone.Status.ObservedGeneration = &generation
-	} else {
-		if *standalone.Status.ObservedGeneration != generation {
-			standalone.Status.ObservedGeneration = &generation
-		}
+	} else if *standalone.Status.ObservedGeneration != generation {
+		standalone.Status.ObservedGeneration = &generation
 	}
 }
 
