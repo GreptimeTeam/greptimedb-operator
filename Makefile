@@ -97,7 +97,7 @@ e2e: setup-e2e ## Run e2e tests.
 
 .PHONY: lint
 lint: golangci-lint ## Run lint.
-	golangci-lint run -v ./...
+	$(GOLANGCI_LINT) run -v ./...
 
 .PHONY: test
 test: manifests generate fmt vet envtest ## Run tests.
@@ -176,6 +176,7 @@ $(LOCALBIN):
 KUSTOMIZE ?= $(LOCALBIN)/kustomize
 CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
 ENVTEST ?= $(LOCALBIN)/setup-envtest
+GOLANGCI_LINT ?= $(LOCALBIN)/golangci-lint
 
 ## Tool Versions
 KUSTOMIZE_VERSION ?= v4.5.3
@@ -199,4 +200,4 @@ $(ENVTEST): $(LOCALBIN)
 
 .PHONY: golangci-lint
 golangci-lint: ## Install golangci-lint.
-	@which golangci-lint || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin $(GOLANGCI_LINT_VERSION)
+	test -f $(GOLANGCI_LINT) || curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(LOCALBIN) $(GOLANGCI_LINT_VERSION)
