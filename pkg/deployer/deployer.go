@@ -111,6 +111,7 @@ func (d *DefaultDeployer) Generate(_ client.Object) ([]client.Object, error) {
 }
 
 func (d *DefaultDeployer) Apply(ctx context.Context, objects []client.Object) error {
+	updateObject := false
 	for _, newObject := range objects {
 		oldObject, err := k8sutils.CreateObjectIfNotExist(ctx, d.Client, d.sourceObject(newObject), newObject)
 		if err != nil {
@@ -128,8 +129,15 @@ func (d *DefaultDeployer) Apply(ctx context.Context, objects []client.Object) er
 				if err := d.Client.Patch(ctx, newObject, client.MergeFrom(oldObject)); err != nil {
 					return err
 				}
+				updateObject = true
 			}
 		}
+	}
+
+	if updateObject {
+		// If the object is updated, we need to wait for the object to be ready.
+		// When the related object is ready, we will receive the event and enter the next reconcile loop.
+		return ErrSyncNotReady
 	}
 
 	return nil
