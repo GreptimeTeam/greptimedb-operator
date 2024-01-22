@@ -75,9 +75,12 @@ func IsObjectSpecEqual(objectA, objectB client.Object, annotationKey string) (bo
 }
 
 // IsDeploymentReady checks if the deployment is ready.
-// TODO(zyy17): Maybe it's not a accurate way to detect the statefulset is ready.
 func IsDeploymentReady(deployment *appsv1.Deployment) bool {
 	if deployment == nil {
+		return false
+	}
+
+	if deployment.Status.ObservedGeneration != deployment.Generation {
 		return false
 	}
 
@@ -94,13 +97,16 @@ func IsDeploymentReady(deployment *appsv1.Deployment) bool {
 }
 
 // IsStatefulSetReady checks if the statefulset is ready.
-// TODO(zyy17): Maybe it's not a accurate way to detect the deployment is ready.
 func IsStatefulSetReady(sts *appsv1.StatefulSet) bool {
 	if sts == nil {
 		return false
 	}
 
-	return sts.Status.ReadyReplicas == *sts.Spec.Replicas
+	if sts.Status.ObservedGeneration != sts.Generation {
+		return false
+	}
+
+	return sts.Status.ReadyReplicas == *sts.Spec.Replicas && sts.Status.CurrentReplicas == *sts.Spec.Replicas
 }
 
 // GetK8sResource returns a native K8s resource by namespace and name.
