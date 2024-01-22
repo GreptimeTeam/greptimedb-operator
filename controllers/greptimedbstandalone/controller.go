@@ -96,7 +96,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (result ct
 	defer func() {
 		if err != nil {
 			r.Recorder.Eventf(standalone, corev1.EventTypeWarning, "ReconcileError", fmt.Sprintf("Reconcile error: %v", err))
-			if err := r.setStandalonePhase(ctx, standalone, v1alpha1.PhaseError); err != nil && !k8serrors.IsNotFound(err) {
+			if err := r.setStandaloneStatus(ctx, standalone, v1alpha1.PhaseError); err != nil && !k8serrors.IsNotFound(err) {
 				klog.Errorf("Failed to update status: %v", err)
 				return
 			}
@@ -126,7 +126,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (result ct
 	// Means the standalone is just created.
 	if len(standalone.Status.StandalonePhase) == 0 {
 		klog.Infof("Start to create the standalone '%s/%s'", standalone.Namespace, standalone.Name)
-		if err = r.setStandalonePhase(ctx, standalone, v1alpha1.PhaseStarting); err != nil {
+		if err = r.setStandaloneStatus(ctx, standalone, v1alpha1.PhaseStarting); err != nil {
 			return
 		}
 	}
@@ -163,7 +163,7 @@ func (r *Reconciler) sync(ctx context.Context, standalone *v1alpha1.GreptimeDBSt
 			nextPhase = v1alpha1.PhaseStarting
 		}
 
-		if err := r.setStandalonePhase(ctx, standalone, nextPhase); err != nil {
+		if err := r.setStandaloneStatus(ctx, standalone, nextPhase); err != nil {
 			return ctrl.Result{}, err
 		}
 
@@ -177,7 +177,7 @@ func (r *Reconciler) sync(ctx context.Context, standalone *v1alpha1.GreptimeDBSt
 	if standalone.Status.StandalonePhase == v1alpha1.PhaseStarting ||
 		standalone.Status.StandalonePhase == v1alpha1.PhaseUpdating {
 		standalone.Status.SetCondition(*v1alpha1.NewCondition(v1alpha1.ConditionTypeReady, corev1.ConditionTrue, "StandaloneReady", "the standalone is ready"))
-		if err := r.setStandalonePhase(ctx, standalone, v1alpha1.PhaseRunning); err != nil {
+		if err := r.setStandaloneStatus(ctx, standalone, v1alpha1.PhaseRunning); err != nil {
 			return ctrl.Result{}, err
 		}
 	}
@@ -218,7 +218,7 @@ func (r *Reconciler) delete(ctx context.Context, standalone *v1alpha1.GreptimeDB
 	return ctrl.Result{}, nil
 }
 
-func (r *Reconciler) setStandalonePhase(ctx context.Context, standalone *v1alpha1.GreptimeDBStandalone, phase v1alpha1.Phase) error {
+func (r *Reconciler) setStandaloneStatus(ctx context.Context, standalone *v1alpha1.GreptimeDBStandalone, phase v1alpha1.Phase) error {
 	// If the standalone is already in the phase, we will not update it.
 	if standalone.Status.StandalonePhase == phase {
 		return nil
@@ -226,6 +226,8 @@ func (r *Reconciler) setStandalonePhase(ctx context.Context, standalone *v1alpha
 
 	standalone.Status.StandalonePhase = phase
 	standalone.Status.Version = standalone.Spec.Version
+
+	r.setObservedGeneration(standalone)
 	r.recordNormalEventByPhase(standalone)
 
 	return UpdateStatus(ctx, standalone, r.Client)
@@ -318,6 +320,17 @@ func (r *Reconciler) recordNormalEventByPhase(standalone *v1alpha1.GreptimeDBSta
 		r.Recorder.Event(standalone, corev1.EventTypeNormal, "UpdatingStandalone", "Standalone is updating")
 	case v1alpha1.PhaseTerminating:
 		r.Recorder.Event(standalone, corev1.EventTypeNormal, "Terminatingstandalone", "Standalone is terminating")
+	}
+}
+
+func (r *Reconciler) setObservedGeneration(standalone *v1alpha1.GreptimeDBStandalone) {
+	generation := standalone.Generation
+	if standalone.Status.ObservedGeneration == nil {
+		standalone.Status.ObservedGeneration = &generation
+	} else {
+		if *standalone.Status.ObservedGeneration != generation {
+			standalone.Status.ObservedGeneration = &generation
+		}
 	}
 }
 

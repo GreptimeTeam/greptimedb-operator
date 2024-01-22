@@ -149,16 +149,26 @@ type GreptimeDBClusterSpec struct {
 
 // GreptimeDBClusterStatus defines the observed state of GreptimeDBCluster
 type GreptimeDBClusterStatus struct {
+	// +optional
 	Frontend FrontendStatus `json:"frontend,omitempty"`
-	Meta     MetaStatus     `json:"meta,omitempty"`
+
+	// +optional
+	Meta MetaStatus `json:"meta,omitempty"`
+
+	// +optional
 	Datanode DatanodeStatus `json:"datanode,omitempty"`
-	Version  string         `json:"version,omitempty"`
+
+	// +optional
+	Version string `json:"version,omitempty"`
 
 	// +optional
 	ClusterPhase Phase `json:"clusterPhase,omitempty"`
 
 	// +optional
 	Conditions []Condition `json:"conditions,omitempty"`
+
+	// +optional
+	ObservedGeneration *int64 `json:"observedGeneration,omitempty"`
 }
 
 type FrontendStatus struct {

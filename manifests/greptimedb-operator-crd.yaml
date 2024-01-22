@@ -10816,6 +10816,9 @@ spec:
                 - readyReplicas
                 - replicas
                 type: object
+              observedGeneration:
+                format: int64
+                type: integer
               version:
                 type: string
             type: object
@@ -13643,6 +13646,9 @@ spec:
                   - type
                   type: object
                 type: array
+              observedGeneration:
+                format: int64
+                type: integer
               standalonePhase:
                 type: string
               version:

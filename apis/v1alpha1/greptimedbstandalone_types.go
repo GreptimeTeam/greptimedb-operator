@@ -79,6 +79,7 @@ type GreptimeDBStandaloneSpec struct {
 
 // GreptimeDBStandaloneStatus defines the observed state of GreptimeDBStandalone
 type GreptimeDBStandaloneStatus struct {
+	// +optional
 	Version string `json:"version,omitempty"`
 
 	// +optional
@@ -86,6 +87,9 @@ type GreptimeDBStandaloneStatus struct {
 
 	// +optional
 	Conditions []Condition `json:"conditions,omitempty"`
+
+	// +optional
+	ObservedGeneration *int64 `json:"observedGeneration,omitempty"`
 }
 
 // +kubebuilder:object:root=true
