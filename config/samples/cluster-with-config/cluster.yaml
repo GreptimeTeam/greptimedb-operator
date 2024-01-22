@@ -18,7 +18,6 @@ metadata:
   name: cluster-with-config
   namespace: default
 spec:
-  reloadWhenConfigChange: true # If you want to use it, you need to install Reloader(https://github.com/stakater/Reloader).
   base:
     main:
       image: greptime/greptimedb:latest

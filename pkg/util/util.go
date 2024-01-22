@@ -14,6 +14,11 @@
 
 package util
 
+import (
+	"crypto/sha256"
+	"encoding/hex"
+)
+
 // MergeStringMap merges two string maps.
 func MergeStringMap(origin, new map[string]string) map[string]string {
 	if origin == nil {
@@ -25,6 +30,16 @@ func MergeStringMap(origin, new map[string]string) map[string]string {
 	}
 
 	return origin
+}
+
+// CalculateConfigHash calculates the sha256 hash of the given config.
+func CalculateConfigHash(config []byte) string {
+	if len(config) == 0 {
+		return ""
+	}
+
+	hash := sha256.Sum256(config)
+	return hex.EncodeToString(hash[:])
 }
 
 // TODO(zyy17): Use generic to implement the following functions.

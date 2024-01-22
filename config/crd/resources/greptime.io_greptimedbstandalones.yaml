@@ -2768,8 +2768,6 @@ spec:
               prometheusServicePort:
                 format: int32
                 type: integer
-              reloadWhenConfigChange:
-                type: boolean
               service:
                 properties:
                   annotations:

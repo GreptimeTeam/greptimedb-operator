@@ -30,6 +30,7 @@ import (
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 	"github.com/GreptimeTeam/greptimedb-operator/controllers/common"
 	"github.com/GreptimeTeam/greptimedb-operator/controllers/constant"
+	"github.com/GreptimeTeam/greptimedb-operator/pkg/dbconfig"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/deployer"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/util"
 	k8sutil "github.com/GreptimeTeam/greptimedb-operator/pkg/util/k8s"
@@ -176,10 +177,14 @@ func (b *frontendBuilder) BuildDeployment() deployer.Builder {
 		},
 	}
 
-	if b.Cluster.Spec.ReloadWhenConfigChange {
-		deployment.SetAnnotations(util.MergeStringMap(deployment.GetAnnotations(),
-			map[string]string{deployer.ConfigmapReloader: common.ResourceName(b.Cluster.Name, b.ComponentKind)}))
+	configData, err := dbconfig.FromCluster(b.Cluster, b.ComponentKind)
+	if err != nil {
+		b.Err = err
+		return b
 	}
+
+	deployment.Spec.Template.Annotations = util.MergeStringMap(deployment.Spec.Template.Annotations,
+		map[string]string{deployer.ConfigHash: util.CalculateConfigHash(configData)})
 
 	b.Objects = append(b.Objects, deployment)
 

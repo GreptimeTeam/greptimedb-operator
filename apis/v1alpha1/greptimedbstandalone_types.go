@@ -70,11 +70,6 @@ type GreptimeDBStandaloneSpec struct {
 
 	// +optional
 	Config string `json:"config,omitempty"`
-
-	// +optional
-	// Attention: This option need to be supported by the Reloader(https://github.com/stakater/Reloader).
-	// We may consider to implement the same feature inside the operator in the future.
-	ReloadWhenConfigChange bool `json:"reloadWhenConfigChange,omitempty"`
 }
 
 // GreptimeDBStandaloneStatus defines the observed state of GreptimeDBStandalone
