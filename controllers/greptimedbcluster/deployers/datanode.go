@@ -230,8 +230,9 @@ func (b *datanodeBuilder) BuildStatefulSet() deployer.Builder {
 			Namespace: b.Cluster.Namespace,
 		},
 		Spec: appsv1.StatefulSetSpec{
-			ServiceName: common.ResourceName(b.Cluster.Name, b.ComponentKind),
-			Replicas:    b.Cluster.Spec.Datanode.Replicas,
+			PodManagementPolicy: appsv1.ParallelPodManagement,
+			ServiceName:         common.ResourceName(b.Cluster.Name, b.ComponentKind),
+			Replicas:            b.Cluster.Spec.Datanode.Replicas,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.ComponentKind),
