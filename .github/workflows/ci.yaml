@@ -90,13 +90,34 @@ jobs:
           kubectl get all -A
           kubectl get pvc
           
+          # describe pods.
+          echo "==> describe metasrv"
+          kubectl describe pod `kubectl get pod | grep meta | awk '{print $1}'`
+          echo "<== describe metasrv"
+          
+          echo "==> describe frontend"
+          kubectl describe pod `kubectl get pod | grep frontend | awk '{print $1}'`
+          echo "<== describe frontend"
+          
+          echo "==> describe datanode-0"
+          kubectl describe pod e2e-cluster-datanode-0
+          echo "<== describe datanode-0"
+          
+          echo "==> describe datanode-1"
+          kubectl describe pod e2e-cluster-datanode-1
+          echo "<== describe datanode-1"
+          
+          echo "==> describe datanode-2"
+          kubectl describe pod e2e-cluster-datanode-2
+          echo "<== describe datanode-2"
+          
           # dump logs
           echo "==> metasrv logging"
-          kubectl logs `kubectl get po | grep meta | awk '{print $1}'`
+          kubectl logs `kubectl get pod | grep meta | awk '{print $1}'`
           echo "<== metasrv logging"
           
           echo "==> frontend logging"
-          kubectl logs `kubectl get po | grep frontend | awk '{print $1}'`
+          kubectl logs `kubectl get pod | grep frontend | awk '{print $1}'`
           echo "<== frontend logging"
           
           echo "==> e2e-cluster-datanode-0 logging"
