@@ -36,6 +36,14 @@ func TestFromClusterForDatanodeConfig(t *testing.T) {
 					Bucket: "testbucket",
 				},
 			},
+			RemoteWalProvider: &v1alpha1.RemoteWalProvider{
+				KafkaRemoteWal: &v1alpha1.KafkaRemoteWal{
+					BrokerEndpoints: []string{
+						"broker1:9092",
+						"broker2:9092",
+					},
+				},
+			},
 		},
 	}
 
@@ -44,6 +52,10 @@ func TestFromClusterForDatanodeConfig(t *testing.T) {
   bucket = "testbucket"
   root = "testcluster"
   type = "S3"
+
+[wal]
+  broker_endpoints = ["broker1:9092", "broker2:9092"]
+  provider = "kafka"
 `
 
 	data, err := FromCluster(testCluster, v1alpha1.DatanodeComponentKind)

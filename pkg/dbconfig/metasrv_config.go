@@ -16,6 +16,7 @@ package dbconfig
 
 import (
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
+	"github.com/GreptimeTeam/greptimedb-operator/pkg/util"
 )
 
 var _ Config = &MetasrvConfig{}
@@ -27,6 +28,12 @@ type MetasrvConfig struct {
 
 	// If it's not empty, the metasrv will store all data with this key prefix.
 	StoreKeyPrefix *string `tomlmapping:"store_key_prefix"`
+
+	// The wal provider.
+	WalProvider *string `tomlmapping:"wal.provider"`
+
+	// The kafka broker endpoints.
+	WalBrokerEndpoints []string `tomlmapping:"wal.broker_endpoints"`
 
 	// InputConfig is from config field of cluster spec.
 	InputConfig string
@@ -45,6 +52,11 @@ func (c *MetasrvConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster) 
 			if err := c.SetInputConfig(cluster.Spec.Meta.Config); err != nil {
 				return err
 			}
+		}
+
+		if cluster.Spec.RemoteWalProvider != nil && cluster.Spec.RemoteWalProvider.KafkaRemoteWal != nil {
+			c.WalProvider = util.StringPtr("kafka")
+			c.WalBrokerEndpoints = cluster.Spec.RemoteWalProvider.KafkaRemoteWal.BrokerEndpoints
 		}
 	}
 
