@@ -38,7 +38,14 @@ type DatanodeConfig struct {
 	StorageRegion          *string `tomlmapping:"storage.region"`
 	StorageEndpoint        *string `tomlmapping:"storage.endpoint"`
 
+	// The wal file directory.
 	WalDir *string `tomlmapping:"wal.dir"`
+
+	// The wal provider.
+	WalProvider *string `tomlmapping:"wal.provider"`
+
+	// The kafka broker endpoints.
+	WalBrokerEndpoints []string `tomlmapping:"wal.broker_endpoints"`
 
 	// InputConfig is from config field of cluster spec.
 	InputConfig string
@@ -91,6 +98,14 @@ func (c *DatanodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster)
 				return err
 			}
 		}
+	}
+
+	if cluster.Spec.RemoteWalProvider != nil && cluster.Spec.RemoteWalProvider.KafkaRemoteWal != nil {
+		c.WalProvider = util.StringPtr("kafka")
+		c.WalBrokerEndpoints = cluster.Spec.RemoteWalProvider.KafkaRemoteWal.BrokerEndpoints
+
+		// FIXME(zyy17): Unset the wal dir if the wal provider is kafka. It's a temporary solution.
+		c.WalDir = nil
 	}
 
 	return nil

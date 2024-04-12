@@ -47,9 +47,6 @@ type GreptimeDBStandaloneSpec struct {
 	OpenTSDBServicePort int32 `json:"openTSDBServicePort,omitempty"`
 
 	// +optional
-	PrometheusServicePort int32 `json:"prometheusServicePort,omitempty"`
-
-	// +optional
 	EnableInfluxDBProtocol bool `json:"enableInfluxDBProtocol,omitempty"`
 
 	// +optional
@@ -67,6 +64,9 @@ type GreptimeDBStandaloneSpec struct {
 
 	// +optional
 	LocalStorage *StorageSpec `json:"localStorage,omitempty"`
+
+	// +optional
+	RemoteWalProvider *RemoteWalProvider `json:"remoteWal,omitempty"`
 
 	// +optional
 	Config string `json:"config,omitempty"`

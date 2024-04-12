@@ -42,10 +42,10 @@ const (
     					PRIMARY KEY(n),
                         TIME INDEX (ts)
                      )
-                     PARTITION BY RANGE COLUMNS (n) (
-    				 	PARTITION r0 VALUES LESS THAN (5),
-    					PARTITION r1 VALUES LESS THAN (9),
-    					PARTITION r2 VALUES LESS THAN (MAXVALUE),
+                     PARTITION ON COLUMNS (n) (
+    				 	n <= 5,
+    					n > 5 AND n <= 10,
+    					n > 10 AND n <= 999,
 					)
 					engine=mito`
 

@@ -304,6 +304,18 @@ type StorageSpec struct {
 	DataHome string `json:"dataHome,omitempty"`
 }
 
+// RemoteWalProvider defines the remote wal provider for the cluster.
+type RemoteWalProvider struct {
+	// +optional
+	KafkaRemoteWal *KafkaRemoteWal `json:"kafka,omitempty"`
+}
+
+// KafkaRemoteWal is the specification for remote WAL that uses Kafka.
+type KafkaRemoteWal struct {
+	// +optional
+	BrokerEndpoints []string `json:"brokerEndpoints,omitempty"`
+}
+
 type ServiceSpec struct {
 	// type determines how the Service is exposed.
 	// +optional

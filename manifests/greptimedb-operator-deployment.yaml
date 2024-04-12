@@ -10749,9 +10749,16 @@ spec:
                       type: string
                     type: object
                 type: object
-              prometheusServicePort:
-                format: int32
-                type: integer
+              remoteWal:
+                properties:
+                  kafka:
+                    properties:
+                      brokerEndpoints:
+                        items:
+                          type: string
+                        type: array
+                    type: object
+                type: object
               version:
                 type: string
             type: object
@@ -13599,9 +13606,16 @@ spec:
                       type: string
                     type: object
                 type: object
-              prometheusServicePort:
-                format: int32
-                type: integer
+              remoteWal:
+                properties:
+                  kafka:
+                    properties:
+                      brokerEndpoints:
+                        items:
+                          type: string
+                        type: array
+                    type: object
+                type: object
               service:
                 properties:
                   annotations:

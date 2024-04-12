@@ -173,6 +173,10 @@ func setConfig(input *toml.Tree, config interface{}) (string, error) {
 					return "", fmt.Errorf("tag '%s' with type '%s is not supported", tag, elem.Kind())
 				}
 			}
+		case reflect.Slice:
+			if field.Len() > 0 {
+				input.Set(tag, field.Interface())
+			}
 		default:
 			return "", fmt.Errorf("field %s is not a pointer", tag)
 		}
