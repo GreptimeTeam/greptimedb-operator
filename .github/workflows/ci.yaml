@@ -25,10 +25,10 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout sources
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
 
@@ -49,10 +49,10 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout sources
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
 
@@ -65,10 +65,10 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout sources
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
           go-version: ${{ env.GO_VERSION }}
 
@@ -76,58 +76,3 @@ jobs:
         id: e2e
         run: |
           make e2e
-
-      - name: Print debug message if e2e failed
-        if: ${{ failure() && steps.e2e.conclusion == 'failure' }}
-        run: |
-          # printf the host info.
-          uname -a
-          kind version
-          kubectl version
-          go version
-          
-          # get K8s resource info.
-          kubectl get all -A
-          kubectl get pvc
-          
-          # describe pods.
-          echo "==> describe metasrv"
-          kubectl describe pod `kubectl get pod | grep meta | awk '{print $1}'`
-          echo "<== describe metasrv"
-          
-          echo "==> describe frontend"
-          kubectl describe pod `kubectl get pod | grep frontend | awk '{print $1}'`
-          echo "<== describe frontend"
-          
-          echo "==> describe datanode-0"
-          kubectl describe pod e2e-cluster-datanode-0
-          echo "<== describe datanode-0"
-          
-          echo "==> describe datanode-1"
-          kubectl describe pod e2e-cluster-datanode-1
-          echo "<== describe datanode-1"
-          
-          echo "==> describe datanode-2"
-          kubectl describe pod e2e-cluster-datanode-2
-          echo "<== describe datanode-2"
-          
-          # dump logs
-          echo "==> metasrv logging"
-          kubectl logs `kubectl get pod | grep meta | awk '{print $1}'`
-          echo "<== metasrv logging"
-          
-          echo "==> frontend logging"
-          kubectl logs `kubectl get pod | grep frontend | awk '{print $1}'`
-          echo "<== frontend logging"
-          
-          echo "==> e2e-cluster-datanode-0 logging"
-          kubectl logs e2e-cluster-datanode-0
-          echo "<== e2e-cluster-datanode-0 logging"
-          
-          echo "==> e2e-cluster-datanode-1 logging"
-          kubectl logs e2e-cluster-datanode-1
-          echo "<== e2e-cluster-datanode-1 logging"
-          
-          echo "==> e2e-cluster-datanode-2 logging"
-          kubectl logs e2e-cluster-datanode-2
-          echo "<== e2e-cluster-datanode-2 logging"

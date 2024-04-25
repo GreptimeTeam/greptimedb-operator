@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y \
 
 # Build the project.
 COPY . .
-RUN make build
+RUN make fast-build
 
 # Export the binary to the clean image.
 # TODO(zyy17): Maybe should use the more secure container image.

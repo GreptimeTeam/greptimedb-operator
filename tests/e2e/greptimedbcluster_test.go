@@ -16,141 +16,62 @@ package e2e
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
-	"os"
-	"os/exec"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"github.com/go-sql-driver/mysql"
-	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/util/yaml"
-	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
-	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
+	greptimev1alpha1 "github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
+	"github.com/GreptimeTeam/greptimedb-operator/tests/e2e/utils"
 )
 
-const (
-	createTableSQL = `CREATE TABLE dist_table (
-                        ts TIMESTAMP DEFAULT current_timestamp(),
-                        n INT,
-    					row_id INT,
-    					PRIMARY KEY(n),
-                        TIME INDEX (ts)
-                     )
-                     PARTITION ON COLUMNS (n) (
-    				 	n <= 5,
-    					n > 5 AND n <= 10,
-    					n > 10 AND n <= 999,
-					)
-					engine=mito`
+var _ = Describe("Test GreptimeDBCluster", func() {
+	var (
+		ctx = context.Background()
+	)
 
-	insertDataSQLStr = "INSERT INTO dist_table(n, row_id) VALUES (%d, %d)"
+	AfterEach(func() {
+		err := utils.CleanEtcdData(ctx, "etcd", "etcd-0")
+		Expect(err).NotTo(HaveOccurred(), "failed to clean etcd data")
+	})
 
-	selectDataSQL = `SELECT * FROM dist_table`
-
-	testRowIDNum = 12
-)
-
-var (
-	defaultQueryTimeout = 5 * time.Second
-)
-
-// TestData is the schema of test data in SQL table.
-type TestData struct {
-	timestamp string
-	n         int32
-	rowID     int32
-}
-
-var _ = Describe("Basic test greptimedbcluster controller", func() {
-	It("Bootstrap cluster", func() {
-		testCluster, err := readClusterConfig()
-		Expect(err).NotTo(HaveOccurred(), "failed to read testCluster config")
+	It("Create basic greptimedb cluster", func() {
+		testCluster := new(greptimev1alpha1.GreptimeDBCluster)
+		err := utils.LoadGreptimeCRDFromFile("./testdata/basic-cluster/cluster.yaml", testCluster)
+		Expect(err).NotTo(HaveOccurred(), "failed to load greptimedbcluster yaml file")
 
 		err = k8sClient.Create(ctx, testCluster)
 		Expect(err).NotTo(HaveOccurred(), "failed to create greptimedbcluster")
 
 		By("Check the status of testCluster")
-		Eventually(func() bool {
-			var cluster v1alpha1.GreptimeDBCluster
-			if err := k8sClient.Get(ctx, client.ObjectKey{Namespace: testCluster.Namespace,
-				Name: testCluster.Name}, &cluster); err != nil {
-				return false
-			}
-
-			for _, condition := range cluster.Status.Conditions {
-				if condition.Type == v1alpha1.ConditionTypeReady &&
-					condition.Status == corev1.ConditionTrue {
-					return true
-				}
-			}
-			return false
-		}, 120*time.Second, time.Second).Should(BeTrue())
-
-		go func() {
-			forwardRequest(testCluster.Name)
-		}()
-
-		By("Connecting GreptimeDB")
-		var db *sql.DB
-		var conn *sql.Conn
 		Eventually(func() error {
-			cfg := mysql.Config{
-				Net:                  "tcp",
-				Addr:                 "127.0.0.1:4002",
-				User:                 "",
-				Passwd:               "",
-				DBName:               "",
-				AllowNativePasswords: true,
-			}
-
-			db, err = sql.Open("mysql", cfg.FormatDSN())
+			clusterPhase, err := utils.GetPhase(ctx, k8sClient, testCluster.Namespace, testCluster.Name, new(greptimev1alpha1.GreptimeDBCluster))
 			if err != nil {
 				return err
 			}
 
-			conn, err = db.Conn(context.TODO())
-			if err != nil {
-				return err
+			if clusterPhase != greptimev1alpha1.PhaseRunning {
+				return fmt.Errorf("cluster is not running")
 			}
 
 			return nil
-		}, 60*time.Second, time.Second).ShouldNot(HaveOccurred())
+		}, utils.DefaultTimeout, time.Second).ShouldNot(HaveOccurred())
 
-		By("Execute SQL queries after connecting")
+		By("Execute distributed SQL queries")
+		var frontendIngressIP string
+		Eventually(func() error {
+			frontendIngressIP, err = utils.GetFrontendServiceIngressIP(ctx, k8sClient, testCluster.Namespace, fmt.Sprintf("%s-frontend", testCluster.Name))
+			if err != nil {
+				return err
+			}
+			return nil
+		}, utils.DefaultTimeout, time.Second).ShouldNot(HaveOccurred())
 
-		ctx, cancel := context.WithTimeout(context.Background(), defaultQueryTimeout)
-		defer cancel()
-
-		_, err = conn.ExecContext(ctx, createTableSQL)
-		Expect(err).NotTo(HaveOccurred(), "failed to create SQL table")
-
-		ctx, cancel = context.WithTimeout(context.Background(), defaultQueryTimeout)
-		defer cancel()
-		for rowID := 1; rowID <= testRowIDNum; rowID++ {
-			insertDataSQL := fmt.Sprintf(insertDataSQLStr, rowID, rowID)
-			_, err = conn.ExecContext(ctx, insertDataSQL)
-			Expect(err).NotTo(HaveOccurred(), "failed to insert data")
-		}
-
-		ctx, cancel = context.WithTimeout(context.Background(), defaultQueryTimeout)
-		defer cancel()
-		results, err := conn.QueryContext(ctx, selectDataSQL)
-		Expect(err).NotTo(HaveOccurred(), "failed to get data")
-
-		var data []TestData
-		for results.Next() {
-			var d TestData
-			err = results.Scan(&d.timestamp, &d.n, &d.rowID)
-			Expect(err).NotTo(HaveOccurred(), "failed to scan data that query from db")
-			data = append(data, d)
-		}
-		Expect(len(data) == testRowIDNum).Should(BeTrue(), "get the wrong data from db")
+		err = utils.RunSQLTest(ctx, frontendIngressIP, true)
+		Expect(err).NotTo(HaveOccurred(), "failed to run distributed SQL queries")
 
 		By("Delete cluster")
 		err = k8sClient.Delete(ctx, testCluster)
@@ -158,31 +79,72 @@ var _ = Describe("Basic test greptimedbcluster controller", func() {
 		Eventually(func() error {
 			// The cluster will be deleted eventually.
 			return k8sClient.Get(ctx, client.ObjectKey{Name: testCluster.Namespace, Namespace: testCluster.Namespace}, testCluster)
-		}, 30*time.Second, time.Second).Should(HaveOccurred())
+		}, utils.DefaultTimeout, time.Second).Should(HaveOccurred())
+
+		By("The PVC of the datanode should be retained")
+		datanodePVCs, err := utils.GetPVCs(ctx, k8sClient, testCluster.Namespace, testCluster.Name, greptimev1alpha1.DatanodeComponentKind)
+		Expect(err).NotTo(HaveOccurred(), "failed to get datanode PVCs")
+		Expect(int32(len(datanodePVCs))).To(Equal(*testCluster.Spec.Datanode.Replicas), "the number of datanode PVCs should be equal to the number of datanode replicas")
+
+		By("Remove the PVC of the datanode")
+		for _, pvc := range datanodePVCs {
+			err = k8sClient.Delete(ctx, &pvc)
+			Expect(err).NotTo(HaveOccurred(), "failed to delete datanode PVC")
+		}
+	})
+
+	It("Create greptimedb cluster with remote wal", func() {
+		testCluster := new(greptimev1alpha1.GreptimeDBCluster)
+		err := utils.LoadGreptimeCRDFromFile("./testdata/cluster-with-remote-wal/cluster.yaml", testCluster)
+		Expect(err).NotTo(HaveOccurred(), "failed to load greptimedbcluster yaml file")
+
+		err = k8sClient.Create(ctx, testCluster)
+		Expect(err).NotTo(HaveOccurred(), "failed to create greptimedbcluster")
+
+		By("Check the status of testCluster")
+		Eventually(func() error {
+			clusterPhase, err := utils.GetPhase(ctx, k8sClient, testCluster.Namespace, testCluster.Name, new(greptimev1alpha1.GreptimeDBCluster))
+			if err != nil {
+				return err
+			}
+
+			if clusterPhase != greptimev1alpha1.PhaseRunning {
+				return fmt.Errorf("cluster is not running")
+			}
+
+			return nil
+		}, utils.DefaultTimeout, time.Second).ShouldNot(HaveOccurred())
+
+		By("Execute distributed SQL queries")
+		var frontendIngressIP string
+		Eventually(func() error {
+			frontendIngressIP, err = utils.GetFrontendServiceIngressIP(ctx, k8sClient, testCluster.Namespace, fmt.Sprintf("%s-frontend", testCluster.Name))
+			if err != nil {
+				return err
+			}
+			return nil
+		}, utils.DefaultTimeout, time.Second).ShouldNot(HaveOccurred())
+
+		err = utils.RunSQLTest(ctx, frontendIngressIP, true)
+		Expect(err).NotTo(HaveOccurred(), "failed to run distributed SQL queries")
+
+		By("Delete cluster")
+		err = k8sClient.Delete(ctx, testCluster)
+		Expect(err).NotTo(HaveOccurred(), "failed to delete cluster")
+		Eventually(func() error {
+			// The cluster will be deleted eventually.
+			return k8sClient.Get(ctx, client.ObjectKey{Name: testCluster.Namespace, Namespace: testCluster.Namespace}, testCluster)
+		}, utils.DefaultTimeout, time.Second).Should(HaveOccurred())
+
+		By("The PVC of the datanode should be retained")
+		datanodePVCs, err := utils.GetPVCs(ctx, k8sClient, testCluster.Namespace, testCluster.Name, greptimev1alpha1.DatanodeComponentKind)
+		Expect(err).NotTo(HaveOccurred(), "failed to get datanode PVCs")
+		Expect(int32(len(datanodePVCs))).To(Equal(*testCluster.Spec.Datanode.Replicas), "the number of datanode PVCs should be equal to the number of datanode replicas")
+
+		By("Remove the PVC of the datanode")
+		for _, pvc := range datanodePVCs {
+			err = k8sClient.Delete(ctx, &pvc)
+			Expect(err).NotTo(HaveOccurred(), "failed to delete datanode PVC")
+		}
 	})
 })
-
-func readClusterConfig() (*v1alpha1.GreptimeDBCluster, error) {
-	data, err := os.ReadFile("./testdata/cluster.yaml")
-	if err != nil {
-		return nil, err
-	}
-
-	var cluster v1alpha1.GreptimeDBCluster
-	if err := yaml.Unmarshal(data, &cluster); err != nil {
-		return nil, err
-	}
-
-	return &cluster, nil
-}
-
-// FIXME(zyy17): When the e2e exit, the kubectl process still active background.
-func forwardRequest(clusterName string) {
-	for {
-		cmd := exec.Command("kubectl", "port-forward", fmt.Sprintf("svc/%s-frontend", clusterName), "4002:4002")
-		if err := cmd.Run(); err != nil {
-			klog.Errorf("Failed to port forward:%v", err)
-			return
-		}
-	}
-}
