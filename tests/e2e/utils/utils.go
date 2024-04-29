@@ -204,3 +204,34 @@ func RunSQLTest(ctx context.Context, frontendIngressIP string, isDistributed boo
 
 	return nil
 }
+
+// CreateS3Credentials creates a secret with the S3 credentials.
+func CreateS3Credentials(ctx context.Context, k8sClient client.Client, namespace, name string) error {
+	// The environment variable AWS_CI_TEST_ACCESS_KEY_ID and AWS_CI_TEST_SECRET_ACCESS_KEY is set by the CI.
+	accessKeyID := os.Getenv("AWS_CI_TEST_ACCESS_KEY_ID")
+	if accessKeyID == "" {
+		return fmt.Errorf("AWS_CI_TEST_ACCESS_KEY_ID is not set")
+	}
+
+	secretAccessKey := os.Getenv("AWS_CI_TEST_SECRET_ACCESS_KEY")
+	if secretAccessKey == "" {
+		return fmt.Errorf("AWS_CI_TEST_SECRET_ACCESS_KEY is not set")
+	}
+
+	secret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		StringData: map[string]string{
+			"access-key-id":     accessKeyID,
+			"secret-access-key": secretAccessKey,
+		},
+	}
+
+	if err := k8sClient.Create(ctx, secret); err != nil {
+		return err
+	}
+
+	return nil
+}
