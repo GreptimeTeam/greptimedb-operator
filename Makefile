@@ -22,8 +22,12 @@ INITIALIZER_DOCKERFILE = ./docker/initializer/Dockerfile
 
 MANIFESTS_DIR = ./manifests
 
-# ENVTEST_K8S_VERSION refers to the version of kubebuilder assets to be downloaded by envtest binary.
-ENVTEST_K8S_VERSION = 1.24.1
+# Use the kubernetes version to run the tests.
+KUBERNETES_VERSION = 1.28.0
+
+# Arguments for running the e2e.
+E2E_CLUSTER_NAME ?= greptimedb-operator-e2e
+E2E_TIMEOUT ?= 8m
 
 GOLANGCI_LINT_VERSION = v1.55.2
 
@@ -87,13 +91,13 @@ check-code-generation: ## Check code generation.
 vet: ## Run go vet against code.
 	go vet ./...
 
-.PHONY: setup-e2e
-setup-e2e: ## Setup e2e test environment.
-	./hack/e2e/setup-e2e-env.sh
+.PHONY: create-e2e-cluster
+create-e2e-cluster: ## Create a kind cluster for e2e tests.
+	./tests/e2e/setup/create-cluster.sh ${E2E_CLUSTER_NAME} v${KUBERNETES_VERSION}
 
 .PHONY: e2e
-e2e: setup-e2e ## Run e2e tests.
-	go test -timeout 8m -v ./tests/e2e/... && kind delete clusters greptimedb-operator-e2e
+e2e: create-e2e-cluster ## Run e2e tests.
+	go test -timeout ${E2E_TIMEOUT} -v ./tests/e2e/... || (./tests/e2e/setup/diagnostic-cluster.sh ; exit 1)
 
 .PHONY: lint
 lint: golangci-lint ## Run lint.
@@ -101,7 +105,7 @@ lint: golangci-lint ## Run lint.
 
 .PHONY: test
 test: manifests generate fmt vet envtest ## Run tests.
-	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(ENVTEST_K8S_VERSION) -p path)" go test \
+	KUBEBUILDER_ASSETS="$(shell $(ENVTEST) use $(KUBERNETES_VERSION) -p path)" go test \
 	./controllers/...     \
 	./apis/...            \
 	./pkg/...             \
@@ -116,23 +120,27 @@ kind-up: ## Create the kind cluster for developing.
 
 .PHONY: build
 build: generate fmt vet ## Build greptimedb-operator binary.
-	go build -ldflags '${LDFLAGS}' -o bin/greptimedb-operator ./cmd/operator/main.go
+	GO111MODULE=on CGO_ENABLED=0 go build -ldflags '${LDFLAGS}' -o bin/greptimedb-operator ./cmd/operator/main.go
+
+.PHONY: fast-build
+fast-build: ## Build greptimedb-operator binary only.
+	GO111MODULE=on CGO_ENABLED=0 go build -ldflags '${LDFLAGS}' -o bin/greptimedb-operator ./cmd/operator/main.go
 
 .PHONY: initializer
 initializer: ## Build greptimedb-initializer binary.
-	go build -ldflags '${LDFLAGS}' -o bin/greptimedb-initializer ./cmd/initializer/main.go
+	GO111MODULE=on CGO_ENABLED=0 go build -ldflags '${LDFLAGS}' -o bin/greptimedb-initializer ./cmd/initializer/main.go
 
 .PHONY: run
 run: manifests generate fmt vet ## Run a controller from your host.
-	go run -ldflags '${LDFLAGS}' ./cmd/operator/main.go
+	GO111MODULE=on CGO_ENABLED=0 go run -ldflags '${LDFLAGS}' ./cmd/operator/main.go
 
 .PHONY: docker-build-operator
 docker-build-operator: ## Build docker image with the greptimedb-operator.
-	docker build ${DOCKER_BUILD_OPTIONS} -f  ${OPERATOR_DOCKERFILE} -t ${IMAGE_REPO}/greptimedb-operator:${IMAGE_TAG} .
+	docker build ${DOCKER_BUILD_OPTIONS} -f ${OPERATOR_DOCKERFILE} -t ${IMAGE_REPO}/greptimedb-operator:${IMAGE_TAG} .
 
 .PHONY: docker-build-initializer
 docker-build-initializer: ## Build docker image with the greptimedb-initializer.
-	docker build ${DOCKER_BUILD_OPTIONS} -f  ${INITIALIZER_DOCKERFILE} -t ${IMAGE_REPO}/greptimedb-initializer:${IMAGE_TAG} .
+	docker build ${DOCKER_BUILD_OPTIONS} -f ${INITIALIZER_DOCKERFILE} -t ${IMAGE_REPO}/greptimedb-initializer:${IMAGE_TAG} .
 
 .PHONY: docker-push-operator
 docker-push-operator: ## Push docker image with the greptimedb-operator.
