@@ -10725,9 +10725,6 @@ spec:
                         type: string
                     type: object
                 type: object
-              openTSDBServicePort:
-                format: int32
-                type: integer
               postgresServicePort:
                 format: int32
                 type: integer
@@ -13582,9 +13579,6 @@ spec:
                         type: string
                     type: object
                 type: object
-              openTSDBServicePort:
-                format: int32
-                type: integer
               postgresServicePort:
                 format: int32
                 type: integer

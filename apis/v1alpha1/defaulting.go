@@ -32,13 +32,11 @@ var (
 	defaultVersion = "Unknown"
 
 	// The default settings for GreptimeDBClusterSpec.
-	defaultHTTPServicePort       = 4000
-	defaultGRPCServicePort       = 4001
-	defaultMySQLServicePort      = 4002
-	defaultPostgresServicePort   = 4003
-	defaultPrometheusServicePort = 4004
-	defaultOpenTSDBServicePort   = 4242
-	defaultMetaServicePort       = 3002
+	defaultHTTPServicePort     = 4000
+	defaultGRPCServicePort     = 4001
+	defaultMySQLServicePort    = 4002
+	defaultPostgresServicePort = 4003
+	defaultMetaServicePort     = 3002
 
 	// The default replicas for frontend/meta/datanode.
 	defaultFrontendReplicas int32 = 1
@@ -92,7 +90,6 @@ func (in *GreptimeDBCluster) SetDefaults() error {
 		GRPCServicePort:     int32(defaultGRPCServicePort),
 		MySQLServicePort:    int32(defaultMySQLServicePort),
 		PostgresServicePort: int32(defaultPostgresServicePort),
-		OpenTSDBServicePort: int32(defaultOpenTSDBServicePort),
 		Version:             defaultVersion,
 	}
 
@@ -209,7 +206,6 @@ func (in *GreptimeDBStandalone) SetDefaults() error {
 		GRPCServicePort:     int32(defaultGRPCServicePort),
 		MySQLServicePort:    int32(defaultMySQLServicePort),
 		PostgresServicePort: int32(defaultPostgresServicePort),
-		OpenTSDBServicePort: int32(defaultOpenTSDBServicePort),
 		Version:             defaultVersion,
 		LocalStorage: &StorageSpec{
 			Name:                defaultStandaloneStorageName,
