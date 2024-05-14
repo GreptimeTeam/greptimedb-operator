@@ -369,11 +369,6 @@ func (s *standaloneBuilder) servicePorts() []corev1.ServicePort {
 			Protocol: corev1.ProtocolTCP,
 			Port:     s.standalone.Spec.PostgresServicePort,
 		},
-		{
-			Name:     "opentsdb",
-			Protocol: corev1.ProtocolTCP,
-			Port:     s.standalone.Spec.OpenTSDBServicePort,
-		},
 	}
 }
 
@@ -398,11 +393,6 @@ func (s *standaloneBuilder) containerPorts() []corev1.ContainerPort {
 			Name:          "postgres",
 			Protocol:      corev1.ProtocolTCP,
 			ContainerPort: s.standalone.Spec.PostgresServicePort,
-		},
-		{
-			Name:          "opentsdb",
-			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: s.standalone.Spec.OpenTSDBServicePort,
 		},
 	}
 }

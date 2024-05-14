@@ -118,9 +118,6 @@ type GreptimeDBClusterSpec struct {
 	PostgresServicePort int32 `json:"postgresServicePort,omitempty"`
 
 	// +optional
-	OpenTSDBServicePort int32 `json:"openTSDBServicePort,omitempty"`
-
-	// +optional
 	EnableInfluxDBProtocol bool `json:"enableInfluxDBProtocol,omitempty"`
 
 	// +optional

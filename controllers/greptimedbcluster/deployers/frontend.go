@@ -248,7 +248,6 @@ func (b *frontendBuilder) generateMainContainerArgs() []string {
 		"--http-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.HTTPServicePort),
 		"--mysql-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.MySQLServicePort),
 		"--postgres-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.PostgresServicePort),
-		"--opentsdb-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.OpenTSDBServicePort),
 		"--config-file", path.Join(constant.GreptimeDBConfigDir, constant.GreptimeDBConfigFileName),
 	}
 
@@ -328,11 +327,6 @@ func (b *frontendBuilder) servicePorts() []corev1.ServicePort {
 			Protocol: corev1.ProtocolTCP,
 			Port:     b.Cluster.Spec.PostgresServicePort,
 		},
-		{
-			Name:     "opentsdb",
-			Protocol: corev1.ProtocolTCP,
-			Port:     b.Cluster.Spec.OpenTSDBServicePort,
-		},
 	}
 }
 
@@ -357,11 +351,6 @@ func (b *frontendBuilder) containerPorts() []corev1.ContainerPort {
 			Name:          "postgres",
 			Protocol:      corev1.ProtocolTCP,
 			ContainerPort: b.Cluster.Spec.PostgresServicePort,
-		},
-		{
-			Name:          "opentsdb",
-			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: b.Cluster.Spec.OpenTSDBServicePort,
 		},
 	}
 }
