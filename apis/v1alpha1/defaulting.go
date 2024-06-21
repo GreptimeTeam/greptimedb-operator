@@ -21,14 +21,10 @@ import (
 	"github.com/imdario/mergo"
 	"google.golang.org/protobuf/proto"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 var (
-	defaultCPU    = "500m"
-	defaultMemory = "512Mi"
-
 	defaultVersion = "Unknown"
 
 	// The default settings for GreptimeDBClusterSpec.
@@ -62,18 +58,6 @@ func (in *GreptimeDBCluster) SetDefaults() error {
 	var defaultGreptimeDBClusterSpec = &GreptimeDBClusterSpec{
 		Base: &PodTemplateSpec{
 			MainContainer: &MainContainerSpec{
-				Resources: &corev1.ResourceRequirements{
-					// Let Requests == Limits by default.
-					Requests: map[corev1.ResourceName]resource.Quantity{
-						"cpu":    resource.MustParse(defaultCPU),
-						"memory": resource.MustParse(defaultMemory),
-					},
-					Limits: map[corev1.ResourceName]resource.Quantity{
-						"cpu":    resource.MustParse(defaultCPU),
-						"memory": resource.MustParse(defaultMemory),
-					},
-				},
-
 				// The default readiness probe for the main container of GreptimeDBCluster.
 				ReadinessProbe: &corev1.Probe{
 					ProbeHandler: corev1.ProbeHandler{
@@ -179,18 +163,6 @@ func (in *GreptimeDBStandalone) SetDefaults() error {
 	var defaultGreptimeDBStandaloneSpec = &GreptimeDBStandaloneSpec{
 		Base: &PodTemplateSpec{
 			MainContainer: &MainContainerSpec{
-				Resources: &corev1.ResourceRequirements{
-					// Let Requests == Limits by default.
-					Requests: map[corev1.ResourceName]resource.Quantity{
-						"cpu":    resource.MustParse(defaultCPU),
-						"memory": resource.MustParse(defaultMemory),
-					},
-					Limits: map[corev1.ResourceName]resource.Quantity{
-						"cpu":    resource.MustParse(defaultCPU),
-						"memory": resource.MustParse(defaultMemory),
-					},
-				},
-
 				// The default readiness probe for the main container of GreptimeDBCluster.
 				ReadinessProbe: &corev1.Probe{
 					ProbeHandler: corev1.ProbeHandler{

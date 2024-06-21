@@ -145,8 +145,7 @@ func RunSQLTest(ctx context.Context, frontendIngressIP string, isDistributed boo
 						      n < 5,
 							  n >= 5 AND n < 9,
 							  n >= 9
-						  )
-						  engine=mito;`
+						  )`
 
 		createStandaloneTableSQL = `CREATE TABLE dist_table(
 							ts TIMESTAMP DEFAULT current_timestamp(),

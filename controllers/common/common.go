@@ -118,7 +118,7 @@ func GeneratePodTemplateSpec(kind v1alpha1.ComponentKind, template *v1alpha1.Pod
 				{
 					// The main container name is the same as the component kind.
 					Name:            string(kind),
-					Resources:       *template.MainContainer.Resources,
+					Resources:       template.MainContainer.Resources,
 					Image:           template.MainContainer.Image,
 					Command:         template.MainContainer.Command,
 					Args:            template.MainContainer.Args,
