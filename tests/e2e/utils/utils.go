@@ -155,7 +155,7 @@ func RunSQLTest(ctx context.Context, frontendIngressIP string, isDistributed boo
                             PRIMARY KEY(n)
 						  )`
 
-		insertDataSQL = `INSERT INTO dist_table(n, row_id) VALUES (?, ?);`
+		insertDataSQL = `INSERT INTO dist_table(n, row_id) VALUES (?, ?)`
 		selectDataSQL = `SELECT * FROM dist_table`
 
 		rowsNum = 42
