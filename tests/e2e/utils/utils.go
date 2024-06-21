@@ -134,29 +134,29 @@ func RunSQLTest(ctx context.Context, frontendIngressIP string, isDistributed boo
 	}
 
 	const (
-		createDistributedTableSQL = `CREATE TABLE dist_table(
-							ts TIMESTAMP DEFAULT current_timestamp(),
-							n INT,
-							row_id INT,
-							TIME INDEX (ts),
-							PRIMARY KEY(n)
-						  )
-                          PARTITION ON COLUMNS (n) (
-						      n < 5,
-							  n >= 5 AND n < 9,
-							  n >= 9
-						  );`
+		createDistributedTableSQL = `CREATE TABLE dist_table (
+                             ts TIMESTAMP DEFAULT current_timestamp(),
+                             n INT,
+    					     row_id INT,
+                             TIME INDEX (ts),
+                             PRIMARY KEY(n)
+                        )
+                        PARTITION ON COLUMNS (n) (
+                          n < 5,
+                          n >= 5 AND n < 9,
+                          n >= 9
+					    )`
 
-		createStandaloneTableSQL = `CREATE TABLE dist_table(
+		createStandaloneTableSQL = `CREATE TABLE dist_table (
 							ts TIMESTAMP DEFAULT current_timestamp(),
-							n INT,
-							row_id INT,
-							PRIMARY KEY(n),
-							TIME INDEX (ts)
-						  );`
+                            n INT,
+    					    row_id INT,
+                            TIME INDEX (ts),
+                            PRIMARY KEY(n)
+						  )`
 
 		insertDataSQL = `INSERT INTO dist_table(n, row_id) VALUES (?, ?);`
-		selectDataSQL = `SELECT * FROM dist_table;`
+		selectDataSQL = `SELECT * FROM dist_table`
 
 		rowsNum = 42
 	)
