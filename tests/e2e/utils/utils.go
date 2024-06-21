@@ -138,8 +138,8 @@ func RunSQLTest(ctx context.Context, frontendIngressIP string, isDistributed boo
 							ts TIMESTAMP DEFAULT current_timestamp(),
 							n INT,
 							row_id INT,
-							PRIMARY KEY(n),
-							TIME INDEX (ts)
+							TIME INDEX (ts),
+							PRIMARY KEY(n)
 						  )
                           PARTITION ON COLUMNS (n) (
 						      n < 5,
@@ -153,8 +153,7 @@ func RunSQLTest(ctx context.Context, frontendIngressIP string, isDistributed boo
 							row_id INT,
 							PRIMARY KEY(n),
 							TIME INDEX (ts)
-						  )
-						  engine=mito;`
+						  )`
 
 		insertDataSQL = `INSERT INTO dist_table(n, row_id) VALUES (?, ?);`
 		selectDataSQL = `SELECT * FROM dist_table`
