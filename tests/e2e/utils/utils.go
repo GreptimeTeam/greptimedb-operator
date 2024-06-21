@@ -145,7 +145,7 @@ func RunSQLTest(ctx context.Context, frontendIngressIP string, isDistributed boo
 						      n < 5,
 							  n >= 5 AND n < 9,
 							  n >= 9
-						  )`
+						  );`
 
 		createStandaloneTableSQL = `CREATE TABLE dist_table(
 							ts TIMESTAMP DEFAULT current_timestamp(),
@@ -153,10 +153,10 @@ func RunSQLTest(ctx context.Context, frontendIngressIP string, isDistributed boo
 							row_id INT,
 							PRIMARY KEY(n),
 							TIME INDEX (ts)
-						  )`
+						  );`
 
 		insertDataSQL = `INSERT INTO dist_table(n, row_id) VALUES (?, ?);`
-		selectDataSQL = `SELECT * FROM dist_table`
+		selectDataSQL = `SELECT * FROM dist_table;`
 
 		rowsNum = 42
 	)
