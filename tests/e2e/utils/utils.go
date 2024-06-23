@@ -155,8 +155,8 @@ func RunSQLTest(ctx context.Context, frontendIngressIP string, isDistributed boo
                             PRIMARY KEY(n)
 						  )`
 
-		insertDataSQL = `INSERT INTO dist_table(n, row_id) VALUES (?, ?)`
-		selectDataSQL = `SELECT * FROM dist_table`
+		insertDataSQLStr = `INSERT INTO dist_table(n, row_id) VALUES (%d, %d)`
+		selectDataSQL    = `SELECT * FROM dist_table`
 
 		rowsNum = 42
 	)
@@ -172,7 +172,8 @@ func RunSQLTest(ctx context.Context, frontendIngressIP string, isDistributed boo
 	}
 
 	for i := 0; i < rowsNum; i++ {
-		_, err = conn.ExecContext(ctx, insertDataSQL, i, i)
+		insertDataSQL := fmt.Sprintf(insertDataSQLStr, i, i)
+		_, err = conn.ExecContext(ctx, insertDataSQL)
 		if err != nil {
 			return err
 		}
