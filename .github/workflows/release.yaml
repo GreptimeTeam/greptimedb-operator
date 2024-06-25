@@ -73,12 +73,12 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           tags: |
-            greptime/greptimedb-operator:latest 
+            greptime/greptimedb-operator:latest
             greptime/greptimedb-operator:${{ env.VERSION }}
             greptime-registry.cn-hangzhou.cr.aliyuncs.com/greptime/greptimedb-operator:latest
             greptime-registry.cn-hangzhou.cr.aliyuncs.com/greptime/greptimedb-operator:${{ env.VERSION }}
-            public.ecr.aws/i8k6a5e1/greptimedb-operator:latest
-            public.ecr.aws/i8k6a5e1/greptimedb-operator:${{ env.VERSION }}
+            public.ecr.aws/i8k6a5e1/greptime/greptimedb-operator:latest
+            public.ecr.aws/i8k6a5e1/greptime/greptimedb-operator:${{ env.VERSION }}
 
       - name: Build and push initializer
         uses: docker/build-push-action@v5
