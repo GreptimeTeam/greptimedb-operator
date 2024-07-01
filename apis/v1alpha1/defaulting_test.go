@@ -211,7 +211,7 @@ func TestSetDefaults(t *testing.T) {
 								MainContainer: &MainContainerSpec{
 									Image: "greptime/frontend:latest",
 									Args: []string{
-										"--metasrv-addr",
+										"--metasrv-addrs",
 										"meta.default:3002",
 									},
 								},
@@ -278,7 +278,7 @@ func TestSetDefaults(t *testing.T) {
 								MainContainer: &MainContainerSpec{
 									Image: "greptime/frontend:latest",
 									Args: []string{
-										"--metasrv-addr",
+										"--metasrv-addrs",
 										"meta.default:3002",
 									},
 									Resources: &corev1.ResourceRequirements{

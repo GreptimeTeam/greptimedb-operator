@@ -284,7 +284,7 @@ func (b *datanodeBuilder) BuildPodMonitor() deployer.Builder {
 func (b *datanodeBuilder) generateMainContainerArgs() []string {
 	return []string{
 		"datanode", "start",
-		"--metasrv-addr", fmt.Sprintf("%s.%s:%d", common.ResourceName(b.Cluster.Name, v1alpha1.MetaComponentKind),
+		"--metasrv-addrs", fmt.Sprintf("%s.%s:%d", common.ResourceName(b.Cluster.Name, v1alpha1.MetaComponentKind),
 			b.Cluster.Namespace, b.Cluster.Spec.Meta.ServicePort),
 		// TODO(zyy17): Should we add the new field of the CRD for datanode http port?
 		"--http-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.HTTPServicePort),

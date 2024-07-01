@@ -243,7 +243,7 @@ func (b *frontendBuilder) generateMainContainerArgs() []string {
 	var args = []string{
 		"frontend", "start",
 		"--rpc-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.GRPCServicePort),
-		"--metasrv-addr", fmt.Sprintf("%s.%s:%d", common.ResourceName(b.Cluster.Name, v1alpha1.MetaComponentKind),
+		"--metasrv-addrs", fmt.Sprintf("%s.%s:%d", common.ResourceName(b.Cluster.Name, v1alpha1.MetaComponentKind),
 			b.Cluster.Namespace, b.Cluster.Spec.Meta.ServicePort),
 		"--http-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.HTTPServicePort),
 		"--mysql-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.MySQLServicePort),
