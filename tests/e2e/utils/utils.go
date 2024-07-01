@@ -134,7 +134,7 @@ func RunSQLTest(ctx context.Context, frontendIngressIP string, isDistributed boo
 	}
 
 	const (
-		createDistributedTableSQL = `CREATE TABLE dist_table(
+		createDistributedTableSQL = `CREATE TABLE test_table(
 							ts TIMESTAMP DEFAULT current_timestamp(),
 							n INT,
 							row_id INT,
@@ -148,7 +148,7 @@ func RunSQLTest(ctx context.Context, frontendIngressIP string, isDistributed boo
 						  )
 						  engine=mito;`
 
-		createStandaloneTableSQL = `CREATE TABLE dist_table(
+		createStandaloneTableSQL = `CREATE TABLE test_table(
 							ts TIMESTAMP DEFAULT current_timestamp(),
 							n INT,
 							row_id INT,
@@ -157,8 +157,8 @@ func RunSQLTest(ctx context.Context, frontendIngressIP string, isDistributed boo
 						  )
 						  engine=mito;`
 
-		insertDataSQL = `INSERT INTO dist_table(n, row_id) VALUES (?, ?);`
-		selectDataSQL = `SELECT * FROM dist_table`
+		insertDataSQL = `INSERT INTO test_table(n, row_id, ts) VALUES (?, ?, ?);`
+		selectDataSQL = `SELECT * FROM test_table`
 
 		rowsNum = 42
 	)
@@ -174,7 +174,9 @@ func RunSQLTest(ctx context.Context, frontendIngressIP string, isDistributed boo
 	}
 
 	for i := 0; i < rowsNum; i++ {
-		_, err = conn.ExecContext(ctx, insertDataSQL, i, i)
+		now := time.Now()
+		timestampInMillisecond := now.Unix()*1000 + int64(now.Nanosecond())/1e6
+		_, err = conn.ExecContext(ctx, insertDataSQL, i, i, timestampInMillisecond)
 		if err != nil {
 			return err
 		}
