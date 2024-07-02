@@ -134,29 +134,31 @@ func RunSQLTest(ctx context.Context, frontendIngressIP string, isDistributed boo
 	}
 
 	const (
-		createDistributedTableSQL = `CREATE TABLE dist_table (
-                             ts TIMESTAMP DEFAULT current_timestamp(),
-                             n INT,
-    					     row_id INT,
-                             TIME INDEX (ts),
-                             PRIMARY KEY(n)
-                        )
-                        PARTITION ON COLUMNS (n) (
-                          n < 5,
-                          n >= 5 AND n < 9,
-                          n >= 9
-					    )`
-
-		createStandaloneTableSQL = `CREATE TABLE dist_table (
+		createDistributedTableSQL = `CREATE TABLE test_table(
 							ts TIMESTAMP DEFAULT current_timestamp(),
-                            n INT,
-    					    row_id INT,
-                            TIME INDEX (ts),
-                            PRIMARY KEY(n)
-						  )`
+							n INT,
+							row_id INT,
+							PRIMARY KEY(n),
+							TIME INDEX (ts)
+						  )
+                          PARTITION ON COLUMNS (n) (
+						      n < 5,
+							  n >= 5 AND n < 9,
+							  n >= 9
+						  )
+						  engine=mito;`
 
-		insertDataSQLStr = `INSERT INTO dist_table(n, row_id) VALUES (%d, %d)`
-		selectDataSQL    = `SELECT * FROM dist_table`
+		createStandaloneTableSQL = `CREATE TABLE test_table(
+							ts TIMESTAMP DEFAULT current_timestamp(),
+							n INT,
+							row_id INT,
+							PRIMARY KEY(n),
+							TIME INDEX (ts)
+						  )
+						  engine=mito;`
+
+		insertDataSQL = `INSERT INTO test_table(n, row_id, ts) VALUES (?, ?, ?);`
+		selectDataSQL = `SELECT * FROM test_table`
 
 		rowsNum = 42
 	)
@@ -172,8 +174,9 @@ func RunSQLTest(ctx context.Context, frontendIngressIP string, isDistributed boo
 	}
 
 	for i := 0; i < rowsNum; i++ {
-		insertDataSQL := fmt.Sprintf(insertDataSQLStr, i, i)
-		_, err = conn.ExecContext(ctx, insertDataSQL)
+		now := time.Now()
+		timestampInMillisecond := now.Unix()*1000 + int64(now.Nanosecond())/1e6
+		_, err = conn.ExecContext(ctx, insertDataSQL, i, i, timestampInMillisecond)
 		if err != nil {
 			return err
 		}
