@@ -81,6 +81,11 @@ type DatanodeSpec struct {
 	// More datanode settings can be added here...
 }
 
+// FlownodeSpec is the specification for flownode component.
+type FlownodeSpec struct {
+	ComponentSpec `json:",inline"`
+}
+
 // InitializerSpec is the init container to set up components configurations before running the container.
 type InitializerSpec struct {
 	// +optional
@@ -104,6 +109,9 @@ type GreptimeDBClusterSpec struct {
 	// Datanode is the specification of datanode node.
 	// +optional
 	Datanode *DatanodeSpec `json:"datanode"`
+
+	// Flownode is the specification of flownode node.
+	Flownode *FlownodeSpec `json:"flownode"`
 
 	// +optional
 	HTTPServicePort int32 `json:"httpServicePort,omitempty"`
