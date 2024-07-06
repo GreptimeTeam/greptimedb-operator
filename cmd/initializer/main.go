@@ -32,8 +32,8 @@ func main() {
 	pflag.StringVar(&opts.Namespace, "namespace", "", "the namespace of greptimedb cluster")
 	pflag.StringVar(&opts.ComponentKind, "component-kind", "", "the component kind")
 
-	pflag.StringVar(&opts.DatanodeServiceName, "datanode-service-name", "", "the name of datanode service")
-	pflag.Int32Var(&opts.DatanodeRPCPort, "datanode-rpc-port", 4001, "the datanode RPC port")
+	pflag.StringVar(&opts.ServiceName, "service-name", "", "the name of service")
+	pflag.Int32Var(&opts.RPCPort, "rpc-port", 4001, "the RPC port")
 
 	klog.InitFlags(nil)
 	pflag.CommandLine.AddGoFlagSet(goflag.CommandLine)

@@ -34,10 +34,11 @@ var (
 	testPodIP            = "192.168.0.1"
 	testClusterService   = "testcluster"
 	testClusterNamespace = "greptimedb"
-	testPodName          = fmt.Sprintf("%s-datanode-%d", testClusterService, testPodIndex)
+	testDatanodePodName  = fmt.Sprintf("%s-datanode-%d", testClusterService, testPodIndex)
+	testFlownodePodName  = fmt.Sprintf("%s-flownode-%d", testClusterService, testPodIndex)
 )
 
-func TestConfigGenerator(t *testing.T) {
+func TestDatanodeConfigGenerator(t *testing.T) {
 	file, err := os.CreateTemp("", "config-*.toml")
 	if err != nil {
 		log.Fatal(err)
@@ -45,18 +46,18 @@ func TestConfigGenerator(t *testing.T) {
 	defer file.Close()
 
 	opts := &Options{
-		ConfigPath:          file.Name(),
-		InitConfigPath:      "testdata/config.toml",
-		Namespace:           testClusterNamespace,
-		ComponentKind:       string(v1alpha1.DatanodeComponentKind),
-		DatanodeRPCPort:     testRPCPort,
-		DatanodeServiceName: testClusterService,
+		ConfigPath:     file.Name(),
+		InitConfigPath: "testdata/datanode-config.toml",
+		Namespace:      testClusterNamespace,
+		ComponentKind:  string(v1alpha1.DatanodeComponentKind),
+		RPCPort:        testRPCPort,
+		ServiceName:    testClusterService,
 	}
 
 	t.Setenv(deployer.EnvPodIP, testPodIP)
-	t.Setenv(deployer.EnvPodName, testPodName)
+	t.Setenv(deployer.EnvPodName, testDatanodePodName)
 
-	cg := NewConfigGenerator(opts, hostname)
+	cg := NewConfigGenerator(opts, datanodeHostname)
 	if err = cg.Generate(); err != nil {
 		t.Fatal(err)
 	}
@@ -92,12 +93,77 @@ func TestConfigGenerator(t *testing.T) {
 	if !ok {
 		t.Fatalf("rpc_hostname is not string")
 	}
-	wantRPCHostname := fmt.Sprintf("%s.%s.%s:%d", testPodName, testClusterService, testClusterNamespace, testRPCPort)
+	wantRPCHostname := fmt.Sprintf("%s.%s.%s:%d", testDatanodePodName, testClusterService, testClusterNamespace, testRPCPort)
 	if !reflect.DeepEqual(wantRPCHostname, rpcHostName) {
 		t.Fatalf("RPCHostName is not equal, want: '%s', got: '%s'", wantRPCHostname, rpcHostName)
 	}
 }
 
-func hostname() (name string, err error) {
-	return testPodName, nil
+func TestFlownodeConfigGenerator(t *testing.T) {
+	file, err := os.CreateTemp("", "config-*.toml")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer file.Close()
+
+	opts := &Options{
+		ConfigPath:     file.Name(),
+		InitConfigPath: "testdata/flownode-config.toml",
+		Namespace:      testClusterNamespace,
+		ComponentKind:  string(v1alpha1.FlownodeComponentKind),
+		RPCPort:        testRPCPort,
+		ServiceName:    testClusterService,
+	}
+
+	t.Setenv(deployer.EnvPodIP, testPodIP)
+	t.Setenv(deployer.EnvPodName, testFlownodePodName)
+
+	cg := NewConfigGenerator(opts, flownodeHostname)
+	if err = cg.Generate(); err != nil {
+		t.Fatal(err)
+	}
+
+	tomlData, err := os.ReadFile(opts.ConfigPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	tree, err := toml.Load(string(tomlData))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	nodeID, ok := tree.Get("node_id").(int64)
+	if !ok {
+		t.Fatalf("node_id is not int64")
+	}
+
+	if !reflect.DeepEqual(testPodIndex, uint64(nodeID)) {
+		t.Fatalf("nodeID is not equal, want: '%d', got: '%d'", testPodIndex, nodeID)
+	}
+
+	rpcAddr, ok := tree.Get("grpc.addr").(string)
+	if !ok {
+		t.Fatalf("rpc_addr is not string")
+	}
+	wantRPCAddr := fmt.Sprintf("%s:%d", testPodIP, testRPCPort)
+	if !reflect.DeepEqual(wantRPCAddr, rpcAddr) {
+		t.Fatalf("RPCAddr is not equal, want: '%s', got: '%s'", wantRPCAddr, rpcAddr)
+	}
+
+	rpcHostName, ok := tree.Get("grpc.hostname").(string)
+	if !ok {
+		t.Fatalf("rpc_hostname is not string")
+	}
+	wantRPCHostname := fmt.Sprintf("%s.%s.%s:%d", testFlownodePodName, testClusterService, testClusterNamespace, testRPCPort)
+	if !reflect.DeepEqual(wantRPCHostname, rpcHostName) {
+		t.Fatalf("RPCHostName is not equal, want: '%s', got: '%s'", wantRPCHostname, rpcHostName)
+	}
+}
+
+func datanodeHostname() (name string, err error) {
+	return testDatanodePodName, nil
+}
+
+func flownodeHostname() (name string, err error) {
+	return testFlownodePodName, nil
 }
