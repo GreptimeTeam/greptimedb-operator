@@ -38,6 +38,7 @@ var (
 	defaultFrontendReplicas int32 = 1
 	defaultMetaReplicas     int32 = 1
 	defaultDatanodeReplicas int32 = 3
+	defaultFlownodeReplicas int32 = 1
 
 	// The default storage settings for datanode.
 	defaultDataNodeStorageName      = "datanode"
@@ -130,6 +131,17 @@ func (in *GreptimeDBCluster) SetDefaults() error {
 		}
 	}
 
+	if in.Spec.Flownode != nil {
+		defaultGreptimeDBClusterSpec.Flownode = &FlownodeSpec{
+			ComponentSpec: ComponentSpec{
+				Template: &PodTemplateSpec{},
+			},
+		}
+		if in.Spec.Flownode.Replicas == nil {
+			in.Spec.Flownode.Replicas = proto.Int32(defaultFlownodeReplicas)
+		}
+	}
+
 	if err := mergo.Merge(&in.Spec, defaultGreptimeDBClusterSpec); err != nil {
 		return err
 	}
@@ -150,6 +162,15 @@ func (in *GreptimeDBCluster) SetDefaults() error {
 		if err := mergo.Merge(in.Spec.Datanode.Template, in.Spec.Base); err != nil {
 			return err
 		}
+	}
+
+	if in.Spec.Flownode != nil {
+		if err := mergo.Merge(in.Spec.Flownode.Template, in.Spec.Base); err != nil {
+			return err
+		}
+
+		// FIXME(zyy17): The flownode does not need readiness probe and will be added in the future.
+		in.Spec.Flownode.Template.MainContainer.ReadinessProbe = nil
 	}
 
 	return nil

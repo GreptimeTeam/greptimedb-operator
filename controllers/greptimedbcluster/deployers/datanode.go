@@ -37,7 +37,7 @@ import (
 	k8sutil "github.com/GreptimeTeam/greptimedb-operator/pkg/util/k8s"
 )
 
-// FlownodeDeployer is the deployer for datanode.
+// DatanodeDeployer is the deployer for datanode.
 type DatanodeDeployer struct {
 	*CommonDeployer
 }

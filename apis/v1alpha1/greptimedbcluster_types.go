@@ -159,6 +159,9 @@ type GreptimeDBClusterStatus struct {
 	Datanode DatanodeStatus `json:"datanode,omitempty"`
 
 	// +optional
+	Flownode FlownodeStatus `json:"flownode,omitempty"`
+
+	// +optional
 	Version string `json:"version,omitempty"`
 
 	// +optional
@@ -189,6 +192,11 @@ type DatanodeStatus struct {
 	ReadyReplicas int32 `json:"readyReplicas"`
 }
 
+type FlownodeStatus struct {
+	Replicas      int32 `json:"replicas"`
+	ReadyReplicas int32 `json:"readyReplicas"`
+}
+
 func (in *GreptimeDBClusterStatus) GetCondition(conditionType ConditionType) *Condition {
 	return GetCondition(in.Conditions, conditionType)
 }
@@ -203,6 +211,7 @@ func (in *GreptimeDBClusterStatus) SetCondition(condition Condition) {
 // +kubebuilder:printcolumn:name="FRONTEND",type="integer",JSONPath=".status.frontend.readyReplicas"
 // +kubebuilder:printcolumn:name="DATANODE",type="integer",JSONPath=".status.datanode.readyReplicas"
 // +kubebuilder:printcolumn:name="META",type="integer",JSONPath=".status.meta.readyReplicas"
+// +kubebuilder:printcolumn:name="FLOWNODE",type="integer",JSONPath=".status.flownode.readyReplicas"
 // +kubebuilder:printcolumn:name="PHASE",type=string,JSONPath=".status.clusterPhase"
 // +kubebuilder:printcolumn:name="VERSION",type=string,JSONPath=".status.version"
 // +kubebuilder:printcolumn:name="AGE",type=date,JSONPath=".metadata.creationTimestamp"

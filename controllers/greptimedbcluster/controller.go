@@ -70,6 +70,7 @@ func Setup(mgr ctrl.Manager, _ *options.Options) error {
 		deployers.NewMetaDeployer(mgr),
 		deployers.NewDatanodeDeployer(mgr),
 		deployers.NewFrontendDeployer(mgr),
+		deployers.NewFlownodeDeployer(mgr),
 	}
 
 	return reconciler.SetupWithManager(mgr)
@@ -256,7 +257,7 @@ func (r *Reconciler) updateClusterStatus(ctx context.Context, cluster *v1alpha1.
 }
 
 func (r *Reconciler) validate(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster) error {
-	if cluster.Spec.Meta == nil && cluster.Spec.Datanode == nil && cluster.Spec.Frontend == nil {
+	if cluster.Spec.Meta == nil && cluster.Spec.Datanode == nil && cluster.Spec.Frontend == nil && cluster.Spec.Flownode == nil {
 		return fmt.Errorf("no components spec in cluster")
 	}
 
@@ -311,6 +312,12 @@ func (r *Reconciler) validate(ctx context.Context, cluster *v1alpha1.GreptimeDBC
 	if cluster.Spec.Frontend != nil {
 		if err := r.validateTomlConfig(cluster.Spec.Frontend.Config); err != nil {
 			return fmt.Errorf("invalid frontend toml config: %v", err)
+		}
+	}
+
+	if cluster.Spec.Flownode != nil {
+		if err := r.validateTomlConfig(cluster.Spec.Flownode.Config); err != nil {
+			return fmt.Errorf("invalid flownode toml config: %v", err)
 		}
 	}
 
