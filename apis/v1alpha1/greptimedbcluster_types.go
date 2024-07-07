@@ -111,6 +111,7 @@ type GreptimeDBClusterSpec struct {
 	Datanode *DatanodeSpec `json:"datanode"`
 
 	// Flownode is the specification of flownode node.
+	// +optional
 	Flownode *FlownodeSpec `json:"flownode"`
 
 	// +optional

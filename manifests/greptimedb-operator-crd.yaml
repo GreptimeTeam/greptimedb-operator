@@ -13400,8 +13400,6 @@ spec:
                 type: object
               version:
                 type: string
-            required:
-            - flownode
             type: object
           status:
             properties:
