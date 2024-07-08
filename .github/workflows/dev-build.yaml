@@ -20,7 +20,7 @@ on:
       repository:
         description: The public repository to build
         required: false
-        default: GreptimeTeam/greptimedb
+        default: GreptimeTeam/greptimedb-operator
       commit: # Note: We only pull the source code and use the current workflow to build the artifacts.
         description: The commit to build
         required: true
@@ -30,7 +30,7 @@ env:
 
 jobs:
   docker:
-    name: Build and push image
+    name: build-images
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
@@ -38,7 +38,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Checkout greptimedb
+      - name: Checkout greptimedb-operator
         uses: actions/checkout@v4
         with:
           repository: ${{ inputs.repository }}
@@ -66,7 +66,7 @@ jobs:
       - name: Configure tag
         shell: bash
         run: |
-          VERSION="dev-$(date "+%Y%m%d-%s")-$(echo "${{ input.commit }}" | cut -c1-8)"
+          VERSION="dev-$(date "+%Y%m%d-%s")-$(echo "${{ inputs.commit }}" | cut -c1-8)"
           echo "VERSION=${VERSION}" >> $GITHUB_ENV
 
       - name: Build and push operator
