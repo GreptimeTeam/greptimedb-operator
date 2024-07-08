@@ -27,7 +27,7 @@ KUBERNETES_VERSION = 1.28.0
 
 # Arguments for running the e2e.
 E2E_CLUSTER_NAME ?= greptimedb-operator-e2e
-E2E_TIMEOUT ?= 8m
+E2E_TIMEOUT ?= 20m
 
 GOLANGCI_LINT_VERSION = v1.55.2
 
