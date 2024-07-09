@@ -20,6 +20,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"reflect"
 	"time"
 
 	"github.com/go-sql-driver/mysql"
@@ -115,6 +116,8 @@ func GetPVCs(ctx context.Context, k8sClient client.Client, namespace, name strin
 	return pvcList.Items, nil
 }
 
+// TODO(zyy17): We should use the sqlness in the future.
+
 // RunSQLTest runs the sql test on the frontend ingress IP.
 func RunSQLTest(ctx context.Context, frontendIngressIP string, isDistributed bool) error {
 	cfg := mysql.Config{
@@ -174,9 +177,7 @@ func RunSQLTest(ctx context.Context, frontendIngressIP string, isDistributed boo
 	}
 
 	for i := 0; i < rowsNum; i++ {
-		now := time.Now()
-		timestampInMillisecond := now.Unix()*1000 + int64(now.Nanosecond())/1e6
-		_, err = conn.ExecContext(ctx, insertDataSQL, i, i, timestampInMillisecond)
+		_, err = conn.ExecContext(ctx, insertDataSQL, i, i, timestampInMillisecond())
 		if err != nil {
 			return err
 		}
@@ -205,4 +206,121 @@ func RunSQLTest(ctx context.Context, frontendIngressIP string, isDistributed boo
 	}
 
 	return nil
+}
+
+// RunFlowTest runs the greptimedb flow tests on the frontend ingress IP.
+func RunFlowTest(ctx context.Context, frontendIngressIP string) error {
+	cfg := mysql.Config{
+		Net:                  "tcp",
+		Addr:                 fmt.Sprintf("%s:%d", frontendIngressIP, 4002),
+		AllowNativePasswords: true,
+	}
+
+	db, err := sql.Open("mysql", cfg.FormatDSN())
+	if err != nil {
+		return err
+	}
+
+	conn, err := db.Conn(ctx)
+	if err != nil {
+		return err
+	}
+
+	createInputTable := `CREATE TABLE numbers_input (
+	    number INT,
+	    ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	    PRIMARY KEY(number),
+	    TIME INDEX(ts)
+	);`
+	_, err = conn.ExecContext(ctx, createInputTable)
+	if err != nil {
+		return err
+	}
+
+	createOutputTable := `CREATE TABLE sum_number_output (
+	    sum_number BIGINT,
+	    start_window TIMESTAMP TIME INDEX,
+	    end_window TIMESTAMP,
+	    update_at TIMESTAMP,
+	);`
+	_, err = conn.ExecContext(ctx, createOutputTable)
+	if err != nil {
+		return err
+	}
+
+	createFlow := fmt.Sprintf(`CREATE FLOW test_flow SINK TO sum_number_output AS
+		SELECT sum(number) FROM numbers_input GROUP BY tumble(ts, '5 second', %d);`, timestampInMillisecond())
+	_, err = conn.ExecContext(ctx, createFlow)
+	if err != nil {
+		return err
+	}
+
+	insertDataSQL := `INSERT INTO numbers_input(number, ts) VALUES (?, ?);`
+	selectDataSQL := `SELECT sum_number FROM sum_number_output;`
+
+	for i := 0; i < 20; i++ {
+		_, err = conn.ExecContext(ctx, insertDataSQL, i, timestampInMillisecond())
+		if err != nil {
+			return err
+		}
+	}
+
+	// Wait for the flow to process the data.
+	time.Sleep(5 * time.Second)
+
+	var sumNumber int
+	if err := conn.QueryRowContext(ctx, selectDataSQL).Scan(&sumNumber); err != nil {
+		return err
+	}
+
+	var numbers []int
+	results, err := conn.QueryContext(ctx, selectDataSQL)
+	if err != nil {
+		return err
+	}
+
+	for results.Next() {
+		var number int
+		if err := results.Scan(&number); err != nil {
+			return err
+		}
+		numbers = append(numbers, number)
+	}
+
+	if !reflect.DeepEqual(numbers, []int{190}) {
+		return fmt.Errorf("unexpected number of rows returned: %d", numbers)
+	}
+
+	// Keep inserting the data.
+	for i := 21; i < 42; i++ {
+		_, err = conn.ExecContext(ctx, insertDataSQL, i, timestampInMillisecond())
+		if err != nil {
+			return err
+		}
+	}
+
+	results, err = conn.QueryContext(ctx, selectDataSQL)
+	if err != nil {
+		return err
+	}
+
+	for results.Next() {
+		var number int
+		if err := results.Scan(&number); err != nil {
+			return err
+		}
+		numbers = append(numbers, number)
+	}
+
+	// There is two windows in the flow.
+	if reflect.DeepEqual(numbers, []int{190, 841}) {
+		return fmt.Errorf("unexpected number of rows returned: %d", numbers)
+	}
+
+	return nil
+}
+
+func timestampInMillisecond() int64 {
+	now := time.Now()
+	return now.Unix()*1000 + int64(now.Nanosecond())/1e6
 }

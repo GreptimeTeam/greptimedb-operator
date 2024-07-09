@@ -180,8 +180,8 @@ var _ = Describe("Test GreptimeDBCluster", func() {
 			return nil
 		}, utils.DefaultTimeout, time.Second).ShouldNot(HaveOccurred())
 
-		err = utils.RunSQLTest(ctx, frontendIngressIP, true)
-		Expect(err).NotTo(HaveOccurred(), "failed to run distributed SQL queries")
+		err = utils.RunFlowTest(ctx, frontendIngressIP)
+		Expect(err).NotTo(HaveOccurred(), "failed to run flow test")
 
 		By("Delete cluster")
 		err = k8sClient.Delete(ctx, testCluster)
