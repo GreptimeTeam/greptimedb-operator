@@ -14,7 +14,29 @@
 
 name: CI
 
-on: [push, pull_request]
+on:
+  pull_request:
+    types: [ opened, synchronize, reopened, ready_for_review ]
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+      - '.dockerignore'
+      - 'docker/**'
+      - '.gitignore'
+      - '.github/workflows/release.yaml'
+      - '.github/workflows/dev-build.yaml'
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+      - '.dockerignore'
+      - 'docker/**'
+      - '.gitignore'
+      - '.github/workflows/release.yaml'
+      - '.github/workflows/dev-build.yaml'
+  workflow_dispatch:
 
 env:
   GO_VERSION: "1.21"
