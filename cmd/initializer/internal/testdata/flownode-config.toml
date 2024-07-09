@@ -1,8 +1,6 @@
 mode = "distributed"
 node_id = 14
 
-frontend_addr = "http://127.0.0.1:4001"
-
 [grpc]
 addr = "127.0.0.1:6800"
 hostname = "127.0.0.1"

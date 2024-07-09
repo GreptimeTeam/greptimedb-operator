@@ -238,7 +238,6 @@ func (b *flownodeBuilder) generateMainContainerArgs() []string {
 	return []string{
 		"flownode", "start",
 		"--metasrv-addrs", fmt.Sprintf("%s.%s:%d", common.ResourceName(b.Cluster.Name, v1alpha1.MetaComponentKind), b.Cluster.Namespace, b.Cluster.Spec.Meta.ServicePort),
-		"--frontend-addr", fmt.Sprintf("http://%s.%s:%d", common.ResourceName(b.Cluster.Name, v1alpha1.FrontendComponentKind), b.Cluster.Namespace, b.Cluster.Spec.GRPCServicePort),
 		"--config-file", path.Join(constant.GreptimeDBConfigDir, constant.GreptimeDBConfigFileName),
 	}
 }
