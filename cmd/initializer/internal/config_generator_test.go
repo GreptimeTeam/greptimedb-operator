@@ -46,12 +46,12 @@ func TestDatanodeConfigGenerator(t *testing.T) {
 	defer file.Close()
 
 	opts := &Options{
-		ConfigPath:     file.Name(),
-		InitConfigPath: "testdata/datanode-config.toml",
-		Namespace:      testClusterNamespace,
-		ComponentKind:  string(v1alpha1.DatanodeComponentKind),
-		RPCPort:        testRPCPort,
-		ServiceName:    testClusterService,
+		ConfigPath:          file.Name(),
+		InitConfigPath:      "testdata/datanode-config.toml",
+		Namespace:           testClusterNamespace,
+		ComponentKind:       string(v1alpha1.DatanodeComponentKind),
+		DatanodeRPCPort:     testRPCPort,
+		DatanodeServiceName: testClusterService,
 	}
 
 	t.Setenv(deployer.EnvPodIP, testPodIP)

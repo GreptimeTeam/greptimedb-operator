@@ -344,8 +344,8 @@ func (b *datanodeBuilder) generateInitializer() *corev1.Container {
 		Args: []string{
 			"--config-path", path.Join(constant.GreptimeDBConfigDir, constant.GreptimeDBConfigFileName),
 			"--init-config-path", path.Join(constant.GreptimeDBInitConfigDir, constant.GreptimeDBConfigFileName),
-			"--rpc-port", fmt.Sprintf("%d", b.Cluster.Spec.GRPCServicePort),
-			"--service-name", common.ResourceName(b.Cluster.Name, b.ComponentKind),
+			"--datanode-rpc-port", fmt.Sprintf("%d", b.Cluster.Spec.GRPCServicePort),
+			"--datanode-service-name", common.ResourceName(b.Cluster.Name, b.ComponentKind),
 			"--namespace", b.Cluster.Namespace,
 			"--component-kind", string(b.ComponentKind),
 		},

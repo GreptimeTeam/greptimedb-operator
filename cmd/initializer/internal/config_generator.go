@@ -37,6 +37,10 @@ type Options struct {
 	// For generating config of datanode or flownode.
 	RPCPort     int32
 	ServiceName string
+
+	// Note: It's Deprecated and will be removed soon. For generating config of datanode.
+	DatanodeRPCPort     int32
+	DatanodeServiceName string
 }
 
 type ConfigGenerator struct {
@@ -110,7 +114,7 @@ func (c *ConfigGenerator) generateDatanodeConfig(initConfig []byte) ([]byte, err
 	if len(podIP) == 0 {
 		return nil, fmt.Errorf("empty pod ip")
 	}
-	datanodeCfg.RPCAddr = util.StringPtr(fmt.Sprintf("%s:%d", podIP, c.RPCPort))
+	datanodeCfg.RPCAddr = util.StringPtr(fmt.Sprintf("%s:%d", podIP, c.DatanodeRPCPort))
 
 	podName := os.Getenv(deployer.EnvPodName)
 	if len(podName) == 0 {
@@ -118,7 +122,7 @@ func (c *ConfigGenerator) generateDatanodeConfig(initConfig []byte) ([]byte, err
 	}
 
 	datanodeCfg.RPCHostName = util.StringPtr(fmt.Sprintf("%s.%s.%s:%d", podName,
-		c.ServiceName, c.Namespace, c.RPCPort))
+		c.DatanodeServiceName, c.Namespace, c.DatanodeRPCPort))
 
 	configData, err := dbconfig.Marshal(cfg)
 	if err != nil {
