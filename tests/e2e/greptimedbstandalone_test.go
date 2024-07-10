@@ -17,6 +17,7 @@ package e2e
 import (
 	"context"
 	"fmt"
+	"net"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -25,6 +26,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	greptimev1alpha1 "github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
+	"github.com/GreptimeTeam/greptimedb-operator/controllers/common"
 	"github.com/GreptimeTeam/greptimedb-operator/tests/e2e/utils"
 )
 
@@ -56,17 +58,22 @@ var _ = Describe("Test GreptimeDBStandalone", func() {
 		}, utils.DefaultTimeout, time.Second).ShouldNot(HaveOccurred())
 
 		By("Run SQL test")
-		var frontendIngressIP string
+		frontendAddr, err := utils.PortForward(ctx, testStandalone.Namespace, common.ResourceName(testStandalone.Name, greptimev1alpha1.StandaloneKind), int(testStandalone.Spec.MySQLServicePort))
+		Expect(err).NotTo(HaveOccurred(), "failed to port forward frontend service")
 		Eventually(func() error {
-			frontendIngressIP, err = utils.GetFrontendServiceIngressIP(ctx, k8sClient, testStandalone.Namespace, fmt.Sprintf("%s-standalone", testStandalone.Name))
+			conn, err := net.Dial("tcp", frontendAddr)
 			if err != nil {
 				return err
 			}
+			conn.Close()
 			return nil
 		}, utils.DefaultTimeout, time.Second).ShouldNot(HaveOccurred())
 
-		err = utils.RunSQLTest(ctx, frontendIngressIP, false)
+		err = utils.RunSQLTest(ctx, frontendAddr, false)
 		Expect(err).NotTo(HaveOccurred(), "failed to run SQL test")
+
+		By("Kill the port forwarding process")
+		utils.KillPortForwardProcess()
 
 		By("Delete standalone")
 		err = k8sClient.Delete(ctx, testStandalone)

@@ -17,6 +17,7 @@ package e2e
 import (
 	"context"
 	"fmt"
+	"net"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -25,6 +26,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	greptimev1alpha1 "github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
+	"github.com/GreptimeTeam/greptimedb-operator/controllers/common"
 	"github.com/GreptimeTeam/greptimedb-operator/tests/e2e/utils"
 )
 
@@ -61,17 +63,22 @@ var _ = Describe("Test GreptimeDBCluster", func() {
 		}, utils.DefaultTimeout, time.Second).ShouldNot(HaveOccurred())
 
 		By("Execute distributed SQL queries")
-		var frontendIngressIP string
+		frontendAddr, err := utils.PortForward(ctx, testCluster.Namespace, common.ResourceName(testCluster.Name, greptimev1alpha1.FrontendComponentKind), int(testCluster.Spec.MySQLServicePort))
+		Expect(err).NotTo(HaveOccurred(), "failed to port forward frontend service")
 		Eventually(func() error {
-			frontendIngressIP, err = utils.GetFrontendServiceIngressIP(ctx, k8sClient, testCluster.Namespace, fmt.Sprintf("%s-frontend", testCluster.Name))
+			conn, err := net.Dial("tcp", frontendAddr)
 			if err != nil {
 				return err
 			}
+			conn.Close()
 			return nil
 		}, utils.DefaultTimeout, time.Second).ShouldNot(HaveOccurred())
 
-		err = utils.RunSQLTest(ctx, frontendIngressIP, true)
+		err = utils.RunSQLTest(ctx, frontendAddr, true)
 		Expect(err).NotTo(HaveOccurred(), "failed to run distributed SQL queries")
+
+		By("Kill the port forwarding process")
+		utils.KillPortForwardProcess()
 
 		By("Delete cluster")
 		err = k8sClient.Delete(ctx, testCluster)
@@ -116,17 +123,22 @@ var _ = Describe("Test GreptimeDBCluster", func() {
 		}, utils.DefaultTimeout, time.Second).ShouldNot(HaveOccurred())
 
 		By("Execute distributed SQL queries")
-		var frontendIngressIP string
+		frontendAddr, err := utils.PortForward(ctx, testCluster.Namespace, common.ResourceName(testCluster.Name, greptimev1alpha1.FrontendComponentKind), int(testCluster.Spec.MySQLServicePort))
+		Expect(err).NotTo(HaveOccurred(), "failed to port forward frontend service")
 		Eventually(func() error {
-			frontendIngressIP, err = utils.GetFrontendServiceIngressIP(ctx, k8sClient, testCluster.Namespace, fmt.Sprintf("%s-frontend", testCluster.Name))
+			conn, err := net.Dial("tcp", frontendAddr)
 			if err != nil {
 				return err
 			}
+			conn.Close()
 			return nil
 		}, utils.DefaultTimeout, time.Second).ShouldNot(HaveOccurred())
 
-		err = utils.RunSQLTest(ctx, frontendIngressIP, true)
+		err = utils.RunSQLTest(ctx, frontendAddr, true)
 		Expect(err).NotTo(HaveOccurred(), "failed to run distributed SQL queries")
+
+		By("Kill the port forwarding process")
+		utils.KillPortForwardProcess()
 
 		By("Delete cluster")
 		err = k8sClient.Delete(ctx, testCluster)
@@ -171,17 +183,22 @@ var _ = Describe("Test GreptimeDBCluster", func() {
 		}, utils.DefaultTimeout, time.Second).ShouldNot(HaveOccurred())
 
 		By("Execute distributed SQL queries")
-		var frontendIngressIP string
+		frontendAddr, err := utils.PortForward(ctx, testCluster.Namespace, common.ResourceName(testCluster.Name, greptimev1alpha1.FrontendComponentKind), int(testCluster.Spec.MySQLServicePort))
+		Expect(err).NotTo(HaveOccurred(), "failed to port forward frontend service")
 		Eventually(func() error {
-			frontendIngressIP, err = utils.GetFrontendServiceIngressIP(ctx, k8sClient, testCluster.Namespace, fmt.Sprintf("%s-frontend", testCluster.Name))
+			conn, err := net.Dial("tcp", frontendAddr)
 			if err != nil {
 				return err
 			}
+			conn.Close()
 			return nil
 		}, utils.DefaultTimeout, time.Second).ShouldNot(HaveOccurred())
 
-		err = utils.RunFlowTest(ctx, frontendIngressIP)
+		err = utils.RunFlowTest(ctx, frontendAddr)
 		Expect(err).NotTo(HaveOccurred(), "failed to run flow test")
+
+		By("Kill the port forwarding process")
+		utils.KillPortForwardProcess()
 
 		By("Delete cluster")
 		err = k8sClient.Delete(ctx, testCluster)

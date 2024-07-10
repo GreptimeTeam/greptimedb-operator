@@ -25,11 +25,10 @@ spec:
       image: localhost:5001/greptime/greptimedb:latest
   frontend:
     replicas: 1
-    service:
-      type: LoadBalancer
   meta:
     replicas: 1
     etcdEndpoints:
       - etcd.etcd:2379
   datanode:
     replicas: 3
+  mysqlServicePort: 4002

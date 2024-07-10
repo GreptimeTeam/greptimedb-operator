@@ -21,5 +21,4 @@ spec:
   base:
     main:
       image: localhost:5001/greptime/greptimedb:latest
-  service:
-    type: LoadBalancer
+  mysqlServicePort: 4002

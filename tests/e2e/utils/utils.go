@@ -18,6 +18,8 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"math/rand"
+	"net"
 	"os"
 	"os/exec"
 	"reflect"
@@ -119,10 +121,10 @@ func GetPVCs(ctx context.Context, k8sClient client.Client, namespace, name strin
 // TODO(zyy17): We should use the sqlness in the future.
 
 // RunSQLTest runs the sql test on the frontend ingress IP.
-func RunSQLTest(ctx context.Context, frontendIngressIP string, isDistributed bool) error {
+func RunSQLTest(ctx context.Context, frontendAddr string, isDistributed bool) error {
 	cfg := mysql.Config{
 		Net:                  "tcp",
-		Addr:                 fmt.Sprintf("%s:%d", frontendIngressIP, 4002),
+		Addr:                 frontendAddr,
 		AllowNativePasswords: true,
 	}
 
@@ -209,10 +211,10 @@ func RunSQLTest(ctx context.Context, frontendIngressIP string, isDistributed boo
 }
 
 // RunFlowTest runs the greptimedb flow tests on the frontend ingress IP.
-func RunFlowTest(ctx context.Context, frontendIngressIP string) error {
+func RunFlowTest(ctx context.Context, frontendAddr string) error {
 	cfg := mysql.Config{
 		Net:                  "tcp",
-		Addr:                 fmt.Sprintf("%s:%d", frontendIngressIP, 4002),
+		Addr:                 frontendAddr,
 		AllowNativePasswords: true,
 	}
 
@@ -323,4 +325,45 @@ func RunFlowTest(ctx context.Context, frontendIngressIP string) error {
 func timestampInMillisecond() int64 {
 	now := time.Now()
 	return now.Unix()*1000 + int64(now.Nanosecond())/1e6
+}
+
+// PortForward uses kubectl to port forward the service to a local random available port.
+func PortForward(ctx context.Context, namespace, serviceName string, sourcePort int) (string, error) {
+	localDestinationPort, err := getRandomAvailablePort(10000, 30000)
+	if err != nil {
+		return "", err
+	}
+
+	// Start the port forwarding in a goroutine.
+	go func() {
+		fmt.Printf("Use kubectl to port forwarding %s/%s:%d to %d\n", namespace, serviceName, sourcePort, localDestinationPort)
+		cmd := exec.CommandContext(ctx, "kubectl", "port-forward", "-n", namespace, fmt.Sprintf("svc/%s", serviceName), fmt.Sprintf("%d:%d", localDestinationPort, sourcePort))
+		if err := cmd.Run(); err != nil {
+			return
+		}
+	}()
+
+	return fmt.Sprintf("localhost:%d", localDestinationPort), nil
+}
+
+// KillPortForwardProcess kills the port forwarding process.
+func KillPortForwardProcess() {
+	cmd := exec.Command("pkill", "-f", "kubectl port-forward")
+	if err := cmd.Run(); err != nil {
+		panic(err)
+	}
+}
+
+func getRandomAvailablePort(minPort, maxPort int) (int, error) {
+	for i := 0; i < 100; i++ {
+		port := rand.Intn(maxPort-minPort+1) + minPort
+		listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+		if err != nil {
+			continue
+		}
+		listener.Close()
+		return port, nil
+	}
+
+	return 0, fmt.Errorf("failed to get a random available port")
 }
