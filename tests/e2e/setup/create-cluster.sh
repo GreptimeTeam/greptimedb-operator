@@ -36,8 +36,7 @@ KAFKA_CLUSTER_NAME=kafka-wal
 DEFAULT_TIMEOUT=300s
 
 # We always use the latest released greptimedb image for testing.
-# LATEST_RELEASED_GREPTIME_VERSION=$(curl -s https://api.github.com/repos/greptimeteam/greptimedb/releases/latest | jq -r .tag_name)
-GREPTIMEDB_IMAGE=greptime/greptimedb-dev:dev-20240709-1720523966-1ddf19d8
+GREPTIMEDB_IMAGE=greptime/greptimedb:latest
 
 # Define the color for the output.
 RED='\033[1;31m'
