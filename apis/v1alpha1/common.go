@@ -57,6 +57,7 @@ const (
 	FrontendComponentKind ComponentKind = "frontend"
 	DatanodeComponentKind ComponentKind = "datanode"
 	MetaComponentKind     ComponentKind = "meta"
+	FlownodeComponentKind ComponentKind = "flownode"
 	StandaloneKind        ComponentKind = "standalone"
 )
 

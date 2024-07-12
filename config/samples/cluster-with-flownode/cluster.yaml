@@ -1,4 +1,4 @@
-# Copyright 2024 Greptime Team
+# Copyright 2022 Greptime Team
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,12 +13,21 @@
 # limitations under the License.
 
 apiVersion: greptime.io/v1alpha1
-kind: GreptimeDBStandalone
+kind: GreptimeDBCluster
 metadata:
-  name: e2e-standalone-basic
+  name: basic
   namespace: default
 spec:
   base:
     main:
-      image: localhost:5001/greptime/greptimedb:latest
-  mysqlServicePort: 4002
+      image: greptime/greptimedb:latest
+  frontend:
+    replicas: 1
+  meta:
+    replicas: 1
+    etcdEndpoints:
+      - "etcd.default:2379"
+  datanode:
+    replicas: 1
+  flownode:
+    replicas: 1
