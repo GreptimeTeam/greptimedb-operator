@@ -185,12 +185,12 @@ func (c *ConfigGenerator) allocateNodeID() (uint64, error) {
 	}
 
 	if len(name) == 0 {
-		return 0, fmt.Errorf("the datanodeHostname is empty")
+		return 0, fmt.Errorf("the hostname is empty")
 	}
 
 	token := strings.Split(name, "-")
 	if len(token) == 0 {
-		return 0, fmt.Errorf("invalid datanodeHostname format '%s'", name)
+		return 0, fmt.Errorf("invalid hostname format '%s'", name)
 	}
 
 	// For the pods of statefulset, the last token of datanodeHostname is the pod index.
@@ -199,7 +199,7 @@ func (c *ConfigGenerator) allocateNodeID() (uint64, error) {
 	// Must be the valid integer type.
 	nodeID, err := strconv.ParseUint(podIndex, 10, 64)
 	if err != nil {
-		return 0, fmt.Errorf("invalid datanodeHostname format '%s'", name)
+		return 0, fmt.Errorf("invalid hostname format '%s'", name)
 	}
 
 	return nodeID, nil
