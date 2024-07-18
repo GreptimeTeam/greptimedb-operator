@@ -109,7 +109,8 @@ func TestSetDefaults(t *testing.T) {
 								},
 							},
 						},
-						ServicePort: int32(defaultMetaServicePort),
+						ServicePort:          int32(defaultMetaServicePort),
+						EnableRegionFailover: proto.Bool(false),
 					},
 					Datanode: &DatanodeSpec{
 						ComponentSpec: ComponentSpec{
@@ -300,7 +301,8 @@ func TestSetDefaults(t *testing.T) {
 						EtcdEndpoints: []string{
 							"etcd.default:2379",
 						},
-						ServicePort: int32(defaultMetaServicePort),
+						ServicePort:          int32(defaultMetaServicePort),
+						EnableRegionFailover: proto.Bool(false),
 					},
 					Datanode: &DatanodeSpec{
 						ComponentSpec: ComponentSpec{
@@ -437,7 +439,8 @@ func TestSetDefaults(t *testing.T) {
 								},
 							},
 						},
-						ServicePort: int32(defaultMetaServicePort),
+						ServicePort:          int32(defaultMetaServicePort),
+						EnableRegionFailover: proto.Bool(false),
 					},
 					Datanode: &DatanodeSpec{
 						ComponentSpec: ComponentSpec{
@@ -485,5 +488,43 @@ func TestSetDefaults(t *testing.T) {
 		if !reflect.DeepEqual(tt.want, tt.input) {
 			t.Errorf("run test [%d] failed, want %v, got %v", i, tt.want, tt.input)
 		}
+	}
+}
+
+func TestDefaultEnableRegionFailover(t *testing.T) {
+	clusterWithRemoteWAL := GreptimeDBCluster{
+		Spec: GreptimeDBClusterSpec{
+			Base: &PodTemplateSpec{
+				MainContainer: &MainContainerSpec{
+					Image: "greptime/greptimedb:latest",
+				},
+			},
+			Datanode: &DatanodeSpec{
+				ComponentSpec: ComponentSpec{
+					Replicas: proto.Int32(1),
+				},
+			},
+			Frontend: &FrontendSpec{
+				ComponentSpec: ComponentSpec{
+					Replicas: proto.Int32(1),
+				},
+			},
+			Meta: &MetaSpec{
+				ComponentSpec: ComponentSpec{
+					Replicas: proto.Int32(1),
+				},
+			},
+			RemoteWalProvider: &RemoteWalProvider{KafkaRemoteWal: &KafkaRemoteWal{
+				BrokerEndpoints: []string{"kafka.default:9092"},
+			}},
+		},
+	}
+
+	if err := clusterWithRemoteWAL.SetDefaults(); err != nil {
+		t.Errorf("set default cluster failed: %v", err)
+	}
+
+	if *clusterWithRemoteWAL.Spec.Meta.EnableRegionFailover != true {
+		t.Errorf("default EnableRegionFailover should be true")
 	}
 }

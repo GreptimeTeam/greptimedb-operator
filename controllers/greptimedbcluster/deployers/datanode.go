@@ -183,7 +183,7 @@ func (d *DatanodeDeployer) turnOnMaintenanceMode(ctx context.Context, newSts *ap
 		return err
 	}
 
-	if !d.maintenanceMode && d.isPodRestart(*newSts, *oldSts) {
+	if !d.maintenanceMode && d.isOldPodRestart(*newSts, *oldSts) {
 		klog.Infof("Turn on maintenance mode for datanode, statefulset: %s", newSts.Name)
 		if err := d.requestMetasrvForMaintenance(cluster, true); err != nil {
 			return err
@@ -257,9 +257,9 @@ func (d *DatanodeDeployer) deleteStorage(ctx context.Context, cluster *v1alpha1.
 	return nil
 }
 
-// isPodRestart checks if the pod needs to be restarted. For convenience, we only compare the necessary fields.
+// isOldPodRestart checks if the existed pod needs to be restarted. For convenience, we only compare the necessary fields.
 // TODO(zyy17): Do we have a easy way to implement this?
-func (d *DatanodeDeployer) isPodRestart(new, old appsv1.StatefulSet) bool {
+func (d *DatanodeDeployer) isOldPodRestart(new, old appsv1.StatefulSet) bool {
 	var (
 		newPodTemplate = new.Spec.Template
 		oldPodTemplate = old.Spec.Template
@@ -300,7 +300,9 @@ func (d *DatanodeDeployer) isPodRestart(new, old appsv1.StatefulSet) bool {
 }
 
 func (d *DatanodeDeployer) shouldUserMaintenanceMode(cluster *v1alpha1.GreptimeDBCluster) bool {
-	if cluster.Spec.RemoteWalProvider != nil && cluster.Spec.Meta.EnableRegionFailover {
+	if cluster.Spec.RemoteWalProvider != nil &&
+		cluster.Spec.Meta.EnableRegionFailover != nil &&
+		*cluster.Spec.Meta.EnableRegionFailover {
 		return true
 	}
 	return false

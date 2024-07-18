@@ -50,7 +50,7 @@ type MetaSpec struct {
 
 	// EnableRegionFailover indicates whether to enable region failover.
 	// +optional
-	EnableRegionFailover bool `json:"enableRegionFailover,omitempty"`
+	EnableRegionFailover *bool `json:"enableRegionFailover,omitempty"`
 
 	// The meta will store data with this key prefix.
 	// +optional
