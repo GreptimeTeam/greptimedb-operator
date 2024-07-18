@@ -300,7 +300,9 @@ func (d *DatanodeDeployer) isPodRestart(new, old appsv1.StatefulSet) bool {
 }
 
 func (d *DatanodeDeployer) shouldUserMaintenanceMode(cluster *v1alpha1.GreptimeDBCluster) bool {
-	if cluster.Spec.RemoteWalProvider != nil && cluster.Spec.Meta.EnableRegionFailover {
+	if cluster.Spec.RemoteWalProvider != nil &&
+		cluster.Spec.Meta.EnableRegionFailover != nil &&
+		*cluster.Spec.Meta.EnableRegionFailover {
 		return true
 	}
 	return false
