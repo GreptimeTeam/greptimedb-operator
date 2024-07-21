@@ -22,7 +22,6 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -37,26 +36,26 @@ import (
 	k8sutil "github.com/GreptimeTeam/greptimedb-operator/pkg/util/k8s"
 )
 
-// DatanodeDeployer is the deployer for datanode.
-type DatanodeDeployer struct {
+// FlownodeDeployer is the deployer for flownode.
+type FlownodeDeployer struct {
 	*CommonDeployer
 }
 
-var _ deployer.Deployer = &DatanodeDeployer{}
+var _ deployer.Deployer = &FlownodeDeployer{}
 
-func NewDatanodeDeployer(mgr ctrl.Manager) *DatanodeDeployer {
-	return &DatanodeDeployer{
+func NewFlownodeDeployer(mgr ctrl.Manager) *FlownodeDeployer {
+	return &FlownodeDeployer{
 		CommonDeployer: NewFromManager(mgr),
 	}
 }
 
-func (d *DatanodeDeployer) NewBuilder(crdObject client.Object) deployer.Builder {
-	return &datanodeBuilder{
-		CommonBuilder: d.NewCommonBuilder(crdObject, v1alpha1.DatanodeComponentKind),
+func (d *FlownodeDeployer) NewBuilder(crdObject client.Object) deployer.Builder {
+	return &flownodeBuilder{
+		CommonBuilder: d.NewCommonBuilder(crdObject, v1alpha1.FlownodeComponentKind),
 	}
 }
 
-func (d *DatanodeDeployer) Generate(crdObject client.Object) ([]client.Object, error) {
+func (d *FlownodeDeployer) Generate(crdObject client.Object) ([]client.Object, error) {
 	objects, err := d.NewBuilder(crdObject).
 		BuildService().
 		BuildConfigMap().
@@ -72,24 +71,11 @@ func (d *DatanodeDeployer) Generate(crdObject client.Object) ([]client.Object, e
 	return objects, nil
 }
 
-func (d *DatanodeDeployer) CleanUp(ctx context.Context, crdObject client.Object) error {
-	cluster, err := d.GetCluster(crdObject)
-	if err != nil {
-		return err
-	}
-
-	if cluster.Spec.Datanode != nil {
-		if cluster.Spec.Datanode.Storage.StorageRetainPolicy == v1alpha1.StorageRetainPolicyTypeDelete {
-			if err := d.deleteStorage(ctx, cluster); err != nil {
-				return err
-			}
-		}
-	}
-
+func (d *FlownodeDeployer) CleanUp(_ context.Context, _ client.Object) error {
 	return nil
 }
 
-func (d *DatanodeDeployer) CheckAndUpdateStatus(ctx context.Context, crdObject client.Object) (bool, error) {
+func (d *FlownodeDeployer) CheckAndUpdateStatus(ctx context.Context, crdObject client.Object) (bool, error) {
 	cluster, err := d.GetCluster(crdObject)
 	if err != nil {
 		return false, err
@@ -100,7 +86,7 @@ func (d *DatanodeDeployer) CheckAndUpdateStatus(ctx context.Context, crdObject c
 
 		objectKey = client.ObjectKey{
 			Namespace: cluster.Namespace,
-			Name:      common.ResourceName(cluster.Name, v1alpha1.DatanodeComponentKind),
+			Name:      common.ResourceName(cluster.Name, v1alpha1.FlownodeComponentKind),
 		}
 	)
 
@@ -112,8 +98,8 @@ func (d *DatanodeDeployer) CheckAndUpdateStatus(ctx context.Context, crdObject c
 		return false, err
 	}
 
-	cluster.Status.Datanode.Replicas = *sts.Spec.Replicas
-	cluster.Status.Datanode.ReadyReplicas = sts.Status.ReadyReplicas
+	cluster.Status.Flownode.Replicas = *sts.Spec.Replicas
+	cluster.Status.Flownode.ReadyReplicas = sts.Status.ReadyReplicas
 	if err := UpdateStatus(ctx, cluster, d.Client); err != nil {
 		klog.Errorf("Failed to update status: %s", err)
 	}
@@ -121,50 +107,18 @@ func (d *DatanodeDeployer) CheckAndUpdateStatus(ctx context.Context, crdObject c
 	return k8sutil.IsStatefulSetReady(sts), nil
 }
 
-func (d *DatanodeDeployer) deleteStorage(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster) error {
-	klog.Infof("Deleting datanode storage...")
+var _ deployer.Builder = &flownodeBuilder{}
 
-	selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
-		MatchLabels: map[string]string{
-			constant.GreptimeDBComponentName: common.ResourceName(cluster.Name, v1alpha1.DatanodeComponentKind),
-		},
-	})
-	if err != nil {
-		return err
-	}
-
-	pvcList := new(corev1.PersistentVolumeClaimList)
-
-	err = d.List(ctx, pvcList, client.InNamespace(cluster.Namespace), client.MatchingLabelsSelector{Selector: selector})
-	if errors.IsNotFound(err) {
-		return nil
-	}
-	if err != nil {
-		return err
-	}
-
-	for _, pvc := range pvcList.Items {
-		klog.Infof("Deleting datanode PVC: %s", pvc.Name)
-		if err := d.Delete(ctx, &pvc); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-var _ deployer.Builder = &datanodeBuilder{}
-
-type datanodeBuilder struct {
+type flownodeBuilder struct {
 	*CommonBuilder
 }
 
-func (b *datanodeBuilder) BuildService() deployer.Builder {
+func (b *flownodeBuilder) BuildService() deployer.Builder {
 	if b.Err != nil {
 		return b
 	}
 
-	if b.Cluster.Spec.Datanode == nil {
+	if b.Cluster.Spec.Flownode == nil {
 		return b
 	}
 
@@ -191,12 +145,12 @@ func (b *datanodeBuilder) BuildService() deployer.Builder {
 	return b
 }
 
-func (b *datanodeBuilder) BuildConfigMap() deployer.Builder {
+func (b *flownodeBuilder) BuildConfigMap() deployer.Builder {
 	if b.Err != nil {
 		return b
 	}
 
-	if b.Cluster.Spec.Datanode == nil {
+	if b.Cluster.Spec.Flownode == nil {
 		return b
 	}
 
@@ -211,12 +165,12 @@ func (b *datanodeBuilder) BuildConfigMap() deployer.Builder {
 	return b
 }
 
-func (b *datanodeBuilder) BuildStatefulSet() deployer.Builder {
+func (b *flownodeBuilder) BuildStatefulSet() deployer.Builder {
 	if b.Err != nil {
 		return b
 	}
 
-	if b.Cluster.Spec.Datanode == nil {
+	if b.Cluster.Spec.Flownode == nil {
 		return b
 	}
 
@@ -232,14 +186,13 @@ func (b *datanodeBuilder) BuildStatefulSet() deployer.Builder {
 		Spec: appsv1.StatefulSetSpec{
 			PodManagementPolicy: appsv1.ParallelPodManagement,
 			ServiceName:         common.ResourceName(b.Cluster.Name, b.ComponentKind),
-			Replicas:            b.Cluster.Spec.Datanode.Replicas,
+			Replicas:            b.Cluster.Spec.Flownode.Replicas,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.ComponentKind),
 				},
 			},
-			Template:             b.generatePodTemplateSpec(),
-			VolumeClaimTemplates: b.generatePVC(),
+			Template: b.generatePodTemplateSpec(),
 		},
 	}
 
@@ -257,12 +210,12 @@ func (b *datanodeBuilder) BuildStatefulSet() deployer.Builder {
 	return b
 }
 
-func (b *datanodeBuilder) BuildPodMonitor() deployer.Builder {
+func (b *flownodeBuilder) BuildPodMonitor() deployer.Builder {
 	if b.Err != nil {
 		return b
 	}
 
-	if b.Cluster.Spec.Datanode == nil {
+	if b.Cluster.Spec.Flownode == nil {
 		return b
 	}
 
@@ -281,27 +234,23 @@ func (b *datanodeBuilder) BuildPodMonitor() deployer.Builder {
 	return b
 }
 
-func (b *datanodeBuilder) generateMainContainerArgs() []string {
+func (b *flownodeBuilder) generateMainContainerArgs() []string {
 	return []string{
-		"datanode", "start",
-		"--metasrv-addrs", fmt.Sprintf("%s.%s:%d", common.ResourceName(b.Cluster.Name, v1alpha1.MetaComponentKind),
-			b.Cluster.Namespace, b.Cluster.Spec.Meta.ServicePort),
-		// TODO(zyy17): Should we add the new field of the CRD for datanode http port?
-		"--http-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.HTTPServicePort),
+		"flownode", "start",
+		"--metasrv-addrs", fmt.Sprintf("%s.%s:%d", common.ResourceName(b.Cluster.Name, v1alpha1.MetaComponentKind), b.Cluster.Namespace, b.Cluster.Spec.Meta.ServicePort),
 		"--config-file", path.Join(constant.GreptimeDBConfigDir, constant.GreptimeDBConfigFileName),
 	}
 }
 
-func (b *datanodeBuilder) generatePodTemplateSpec() corev1.PodTemplateSpec {
-	podTemplateSpec := b.GeneratePodTemplateSpec(b.Cluster.Spec.Datanode.Template)
+func (b *flownodeBuilder) generatePodTemplateSpec() corev1.PodTemplateSpec {
+	podTemplateSpec := b.GeneratePodTemplateSpec(b.Cluster.Spec.Flownode.Template)
 
-	if len(b.Cluster.Spec.Datanode.Template.MainContainer.Args) == 0 {
+	if len(b.Cluster.Spec.Flownode.Template.MainContainer.Args) == 0 {
 		// Setup main container args.
 		podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Args = b.generateMainContainerArgs()
 	}
 
 	b.mountConfigDir(podTemplateSpec)
-	b.addStorageDirMounts(podTemplateSpec)
 	b.addInitConfigDirVolume(podTemplateSpec)
 
 	podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Ports = b.containerPorts()
@@ -313,28 +262,7 @@ func (b *datanodeBuilder) generatePodTemplateSpec() corev1.PodTemplateSpec {
 	return *podTemplateSpec
 }
 
-func (b *datanodeBuilder) generatePVC() []corev1.PersistentVolumeClaim {
-	return []corev1.PersistentVolumeClaim{
-		{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: b.Cluster.Spec.Datanode.Storage.Name,
-			},
-			Spec: corev1.PersistentVolumeClaimSpec{
-				StorageClassName: b.Cluster.Spec.Datanode.Storage.StorageClassName,
-				AccessModes: []corev1.PersistentVolumeAccessMode{
-					corev1.ReadWriteOnce,
-				},
-				Resources: corev1.ResourceRequirements{
-					Requests: corev1.ResourceList{
-						corev1.ResourceStorage: resource.MustParse(b.Cluster.Spec.Datanode.Storage.StorageSize),
-					},
-				},
-			},
-		},
-	}
-}
-
-func (b *datanodeBuilder) generateInitializer() *corev1.Container {
+func (b *flownodeBuilder) generateInitializer() *corev1.Container {
 	initializer := &corev1.Container{
 		Name:  "initializer",
 		Image: b.Cluster.Spec.Initializer.Image,
@@ -344,8 +272,8 @@ func (b *datanodeBuilder) generateInitializer() *corev1.Container {
 		Args: []string{
 			"--config-path", path.Join(constant.GreptimeDBConfigDir, constant.GreptimeDBConfigFileName),
 			"--init-config-path", path.Join(constant.GreptimeDBInitConfigDir, constant.GreptimeDBConfigFileName),
-			"--datanode-rpc-port", fmt.Sprintf("%d", b.Cluster.Spec.GRPCServicePort),
-			"--datanode-service-name", common.ResourceName(b.Cluster.Name, b.ComponentKind),
+			"--rpc-port", fmt.Sprintf("%d", b.Cluster.Spec.GRPCServicePort),
+			"--service-name", common.ResourceName(b.Cluster.Name, b.ComponentKind),
 			"--namespace", b.Cluster.Namespace,
 			"--component-kind", string(b.ComponentKind),
 		},
@@ -360,7 +288,7 @@ func (b *datanodeBuilder) generateInitializer() *corev1.Container {
 			},
 		},
 
-		// TODO(zyy17): the datanode don't support to accept hostname.
+		// TODO(zyy17): the flownode don't support to accept hostname.
 		Env: []corev1.EnvVar{
 			{
 				Name: deployer.EnvPodIP,
@@ -384,7 +312,7 @@ func (b *datanodeBuilder) generateInitializer() *corev1.Container {
 	return initializer
 }
 
-func (b *datanodeBuilder) mountConfigDir(template *corev1.PodTemplateSpec) {
+func (b *flownodeBuilder) mountConfigDir(template *corev1.PodTemplateSpec) {
 	// The empty-dir will be modified by initializer.
 	template.Spec.Volumes = append(template.Spec.Volumes, corev1.Volume{
 		Name: constant.ConfigVolumeName,
@@ -402,19 +330,8 @@ func (b *datanodeBuilder) mountConfigDir(template *corev1.PodTemplateSpec) {
 		)
 }
 
-func (b *datanodeBuilder) addStorageDirMounts(template *corev1.PodTemplateSpec) {
-	// The volume is defined in the PVC.
-	template.Spec.Containers[constant.MainContainerIndex].VolumeMounts =
-		append(template.Spec.Containers[constant.MainContainerIndex].VolumeMounts,
-			corev1.VolumeMount{
-				Name:      b.Cluster.Spec.Datanode.Storage.Name,
-				MountPath: b.Cluster.Spec.Datanode.Storage.MountPath,
-			},
-		)
-}
-
 // The init-config volume is used for initializer.
-func (b *datanodeBuilder) addInitConfigDirVolume(template *corev1.PodTemplateSpec) {
+func (b *flownodeBuilder) addInitConfigDirVolume(template *corev1.PodTemplateSpec) {
 	template.Spec.Volumes = append(template.Spec.Volumes, corev1.Volume{
 		Name: constant.InitConfigVolumeName,
 		VolumeSource: corev1.VolumeSource{
@@ -428,32 +345,22 @@ func (b *datanodeBuilder) addInitConfigDirVolume(template *corev1.PodTemplateSpe
 	})
 }
 
-func (b *datanodeBuilder) servicePorts() []corev1.ServicePort {
+func (b *flownodeBuilder) servicePorts() []corev1.ServicePort {
 	return []corev1.ServicePort{
 		{
 			Name:     "grpc",
 			Protocol: corev1.ProtocolTCP,
 			Port:     b.Cluster.Spec.GRPCServicePort,
 		},
-		{
-			Name:     "http",
-			Protocol: corev1.ProtocolTCP,
-			Port:     b.Cluster.Spec.HTTPServicePort,
-		},
 	}
 }
 
-func (b *datanodeBuilder) containerPorts() []corev1.ContainerPort {
+func (b *flownodeBuilder) containerPorts() []corev1.ContainerPort {
 	return []corev1.ContainerPort{
 		{
 			Name:          "grpc",
 			Protocol:      corev1.ProtocolTCP,
 			ContainerPort: b.Cluster.Spec.GRPCServicePort,
-		},
-		{
-			Name:          "http",
-			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: b.Cluster.Spec.HTTPServicePort,
 		},
 	}
 }

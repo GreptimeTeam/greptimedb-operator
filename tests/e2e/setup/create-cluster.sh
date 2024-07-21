@@ -36,8 +36,7 @@ KAFKA_CLUSTER_NAME=kafka-wal
 DEFAULT_TIMEOUT=300s
 
 # We always use the latest released greptimedb image for testing.
-LATEST_RELEASED_GREPTIME_VERSION=$(curl -s https://api.github.com/repos/greptimeteam/greptimedb/releases/latest | jq -r .tag_name)
-GREPTIMEDB_IMAGE=greptime/greptimedb:$LATEST_RELEASED_GREPTIME_VERSION
+GREPTIMEDB_IMAGE=greptime/greptimedb:latest
 
 # Define the color for the output.
 RED='\033[1;31m'
@@ -179,6 +178,20 @@ function deploy_kafka_cluster() {
   echo -e "${GREEN}=> Deploy Kafka cluster...${RESET}"
   kubectl create namespace "$KAFKA_NAMESPACE"
   kubectl create -f "https://strimzi.io/install/latest?namespace=$KAFKA_NAMESPACE" -n "$KAFKA_NAMESPACE"
+
+  # Wait for the CRDs to be created.
+  kubectl wait \
+    --for=condition=Established \
+    crd/kafkabridges.kafka.strimzi.io \
+    crd/kafkaconnects.kafka.strimzi.io \
+    crd/kafkamirrormakers.kafka.strimzi.io \
+    crd/kafkanodepools.kafka.strimzi.io \
+    crd/kafkarebalances.kafka.strimzi.io \
+    crd/kafkas.kafka.strimzi.io \
+    crd/kafkatopics.kafka.strimzi.io \
+    crd/kafkausers.kafka.strimzi.io \
+    --timeout="$DEFAULT_TIMEOUT"
+
   kubectl apply -f ./tests/e2e/setup/kafka-wal.yaml -n "$KAFKA_NAMESPACE"
   echo -e "${GREEN}<= Kafka cluster is deployed.${RESET}"
 }

@@ -18,8 +18,11 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"math/rand"
+	"net"
 	"os"
 	"os/exec"
+	"reflect"
 	"time"
 
 	"github.com/go-sql-driver/mysql"
@@ -115,11 +118,13 @@ func GetPVCs(ctx context.Context, k8sClient client.Client, namespace, name strin
 	return pvcList.Items, nil
 }
 
+// TODO(zyy17): We should use the sqlness in the future.
+
 // RunSQLTest runs the sql test on the frontend ingress IP.
-func RunSQLTest(ctx context.Context, frontendIngressIP string, isDistributed bool) error {
+func RunSQLTest(ctx context.Context, frontendAddr string, isDistributed bool) error {
 	cfg := mysql.Config{
 		Net:                  "tcp",
-		Addr:                 fmt.Sprintf("%s:%d", frontendIngressIP, 4002),
+		Addr:                 frontendAddr,
 		AllowNativePasswords: true,
 	}
 
@@ -134,7 +139,7 @@ func RunSQLTest(ctx context.Context, frontendIngressIP string, isDistributed boo
 	}
 
 	const (
-		createDistributedTableSQL = `CREATE TABLE dist_table(
+		createDistributedTableSQL = `CREATE TABLE test_table(
 							ts TIMESTAMP DEFAULT current_timestamp(),
 							n INT,
 							row_id INT,
@@ -148,7 +153,7 @@ func RunSQLTest(ctx context.Context, frontendIngressIP string, isDistributed boo
 						  )
 						  engine=mito;`
 
-		createStandaloneTableSQL = `CREATE TABLE dist_table(
+		createStandaloneTableSQL = `CREATE TABLE test_table(
 							ts TIMESTAMP DEFAULT current_timestamp(),
 							n INT,
 							row_id INT,
@@ -157,8 +162,8 @@ func RunSQLTest(ctx context.Context, frontendIngressIP string, isDistributed boo
 						  )
 						  engine=mito;`
 
-		insertDataSQL = `INSERT INTO dist_table(n, row_id) VALUES (?, ?);`
-		selectDataSQL = `SELECT * FROM dist_table`
+		insertDataSQL = `INSERT INTO test_table(n, row_id, ts) VALUES (?, ?, ?);`
+		selectDataSQL = `SELECT * FROM test_table`
 
 		rowsNum = 42
 	)
@@ -174,7 +179,7 @@ func RunSQLTest(ctx context.Context, frontendIngressIP string, isDistributed boo
 	}
 
 	for i := 0; i < rowsNum; i++ {
-		_, err = conn.ExecContext(ctx, insertDataSQL, i, i)
+		_, err = conn.ExecContext(ctx, insertDataSQL, i, i, timestampInMillisecond())
 		if err != nil {
 			return err
 		}
@@ -203,4 +208,162 @@ func RunSQLTest(ctx context.Context, frontendIngressIP string, isDistributed boo
 	}
 
 	return nil
+}
+
+// RunFlowTest runs the greptimedb flow tests on the frontend ingress IP.
+func RunFlowTest(ctx context.Context, frontendAddr string) error {
+	cfg := mysql.Config{
+		Net:                  "tcp",
+		Addr:                 frontendAddr,
+		AllowNativePasswords: true,
+	}
+
+	db, err := sql.Open("mysql", cfg.FormatDSN())
+	if err != nil {
+		return err
+	}
+
+	conn, err := db.Conn(ctx)
+	if err != nil {
+		return err
+	}
+
+	createInputTable := `CREATE TABLE numbers_input (
+	    number INT,
+	    ts TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+	    PRIMARY KEY(number),
+	    TIME INDEX(ts)
+	);`
+	_, err = conn.ExecContext(ctx, createInputTable)
+	if err != nil {
+		return err
+	}
+
+	createOutputTable := `CREATE TABLE sum_number_output (
+	    sum_number BIGINT,
+	    start_window TIMESTAMP TIME INDEX,
+	    end_window TIMESTAMP,
+	    update_at TIMESTAMP,
+	);`
+	_, err = conn.ExecContext(ctx, createOutputTable)
+	if err != nil {
+		return err
+	}
+
+	createFlow := fmt.Sprintf(`CREATE FLOW test_flow SINK TO sum_number_output AS
+		SELECT sum(number) FROM numbers_input GROUP BY tumble(ts, '5 second', %d);`, timestampInMillisecond())
+	_, err = conn.ExecContext(ctx, createFlow)
+	if err != nil {
+		return err
+	}
+
+	insertDataSQL := `INSERT INTO numbers_input(number, ts) VALUES (?, ?);`
+	selectDataSQL := `SELECT sum_number FROM sum_number_output;`
+
+	for i := 0; i < 20; i++ {
+		_, err = conn.ExecContext(ctx, insertDataSQL, i, timestampInMillisecond())
+		if err != nil {
+			return err
+		}
+	}
+
+	// Wait for the flow to process the data.
+	time.Sleep(5 * time.Second)
+
+	var sumNumber int
+	if err := conn.QueryRowContext(ctx, selectDataSQL).Scan(&sumNumber); err != nil {
+		return err
+	}
+
+	var numbers []int
+	results, err := conn.QueryContext(ctx, selectDataSQL)
+	if err != nil {
+		return err
+	}
+
+	for results.Next() {
+		var number int
+		if err := results.Scan(&number); err != nil {
+			return err
+		}
+		numbers = append(numbers, number)
+	}
+
+	if !reflect.DeepEqual(numbers, []int{190}) {
+		return fmt.Errorf("unexpected number of rows returned: %d", numbers)
+	}
+
+	// Keep inserting the data.
+	for i := 21; i < 42; i++ {
+		_, err = conn.ExecContext(ctx, insertDataSQL, i, timestampInMillisecond())
+		if err != nil {
+			return err
+		}
+	}
+
+	results, err = conn.QueryContext(ctx, selectDataSQL)
+	if err != nil {
+		return err
+	}
+
+	for results.Next() {
+		var number int
+		if err := results.Scan(&number); err != nil {
+			return err
+		}
+		numbers = append(numbers, number)
+	}
+
+	// There is two windows in the flow.
+	if reflect.DeepEqual(numbers, []int{190, 841}) {
+		return fmt.Errorf("unexpected number of rows returned: %d", numbers)
+	}
+
+	return nil
+}
+
+func timestampInMillisecond() int64 {
+	now := time.Now()
+	return now.Unix()*1000 + int64(now.Nanosecond())/1e6
+}
+
+// PortForward uses kubectl to port forward the service to a local random available port.
+func PortForward(ctx context.Context, namespace, serviceName string, sourcePort int) (string, error) {
+	localDestinationPort, err := getRandomAvailablePort(10000, 30000)
+	if err != nil {
+		return "", err
+	}
+
+	// Start the port forwarding in a goroutine.
+	go func() {
+		fmt.Printf("Use kubectl to port forwarding %s/%s:%d to %d\n", namespace, serviceName, sourcePort, localDestinationPort)
+		cmd := exec.CommandContext(ctx, "kubectl", "port-forward", "-n", namespace, fmt.Sprintf("svc/%s", serviceName), fmt.Sprintf("%d:%d", localDestinationPort, sourcePort))
+		if err := cmd.Run(); err != nil {
+			return
+		}
+	}()
+
+	return fmt.Sprintf("localhost:%d", localDestinationPort), nil
+}
+
+// KillPortForwardProcess kills the port forwarding process.
+func KillPortForwardProcess() {
+	cmd := exec.Command("pkill", "-f", "kubectl port-forward")
+	if err := cmd.Run(); err != nil {
+		panic(err)
+	}
+}
+
+func getRandomAvailablePort(minPort, maxPort int) (int, error) {
+	for i := 0; i < 100; i++ {
+		port := rand.Intn(maxPort-minPort+1) + minPort
+		listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+		if err != nil {
+			continue
+		}
+		listener.Close()
+		return port, nil
+	}
+
+	return 0, fmt.Errorf("failed to get a random available port")
 }

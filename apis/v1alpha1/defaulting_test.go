@@ -61,16 +61,6 @@ func TestSetDefaults(t *testing.T) {
 					Base: &PodTemplateSpec{
 						MainContainer: &MainContainerSpec{
 							Image: "greptime/greptimedb:latest",
-							Resources: &corev1.ResourceRequirements{
-								Requests: map[corev1.ResourceName]resource.Quantity{
-									"cpu":    resource.MustParse(defaultCPU),
-									"memory": resource.MustParse(defaultMemory),
-								},
-								Limits: map[corev1.ResourceName]resource.Quantity{
-									"cpu":    resource.MustParse(defaultCPU),
-									"memory": resource.MustParse(defaultMemory),
-								},
-							},
 							ReadinessProbe: &corev1.Probe{
 								ProbeHandler: corev1.ProbeHandler{
 									HTTPGet: &corev1.HTTPGetAction{
@@ -87,16 +77,6 @@ func TestSetDefaults(t *testing.T) {
 							Template: &PodTemplateSpec{
 								MainContainer: &MainContainerSpec{
 									Image: "greptime/greptimedb:latest",
-									Resources: &corev1.ResourceRequirements{
-										Requests: map[corev1.ResourceName]resource.Quantity{
-											"cpu":    resource.MustParse(defaultCPU),
-											"memory": resource.MustParse(defaultMemory),
-										},
-										Limits: map[corev1.ResourceName]resource.Quantity{
-											"cpu":    resource.MustParse(defaultCPU),
-											"memory": resource.MustParse(defaultMemory),
-										},
-									},
 									ReadinessProbe: &corev1.Probe{
 										ProbeHandler: corev1.ProbeHandler{
 											HTTPGet: &corev1.HTTPGetAction{
@@ -118,16 +98,6 @@ func TestSetDefaults(t *testing.T) {
 							Template: &PodTemplateSpec{
 								MainContainer: &MainContainerSpec{
 									Image: "greptime/greptimedb:latest",
-									Resources: &corev1.ResourceRequirements{
-										Requests: map[corev1.ResourceName]resource.Quantity{
-											"cpu":    resource.MustParse(defaultCPU),
-											"memory": resource.MustParse(defaultMemory),
-										},
-										Limits: map[corev1.ResourceName]resource.Quantity{
-											"cpu":    resource.MustParse(defaultCPU),
-											"memory": resource.MustParse(defaultMemory),
-										},
-									},
 									ReadinessProbe: &corev1.Probe{
 										ProbeHandler: corev1.ProbeHandler{
 											HTTPGet: &corev1.HTTPGetAction{
@@ -147,16 +117,6 @@ func TestSetDefaults(t *testing.T) {
 							Template: &PodTemplateSpec{
 								MainContainer: &MainContainerSpec{
 									Image: "greptime/greptimedb:latest",
-									Resources: &corev1.ResourceRequirements{
-										Requests: map[corev1.ResourceName]resource.Quantity{
-											"cpu":    resource.MustParse(defaultCPU),
-											"memory": resource.MustParse(defaultMemory),
-										},
-										Limits: map[corev1.ResourceName]resource.Quantity{
-											"cpu":    resource.MustParse(defaultCPU),
-											"memory": resource.MustParse(defaultMemory),
-										},
-									},
 									ReadinessProbe: &corev1.Probe{
 										ProbeHandler: corev1.ProbeHandler{
 											HTTPGet: &corev1.HTTPGetAction{
@@ -193,7 +153,7 @@ func TestSetDefaults(t *testing.T) {
 					Base: &PodTemplateSpec{
 						MainContainer: &MainContainerSpec{
 							Image: "greptime/greptimedb:latest",
-							Resources: &corev1.ResourceRequirements{
+							Resources: corev1.ResourceRequirements{
 								Requests: map[corev1.ResourceName]resource.Quantity{
 									"cpu":    resource.MustParse("500m"),
 									"memory": resource.MustParse("256Mi"),
@@ -211,7 +171,7 @@ func TestSetDefaults(t *testing.T) {
 								MainContainer: &MainContainerSpec{
 									Image: "greptime/frontend:latest",
 									Args: []string{
-										"--metasrv-addr",
+										"--metasrv-addrs",
 										"meta.default:3002",
 									},
 								},
@@ -251,7 +211,7 @@ func TestSetDefaults(t *testing.T) {
 					Base: &PodTemplateSpec{
 						MainContainer: &MainContainerSpec{
 							Image: "greptime/greptimedb:latest",
-							Resources: &corev1.ResourceRequirements{
+							Resources: corev1.ResourceRequirements{
 								Requests: map[corev1.ResourceName]resource.Quantity{
 									"cpu":    resource.MustParse("500m"),
 									"memory": resource.MustParse("256Mi"),
@@ -278,10 +238,10 @@ func TestSetDefaults(t *testing.T) {
 								MainContainer: &MainContainerSpec{
 									Image: "greptime/frontend:latest",
 									Args: []string{
-										"--metasrv-addr",
+										"--metasrv-addrs",
 										"meta.default:3002",
 									},
-									Resources: &corev1.ResourceRequirements{
+									Resources: corev1.ResourceRequirements{
 										Requests: map[corev1.ResourceName]resource.Quantity{
 											"cpu":    resource.MustParse("500m"),
 											"memory": resource.MustParse("256Mi"),
@@ -316,7 +276,7 @@ func TestSetDefaults(t *testing.T) {
 										"--store-addr",
 										"etcd.default:2379",
 									},
-									Resources: &corev1.ResourceRequirements{
+									Resources: corev1.ResourceRequirements{
 										Requests: map[corev1.ResourceName]resource.Quantity{
 											"cpu":    resource.MustParse("500m"),
 											"memory": resource.MustParse("256Mi"),
@@ -348,7 +308,7 @@ func TestSetDefaults(t *testing.T) {
 							Template: &PodTemplateSpec{
 								MainContainer: &MainContainerSpec{
 									Image: "greptime/greptimedb:latest",
-									Resources: &corev1.ResourceRequirements{
+									Resources: corev1.ResourceRequirements{
 										Requests: map[corev1.ResourceName]resource.Quantity{
 											"cpu":    resource.MustParse("500m"),
 											"memory": resource.MustParse("256Mi"),
@@ -429,16 +389,6 @@ func TestSetDefaults(t *testing.T) {
 					Base: &PodTemplateSpec{
 						MainContainer: &MainContainerSpec{
 							Image: "greptime/greptimedb:latest",
-							Resources: &corev1.ResourceRequirements{
-								Requests: map[corev1.ResourceName]resource.Quantity{
-									"cpu":    resource.MustParse(defaultCPU),
-									"memory": resource.MustParse(defaultMemory),
-								},
-								Limits: map[corev1.ResourceName]resource.Quantity{
-									"cpu":    resource.MustParse(defaultCPU),
-									"memory": resource.MustParse(defaultMemory),
-								},
-							},
 							ReadinessProbe: &corev1.Probe{
 								ProbeHandler: corev1.ProbeHandler{
 									HTTPGet: &corev1.HTTPGetAction{
@@ -455,16 +405,6 @@ func TestSetDefaults(t *testing.T) {
 							Template: &PodTemplateSpec{
 								MainContainer: &MainContainerSpec{
 									Image: "greptime/greptimedb:latest",
-									Resources: &corev1.ResourceRequirements{
-										Requests: map[corev1.ResourceName]resource.Quantity{
-											"cpu":    resource.MustParse(defaultCPU),
-											"memory": resource.MustParse(defaultMemory),
-										},
-										Limits: map[corev1.ResourceName]resource.Quantity{
-											"cpu":    resource.MustParse(defaultCPU),
-											"memory": resource.MustParse(defaultMemory),
-										},
-									},
 									ReadinessProbe: &corev1.Probe{
 										ProbeHandler: corev1.ProbeHandler{
 											HTTPGet: &corev1.HTTPGetAction{
@@ -486,16 +426,6 @@ func TestSetDefaults(t *testing.T) {
 							Template: &PodTemplateSpec{
 								MainContainer: &MainContainerSpec{
 									Image: "greptime/greptimedb:latest",
-									Resources: &corev1.ResourceRequirements{
-										Requests: map[corev1.ResourceName]resource.Quantity{
-											"cpu":    resource.MustParse(defaultCPU),
-											"memory": resource.MustParse(defaultMemory),
-										},
-										Limits: map[corev1.ResourceName]resource.Quantity{
-											"cpu":    resource.MustParse(defaultCPU),
-											"memory": resource.MustParse(defaultMemory),
-										},
-									},
 									ReadinessProbe: &corev1.Probe{
 										ProbeHandler: corev1.ProbeHandler{
 											HTTPGet: &corev1.HTTPGetAction{
@@ -515,16 +445,6 @@ func TestSetDefaults(t *testing.T) {
 							Template: &PodTemplateSpec{
 								MainContainer: &MainContainerSpec{
 									Image: "greptime/greptimedb:latest",
-									Resources: &corev1.ResourceRequirements{
-										Requests: map[corev1.ResourceName]resource.Quantity{
-											"cpu":    resource.MustParse(defaultCPU),
-											"memory": resource.MustParse(defaultMemory),
-										},
-										Limits: map[corev1.ResourceName]resource.Quantity{
-											"cpu":    resource.MustParse(defaultCPU),
-											"memory": resource.MustParse(defaultMemory),
-										},
-									},
 									ReadinessProbe: &corev1.Probe{
 										ProbeHandler: corev1.ProbeHandler{
 											HTTPGet: &corev1.HTTPGetAction{

@@ -56,6 +56,8 @@ func NewFromComponentKind(kind v1alpha1.ComponentKind) (Config, error) {
 		return &DatanodeConfig{}, nil
 	case v1alpha1.FrontendComponentKind:
 		return &FrontendConfig{}, nil
+	case v1alpha1.FlownodeComponentKind:
+		return &FlownodeConfig{}, nil
 	case v1alpha1.StandaloneKind:
 		return &StandaloneConfig{}, nil
 	default:
