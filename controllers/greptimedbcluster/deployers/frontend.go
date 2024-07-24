@@ -253,7 +253,7 @@ func (b *frontendBuilder) generateMainContainerArgs() []string {
 
 	if b.Cluster.Spec.Frontend != nil && b.Cluster.Spec.Frontend.TLS != nil {
 		args = append(args, []string{
-			"--tls-mode", "require",
+			"--tls-mode", constant.DefaultTLSMode,
 			"--tls-cert-path", path.Join(constant.GreptimeDBTLSDir, TLSCrtSecretKey),
 			"--tls-key-path", path.Join(constant.GreptimeDBTLSDir, TLSKeySecretKey),
 		}...)

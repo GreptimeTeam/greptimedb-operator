@@ -27,4 +27,5 @@ const (
 	ConfigVolumeName         = "config"
 	InitConfigVolumeName     = "init-config"
 	TLSVolumeName            = "tls"
+	DefaultTLSMode           = "prefer"
 )
