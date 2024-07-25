@@ -41,7 +41,7 @@ jobs:
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ var.ECR_REGION }}
+          aws-region: ${{ vars.ECR_REGION }}
 
       - name: Login to DockerHub
         uses: docker/login-action@v3
@@ -76,8 +76,8 @@ jobs:
             greptime/greptimedb-operator:${{ env.VERSION }}
             greptime-registry.cn-hangzhou.cr.aliyuncs.com/greptime/greptimedb-operator:latest
             greptime-registry.cn-hangzhou.cr.aliyuncs.com/greptime/greptimedb-operator:${{ env.VERSION }}
-            ${{ var.ECR_REGISTRY }}/greptime/greptimedb-operator:latest
-            ${{ var.ECR_REGISTRY }}/greptime/greptimedb-operator:${{ env.VERSION }}
+            ${{ vars.ECR_REGISTRY }}/greptime/greptimedb-operator:latest
+            ${{ vars.ECR_REGISTRY }}/greptime/greptimedb-operator:${{ env.VERSION }}
 
       - name: Build and push initializer
         uses: docker/build-push-action@v5
@@ -90,8 +90,8 @@ jobs:
             greptime/greptimedb-initializer:${{ env.VERSION }}
             greptime-registry.cn-hangzhou.cr.aliyuncs.com/greptime/greptimedb-initializer:latest
             greptime-registry.cn-hangzhou.cr.aliyuncs.com/greptime/greptimedb-initializer:${{ env.VERSION }}
-            ${{ var.ECR_REGISTRY }}/greptime/greptimedb-initializer:latest
-            ${{ var.ECR_REGISTRY }}/greptime/greptimedb-initializer:${{ env.VERSION }}
+            ${{ vars.ECR_REGISTRY }}/greptime/greptimedb-initializer:latest
+            ${{ vars.ECR_REGISTRY }}/greptime/greptimedb-initializer:${{ env.VERSION }}
 
   release:
     name: Release the artifacts
