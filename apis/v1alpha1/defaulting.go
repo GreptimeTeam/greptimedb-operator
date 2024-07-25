@@ -100,12 +100,16 @@ func (in *GreptimeDBCluster) SetDefaults() error {
 	}
 
 	if in.Spec.Meta != nil {
+		enableRegionFailover := false
+		if in.Spec.RemoteWalProvider != nil { // If remote wal provider is enabled, enable region failover by default.
+			enableRegionFailover = true
+		}
 		defaultGreptimeDBClusterSpec.Meta = &MetaSpec{
 			ComponentSpec: ComponentSpec{
 				Template: &PodTemplateSpec{},
 			},
 			ServicePort:          int32(defaultMetaServicePort),
-			EnableRegionFailover: false,
+			EnableRegionFailover: &enableRegionFailover,
 		}
 		if in.Spec.Meta.Replicas == nil {
 			in.Spec.Meta.Replicas = proto.Int32(defaultMetaReplicas)

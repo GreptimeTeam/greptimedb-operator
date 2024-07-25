@@ -22,6 +22,7 @@ import (
 
 	appsv1 "k8s.io/api/apps/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -121,4 +122,14 @@ func GetK8sResource(namespace, name string, obj client.Object) error {
 	}
 
 	return nil
+}
+
+// SourceObject create the unstructured object from the given object.
+func SourceObject(input client.Object) client.Object {
+	u := &unstructured.Unstructured{}
+
+	// MUST set the APIVersion and Kind.
+	u.SetGroupVersionKind(input.GetObjectKind().GroupVersionKind())
+
+	return u
 }

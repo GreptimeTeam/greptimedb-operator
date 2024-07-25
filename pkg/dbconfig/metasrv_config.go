@@ -42,7 +42,7 @@ type MetasrvConfig struct {
 // ConfigureByCluster configures the metasrv config by the given cluster.
 func (c *MetasrvConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster) error {
 	if cluster.Spec.Meta != nil {
-		c.EnableRegionFailover = &cluster.Spec.Meta.EnableRegionFailover
+		c.EnableRegionFailover = cluster.Spec.Meta.EnableRegionFailover
 
 		if len(cluster.Spec.Meta.StoreKeyPrefix) > 0 {
 			c.StoreKeyPrefix = &cluster.Spec.Meta.StoreKeyPrefix

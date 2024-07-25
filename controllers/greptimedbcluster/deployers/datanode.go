@@ -17,7 +17,9 @@ package deployers
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"path"
+	"reflect"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -34,19 +36,21 @@ import (
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/dbconfig"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/deployer"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/util"
-	k8sutil "github.com/GreptimeTeam/greptimedb-operator/pkg/util/k8s"
+	k8sutils "github.com/GreptimeTeam/greptimedb-operator/pkg/util/k8s"
 )
 
 // DatanodeDeployer is the deployer for datanode.
 type DatanodeDeployer struct {
 	*CommonDeployer
+	maintenanceMode bool
 }
 
 var _ deployer.Deployer = &DatanodeDeployer{}
 
 func NewDatanodeDeployer(mgr ctrl.Manager) *DatanodeDeployer {
 	return &DatanodeDeployer{
-		CommonDeployer: NewFromManager(mgr),
+		CommonDeployer:  NewFromManager(mgr),
+		maintenanceMode: false,
 	}
 }
 
@@ -118,7 +122,107 @@ func (d *DatanodeDeployer) CheckAndUpdateStatus(ctx context.Context, crdObject c
 		klog.Errorf("Failed to update status: %s", err)
 	}
 
-	return k8sutil.IsStatefulSetReady(sts), nil
+	return k8sutils.IsStatefulSetReady(sts), nil
+}
+
+// Apply is re-implemented for datanode to handle the maintenance mode.
+func (d *DatanodeDeployer) Apply(ctx context.Context, crdObject client.Object, objects []client.Object) error {
+	updateObject := false
+
+	cluster, err := d.GetCluster(crdObject)
+	if err != nil {
+		return err
+	}
+
+	for _, newObject := range objects {
+		oldObject, err := k8sutils.CreateObjectIfNotExist(ctx, d.Client, k8sutils.SourceObject(newObject), newObject)
+		if err != nil {
+			return err
+		}
+
+		if oldObject != nil {
+			equal, err := k8sutils.IsObjectSpecEqual(oldObject, newObject, deployer.LastAppliedResourceSpec)
+			if err != nil {
+				return err
+			}
+
+			// If the spec is not equal, update the object.
+			if !equal {
+				if sts, ok := newObject.(*appsv1.StatefulSet); ok && d.shouldUserMaintenanceMode(cluster) {
+					if err := d.turnOnMaintenanceMode(ctx, sts, cluster); err != nil {
+						return err
+					}
+				}
+				if err := d.Client.Patch(ctx, newObject, client.MergeFrom(oldObject)); err != nil {
+					return err
+				}
+				updateObject = true
+			}
+		}
+	}
+
+	if updateObject {
+		// If the object is updated, we need to wait for the object to be ready.
+		// When the related object is ready, we will receive the event and enter the next reconcile loop.
+		return deployer.ErrSyncNotReady
+	}
+
+	return nil
+}
+
+func (d *DatanodeDeployer) PostSyncHooks() []deployer.Hook {
+	return []deployer.Hook{
+		d.turnOffMaintenanceMode,
+	}
+}
+
+func (d *DatanodeDeployer) turnOnMaintenanceMode(ctx context.Context, newSts *appsv1.StatefulSet, cluster *v1alpha1.GreptimeDBCluster) error {
+	oldSts := new(appsv1.StatefulSet)
+	// The oldSts must exist since we have checked it before.
+	if err := d.Get(ctx, client.ObjectKeyFromObject(newSts), oldSts); err != nil {
+		return err
+	}
+
+	if !d.maintenanceMode && d.isOldPodRestart(*newSts, *oldSts) {
+		klog.Infof("Turn on maintenance mode for datanode, statefulset: %s", newSts.Name)
+		if err := d.requestMetasrvForMaintenance(cluster, true); err != nil {
+			return err
+		}
+		d.maintenanceMode = true
+	}
+
+	return nil
+}
+
+func (d *DatanodeDeployer) turnOffMaintenanceMode(ctx context.Context, crdObject client.Object) error {
+	cluster, err := d.GetCluster(crdObject)
+	if err != nil {
+		return err
+	}
+
+	if d.maintenanceMode && d.shouldUserMaintenanceMode(cluster) {
+		klog.Infof("Turn off maintenance mode for datanode, cluster: %s", cluster.Name)
+		if err := d.requestMetasrvForMaintenance(cluster, false); err != nil {
+			return err
+		}
+		d.maintenanceMode = false
+	}
+
+	return nil
+}
+
+func (d *DatanodeDeployer) requestMetasrvForMaintenance(cluster *v1alpha1.GreptimeDBCluster, enabled bool) error {
+	requestURL := fmt.Sprintf("http://%s.%s:%d/admin/maintenance?enable=%v", common.ResourceName(cluster.GetName(), v1alpha1.MetaComponentKind), cluster.GetNamespace(), cluster.Spec.Meta.ServicePort, enabled)
+	rsp, err := http.Get(requestURL)
+	if err != nil {
+		return err
+	}
+	defer rsp.Body.Close()
+
+	if rsp.StatusCode != http.StatusOK {
+		return fmt.Errorf("failed to turn off maintenance mode for datanode, status code: %d", rsp.StatusCode)
+	}
+	return nil
 }
 
 func (d *DatanodeDeployer) deleteStorage(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster) error {
@@ -151,6 +255,57 @@ func (d *DatanodeDeployer) deleteStorage(ctx context.Context, cluster *v1alpha1.
 	}
 
 	return nil
+}
+
+// isOldPodRestart checks if the existed pod needs to be restarted. For convenience, we only compare the necessary fields.
+// TODO(zyy17): Do we have a easy way to implement this?
+func (d *DatanodeDeployer) isOldPodRestart(new, old appsv1.StatefulSet) bool {
+	var (
+		newPodTemplate = new.Spec.Template
+		oldPodTemplate = old.Spec.Template
+	)
+
+	if !reflect.DeepEqual(newPodTemplate.GetObjectMeta().GetAnnotations(), oldPodTemplate.GetObjectMeta().GetAnnotations()) {
+		return true
+	}
+
+	if newPodTemplate.Spec.InitContainers[0].Image != oldPodTemplate.Spec.InitContainers[0].Image {
+		return true
+	}
+
+	// If the tolerations, affinity, nodeSelector are changed, the original Pod may need to be restarted for re-scheduling.
+	if !reflect.DeepEqual(newPodTemplate.Spec.Tolerations, oldPodTemplate.Spec.Tolerations) ||
+		!reflect.DeepEqual(newPodTemplate.Spec.Affinity, oldPodTemplate.Spec.Affinity) ||
+		!reflect.DeepEqual(newPodTemplate.Spec.NodeSelector, oldPodTemplate.Spec.NodeSelector) {
+		return true
+	}
+
+	// Compare the main container settings.
+	newMainContainer := newPodTemplate.Spec.Containers[constant.MainContainerIndex]
+	oldMainContainer := oldPodTemplate.Spec.Containers[constant.MainContainerIndex]
+	if newMainContainer.Image != oldMainContainer.Image {
+		return true
+	}
+
+	if !reflect.DeepEqual(newMainContainer.Command, oldMainContainer.Command) ||
+		!reflect.DeepEqual(newMainContainer.Args, oldMainContainer.Args) ||
+		!reflect.DeepEqual(newMainContainer.Env, oldMainContainer.Env) ||
+		!reflect.DeepEqual(newMainContainer.VolumeMounts, oldMainContainer.VolumeMounts) ||
+		!reflect.DeepEqual(newMainContainer.Ports, oldMainContainer.Ports) ||
+		!reflect.DeepEqual(newMainContainer.Resources, oldMainContainer.Resources) {
+		return true
+	}
+
+	return false
+}
+
+func (d *DatanodeDeployer) shouldUserMaintenanceMode(cluster *v1alpha1.GreptimeDBCluster) bool {
+	if cluster.Spec.RemoteWalProvider != nil &&
+		cluster.Spec.Meta.EnableRegionFailover != nil &&
+		*cluster.Spec.Meta.EnableRegionFailover {
+		return true
+	}
+	return false
 }
 
 var _ deployer.Builder = &datanodeBuilder{}
