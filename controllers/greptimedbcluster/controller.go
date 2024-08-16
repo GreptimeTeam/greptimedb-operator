@@ -327,7 +327,21 @@ func (r *Reconciler) validate(ctx context.Context, cluster *v1alpha1.GreptimeDBC
 	}
 
 	if cluster.Spec.ObjectStorageProvider != nil {
-		if cluster.Spec.ObjectStorageProvider.S3 != nil && cluster.Spec.ObjectStorageProvider.OSS != nil {
+		checkProviders := func() bool {
+			providers := []bool{
+				cluster.Spec.ObjectStorageProvider.S3 != nil,
+				cluster.Spec.ObjectStorageProvider.OSS != nil,
+				cluster.Spec.ObjectStorageProvider.GCS != nil,
+			}
+			providerCount := 0
+			for _, p := range providers {
+				if p {
+					providerCount++
+				}
+			}
+			return providerCount > 1
+		}()
+		if checkProviders {
 			return fmt.Errorf("only one object storage provider can be specified")
 		}
 	}

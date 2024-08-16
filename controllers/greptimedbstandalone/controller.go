@@ -281,7 +281,21 @@ func (r *Reconciler) validate(ctx context.Context, standalone *v1alpha1.Greptime
 	}
 
 	if standalone.Spec.ObjectStorageProvider != nil {
-		if standalone.Spec.ObjectStorageProvider.S3 != nil && standalone.Spec.ObjectStorageProvider.OSS != nil {
+		checkProviders := func() bool {
+			providers := []bool{
+				standalone.Spec.ObjectStorageProvider.S3 != nil,
+				standalone.Spec.ObjectStorageProvider.OSS != nil,
+				standalone.Spec.ObjectStorageProvider.GCS != nil,
+			}
+			providerCount := 0
+			for _, p := range providers {
+				if p {
+					providerCount++
+				}
+			}
+			return providerCount > 1
+		}()
+		if checkProviders {
 			return fmt.Errorf("only one object storage provider can be specified")
 		}
 	}

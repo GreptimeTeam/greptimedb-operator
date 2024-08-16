@@ -111,7 +111,27 @@ func FromStandalone(standalone *v1alpha1.GreptimeDBStandalone) ([]byte, error) {
 const (
 	AccessKeyIDSecretKey     = "access-key-id"
 	SecretAccessKeySecretKey = "secret-access-key"
+	ServiceAccountKey        = "service-account-key"
 )
+
+func getServiceAccountKey(namespace, name string) (secretAccessKey []byte, err error) {
+	var secret corev1.Secret
+	if err = k8sutil.GetK8sResource(namespace, name, &secret); err != nil {
+		return
+	}
+
+	if secret.Data == nil {
+		err = fmt.Errorf("secret '%s/%s' is empty", namespace, name)
+		return
+	}
+
+	secretAccessKey = secret.Data[ServiceAccountKey]
+	if secretAccessKey == nil {
+		err = fmt.Errorf("secret '%s/%s' does not have service account key '%s'", namespace, name, ServiceAccountKey)
+		return
+	}
+	return
+}
 
 func getOCSCredentials(namespace, name string) (accessKeyID, secretAccessKey []byte, err error) {
 	var ocsCredentials corev1.Secret

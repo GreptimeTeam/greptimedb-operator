@@ -15,6 +15,8 @@
 package dbconfig
 
 import (
+	"encoding/base64"
+
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/util"
 )
@@ -33,6 +35,8 @@ type StandaloneConfig struct {
 	StorageRoot            *string `tomlmapping:"storage.root"`
 	StorageRegion          *string `tomlmapping:"storage.region"`
 	StorageEndpoint        *string `tomlmapping:"storage.endpoint"`
+	StorageScope           *string `tomlmapping:"storage.scope"`
+	StorageCredential      *string `tomlmapping:"storage.credential"`
 
 	WalDir *string `tomlmapping:"wal.dir"`
 
@@ -80,6 +84,22 @@ func (c *StandaloneConfig) ConfigureByStandalone(standalone *v1alpha1.GreptimeDB
 			c.StorageRoot = util.StringPtr(standalone.Spec.ObjectStorageProvider.OSS.Root)
 			c.StorageEndpoint = util.StringPtr(standalone.Spec.ObjectStorageProvider.OSS.Endpoint)
 			c.StorageRegion = util.StringPtr(standalone.Spec.ObjectStorageProvider.OSS.Region)
+		} else if standalone.Spec.ObjectStorageProvider.GCS != nil {
+			if standalone.Spec.ObjectStorageProvider.GCS.SecretName != "" {
+				serviceAccountKey, err := getServiceAccountKey(standalone.Namespace, standalone.Spec.ObjectStorageProvider.GCS.SecretName)
+				if err != nil {
+					return err
+				}
+				if len(serviceAccountKey) != 0 {
+					c.StorageCredential = util.StringPtr(base64.StdEncoding.EncodeToString(serviceAccountKey))
+				}
+			}
+
+			c.StorageType = util.StringPtr("Gcs")
+			c.StorageBucket = util.StringPtr(standalone.Spec.ObjectStorageProvider.GCS.Bucket)
+			c.StorageRoot = util.StringPtr(standalone.Spec.ObjectStorageProvider.GCS.Root)
+			c.StorageEndpoint = util.StringPtr(standalone.Spec.ObjectStorageProvider.GCS.Endpoint)
+			c.StorageScope = util.StringPtr(standalone.Spec.ObjectStorageProvider.GCS.Scope)
 		}
 	}
 

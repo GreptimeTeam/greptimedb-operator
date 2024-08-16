@@ -346,6 +346,7 @@ type TLSSpec struct {
 type ObjectStorageProvider struct {
 	S3            *S3StorageProvider  `json:"s3,omitempty"`
 	OSS           *OSSStorageProvider `json:"oss,omitempty"`
+	GCS           *GCSStorageProvider `json:"gcs,omitempty"`
 	CachePath     string              `json:"cachePath,omitempty"`
 	CacheCapacity string              `json:"cacheCapacity,omitempty"`
 }
@@ -394,6 +395,29 @@ type OSSStorageProvider struct {
 	// The OSS directory path.
 	// +optional
 	Root string `json:"root,omitempty"`
+}
+
+type GCSStorageProvider struct {
+	// The data will be stored in the bucket.
+	// +optional
+	Bucket string `json:"bucket,omitempty"`
+
+	// The gcs directory path.
+	// +optional
+	Root string `json:"root,omitempty"`
+
+	// The scope for gcs.
+	// +optional
+	Scope string `json:"scope,omitempty"`
+
+	// The endpoint URI of gcs service.
+	// +optional
+	Endpoint string `json:"endpoint,omitempty"`
+
+	// The secret of storing Credentials for gcs service OAuth2 authentication.
+	// The secret must be the same namespace with the GreptimeDBCluster resource.
+	// +optional
+	SecretName string `json:"secretName,omitempty"`
 }
 
 // PrometheusMonitorSpec defines the PodMonitor configuration.
