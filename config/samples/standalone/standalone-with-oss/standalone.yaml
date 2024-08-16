@@ -15,7 +15,7 @@
 apiVersion: greptime.io/v1alpha1
 kind: GreptimeDBStandalone
 metadata:
-  name: standalone-with-s3
+  name: standalone-with-oss
   namespace: default
 spec:
   base:
