@@ -13347,6 +13347,19 @@ spec:
                     type: string
                   cachePath:
                     type: string
+                  gcs:
+                    properties:
+                      bucket:
+                        type: string
+                      endpoint:
+                        type: string
+                      root:
+                        type: string
+                      scope:
+                        type: string
+                      secretName:
+                        type: string
+                    type: object
                   oss:
                     properties:
                       bucket:
@@ -16213,6 +16226,19 @@ spec:
                     type: string
                   cachePath:
                     type: string
+                  gcs:
+                    properties:
+                      bucket:
+                        type: string
+                      endpoint:
+                        type: string
+                      root:
+                        type: string
+                      scope:
+                        type: string
+                      secretName:
+                        type: string
+                    type: object
                   oss:
                     properties:
                       bucket:

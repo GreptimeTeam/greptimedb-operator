@@ -15,6 +15,8 @@
 package dbconfig
 
 import (
+	"encoding/base64"
+
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/util"
 )
@@ -37,6 +39,8 @@ type DatanodeConfig struct {
 	StorageRoot            *string `tomlmapping:"storage.root"`
 	StorageRegion          *string `tomlmapping:"storage.region"`
 	StorageEndpoint        *string `tomlmapping:"storage.endpoint"`
+	StorageScope           *string `tomlmapping:"storage.scope"`
+	StorageCredential      *string `tomlmapping:"storage.credential"`
 
 	// The wal file directory.
 	WalDir *string `tomlmapping:"wal.dir"`
@@ -55,7 +59,8 @@ type DatanodeConfig struct {
 func (c *DatanodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster) error {
 	// TODO(zyy17): need to refactor the following code. It's too ugly.
 	if cluster.Spec.ObjectStorageProvider != nil {
-		if cluster.Spec.ObjectStorageProvider.S3 != nil {
+		switch {
+		case cluster.Spec.ObjectStorageProvider.S3 != nil:
 			if cluster.Spec.ObjectStorageProvider.S3.SecretName != "" {
 				accessKeyID, secretAccessKey, err := getOCSCredentials(cluster.Namespace, cluster.Spec.ObjectStorageProvider.S3.SecretName)
 				if err != nil {
@@ -64,14 +69,13 @@ func (c *DatanodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster)
 				c.StorageAccessKeyID = util.StringPtr(string(accessKeyID))
 				c.StorageSecretAccessKey = util.StringPtr(string(secretAccessKey))
 			}
-
 			c.StorageType = util.StringPtr("S3")
 			c.StorageBucket = util.StringPtr(cluster.Spec.ObjectStorageProvider.S3.Bucket)
 			c.StorageRoot = util.StringPtr(cluster.Spec.ObjectStorageProvider.S3.Root)
 			c.StorageEndpoint = util.StringPtr(cluster.Spec.ObjectStorageProvider.S3.Endpoint)
 			c.StorageRegion = util.StringPtr(cluster.Spec.ObjectStorageProvider.S3.Region)
 
-		} else if cluster.Spec.ObjectStorageProvider.OSS != nil {
+		case cluster.Spec.ObjectStorageProvider.OSS != nil:
 			if cluster.Spec.ObjectStorageProvider.OSS.SecretName != "" {
 				accessKeyID, secretAccessKey, err := getOCSCredentials(cluster.Namespace, cluster.Spec.ObjectStorageProvider.OSS.SecretName)
 				if err != nil {
@@ -80,12 +84,27 @@ func (c *DatanodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster)
 				c.StorageAccessKeyID = util.StringPtr(string(accessKeyID))
 				c.StorageAccessKeySecret = util.StringPtr(string(secretAccessKey))
 			}
-
 			c.StorageType = util.StringPtr("Oss")
 			c.StorageBucket = util.StringPtr(cluster.Spec.ObjectStorageProvider.OSS.Bucket)
 			c.StorageRoot = util.StringPtr(cluster.Spec.ObjectStorageProvider.OSS.Root)
 			c.StorageEndpoint = util.StringPtr(cluster.Spec.ObjectStorageProvider.OSS.Endpoint)
 			c.StorageRegion = util.StringPtr(cluster.Spec.ObjectStorageProvider.OSS.Region)
+
+		case cluster.Spec.ObjectStorageProvider.GCS != nil:
+			if cluster.Spec.ObjectStorageProvider.GCS.SecretName != "" {
+				serviceAccountKey, err := getServiceAccountKey(cluster.Namespace, cluster.Spec.ObjectStorageProvider.GCS.SecretName)
+				if err != nil {
+					return err
+				}
+				if len(serviceAccountKey) != 0 {
+					c.StorageCredential = util.StringPtr(base64.StdEncoding.EncodeToString(serviceAccountKey))
+				}
+			}
+			c.StorageType = util.StringPtr("Gcs")
+			c.StorageBucket = util.StringPtr(cluster.Spec.ObjectStorageProvider.GCS.Bucket)
+			c.StorageRoot = util.StringPtr(cluster.Spec.ObjectStorageProvider.GCS.Root)
+			c.StorageEndpoint = util.StringPtr(cluster.Spec.ObjectStorageProvider.GCS.Endpoint)
+			c.StorageScope = util.StringPtr(cluster.Spec.ObjectStorageProvider.GCS.Scope)
 		}
 	}
 

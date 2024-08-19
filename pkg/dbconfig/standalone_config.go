@@ -15,6 +15,8 @@
 package dbconfig
 
 import (
+	"encoding/base64"
+
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/util"
 )
@@ -33,6 +35,8 @@ type StandaloneConfig struct {
 	StorageRoot            *string `tomlmapping:"storage.root"`
 	StorageRegion          *string `tomlmapping:"storage.region"`
 	StorageEndpoint        *string `tomlmapping:"storage.endpoint"`
+	StorageScope           *string `tomlmapping:"storage.scope"`
+	StorageCredential      *string `tomlmapping:"storage.credential"`
 
 	WalDir *string `tomlmapping:"wal.dir"`
 
@@ -49,7 +53,8 @@ func (c *StandaloneConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluste
 func (c *StandaloneConfig) ConfigureByStandalone(standalone *v1alpha1.GreptimeDBStandalone) error {
 	// TODO(zyy17): need to refactor the following code. It's too ugly.
 	if standalone.Spec.ObjectStorageProvider != nil {
-		if standalone.Spec.ObjectStorageProvider.S3 != nil {
+		switch {
+		case standalone.Spec.ObjectStorageProvider.S3 != nil:
 			if standalone.Spec.ObjectStorageProvider.S3.SecretName != "" {
 				accessKeyID, secretAccessKey, err := getOCSCredentials(standalone.Namespace, standalone.Spec.ObjectStorageProvider.S3.SecretName)
 				if err != nil {
@@ -58,14 +63,13 @@ func (c *StandaloneConfig) ConfigureByStandalone(standalone *v1alpha1.GreptimeDB
 				c.StorageAccessKeyID = util.StringPtr(string(accessKeyID))
 				c.StorageSecretAccessKey = util.StringPtr(string(secretAccessKey))
 			}
-
 			c.StorageType = util.StringPtr("S3")
 			c.StorageBucket = util.StringPtr(standalone.Spec.ObjectStorageProvider.S3.Bucket)
 			c.StorageRoot = util.StringPtr(standalone.Spec.ObjectStorageProvider.S3.Root)
 			c.StorageEndpoint = util.StringPtr(standalone.Spec.ObjectStorageProvider.S3.Endpoint)
 			c.StorageRegion = util.StringPtr(standalone.Spec.ObjectStorageProvider.S3.Region)
 
-		} else if standalone.Spec.ObjectStorageProvider.OSS != nil {
+		case standalone.Spec.ObjectStorageProvider.OSS != nil:
 			if standalone.Spec.ObjectStorageProvider.OSS.SecretName != "" {
 				accessKeyID, secretAccessKey, err := getOCSCredentials(standalone.Namespace, standalone.Spec.ObjectStorageProvider.OSS.SecretName)
 				if err != nil {
@@ -74,12 +78,27 @@ func (c *StandaloneConfig) ConfigureByStandalone(standalone *v1alpha1.GreptimeDB
 				c.StorageAccessKeyID = util.StringPtr(string(accessKeyID))
 				c.StorageAccessKeySecret = util.StringPtr(string(secretAccessKey))
 			}
-
 			c.StorageType = util.StringPtr("Oss")
 			c.StorageBucket = util.StringPtr(standalone.Spec.ObjectStorageProvider.OSS.Bucket)
 			c.StorageRoot = util.StringPtr(standalone.Spec.ObjectStorageProvider.OSS.Root)
 			c.StorageEndpoint = util.StringPtr(standalone.Spec.ObjectStorageProvider.OSS.Endpoint)
 			c.StorageRegion = util.StringPtr(standalone.Spec.ObjectStorageProvider.OSS.Region)
+
+		case standalone.Spec.ObjectStorageProvider.GCS != nil:
+			if standalone.Spec.ObjectStorageProvider.GCS.SecretName != "" {
+				serviceAccountKey, err := getServiceAccountKey(standalone.Namespace, standalone.Spec.ObjectStorageProvider.GCS.SecretName)
+				if err != nil {
+					return err
+				}
+				if len(serviceAccountKey) != 0 {
+					c.StorageCredential = util.StringPtr(base64.StdEncoding.EncodeToString(serviceAccountKey))
+				}
+			}
+			c.StorageType = util.StringPtr("Gcs")
+			c.StorageBucket = util.StringPtr(standalone.Spec.ObjectStorageProvider.GCS.Bucket)
+			c.StorageRoot = util.StringPtr(standalone.Spec.ObjectStorageProvider.GCS.Root)
+			c.StorageEndpoint = util.StringPtr(standalone.Spec.ObjectStorageProvider.GCS.Endpoint)
+			c.StorageScope = util.StringPtr(standalone.Spec.ObjectStorageProvider.GCS.Scope)
 		}
 	}
 
