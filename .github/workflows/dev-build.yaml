@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: GreptimeDB Operator Development Build
+name: dev-build
 
 on:
   workflow_dispatch: # Allows you to run this workflow manually.
@@ -22,14 +22,16 @@ on:
         required: false
         default: GreptimeTeam/greptimedb-operator
       commit: # Note: We only pull the source code and use the current workflow to build the artifacts.
-        description: The commit to build
-        required: true
+        description: The commit to build, default to the latest commit in the current branch.
+        required: false
 
 env:
   GO_VERSION: "1.21"
 
   # The source code will check out in the following path: '${WORKING_DIR}/dev/greptimedb-operator'.
   CHECKOUT_SOURCE_PATH: dev/greptimedb-operator
+
+  COMMIT: ${{ inputs.commit || github.sha }}
 
 jobs:
   docker:
@@ -45,7 +47,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: ${{ inputs.repository }}
-          ref: ${{ inputs.commit }}
+          ref: ${{ env.COMMIT }}
           path: ${{ env.CHECKOUT_SOURCE_PATH }}
 
       - name: Set up QEMU
@@ -80,7 +82,7 @@ jobs:
       - name: Configure tag
         shell: bash
         run: |
-          VERSION="dev-$(date "+%Y%m%d-%s")-$(echo "${{ inputs.commit }}" | cut -c1-8)"
+          VERSION="dev-$(date "+%Y%m%d-%s")-$(echo "${{ env.COMMIT }}" | cut -c1-8)"
           echo "VERSION=${VERSION}" >> $GITHUB_ENV
 
       - name: Build and push operator
