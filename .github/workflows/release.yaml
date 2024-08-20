@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: release
+name: Release
 
 on:
   push:
@@ -63,6 +63,7 @@ jobs:
         shell: bash
         run: |
           VERSION=${{ github.ref_name }}
+          echo "VERSION=${VERSION}" >> $GITHUB_ENV
 
       - name: Build and push operator
         uses: docker/build-push-action@v5
