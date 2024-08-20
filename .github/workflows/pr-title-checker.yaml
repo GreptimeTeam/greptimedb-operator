@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: check-pr-title
+name: Check PR Title
 
 on:
   pull_request_target:
@@ -24,7 +24,7 @@ on:
       - unlabeled
 
 jobs:
-  check:
+  check-pr-title:
     runs-on: ubuntu-22.04
     steps:
       - uses: thehanimo/pr-title-checker@v1.4.1
