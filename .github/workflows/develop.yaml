@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: CI
+name: develop
 
 on:
   pull_request:
@@ -55,14 +55,17 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
 
       - name: Check code generation
+        shell: bash
         run: |
           make check-code-generation
 
       - name: Compile the project
+        shell: bash
         run: |
           make
 
       - name: Make lint
+        shell: bash
         run: |
           make lint
 
@@ -79,6 +82,7 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
 
       - name: Run the unit tests
+        shell: bash
         run: |
           make test
 
@@ -96,5 +100,6 @@ jobs:
 
       - name: Run e2e
         id: e2e
+        shell: bash
         run: |
           make e2e
