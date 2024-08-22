@@ -32,16 +32,16 @@ type GreptimeDBStandaloneSpec struct {
 	TLS *TLSSpec `json:"tls,omitempty"`
 
 	// +optional
-	HTTPServicePort int32 `json:"httpServicePort,omitempty"`
+	HTTPServicePort int32 `json:"httpPort,omitempty"`
 
 	// +optional
-	GRPCServicePort int32 `json:"grpcServicePort,omitempty"`
+	RPCPort int32 `json:"rpcPort,omitempty"`
 
 	// +optional
-	MySQLServicePort int32 `json:"mysqlServicePort,omitempty"`
+	MySQLPort int32 `json:"mysqlPort,omitempty"`
 
 	// +optional
-	PostgresServicePort int32 `json:"postgresServicePort,omitempty"`
+	PostgreSQLPort int32 `json:"postgreSQLPort,omitempty"`
 
 	// +optional
 	EnableInfluxDBProtocol bool `json:"enableInfluxDBProtocol,omitempty"`

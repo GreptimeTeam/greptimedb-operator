@@ -63,7 +63,7 @@ var _ = Describe("Test GreptimeDBCluster", func() {
 		}, utils.DefaultTimeout, time.Second).ShouldNot(HaveOccurred())
 
 		By("Execute distributed SQL queries")
-		frontendAddr, err := utils.PortForward(ctx, testCluster.Namespace, common.ResourceName(testCluster.Name, greptimev1alpha1.FrontendComponentKind), int(testCluster.Spec.MySQLServicePort))
+		frontendAddr, err := utils.PortForward(ctx, testCluster.Namespace, common.ResourceName(testCluster.Name, greptimev1alpha1.FrontendComponentKind), int(testCluster.Spec.MySQLPort))
 		Expect(err).NotTo(HaveOccurred(), "failed to port forward frontend service")
 		Eventually(func() error {
 			conn, err := net.Dial("tcp", frontendAddr)
@@ -123,7 +123,7 @@ var _ = Describe("Test GreptimeDBCluster", func() {
 		}, utils.DefaultTimeout, time.Second).ShouldNot(HaveOccurred())
 
 		By("Execute distributed SQL queries")
-		frontendAddr, err := utils.PortForward(ctx, testCluster.Namespace, common.ResourceName(testCluster.Name, greptimev1alpha1.FrontendComponentKind), int(testCluster.Spec.MySQLServicePort))
+		frontendAddr, err := utils.PortForward(ctx, testCluster.Namespace, common.ResourceName(testCluster.Name, greptimev1alpha1.FrontendComponentKind), int(testCluster.Spec.MySQLPort))
 		Expect(err).NotTo(HaveOccurred(), "failed to port forward frontend service")
 		Eventually(func() error {
 			conn, err := net.Dial("tcp", frontendAddr)
@@ -183,7 +183,7 @@ var _ = Describe("Test GreptimeDBCluster", func() {
 		}, utils.DefaultTimeout, time.Second).ShouldNot(HaveOccurred())
 
 		By("Execute distributed SQL queries")
-		frontendAddr, err := utils.PortForward(ctx, testCluster.Namespace, common.ResourceName(testCluster.Name, greptimev1alpha1.FrontendComponentKind), int(testCluster.Spec.MySQLServicePort))
+		frontendAddr, err := utils.PortForward(ctx, testCluster.Namespace, common.ResourceName(testCluster.Name, greptimev1alpha1.FrontendComponentKind), int(testCluster.Spec.MySQLPort))
 		Expect(err).NotTo(HaveOccurred(), "failed to port forward frontend service")
 		Eventually(func() error {
 			conn, err := net.Dial("tcp", frontendAddr)

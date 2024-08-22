@@ -242,12 +242,12 @@ func (b *frontendBuilder) Generate() ([]client.Object, error) {
 func (b *frontendBuilder) generateMainContainerArgs() []string {
 	var args = []string{
 		"frontend", "start",
-		"--rpc-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.GRPCServicePort),
+		"--rpc-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.RPCPort),
 		"--metasrv-addrs", fmt.Sprintf("%s.%s:%d", common.ResourceName(b.Cluster.Name, v1alpha1.MetaComponentKind),
-			b.Cluster.Namespace, b.Cluster.Spec.Meta.ServicePort),
-		"--http-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.HTTPServicePort),
-		"--mysql-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.MySQLServicePort),
-		"--postgres-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.PostgresServicePort),
+			b.Cluster.Namespace, b.Cluster.Spec.Meta.RPCPort),
+		"--http-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.HTTPPort),
+		"--mysql-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.MySQLPort),
+		"--postgres-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.PostgreSQLPort),
 		"--config-file", path.Join(constant.GreptimeDBConfigDir, constant.GreptimeDBConfigFileName),
 	}
 
@@ -308,24 +308,24 @@ func (b *frontendBuilder) mountTLSSecret(template *corev1.PodTemplateSpec) {
 func (b *frontendBuilder) servicePorts() []corev1.ServicePort {
 	return []corev1.ServicePort{
 		{
-			Name:     "grpc",
+			Name:     "rpc",
 			Protocol: corev1.ProtocolTCP,
-			Port:     b.Cluster.Spec.GRPCServicePort,
+			Port:     b.Cluster.Spec.RPCPort,
 		},
 		{
 			Name:     "http",
 			Protocol: corev1.ProtocolTCP,
-			Port:     b.Cluster.Spec.HTTPServicePort,
+			Port:     b.Cluster.Spec.HTTPPort,
 		},
 		{
 			Name:     "mysql",
 			Protocol: corev1.ProtocolTCP,
-			Port:     b.Cluster.Spec.MySQLServicePort,
+			Port:     b.Cluster.Spec.MySQLPort,
 		},
 		{
-			Name:     "postgres",
+			Name:     "pg",
 			Protocol: corev1.ProtocolTCP,
-			Port:     b.Cluster.Spec.PostgresServicePort,
+			Port:     b.Cluster.Spec.PostgreSQLPort,
 		},
 	}
 }
@@ -333,24 +333,24 @@ func (b *frontendBuilder) servicePorts() []corev1.ServicePort {
 func (b *frontendBuilder) containerPorts() []corev1.ContainerPort {
 	return []corev1.ContainerPort{
 		{
-			Name:          "grpc",
+			Name:          "rpc",
 			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: b.Cluster.Spec.GRPCServicePort,
+			ContainerPort: b.Cluster.Spec.RPCPort,
 		},
 		{
 			Name:          "http",
 			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: b.Cluster.Spec.HTTPServicePort,
+			ContainerPort: b.Cluster.Spec.HTTPPort,
 		},
 		{
 			Name:          "mysql",
 			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: b.Cluster.Spec.MySQLServicePort,
+			ContainerPort: b.Cluster.Spec.MySQLPort,
 		},
 		{
-			Name:          "postgres",
+			Name:          "pg",
 			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: b.Cluster.Spec.PostgresServicePort,
+			ContainerPort: b.Cluster.Spec.PostgreSQLPort,
 		},
 	}
 }

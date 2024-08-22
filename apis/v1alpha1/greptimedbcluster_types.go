@@ -38,8 +38,13 @@ type ComponentSpec struct {
 type MetaSpec struct {
 	ComponentSpec `json:",inline"`
 
+	// The RPC port of the meta.
 	// +optional
-	ServicePort int32 `json:"servicePort,omitempty"`
+	RPCPort int32 `json:"rpcPort,omitempty"`
+
+	// The HTTP port of the meta.
+	// +optional
+	HTTPPort int32 `json:"httpPort,omitempty"`
 
 	// +optional
 	EtcdEndpoints []string `json:"etcdEndpoints,omitempty"`
@@ -55,8 +60,6 @@ type MetaSpec struct {
 	// The meta will store data with this key prefix.
 	// +optional
 	StoreKeyPrefix string `json:"storeKeyPrefix,omitempty"`
-
-	// More meta settings can be added here...
 }
 
 // FrontendSpec is the specification for frontend component.
@@ -69,21 +72,32 @@ type FrontendSpec struct {
 	// The TLS configurations of the frontend.
 	// +optional
 	TLS *TLSSpec `json:"tls,omitempty"`
-
-	// More frontend settings can be added here...
 }
 
 // DatanodeSpec is the specification for datanode component.
 type DatanodeSpec struct {
 	ComponentSpec `json:",inline"`
 
+	// The RPC port of the datanode.
+	// +optional
+	RPCPort int32 `json:"rpcPort,omitempty"`
+
+	// The HTTP port of the datanode.
+	// +optional
+	HTTPPort int32 `json:"httpPort,omitempty"`
+
+	// Storage is the storage specification for the datanode.
+	// +optional
 	Storage StorageSpec `json:"storage,omitempty"`
-	// More datanode settings can be added here...
 }
 
 // FlownodeSpec is the specification for flownode component.
 type FlownodeSpec struct {
 	ComponentSpec `json:",inline"`
+
+	// The gRPC port of the flownode.
+	// +optional
+	RPCPort int32 `json:"rpcPort,omitempty"`
 }
 
 // InitializerSpec is the init container to set up components configurations before running the container.
@@ -115,16 +129,16 @@ type GreptimeDBClusterSpec struct {
 	Flownode *FlownodeSpec `json:"flownode"`
 
 	// +optional
-	HTTPServicePort int32 `json:"httpServicePort,omitempty"`
+	HTTPPort int32 `json:"httpPort,omitempty"`
 
 	// +optional
-	GRPCServicePort int32 `json:"grpcServicePort,omitempty"`
+	RPCPort int32 `json:"rpcPort,omitempty"`
 
 	// +optional
-	MySQLServicePort int32 `json:"mysqlServicePort,omitempty"`
+	MySQLPort int32 `json:"mysqlPort,omitempty"`
 
 	// +optional
-	PostgresServicePort int32 `json:"postgresServicePort,omitempty"`
+	PostgreSQLPort int32 `json:"postgreSQLPort,omitempty"`
 
 	// +optional
 	EnableInfluxDBProtocol bool `json:"enableInfluxDBProtocol,omitempty"`

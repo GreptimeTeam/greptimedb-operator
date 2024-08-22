@@ -1,0 +1,19 @@
+apiVersion: greptime.io/v1alpha1
+kind: GreptimeDBCluster
+metadata:
+  name: test02
+  namespace: default
+spec:
+  base:
+    main:
+      image: greptime/greptimedb:latest
+  frontend:
+    replicas: 1
+  meta:
+    replicas: 1
+  datanode:
+    replicas: 1
+  remoteWal:
+    kafka:
+      brokerEndpoints:
+        - kafka.default:9092

@@ -2692,9 +2692,15 @@ spec:
                 properties:
                   config:
                     type: string
+                  httpPort:
+                    format: int32
+                    type: integer
                   replicas:
                     format: int32
                     minimum: 0
+                    type: integer
+                  rpcPort:
+                    format: int32
                     type: integer
                   storage:
                     properties:
@@ -5364,6 +5370,9 @@ spec:
                   replicas:
                     format: int32
                     minimum: 0
+                    type: integer
+                  rpcPort:
+                    format: int32
                     type: integer
                   template:
                     properties:
@@ -10669,10 +10678,7 @@ spec:
                         type: string
                     type: object
                 type: object
-              grpcServicePort:
-                format: int32
-                type: integer
-              httpServicePort:
+              httpPort:
                 format: int32
                 type: integer
               initializer:
@@ -10692,11 +10698,14 @@ spec:
                     items:
                       type: string
                     type: array
+                  httpPort:
+                    format: int32
+                    type: integer
                   replicas:
                     format: int32
                     minimum: 0
                     type: integer
-                  servicePort:
+                  rpcPort:
                     format: int32
                     type: integer
                   storeKeyPrefix:
@@ -13339,7 +13348,7 @@ spec:
                         type: array
                     type: object
                 type: object
-              mysqlServicePort:
+              mysqlPort:
                 format: int32
                 type: integer
               objectStorage:
@@ -13388,7 +13397,7 @@ spec:
                         type: string
                     type: object
                 type: object
-              postgresServicePort:
+              postgreSQLPort:
                 format: int32
                 type: integer
               prometheusMonitor:
@@ -13412,6 +13421,9 @@ spec:
                         type: array
                     type: object
                 type: object
+              rpcPort:
+                format: int32
+                type: integer
               version:
                 type: string
             type: object

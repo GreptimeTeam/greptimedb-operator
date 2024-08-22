@@ -1,0 +1,66 @@
+apiVersion: greptime.io/v1alpha1
+kind: GreptimeDBCluster
+metadata:
+  name: test02
+  namespace: default
+spec:
+  version: latest
+  initializer:
+    image: greptime/greptimedb-initializer:latest
+  httpPort: 4000
+  rpcPort: 4001
+  mysqlPort: 4002
+  postgreSQLPort: 4003
+  remoteWal:
+    kafka:
+      brokerEndpoints:
+        - kafka.default:9092
+  base:
+    main:
+      image: greptime/greptimedb:latest
+      livenessProbe:
+        httpGet:
+          path: /health
+          port: 4000
+  frontend:
+    replicas: 1
+    service:
+      type: ClusterIP
+    template:
+      main:
+        image: greptime/greptimedb:latest
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 4000
+  meta:
+    # Should be true if remoteWal.kafka is set.
+    enableRegionFailover: true
+    httpPort: 4000
+    rpcPort: 3002
+    replicas: 1
+    template:
+      main:
+        image: greptime/greptimedb:latest
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 4000
+  datanode:
+    httpPort: 4000
+    rpcPort: 4001
+    replicas: 1
+    storage:
+      dataHome: /data/greptimedb
+      mountPath: /data/greptimedb
+      name: datanode
+      storageRetainPolicy: Retain
+      storageSize: 10Gi
+      walDir: /data/greptimedb/wal
+    template:
+      main:
+        image: greptime/greptimedb:latest
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 4000
