@@ -237,7 +237,7 @@ func (b *flownodeBuilder) BuildPodMonitor() deployer.Builder {
 func (b *flownodeBuilder) generateMainContainerArgs() []string {
 	return []string{
 		"flownode", "start",
-		"--metasrv-addrs", fmt.Sprintf("%s.%s:%d", common.ResourceName(b.Cluster.Name, v1alpha1.MetaComponentKind), b.Cluster.Namespace, b.Cluster.Spec.Meta.ServicePort),
+		"--metasrv-addrs", fmt.Sprintf("%s.%s:%d", common.ResourceName(b.Cluster.Name, v1alpha1.MetaComponentKind), b.Cluster.Namespace, b.Cluster.Spec.Meta.RPCPort),
 		"--config-file", path.Join(constant.GreptimeDBConfigDir, constant.GreptimeDBConfigFileName),
 	}
 }
@@ -272,7 +272,7 @@ func (b *flownodeBuilder) generateInitializer() *corev1.Container {
 		Args: []string{
 			"--config-path", path.Join(constant.GreptimeDBConfigDir, constant.GreptimeDBConfigFileName),
 			"--init-config-path", path.Join(constant.GreptimeDBInitConfigDir, constant.GreptimeDBConfigFileName),
-			"--rpc-port", fmt.Sprintf("%d", b.Cluster.Spec.GRPCServicePort),
+			"--rpc-port", fmt.Sprintf("%d", b.Cluster.Spec.Flownode.RPCPort),
 			"--service-name", common.ResourceName(b.Cluster.Name, b.ComponentKind),
 			"--namespace", b.Cluster.Namespace,
 			"--component-kind", string(b.ComponentKind),
@@ -348,9 +348,9 @@ func (b *flownodeBuilder) addInitConfigDirVolume(template *corev1.PodTemplateSpe
 func (b *flownodeBuilder) servicePorts() []corev1.ServicePort {
 	return []corev1.ServicePort{
 		{
-			Name:     "grpc",
+			Name:     "rpc",
 			Protocol: corev1.ProtocolTCP,
-			Port:     b.Cluster.Spec.GRPCServicePort,
+			Port:     b.Cluster.Spec.Flownode.RPCPort,
 		},
 	}
 }
@@ -360,7 +360,7 @@ func (b *flownodeBuilder) containerPorts() []corev1.ContainerPort {
 		{
 			Name:          "grpc",
 			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: b.Cluster.Spec.GRPCServicePort,
+			ContainerPort: b.Cluster.Spec.Flownode.RPCPort,
 		},
 	}
 }

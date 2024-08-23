@@ -1,0 +1,36 @@
+apiVersion: greptime.io/v1alpha1
+kind: GreptimeDBCluster
+metadata:
+  name: test01
+  namespace: default
+spec:
+  base:
+    main:
+      image: greptime/greptimedb:latest
+      resources:
+        requests:
+          cpu: "500m"
+          memory: "256Mi"
+        limits:
+          cpu: "1"
+          memory: "1Gi"
+  frontend:
+    template:
+      main:
+        image: greptime/greptimedb:latest
+        args:
+          - --metasrv-addrs
+          - meta.default:3002
+  meta:
+    etcdEndpoints:
+      - etcd.default:2379
+    template:
+      main:
+        image: greptime/greptimedb:latest
+        args:
+          - --store-addr
+          - etcd.default:2379
+  datanode:
+    template:
+      main:
+        image: greptime/greptimedb:latest

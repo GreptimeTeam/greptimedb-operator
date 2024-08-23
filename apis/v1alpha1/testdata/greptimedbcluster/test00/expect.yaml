@@ -1,0 +1,61 @@
+apiVersion: greptime.io/v1alpha1
+kind: GreptimeDBCluster
+metadata:
+  name: test00
+  namespace: default
+spec:
+  version: latest
+  initializer:
+    image: greptime/greptimedb-initializer:latest
+  httpPort: 5000
+  rpcPort: 4001
+  mysqlPort: 4002
+  postgreSQLPort: 4003
+  base:
+    main:
+      image: greptime/greptimedb:latest
+      livenessProbe:
+        httpGet:
+          path: /health
+          port: 4000
+  frontend:
+    replicas: 3
+    service:
+      type: ClusterIP
+    template:
+      main:
+        image: greptime/greptimedb:latest
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5000
+  meta:
+    enableRegionFailover: false
+    httpPort: 4000
+    rpcPort: 3002
+    replicas: 3
+    template:
+      main:
+        image: greptime/greptimedb:latest
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 4000
+  datanode:
+    httpPort: 4000
+    rpcPort: 4001
+    replicas: 1
+    storage:
+      dataHome: /data/greptimedb
+      mountPath: /data/greptimedb
+      name: datanode
+      storageRetainPolicy: Retain
+      storageSize: 10Gi
+      walDir: /data/greptimedb/wal
+    template:
+      main:
+        image: greptime/greptimedb:latest
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 4000

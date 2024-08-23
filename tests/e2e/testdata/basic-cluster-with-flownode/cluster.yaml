@@ -33,4 +33,4 @@ spec:
     replicas: 3
   flownode:
     replicas: 2
-  mysqlServicePort: 4002
+  mysqlPort: 4002

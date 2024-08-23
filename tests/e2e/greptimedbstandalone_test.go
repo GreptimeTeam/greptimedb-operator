@@ -58,7 +58,7 @@ var _ = Describe("Test GreptimeDBStandalone", func() {
 		}, utils.DefaultTimeout, time.Second).ShouldNot(HaveOccurred())
 
 		By("Run SQL test")
-		frontendAddr, err := utils.PortForward(ctx, testStandalone.Namespace, common.ResourceName(testStandalone.Name, greptimev1alpha1.StandaloneKind), int(testStandalone.Spec.MySQLServicePort))
+		frontendAddr, err := utils.PortForward(ctx, testStandalone.Namespace, common.ResourceName(testStandalone.Name, greptimev1alpha1.StandaloneKind), int(testStandalone.Spec.MySQLPort))
 		Expect(err).NotTo(HaveOccurred(), "failed to port forward frontend service")
 		Eventually(func() error {
 			conn, err := net.Dial("tcp", frontendAddr)

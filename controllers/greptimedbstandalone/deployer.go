@@ -352,7 +352,7 @@ func (s *standaloneBuilder) servicePorts() []corev1.ServicePort {
 		{
 			Name:     "grpc",
 			Protocol: corev1.ProtocolTCP,
-			Port:     s.standalone.Spec.GRPCServicePort,
+			Port:     s.standalone.Spec.RPCPort,
 		},
 		{
 			Name:     "http",
@@ -362,12 +362,12 @@ func (s *standaloneBuilder) servicePorts() []corev1.ServicePort {
 		{
 			Name:     "mysql",
 			Protocol: corev1.ProtocolTCP,
-			Port:     s.standalone.Spec.MySQLServicePort,
+			Port:     s.standalone.Spec.MySQLPort,
 		},
 		{
 			Name:     "postgres",
 			Protocol: corev1.ProtocolTCP,
-			Port:     s.standalone.Spec.PostgresServicePort,
+			Port:     s.standalone.Spec.PostgreSQLPort,
 		},
 	}
 }
@@ -377,7 +377,7 @@ func (s *standaloneBuilder) containerPorts() []corev1.ContainerPort {
 		{
 			Name:          "grpc",
 			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: s.standalone.Spec.GRPCServicePort,
+			ContainerPort: s.standalone.Spec.RPCPort,
 		},
 		{
 			Name:          "http",
@@ -387,12 +387,12 @@ func (s *standaloneBuilder) containerPorts() []corev1.ContainerPort {
 		{
 			Name:          "mysql",
 			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: s.standalone.Spec.MySQLServicePort,
+			ContainerPort: s.standalone.Spec.MySQLPort,
 		},
 		{
 			Name:          "postgres",
 			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: s.standalone.Spec.PostgresServicePort,
+			ContainerPort: s.standalone.Spec.PostgreSQLPort,
 		},
 	}
 }
@@ -401,10 +401,10 @@ func (s *standaloneBuilder) generateMainContainerArgs() []string {
 	var args = []string{
 		"standalone", "start",
 		"--data-home", "/data",
-		"--rpc-addr", fmt.Sprintf("0.0.0.0:%d", s.standalone.Spec.GRPCServicePort),
-		"--mysql-addr", fmt.Sprintf("0.0.0.0:%d", s.standalone.Spec.MySQLServicePort),
+		"--rpc-addr", fmt.Sprintf("0.0.0.0:%d", s.standalone.Spec.RPCPort),
+		"--mysql-addr", fmt.Sprintf("0.0.0.0:%d", s.standalone.Spec.MySQLPort),
 		"--http-addr", fmt.Sprintf("0.0.0.0:%d", s.standalone.Spec.HTTPServicePort),
-		"--postgres-addr", fmt.Sprintf("0.0.0.0:%d", s.standalone.Spec.PostgresServicePort),
+		"--postgres-addr", fmt.Sprintf("0.0.0.0:%d", s.standalone.Spec.PostgreSQLPort),
 		"--config-file", path.Join(constant.GreptimeDBConfigDir, constant.GreptimeDBConfigFileName),
 	}
 

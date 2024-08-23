@@ -212,7 +212,7 @@ func (d *DatanodeDeployer) turnOffMaintenanceMode(ctx context.Context, crdObject
 }
 
 func (d *DatanodeDeployer) requestMetasrvForMaintenance(cluster *v1alpha1.GreptimeDBCluster, enabled bool) error {
-	requestURL := fmt.Sprintf("http://%s.%s:%d/admin/maintenance?enable=%v", common.ResourceName(cluster.GetName(), v1alpha1.MetaComponentKind), cluster.GetNamespace(), cluster.Spec.Meta.ServicePort, enabled)
+	requestURL := fmt.Sprintf("http://%s.%s:%d/admin/maintenance?enable=%v", common.ResourceName(cluster.GetName(), v1alpha1.MetaComponentKind), cluster.GetNamespace(), cluster.Spec.Meta.RPCPort, enabled)
 	rsp, err := http.Get(requestURL)
 	if err != nil {
 		return err
@@ -440,9 +440,8 @@ func (b *datanodeBuilder) generateMainContainerArgs() []string {
 	return []string{
 		"datanode", "start",
 		"--metasrv-addrs", fmt.Sprintf("%s.%s:%d", common.ResourceName(b.Cluster.Name, v1alpha1.MetaComponentKind),
-			b.Cluster.Namespace, b.Cluster.Spec.Meta.ServicePort),
-		// TODO(zyy17): Should we add the new field of the CRD for datanode http port?
-		"--http-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.HTTPServicePort),
+			b.Cluster.Namespace, b.Cluster.Spec.Meta.RPCPort),
+		"--http-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.Datanode.HTTPPort),
 		"--config-file", path.Join(constant.GreptimeDBConfigDir, constant.GreptimeDBConfigFileName),
 	}
 }
@@ -499,7 +498,7 @@ func (b *datanodeBuilder) generateInitializer() *corev1.Container {
 		Args: []string{
 			"--config-path", path.Join(constant.GreptimeDBConfigDir, constant.GreptimeDBConfigFileName),
 			"--init-config-path", path.Join(constant.GreptimeDBInitConfigDir, constant.GreptimeDBConfigFileName),
-			"--datanode-rpc-port", fmt.Sprintf("%d", b.Cluster.Spec.GRPCServicePort),
+			"--datanode-rpc-port", fmt.Sprintf("%d", b.Cluster.Spec.Datanode.RPCPort),
 			"--datanode-service-name", common.ResourceName(b.Cluster.Name, b.ComponentKind),
 			"--namespace", b.Cluster.Namespace,
 			"--component-kind", string(b.ComponentKind),
@@ -586,14 +585,14 @@ func (b *datanodeBuilder) addInitConfigDirVolume(template *corev1.PodTemplateSpe
 func (b *datanodeBuilder) servicePorts() []corev1.ServicePort {
 	return []corev1.ServicePort{
 		{
-			Name:     "grpc",
+			Name:     "rpc",
 			Protocol: corev1.ProtocolTCP,
-			Port:     b.Cluster.Spec.GRPCServicePort,
+			Port:     b.Cluster.Spec.Datanode.RPCPort,
 		},
 		{
 			Name:     "http",
 			Protocol: corev1.ProtocolTCP,
-			Port:     b.Cluster.Spec.HTTPServicePort,
+			Port:     b.Cluster.Spec.Datanode.HTTPPort,
 		},
 	}
 }
@@ -601,14 +600,14 @@ func (b *datanodeBuilder) servicePorts() []corev1.ServicePort {
 func (b *datanodeBuilder) containerPorts() []corev1.ContainerPort {
 	return []corev1.ContainerPort{
 		{
-			Name:          "grpc",
+			Name:          "rpc",
 			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: b.Cluster.Spec.GRPCServicePort,
+			ContainerPort: b.Cluster.Spec.Datanode.RPCPort,
 		},
 		{
 			Name:          "http",
 			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: b.Cluster.Spec.HTTPServicePort,
+			ContainerPort: b.Cluster.Spec.Datanode.HTTPPort,
 		},
 	}
 }

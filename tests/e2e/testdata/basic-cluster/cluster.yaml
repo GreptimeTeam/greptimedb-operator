@@ -31,4 +31,4 @@ spec:
       - etcd.etcd:2379
   datanode:
     replicas: 3
-  mysqlServicePort: 4002
+  mysqlPort: 4002

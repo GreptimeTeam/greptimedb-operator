@@ -2680,10 +2680,7 @@ spec:
                 type: string
               enableInfluxDBProtocol:
                 type: boolean
-              grpcServicePort:
-                format: int32
-                type: integer
-              httpServicePort:
+              httpPort:
                 format: int32
                 type: integer
               initializer:
@@ -2712,7 +2709,7 @@ spec:
                   walDir:
                     type: string
                 type: object
-              mysqlServicePort:
+              mysqlPort:
                 format: int32
                 type: integer
               objectStorage:
@@ -2761,7 +2758,7 @@ spec:
                         type: string
                     type: object
                 type: object
-              postgresServicePort:
+              postgreSQLPort:
                 format: int32
                 type: integer
               prometheusMonitor:
@@ -2785,6 +2782,9 @@ spec:
                         type: array
                     type: object
                 type: object
+              rpcPort:
+                format: int32
+                type: integer
               service:
                 properties:
                   annotations:

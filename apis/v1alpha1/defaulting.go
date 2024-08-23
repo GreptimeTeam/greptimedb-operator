@@ -18,7 +18,7 @@ import (
 	"path"
 	"strings"
 
-	"github.com/imdario/mergo"
+	"dario.cat/mergo"
 	"google.golang.org/protobuf/proto"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -27,12 +27,14 @@ import (
 var (
 	defaultVersion = "Unknown"
 
+	defautlHealthEndpoint = "/health"
+
 	// The default settings for GreptimeDBClusterSpec.
-	defaultHTTPServicePort     = 4000
-	defaultGRPCServicePort     = 4001
-	defaultMySQLServicePort    = 4002
-	defaultPostgresServicePort = 4003
-	defaultMetaServicePort     = 3002
+	defaultHTTPPort       = 4000
+	defaultRPCPort        = 4001
+	defaultMySQLPort      = 4002
+	defaultPostgreSQLPort = 4003
+	defaultMetaRPCPort    = 3002
 
 	// The default replicas for frontend/meta/datanode.
 	defaultFrontendReplicas int32 = 1
@@ -56,26 +58,91 @@ func (in *GreptimeDBCluster) SetDefaults() error {
 		return nil
 	}
 
-	var defaultGreptimeDBClusterSpec = &GreptimeDBClusterSpec{
+	// Merge the default settings into the GreptimeDBClusterSpec.
+	if err := mergo.Merge(&in.Spec, in.defaultClusterSpec()); err != nil {
+		return err
+	}
+
+	// Merge the Base field into the frontend/meta/datanode/flownode template.
+	if err := in.mergeTemplate(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (in *GreptimeDBStandalone) SetDefaults() error {
+	if in == nil {
+		return nil
+	}
+
+	var defaultGreptimeDBStandaloneSpec = &GreptimeDBStandaloneSpec{
 		Base: &PodTemplateSpec{
 			MainContainer: &MainContainerSpec{
-				// The default readiness probe for the main container of GreptimeDBCluster.
-				ReadinessProbe: &corev1.Probe{
+				// The default liveness probe for the main container of GreptimeDBStandalone.
+				LivenessProbe: &corev1.Probe{
 					ProbeHandler: corev1.ProbeHandler{
 						HTTPGet: &corev1.HTTPGetAction{
-							Path: "/health",
-							Port: intstr.FromInt(defaultHTTPServicePort),
+							Path: defautlHealthEndpoint,
+							Port: intstr.FromInt(defaultHTTPPort),
 						},
 					},
 				},
 			},
 		},
-		Initializer:         &InitializerSpec{Image: defaultInitializer},
-		HTTPServicePort:     int32(defaultHTTPServicePort),
-		GRPCServicePort:     int32(defaultGRPCServicePort),
-		MySQLServicePort:    int32(defaultMySQLServicePort),
-		PostgresServicePort: int32(defaultPostgresServicePort),
-		Version:             defaultVersion,
+		HTTPServicePort: int32(defaultHTTPPort),
+		RPCPort:         int32(defaultRPCPort),
+		MySQLPort:       int32(defaultMySQLPort),
+		PostgreSQLPort:  int32(defaultPostgreSQLPort),
+		Version:         defaultVersion,
+		LocalStorage: &StorageSpec{
+			Name:                defaultStandaloneStorageName,
+			StorageSize:         defaultDataNodeStorageSize,
+			MountPath:           defaultDataNodeStorageMountPath,
+			StorageRetainPolicy: defaultStorageRetainPolicyType,
+			WalDir:              defaultWalDir,
+			DataHome:            defaultDataNodeStorageMountPath,
+		},
+		Service: &ServiceSpec{
+			Type: corev1.ServiceTypeClusterIP,
+		},
+	}
+
+	if in.Spec.Version == "" &&
+		in.Spec.Base != nil &&
+		in.Spec.Base.MainContainer != nil &&
+		in.Spec.Base.MainContainer.Image != "" {
+		in.Spec.Version = getVersionFromImage(in.Spec.Base.MainContainer.Image)
+	}
+
+	if err := mergo.Merge(&in.Spec, defaultGreptimeDBStandaloneSpec); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (in *GreptimeDBCluster) defaultClusterSpec() *GreptimeDBClusterSpec {
+	var defaultGreptimeDBClusterSpec = &GreptimeDBClusterSpec{
+		Base: &PodTemplateSpec{
+			MainContainer: &MainContainerSpec{
+				// The default liveness probe for the main container of GreptimeDBCluster.
+				LivenessProbe: &corev1.Probe{
+					ProbeHandler: corev1.ProbeHandler{
+						HTTPGet: &corev1.HTTPGetAction{
+							Path: defautlHealthEndpoint,
+							Port: intstr.FromInt(defaultHTTPPort),
+						},
+					},
+				},
+			},
+		},
+		Initializer:    &InitializerSpec{Image: defaultInitializer},
+		HTTPPort:       int32(defaultHTTPPort),
+		RPCPort:        int32(defaultRPCPort),
+		MySQLPort:      int32(defaultMySQLPort),
+		PostgreSQLPort: int32(defaultPostgreSQLPort),
+		Version:        defaultVersion,
 	}
 
 	if in.Spec.Version == "" &&
@@ -108,7 +175,8 @@ func (in *GreptimeDBCluster) SetDefaults() error {
 			ComponentSpec: ComponentSpec{
 				Template: &PodTemplateSpec{},
 			},
-			ServicePort:          int32(defaultMetaServicePort),
+			RPCPort:              int32(defaultMetaRPCPort),
+			HTTPPort:             int32(defaultHTTPPort),
 			EnableRegionFailover: &enableRegionFailover,
 		}
 		if in.Spec.Meta.Replicas == nil {
@@ -129,6 +197,8 @@ func (in *GreptimeDBCluster) SetDefaults() error {
 				WalDir:              defaultWalDir,
 				DataHome:            defaultDataNodeStorageMountPath,
 			},
+			RPCPort:  int32(defaultRPCPort),
+			HTTPPort: int32(defaultHTTPPort),
 		}
 		if in.Spec.Datanode.Replicas == nil {
 			in.Spec.Datanode.Replicas = proto.Int32(defaultDatanodeReplicas)
@@ -140,92 +210,87 @@ func (in *GreptimeDBCluster) SetDefaults() error {
 			ComponentSpec: ComponentSpec{
 				Template: &PodTemplateSpec{},
 			},
+			RPCPort: int32(defaultRPCPort),
 		}
 		if in.Spec.Flownode.Replicas == nil {
 			in.Spec.Flownode.Replicas = proto.Int32(defaultFlownodeReplicas)
 		}
 	}
 
-	if err := mergo.Merge(&in.Spec, defaultGreptimeDBClusterSpec); err != nil {
+	return defaultGreptimeDBClusterSpec
+}
+
+func (in *GreptimeDBCluster) mergeTemplate() error {
+	if err := in.mergeFrontendTemplate(); err != nil {
 		return err
 	}
 
-	if in.Spec.Frontend != nil {
-		if err := mergo.Merge(in.Spec.Frontend.Template, in.Spec.Base); err != nil {
-			return err
-		}
+	if err := in.mergeMetaTemplate(); err != nil {
+		return err
 	}
 
-	if in.Spec.Meta != nil {
-		if err := mergo.Merge(in.Spec.Meta.Template, in.Spec.Base); err != nil {
-			return err
-		}
+	if err := in.mergeDatanodeTemplate(); err != nil {
+		return err
 	}
 
-	if in.Spec.Datanode != nil {
-		if err := mergo.Merge(in.Spec.Datanode.Template, in.Spec.Base); err != nil {
-			return err
-		}
-	}
-
-	if in.Spec.Flownode != nil {
-		if err := mergo.Merge(in.Spec.Flownode.Template, in.Spec.Base); err != nil {
-			return err
-		}
-
-		// FIXME(zyy17): The flownode does not need readiness probe and will be added in the future.
-		in.Spec.Flownode.Template.MainContainer.ReadinessProbe = nil
+	if err := in.mergeFlownodeTemplate(); err != nil {
+		return err
 	}
 
 	return nil
 }
 
-func (in *GreptimeDBStandalone) SetDefaults() error {
-	if in == nil {
-		return nil
+func (in *GreptimeDBCluster) mergeFrontendTemplate() error {
+	if in.Spec.Frontend != nil {
+		// Use DeepCopy to avoid the same pointer.
+		if err := mergo.Merge(in.Spec.Frontend.Template, in.DeepCopy().Spec.Base); err != nil {
+			return err
+		}
+
+		// Reconfigure the probe settings based on the HTTP port.
+		in.Spec.Frontend.Template.MainContainer.LivenessProbe.HTTPGet.Port = intstr.FromInt(int(in.Spec.HTTPPort))
 	}
 
-	var defaultGreptimeDBStandaloneSpec = &GreptimeDBStandaloneSpec{
-		Base: &PodTemplateSpec{
-			MainContainer: &MainContainerSpec{
-				// The default readiness probe for the main container of GreptimeDBCluster.
-				ReadinessProbe: &corev1.Probe{
-					ProbeHandler: corev1.ProbeHandler{
-						HTTPGet: &corev1.HTTPGetAction{
-							Path: "/health",
-							Port: intstr.FromInt(defaultHTTPServicePort),
-						},
-					},
-				},
-			},
-		},
-		HTTPServicePort:     int32(defaultHTTPServicePort),
-		GRPCServicePort:     int32(defaultGRPCServicePort),
-		MySQLServicePort:    int32(defaultMySQLServicePort),
-		PostgresServicePort: int32(defaultPostgresServicePort),
-		Version:             defaultVersion,
-		LocalStorage: &StorageSpec{
-			Name:                defaultStandaloneStorageName,
-			StorageSize:         defaultDataNodeStorageSize,
-			MountPath:           defaultDataNodeStorageMountPath,
-			StorageRetainPolicy: defaultStorageRetainPolicyType,
-			WalDir:              defaultWalDir,
-			DataHome:            defaultDataNodeStorageMountPath,
-		},
-		Service: &ServiceSpec{
-			Type: corev1.ServiceTypeClusterIP,
-		},
+	return nil
+}
+
+func (in *GreptimeDBCluster) mergeMetaTemplate() error {
+	if in.Spec.Meta != nil {
+		// Use DeepCopy to avoid the same pointer.
+		if err := mergo.Merge(in.Spec.Meta.Template, in.DeepCopy().Spec.Base); err != nil {
+			return err
+		}
+
+		// Reconfigure the probe settings based on the HTTP port.
+		in.Spec.Meta.Template.MainContainer.LivenessProbe.HTTPGet.Port = intstr.FromInt(int(in.Spec.Meta.HTTPPort))
 	}
 
-	if in.Spec.Version == "" &&
-		in.Spec.Base != nil &&
-		in.Spec.Base.MainContainer != nil &&
-		in.Spec.Base.MainContainer.Image != "" {
-		in.Spec.Version = getVersionFromImage(in.Spec.Base.MainContainer.Image)
+	return nil
+}
+
+func (in *GreptimeDBCluster) mergeDatanodeTemplate() error {
+	if in.Spec.Datanode != nil {
+		// Use DeepCopy to avoid the same pointer.
+		if err := mergo.Merge(in.Spec.Datanode.Template, in.DeepCopy().Spec.Base); err != nil {
+			return err
+		}
+
+		// Reconfigure the probe settings based on the HTTP port.
+		in.Spec.Datanode.Template.MainContainer.LivenessProbe.HTTPGet.Port = intstr.FromInt(int(in.Spec.Datanode.HTTPPort))
 	}
 
-	if err := mergo.Merge(&in.Spec, defaultGreptimeDBStandaloneSpec); err != nil {
-		return err
+	return nil
+}
+
+func (in *GreptimeDBCluster) mergeFlownodeTemplate() error {
+	if in.Spec.Flownode != nil {
+		// Use DeepCopy to avoid the same pointer.
+		if err := mergo.Merge(in.Spec.Flownode.Template, in.DeepCopy().Spec.Base); err != nil {
+			return err
+		}
+
+		// TODO(zyy17): The flownode does not need liveness probe and will be added in the future.
+		in.Spec.Flownode.Template.MainContainer.LivenessProbe = nil
 	}
 
 	return nil

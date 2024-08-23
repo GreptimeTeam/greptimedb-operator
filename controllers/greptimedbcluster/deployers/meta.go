@@ -335,10 +335,9 @@ func (b *metaBuilder) generatePodTemplateSpec() *corev1.PodTemplateSpec {
 func (b *metaBuilder) generateMainContainerArgs() []string {
 	return []string{
 		"metasrv", "start",
-		"--bind-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.Meta.ServicePort),
-		// TODO(zyy17): Should we add the new field of the CRD for meta http port?
-		"--http-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.HTTPServicePort),
-		"--server-addr", fmt.Sprintf("$(%s):%d", deployer.EnvPodIP, b.Cluster.Spec.Meta.ServicePort),
+		"--bind-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.Meta.RPCPort),
+		"--http-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.Meta.HTTPPort),
+		"--server-addr", fmt.Sprintf("$(%s):%d", deployer.EnvPodIP, b.Cluster.Spec.Meta.RPCPort),
 		"--store-addr", b.Cluster.Spec.Meta.EtcdEndpoints[0],
 		"--config-file", path.Join(constant.GreptimeDBConfigDir, constant.GreptimeDBConfigFileName),
 	}
@@ -347,14 +346,14 @@ func (b *metaBuilder) generateMainContainerArgs() []string {
 func (b *metaBuilder) servicePorts() []corev1.ServicePort {
 	return []corev1.ServicePort{
 		{
-			Name:     "grpc",
+			Name:     "rpc",
 			Protocol: corev1.ProtocolTCP,
-			Port:     b.Cluster.Spec.Meta.ServicePort,
+			Port:     b.Cluster.Spec.Meta.RPCPort,
 		},
 		{
 			Name:     "http",
 			Protocol: corev1.ProtocolTCP,
-			Port:     b.Cluster.Spec.HTTPServicePort,
+			Port:     b.Cluster.Spec.Meta.HTTPPort,
 		},
 	}
 }
@@ -362,14 +361,14 @@ func (b *metaBuilder) servicePorts() []corev1.ServicePort {
 func (b *metaBuilder) containerPorts() []corev1.ContainerPort {
 	return []corev1.ContainerPort{
 		{
-			Name:          "grpc",
+			Name:          "rpc",
 			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: b.Cluster.Spec.Meta.ServicePort,
+			ContainerPort: b.Cluster.Spec.Meta.RPCPort,
 		},
 		{
 			Name:          "http",
 			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: b.Cluster.Spec.HTTPServicePort,
+			ContainerPort: b.Cluster.Spec.Meta.HTTPPort,
 		},
 	}
 }

@@ -35,4 +35,4 @@ spec:
     kafka:
       brokerEndpoints:
         - kafka-wal-kafka-bootstrap.kafka:9092
-  mysqlServicePort: 4002
+  mysqlPort: 4002

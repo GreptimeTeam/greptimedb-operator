@@ -21,4 +21,4 @@ spec:
   base:
     main:
       image: localhost:5001/greptime/greptimedb:latest
-  mysqlServicePort: 4002
+  mysqlPort: 4002
