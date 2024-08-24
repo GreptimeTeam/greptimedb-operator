@@ -25,7 +25,7 @@ REGISTRY_NAME=kind-registry
 REGISTRY_PORT=5001
 
 # The argument for deploying etcd cluster.
-ETCD_NAMESPACE=etcd
+ETCD_NAMESPACE=etcd-cluster
 ETCD_CHART_VERSION=9.0.0
 
 # The argument for deploying Kafka cluster.
