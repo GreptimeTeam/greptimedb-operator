@@ -11,9 +11,13 @@ The E2E needs to be run in a Kubernetes cluster. It will use the [kind](https://
 The following scripts are used to run the E2E:
 
 - `tests/e2e/setup/create-cluster.sh`
+
    - Create a Kubernetes cluster using kind;
+
    - Pull the latest release GreptimeDB image;
+
    - Build the `greptimedb-operator` and `greptimedb-initializer` image and deploy it to the cluster;
+
    - Deploy the dependencies (e.g., etcd, Kafka, etc);
    
 - `tests/e2e/setup/delete-cluster.sh`: Destroy the E2E cluster;

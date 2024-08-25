@@ -73,7 +73,7 @@ func TestBasicCluster(ctx context.Context, h *helper.Helper) {
 	}, helper.DefaultTimeout, time.Second).ShouldNot(HaveOccurred())
 
 	err = h.RunSQLTest(ctx, frontendAddr, testSQLFile)
-	Expect(err).NotTo(HaveOccurred(), "failed to runClusterStandardTest sql test")
+	Expect(err).NotTo(HaveOccurred(), "failed to run sql test")
 
 	By("Kill the port forwarding process")
 	h.KillPortForwardProcess()
