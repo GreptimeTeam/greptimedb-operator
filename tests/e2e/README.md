@@ -6,14 +6,18 @@
 
 ## How it works
 
-The E2E needs to be run in a Kubernetes cluster. It will use the kind to create a K8s and deploy the greptimedb-operator and other dependencies.
+The E2E needs to be run in a Kubernetes cluster. It will use the [kind](https://kind.sigs.k8s.io/) to create a K8s and deploy the greptimedb-operator and other dependencies.
 
 The following scripts are used to run the E2E:
 
 - `tests/e2e/setup/create-cluster.sh`
+
    - Create a Kubernetes cluster using kind;
+
    - Pull the latest release GreptimeDB image;
-   - Build the greptimedb-operator image and deploy it to the cluster;
+
+   - Build the `greptimedb-operator` and `greptimedb-initializer` image and deploy it to the cluster;
+
    - Deploy the dependencies (e.g., etcd, Kafka, etc);
    
 - `tests/e2e/setup/delete-cluster.sh`: Destroy the E2E cluster;
@@ -28,10 +32,3 @@ In the root directory of the project, run the following commands:
 ```console
 make e2e
 ```
-
-If you run the E2E on macOS, you need to use `sudo` because the [`cloud-kind-provider`](https://github.com/kubernetes-sigs/cloud-provider-kind?tab=readme-ov-file#install) only supports running as an administrator.
-
-```console
-sudo make e2e
-```
-

@@ -21,18 +21,18 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/client-go/util/homedir"
-
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/homedir"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	greptimev1alpha1 "github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
+	"github.com/GreptimeTeam/greptimedb-operator/tests/e2e/helper"
 )
 
 var (
-	k8sClient client.Client
+	h *helper.Helper
 )
 
 func TestGreptimeDBOperator(t *testing.T) {
@@ -57,9 +57,12 @@ var _ = BeforeSuite(func() {
 	err = apiextensionsv1.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 
-	k8sClient, err = client.New(cfg, client.Options{Scheme: scheme.Scheme})
+	client, err := client.New(cfg, client.Options{Scheme: scheme.Scheme})
 	Expect(err).NotTo(HaveOccurred())
-	Expect(k8sClient).NotTo(BeNil())
+	Expect(client).NotTo(BeNil())
+
+	// Create a new helper instance.
+	h = helper.New(client)
 })
 
 var _ = AfterSuite(func() {})
