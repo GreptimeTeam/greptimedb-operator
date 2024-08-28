@@ -73,7 +73,7 @@ spec:
   datanode:
     httpPort: 4000
     rpcPort: 4001
-    replicas: 3
+    replicas: 1
     storage:
       dataHome: /data/greptimedb
       mountPath: /data/greptimedb

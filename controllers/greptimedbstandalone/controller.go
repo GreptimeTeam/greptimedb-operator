@@ -82,9 +82,10 @@ func Setup(mgr ctrl.Manager, _ *options.Options) error {
 // +kubebuilder:rbac:groups=monitoring.coreos.com,resources=podmonitors,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=apiextensions.k8s.io,resources=customresourcedefinitions,verbs=get;list;watch
 
-func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (result ctrl.Result, err error) {
+func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	klog.V(2).Infof("Reconciling GreptimeDBStandalone: %s", req.NamespacedName)
 
+	var err error
 	standalone := new(v1alpha1.GreptimeDBStandalone)
 	if err := r.Get(ctx, req.NamespacedName, standalone); err != nil {
 		if k8serrors.IsNotFound(err) {
@@ -110,24 +111,31 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (result ct
 
 	if err = r.addFinalizer(ctx, standalone); err != nil {
 		r.Recorder.Event(standalone, corev1.EventTypeWarning, "AddFinalizerFailed", fmt.Sprintf("Add finalizer failed: %v", err))
-		return
+		return ctrl.Result{}, err
 	}
 
 	if err = r.validate(ctx, standalone); err != nil {
 		r.Recorder.Event(standalone, corev1.EventTypeWarning, "InvalidStandalone", fmt.Sprintf("Invalid standalone: %v", err))
-		return
-	}
-
-	if err = standalone.SetDefaults(); err != nil {
-		r.Recorder.Event(standalone, corev1.EventTypeWarning, "SetDefaultValuesFailed", fmt.Sprintf("Set default values failed: %v", err))
-		return
+		return ctrl.Result{}, err
 	}
 
 	// Means the standalone is just created.
 	if len(standalone.Status.StandalonePhase) == 0 {
 		klog.Infof("Start to create the standalone '%s/%s'", standalone.Namespace, standalone.Name)
+
+		if err = standalone.SetDefaults(); err != nil {
+			r.Recorder.Event(standalone, corev1.EventTypeWarning, "SetDefaultValuesFailed", fmt.Sprintf("Set default values failed: %v", err))
+			return ctrl.Result{}, err
+		}
+
+		// Update the default values to the standalone spec.
+		if err = r.Update(ctx, standalone); err != nil {
+			r.Recorder.Event(standalone, corev1.EventTypeWarning, "UpdateStandaloneFailed", fmt.Sprintf("Update standalone failed: %v", err))
+			return ctrl.Result{}, err
+		}
+
 		if err = r.setStandaloneStatus(ctx, standalone, v1alpha1.PhaseStarting); err != nil {
-			return
+			return ctrl.Result{}, err
 		}
 	}
 

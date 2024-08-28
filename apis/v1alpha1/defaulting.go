@@ -39,7 +39,7 @@ var (
 	// The default replicas for frontend/meta/datanode.
 	defaultFrontendReplicas int32 = 1
 	defaultMetaReplicas     int32 = 1
-	defaultDatanodeReplicas int32 = 3
+	defaultDatanodeReplicas int32 = 1
 	defaultFlownodeReplicas int32 = 1
 
 	// The default storage settings for datanode.
