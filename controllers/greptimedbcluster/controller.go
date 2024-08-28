@@ -101,9 +101,10 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 // +kubebuilder:rbac:groups=apiextensions.k8s.io,resources=customresourcedefinitions,verbs=get;list;watch
 
 // Reconcile is reconciliation loop for GreptimeDBCluster.
-func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (result ctrl.Result, err error) {
+func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	klog.V(2).Infof("Reconciling GreptimeDBCluster: %s", req.NamespacedName)
 
+	var err error
 	cluster := new(v1alpha1.GreptimeDBCluster)
 	if err := r.Get(ctx, req.NamespacedName, cluster); err != nil {
 		if k8serrors.IsNotFound(err) {
@@ -129,24 +130,31 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (result ct
 
 	if err = r.addFinalizer(ctx, cluster); err != nil {
 		r.Recorder.Event(cluster, corev1.EventTypeWarning, "AddFinalizerFailed", fmt.Sprintf("Add finalizer failed: %v", err))
-		return
+		return ctrl.Result{}, err
 	}
 
 	if err = r.validate(ctx, cluster); err != nil {
 		r.Recorder.Event(cluster, corev1.EventTypeWarning, "InvalidCluster", fmt.Sprintf("Invalid cluster: %v", err))
-		return
-	}
-
-	if err = cluster.SetDefaults(); err != nil {
-		r.Recorder.Event(cluster, corev1.EventTypeWarning, "SetDefaultValuesFailed", fmt.Sprintf("Set default values failed: %v", err))
-		return
+		return ctrl.Result{}, err
 	}
 
 	// Means the cluster is just created.
 	if len(cluster.Status.ClusterPhase) == 0 {
 		klog.Infof("Start to create the cluster '%s/%s'", cluster.Namespace, cluster.Name)
+
+		if err = cluster.SetDefaults(); err != nil {
+			r.Recorder.Event(cluster, corev1.EventTypeWarning, "SetDefaultValuesFailed", fmt.Sprintf("Set default values failed: %v", err))
+			return ctrl.Result{}, err
+		}
+
+		// Update the default values to the cluster spec.
+		if err = r.Update(ctx, cluster); err != nil {
+			r.Recorder.Event(cluster, corev1.EventTypeWarning, "UpdateClusterFailed", fmt.Sprintf("Update cluster failed: %v", err))
+			return ctrl.Result{}, err
+		}
+
 		if err = r.updateClusterStatus(ctx, cluster, v1alpha1.PhaseStarting); err != nil {
-			return
+			return ctrl.Result{}, err
 		}
 	}
 
