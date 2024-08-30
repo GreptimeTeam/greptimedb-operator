@@ -357,7 +357,7 @@ func (s *standaloneBuilder) servicePorts() []corev1.ServicePort {
 		{
 			Name:     "http",
 			Protocol: corev1.ProtocolTCP,
-			Port:     s.standalone.Spec.HTTPServicePort,
+			Port:     s.standalone.Spec.HTTPPort,
 		},
 		{
 			Name:     "mysql",
@@ -382,7 +382,7 @@ func (s *standaloneBuilder) containerPorts() []corev1.ContainerPort {
 		{
 			Name:          "http",
 			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: s.standalone.Spec.HTTPServicePort,
+			ContainerPort: s.standalone.Spec.HTTPPort,
 		},
 		{
 			Name:          "mysql",
@@ -403,7 +403,7 @@ func (s *standaloneBuilder) generateMainContainerArgs() []string {
 		"--data-home", "/data",
 		"--rpc-addr", fmt.Sprintf("0.0.0.0:%d", s.standalone.Spec.RPCPort),
 		"--mysql-addr", fmt.Sprintf("0.0.0.0:%d", s.standalone.Spec.MySQLPort),
-		"--http-addr", fmt.Sprintf("0.0.0.0:%d", s.standalone.Spec.HTTPServicePort),
+		"--http-addr", fmt.Sprintf("0.0.0.0:%d", s.standalone.Spec.HTTPPort),
 		"--postgres-addr", fmt.Sprintf("0.0.0.0:%d", s.standalone.Spec.PostgreSQLPort),
 		"--config-file", path.Join(constant.GreptimeDBConfigDir, constant.GreptimeDBConfigFileName),
 	}

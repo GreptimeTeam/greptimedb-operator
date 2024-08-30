@@ -30,11 +30,11 @@ var (
 	defautlHealthEndpoint = "/health"
 
 	// The default settings for GreptimeDBClusterSpec.
-	defaultHTTPPort       = 4000
-	defaultRPCPort        = 4001
-	defaultMySQLPort      = 4002
-	defaultPostgreSQLPort = 4003
-	defaultMetaRPCPort    = 3002
+	defaultHTTPPort       int32 = 4000
+	defaultRPCPort        int32 = 4001
+	defaultMySQLPort      int32 = 4002
+	defaultPostgreSQLPort int32 = 4003
+	defaultMetaRPCPort    int32 = 3002
 
 	// The default replicas for frontend/meta/datanode.
 	defaultFrontendReplicas int32 = 1
@@ -84,17 +84,17 @@ func (in *GreptimeDBStandalone) SetDefaults() error {
 					ProbeHandler: corev1.ProbeHandler{
 						HTTPGet: &corev1.HTTPGetAction{
 							Path: defautlHealthEndpoint,
-							Port: intstr.FromInt(defaultHTTPPort),
+							Port: intstr.FromInt32(defaultHTTPPort),
 						},
 					},
 				},
 			},
 		},
-		HTTPServicePort: int32(defaultHTTPPort),
-		RPCPort:         int32(defaultRPCPort),
-		MySQLPort:       int32(defaultMySQLPort),
-		PostgreSQLPort:  int32(defaultPostgreSQLPort),
-		Version:         defaultVersion,
+		HTTPPort:       defaultHTTPPort,
+		RPCPort:        defaultRPCPort,
+		MySQLPort:      defaultMySQLPort,
+		PostgreSQLPort: defaultPostgreSQLPort,
+		Version:        defaultVersion,
 		LocalStorage: &StorageSpec{
 			Name:                defaultStandaloneStorageName,
 			StorageSize:         defaultDataNodeStorageSize,
@@ -131,17 +131,17 @@ func (in *GreptimeDBCluster) defaultClusterSpec() *GreptimeDBClusterSpec {
 					ProbeHandler: corev1.ProbeHandler{
 						HTTPGet: &corev1.HTTPGetAction{
 							Path: defautlHealthEndpoint,
-							Port: intstr.FromInt(defaultHTTPPort),
+							Port: intstr.FromInt32(defaultHTTPPort),
 						},
 					},
 				},
 			},
 		},
 		Initializer:    &InitializerSpec{Image: defaultInitializer},
-		HTTPPort:       int32(defaultHTTPPort),
-		RPCPort:        int32(defaultRPCPort),
-		MySQLPort:      int32(defaultMySQLPort),
-		PostgreSQLPort: int32(defaultPostgreSQLPort),
+		HTTPPort:       defaultHTTPPort,
+		RPCPort:        defaultRPCPort,
+		MySQLPort:      defaultMySQLPort,
+		PostgreSQLPort: defaultPostgreSQLPort,
 		Version:        defaultVersion,
 	}
 
@@ -175,8 +175,8 @@ func (in *GreptimeDBCluster) defaultClusterSpec() *GreptimeDBClusterSpec {
 			ComponentSpec: ComponentSpec{
 				Template: &PodTemplateSpec{},
 			},
-			RPCPort:              int32(defaultMetaRPCPort),
-			HTTPPort:             int32(defaultHTTPPort),
+			RPCPort:              defaultMetaRPCPort,
+			HTTPPort:             defaultHTTPPort,
 			EnableRegionFailover: &enableRegionFailover,
 		}
 		if in.Spec.Meta.Replicas == nil {
@@ -197,8 +197,8 @@ func (in *GreptimeDBCluster) defaultClusterSpec() *GreptimeDBClusterSpec {
 				WalDir:              defaultWalDir,
 				DataHome:            defaultDataNodeStorageMountPath,
 			},
-			RPCPort:  int32(defaultRPCPort),
-			HTTPPort: int32(defaultHTTPPort),
+			RPCPort:  defaultRPCPort,
+			HTTPPort: defaultHTTPPort,
 		}
 		if in.Spec.Datanode.Replicas == nil {
 			in.Spec.Datanode.Replicas = proto.Int32(defaultDatanodeReplicas)
@@ -210,7 +210,7 @@ func (in *GreptimeDBCluster) defaultClusterSpec() *GreptimeDBClusterSpec {
 			ComponentSpec: ComponentSpec{
 				Template: &PodTemplateSpec{},
 			},
-			RPCPort: int32(defaultRPCPort),
+			RPCPort: defaultRPCPort,
 		}
 		if in.Spec.Flownode.Replicas == nil {
 			in.Spec.Flownode.Replicas = proto.Int32(defaultFlownodeReplicas)
@@ -248,7 +248,7 @@ func (in *GreptimeDBCluster) mergeFrontendTemplate() error {
 		}
 
 		// Reconfigure the probe settings based on the HTTP port.
-		in.Spec.Frontend.Template.MainContainer.LivenessProbe.HTTPGet.Port = intstr.FromInt(int(in.Spec.HTTPPort))
+		in.Spec.Frontend.Template.MainContainer.LivenessProbe.HTTPGet.Port = intstr.FromInt32(in.Spec.HTTPPort)
 	}
 
 	return nil
@@ -262,7 +262,7 @@ func (in *GreptimeDBCluster) mergeMetaTemplate() error {
 		}
 
 		// Reconfigure the probe settings based on the HTTP port.
-		in.Spec.Meta.Template.MainContainer.LivenessProbe.HTTPGet.Port = intstr.FromInt(int(in.Spec.Meta.HTTPPort))
+		in.Spec.Meta.Template.MainContainer.LivenessProbe.HTTPGet.Port = intstr.FromInt32(in.Spec.Meta.HTTPPort)
 	}
 
 	return nil
@@ -276,7 +276,7 @@ func (in *GreptimeDBCluster) mergeDatanodeTemplate() error {
 		}
 
 		// Reconfigure the probe settings based on the HTTP port.
-		in.Spec.Datanode.Template.MainContainer.LivenessProbe.HTTPGet.Port = intstr.FromInt(int(in.Spec.Datanode.HTTPPort))
+		in.Spec.Datanode.Template.MainContainer.LivenessProbe.HTTPGet.Port = intstr.FromInt32(in.Spec.Datanode.HTTPPort)
 	}
 
 	return nil

@@ -32,7 +32,7 @@ type GreptimeDBStandaloneSpec struct {
 	TLS *TLSSpec `json:"tls,omitempty"`
 
 	// +optional
-	HTTPServicePort int32 `json:"httpPort,omitempty"`
+	HTTPPort int32 `json:"httpPort,omitempty"`
 
 	// +optional
 	RPCPort int32 `json:"rpcPort,omitempty"`
