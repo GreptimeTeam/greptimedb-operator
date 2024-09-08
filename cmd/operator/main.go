@@ -24,7 +24,7 @@ import (
 )
 
 func main() {
-	rand.Seed(time.Now().UnixNano())
+	rand.New(rand.NewSource(time.Now().UnixNano()))
 	command := app.NewOperatorCommand()
 	if err := command.Execute(); err != nil {
 		fmt.Fprintln(os.Stderr, err.Error())
