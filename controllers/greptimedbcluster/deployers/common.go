@@ -106,7 +106,7 @@ func (c *CommonBuilder) MountConfigDir(template *corev1.PodTemplateSpec) {
 	common.MountConfigDir(c.Cluster.Name, c.ComponentKind, template)
 }
 
-func UpdateStatus(ctx context.Context, input *v1alpha1.GreptimeDBCluster, kc client.Client, opts ...client.UpdateOption) error {
+func UpdateStatus(ctx context.Context, input *v1alpha1.GreptimeDBCluster, kc client.Client, opts ...client.SubResourceUpdateOption) error {
 	cluster := input.DeepCopy()
 	status := cluster.Status
 	return retry.RetryOnConflict(retry.DefaultBackoff, func() (err error) {

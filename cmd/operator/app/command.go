@@ -28,6 +28,7 @@ import (
 	"k8s.io/klog/v2/klogr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
+	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 	"github.com/GreptimeTeam/greptimedb-operator/cmd/operator/app/options"
@@ -66,10 +67,12 @@ func NewOperatorCommand() *cobra.Command {
 
 			mgr, err := ctrl.NewManager(cfg, ctrl.Options{
 				Scheme:                 scheme,
-				MetricsBindAddress:     o.MetricsAddr,
 				HealthProbeBindAddress: o.HealthProbeAddr,
 				LeaderElection:         o.EnableLeaderElection,
 				LeaderElectionID:       leaderElectionID,
+				Metrics: metricsserver.Options{
+					BindAddress: o.MetricsAddr,
+				},
 			})
 			if err != nil {
 				setupLog.Error(err, "unable to start manager")

@@ -354,7 +354,7 @@ func (r *Reconciler) setObservedGeneration(standalone *v1alpha1.GreptimeDBStanda
 	}
 }
 
-func UpdateStatus(ctx context.Context, input *v1alpha1.GreptimeDBStandalone, kc client.Client, opts ...client.UpdateOption) error {
+func UpdateStatus(ctx context.Context, input *v1alpha1.GreptimeDBStandalone, kc client.Client, opts ...client.SubResourceUpdateOption) error {
 	standalone := input.DeepCopy()
 	status := standalone.Status
 	return retry.RetryOnConflict(retry.DefaultBackoff, func() (err error) {
