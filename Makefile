@@ -112,10 +112,10 @@ test: manifests generate fmt vet envtest ## Run tests.
 	./cmd/initializer/... \
 	-coverprofile cover.out
 
-.PHONY: check-docs
-check-docs: docs ## Check docs
+.PHONY: check-api-docs
+check-api-docs: api-docs ## Check docs
 	@git diff --quiet || \
-    (echo "Need to update documentation, please run 'make docs'"; \
+    (echo "Need to update documentation, please run 'make api-docs'"; \
 	exit 1)
 
 .PHONY: kind-up
@@ -179,6 +179,17 @@ deploy: manifests kustomize ## Deploy controller to the K8s cluster specified in
 undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/config. Call with ignore-not-found=true to ignore resource not found errors during deletion.
 	$(KUSTOMIZE) build config/default | kubectl delete --ignore-not-found=$(ignore-not-found) -f -
 
+##@ Documentation
+
+.PHONY: api-docs
+api-docs: crd-ref-docs ## Generate api references docs.
+	$(CRD_REF_DOCS) \
+      --source-path=./apis \
+      --renderer=markdown \
+      --output-path=./docs/api-references/docs.md \
+      --templates-dir=./docs/api-references/template/ \
+      --config=./docs/api-references/config.yaml
+
 ##@ Build Dependencies
 
 ## Location to install dependencies to
@@ -221,7 +232,3 @@ golangci-lint: ## Install golangci-lint.
 .PHONY: crd-ref-docs
 crd-ref-docs: ## Install crd-ref-docs.
 	GOBIN=$(LOCALBIN) go install github.com/elastic/crd-ref-docs@$(CRD_REF_DOCS_VERSION)
-
-.PHONY: docs
-docs: crd-ref-docs ## Generate api references docs.
-	$(CRD_REF_DOCS) --source-path=./apis --renderer=markdown --output-path=./docs/api-references/docs.md --templates-dir=./docs/api-references/template/ --config=./docs/api-references/config.yaml

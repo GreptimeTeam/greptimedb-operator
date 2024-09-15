@@ -54,9 +54,10 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
 
-      - name: Check docs
+      - name: Check api docs
+        shell: bash
         run: |
-          make check-docs    
+          make check-api-docs
 
       - name: Check code generation
         shell: bash
