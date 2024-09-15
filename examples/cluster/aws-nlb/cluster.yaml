@@ -1,0 +1,22 @@
+apiVersion: greptime.io/v1alpha1
+kind: GreptimeDBCluster
+metadata:
+  name: cluster-with-aws-nlb
+spec:
+  base:
+    main:
+      image: greptime/greptimedb:latest
+  frontend:
+    replicas: 1
+    service:
+      type: LoadBalancer
+      loadBalancerClass: service.k8s.aws/nlb
+      annotations:
+        service.beta.kubernetes.io/aws-load-balancer-scheme: "internet-facing"
+        external-dns.alpha.kubernetes.io/hostname: "test.greptime.io"
+  meta:
+    replicas: 1
+    etcdEndpoints:
+      - "etcd.etcd-cluster.svc.cluster.local:2379"
+  datanode:
+    replicas: 1

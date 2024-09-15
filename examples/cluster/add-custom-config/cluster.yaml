@@ -1,0 +1,31 @@
+apiVersion: greptime.io/v1alpha1
+kind: GreptimeDBCluster
+metadata:
+  name: cluster-with-config
+spec:
+  base:
+    main:
+      image: greptime/greptimedb:latest
+  frontend:
+    replicas: 1
+  meta:
+    replicas: 1
+    etcdEndpoints:
+      - "etcd.etcd-cluster.svc.cluster.local:2379"
+  datanode:
+    replicas: 1
+    config: |
+      [[region_engine]]
+      [region_engine.mito]
+      # Number of region workers
+      num_workers = 8
+      # Request channel size of each worker
+      worker_channel_size = 128
+      # Max batch size for a worker to handle requests
+      worker_request_batch_size = 64
+      # Number of meta action updated to trigger a new checkpoint for the manifest
+      manifest_checkpoint_distance = 10
+      # Whether to compress manifest and checkpoint file by gzip (default false).
+      compress_manifest = false
+      # Max number of running background jobs
+      max_background_jobs = 4

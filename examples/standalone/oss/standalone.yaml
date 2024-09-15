@@ -1,0 +1,15 @@
+apiVersion: greptime.io/v1alpha1
+kind: GreptimeDBStandalone
+metadata:
+  name: standalone-with-oss
+spec:
+  base:
+    main:
+      image: greptime/greptimedb:latest
+  objectStorage:
+    oss:
+      bucket: "greptimedb"
+      secretName: "oss-credentials"
+      root: "standalone-with-oss-data"
+      endpoint: "oss-cn-hangzhou.aliyuncs.com"
+      region: "cn-hangzhou"
