@@ -1,4 +1,4 @@
-# GreptimeDB Operator API Reference
+# GreptimeDB Operator API References
 
 ## Packages
 - [greptime.io/v1alpha1](#greptimeiov1alpha1)
@@ -31,8 +31,8 @@ _Appears in:_
 - [FrontendSpec](#frontendspec)
 - [MetaSpec](#metaspec)
 
-| Field | Description |
-| --- | --- |
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
 | `replicas` _integer_ | The number of replicas of the components. |  | Minimum: 0 <br /> |
 | `config` _string_ | The content of the configuration file of the component in TOML format. |  |  |
 | `template` _[PodTemplateSpec](#podtemplatespec)_ | Template defines the pod template for the component, if not specified, the pod template will use the default value. |  |  |
@@ -50,8 +50,8 @@ _Appears in:_
 - [GreptimeDBClusterStatus](#greptimedbclusterstatus)
 - [GreptimeDBStandaloneStatus](#greptimedbstandalonestatus)
 
-| Field | Description |
-| --- | --- |
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
 | `type` _[ConditionType](#conditiontype)_ | Type of deployment condition. |  |  |
 | `lastUpdateTime` _[Time](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#time-v1-meta)_ | The last time this condition was updated. |  |  |
 | `lastTransitionTime` _[Time](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#time-v1-meta)_ | Last time the condition transitioned from one status to another. |  |  |
@@ -71,6 +71,7 @@ _Appears in:_
 - [Condition](#condition)
 
 | Field | Description |
+| --- | --- |
 | `Ready` | ConditionTypeReady indicates that the GreptimeDB cluster is ready to serve requests.<br />Every component in the cluster are all ready.<br /> |
 | `Progressing` | ConditionTypeProgressing indicates that the GreptimeDB cluster is progressing.<br /> |
 
@@ -86,8 +87,8 @@ DatanodeSpec is the specification for datanode component.
 _Appears in:_
 - [GreptimeDBClusterSpec](#greptimedbclusterspec)
 
-| Field | Description |
-| --- | --- |
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
 | `replicas` _integer_ | The number of replicas of the components. |  | Minimum: 0 <br /> |
 | `config` _string_ | The content of the configuration file of the component in TOML format. |  |  |
 | `template` _[PodTemplateSpec](#podtemplatespec)_ | Template defines the pod template for the component, if not specified, the pod template will use the default value. |  |  |
@@ -107,8 +108,8 @@ _Appears in:_
 _Appears in:_
 - [GreptimeDBClusterStatus](#greptimedbclusterstatus)
 
-| Field | Description |
-| --- | --- |
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
 | `replicas` _integer_ |  |  |  |
 | `readyReplicas` _integer_ |  |  |  |
 
@@ -124,8 +125,8 @@ FlownodeSpec is the specification for flownode component.
 _Appears in:_
 - [GreptimeDBClusterSpec](#greptimedbclusterspec)
 
-| Field | Description |
-| --- | --- |
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
 | `replicas` _integer_ | The number of replicas of the components. |  | Minimum: 0 <br /> |
 | `config` _string_ | The content of the configuration file of the component in TOML format. |  |  |
 | `template` _[PodTemplateSpec](#podtemplatespec)_ | Template defines the pod template for the component, if not specified, the pod template will use the default value. |  |  |
@@ -143,8 +144,8 @@ _Appears in:_
 _Appears in:_
 - [GreptimeDBClusterStatus](#greptimedbclusterstatus)
 
-| Field | Description |
-| --- | --- |
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
 | `replicas` _integer_ |  |  |  |
 | `readyReplicas` _integer_ |  |  |  |
 
@@ -160,8 +161,8 @@ FrontendSpec is the specification for frontend component.
 _Appears in:_
 - [GreptimeDBClusterSpec](#greptimedbclusterspec)
 
-| Field | Description |
-| --- | --- |
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
 | `replicas` _integer_ | The number of replicas of the components. |  | Minimum: 0 <br /> |
 | `config` _string_ | The content of the configuration file of the component in TOML format. |  |  |
 | `template` _[PodTemplateSpec](#podtemplatespec)_ | Template defines the pod template for the component, if not specified, the pod template will use the default value. |  |  |
@@ -180,8 +181,8 @@ _Appears in:_
 _Appears in:_
 - [GreptimeDBClusterStatus](#greptimedbclusterstatus)
 
-| Field | Description |
-| --- | --- |
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
 | `replicas` _integer_ |  |  |  |
 | `readyReplicas` _integer_ |  |  |  |
 
@@ -197,8 +198,8 @@ _Appears in:_
 _Appears in:_
 - [ObjectStorageProvider](#objectstorageprovider)
 
-| Field | Description |
-| --- | --- |
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
 | `bucket` _string_ | The data will be stored in the bucket. |  |  |
 | `root` _string_ | The gcs directory path. |  |  |
 | `scope` _string_ | The scope for gcs. |  |  |
@@ -217,8 +218,8 @@ GreptimeDBCluster is the Schema for the greptimedbclusters API
 _Appears in:_
 - [GreptimeDBClusterList](#greptimedbclusterlist)
 
-| Field | Description |
-| --- | --- |
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
 | `apiVersion` _string_ | `greptime.io/v1alpha1` | | |
 | `kind` _string_ | `GreptimeDBCluster` | | |
 | `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
@@ -235,8 +236,8 @@ GreptimeDBClusterList contains a list of GreptimeDBCluster
 
 
 
-| Field | Description |
-| --- | --- |
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
 | `apiVersion` _string_ | `greptime.io/v1alpha1` | | |
 | `kind` _string_ | `GreptimeDBClusterList` | | |
 | `metadata` _[ListMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#listmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
@@ -254,8 +255,8 @@ GreptimeDBClusterSpec defines the desired state of GreptimeDBCluster
 _Appears in:_
 - [GreptimeDBCluster](#greptimedbcluster)
 
-| Field | Description |
-| --- | --- |
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
 | `base` _[PodTemplateSpec](#podtemplatespec)_ | Base is the base pod template for all components and can be overridden by template of individual component. |  |  |
 | `frontend` _[FrontendSpec](#frontendspec)_ | Frontend is the specification of frontend node. |  |  |
 | `meta` _[MetaSpec](#metaspec)_ | Meta is the specification of meta node. |  |  |
@@ -286,8 +287,8 @@ GreptimeDBStandalone is the Schema for the greptimedbstandalones API
 _Appears in:_
 - [GreptimeDBStandaloneList](#greptimedbstandalonelist)
 
-| Field | Description |
-| --- | --- |
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
 | `apiVersion` _string_ | `greptime.io/v1alpha1` | | |
 | `kind` _string_ | `GreptimeDBStandalone` | | |
 | `metadata` _[ObjectMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#objectmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
@@ -304,8 +305,8 @@ GreptimeDBStandaloneList contains a list of GreptimeDBStandalone
 
 
 
-| Field | Description |
-| --- | --- |
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
 | `apiVersion` _string_ | `greptime.io/v1alpha1` | | |
 | `kind` _string_ | `GreptimeDBStandaloneList` | | |
 | `metadata` _[ListMeta](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#listmeta-v1-meta)_ | Refer to Kubernetes API documentation for fields of `metadata`. |  |  |
@@ -323,8 +324,8 @@ GreptimeDBStandaloneSpec defines the desired state of GreptimeDBStandalone
 _Appears in:_
 - [GreptimeDBStandalone](#greptimedbstandalone)
 
-| Field | Description |
-| --- | --- |
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
 | `base` _[PodTemplateSpec](#podtemplatespec)_ | Base is the base pod template for all components and can be overridden by template of individual component. |  |  |
 | `service` _[ServiceSpec](#servicespec)_ |  |  |  |
 | `tls` _[TLSSpec](#tlsspec)_ | The TLS configurations of the greptimedb. |  |  |
@@ -356,8 +357,8 @@ _Appears in:_
 - [GreptimeDBClusterSpec](#greptimedbclusterspec)
 - [GreptimeDBStandaloneSpec](#greptimedbstandalonespec)
 
-| Field | Description |
-| --- | --- |
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
 | `image` _string_ |  |  |  |
 
 
@@ -372,8 +373,8 @@ KafkaRemoteWal is the specification for remote WAL that uses Kafka.
 _Appears in:_
 - [RemoteWalProvider](#remotewalprovider)
 
-| Field | Description |
-| --- | --- |
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
 | `brokerEndpoints` _string array_ |  |  |  |
 
 
@@ -389,8 +390,8 @@ Most of the fields of MainContainerSpec are from 'corev1.Container'.
 _Appears in:_
 - [PodTemplateSpec](#podtemplatespec)
 
-| Field | Description |
-| --- | --- |
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
 | `image` _string_ | The main container image name of the component. |  |  |
 | `resources` _[ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#resourcerequirements-v1-core)_ | The resource requirements of the main container. |  |  |
 | `command` _string array_ | Entrypoint array. Not executed within a shell.<br />The container image's ENTRYPOINT is used if this is not provided.<br />Variable references $(VAR_NAME) are expanded using the container's environment. If a variable<br />cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced<br />to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will<br />produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless<br />of whether the variable exists or not. Cannot be updated.<br />More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell<br />Command field is from 'corev1.Container.Command'. |  |  |
@@ -415,8 +416,8 @@ MetaSpec is the specification for meta component.
 _Appears in:_
 - [GreptimeDBClusterSpec](#greptimedbclusterspec)
 
-| Field | Description |
-| --- | --- |
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
 | `replicas` _integer_ | The number of replicas of the components. |  | Minimum: 0 <br /> |
 | `config` _string_ | The content of the configuration file of the component in TOML format. |  |  |
 | `template` _[PodTemplateSpec](#podtemplatespec)_ | Template defines the pod template for the component, if not specified, the pod template will use the default value. |  |  |
@@ -439,8 +440,8 @@ _Appears in:_
 _Appears in:_
 - [GreptimeDBClusterStatus](#greptimedbclusterstatus)
 
-| Field | Description |
-| --- | --- |
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
 | `replicas` _integer_ |  |  |  |
 | `readyReplicas` _integer_ |  |  |  |
 | `etcdEndpoints` _string array_ |  |  |  |
@@ -457,8 +458,8 @@ _Appears in:_
 _Appears in:_
 - [ObjectStorageProvider](#objectstorageprovider)
 
-| Field | Description |
-| --- | --- |
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
 | `bucket` _string_ | The data will be stored in the bucket. |  |  |
 | `region` _string_ | The region of the bucket. |  |  |
 | `endpoint` _string_ | The endpoint of the bucket. |  |  |
@@ -478,8 +479,8 @@ _Appears in:_
 - [GreptimeDBClusterSpec](#greptimedbclusterspec)
 - [GreptimeDBStandaloneSpec](#greptimedbstandalonespec)
 
-| Field | Description |
-| --- | --- |
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
 | `s3` _[S3StorageProvider](#s3storageprovider)_ |  |  |  |
 | `oss` _[OSSStorageProvider](#ossstorageprovider)_ |  |  |  |
 | `gcs` _[GCSStorageProvider](#gcsstorageprovider)_ |  |  |  |
@@ -500,6 +501,7 @@ _Appears in:_
 - [GreptimeDBStandaloneStatus](#greptimedbstandalonestatus)
 
 | Field | Description |
+| --- | --- |
 | `Starting` | PhaseStarting means the controller start to create cluster.<br /> |
 | `Running` | PhaseRunning means all the components of cluster is ready.<br /> |
 | `Updating` | PhaseUpdating means the cluster is updating.<br /> |
@@ -524,8 +526,8 @@ _Appears in:_
 - [GreptimeDBStandaloneSpec](#greptimedbstandalonespec)
 - [MetaSpec](#metaspec)
 
-| Field | Description |
-| --- | --- |
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
 | `annotations` _object (keys:string, values:string)_ | The annotations to be created to the pod. |  |  |
 | `labels` _object (keys:string, values:string)_ | The labels to be created to the pod. |  |  |
 | `main` _[MainContainerSpec](#maincontainerspec)_ | MainContainer defines the specification of the main container of the pod. |  |  |
@@ -557,8 +559,8 @@ _Appears in:_
 - [GreptimeDBClusterSpec](#greptimedbclusterspec)
 - [GreptimeDBStandaloneSpec](#greptimedbstandalonespec)
 
-| Field | Description |
-| --- | --- |
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
 | `enabled` _boolean_ | Enable a Prometheus PodMonitor |  |  |
 | `labels` _object (keys:string, values:string)_ | Prometheus PodMonitor labels. |  |  |
 | `interval` _string_ | Interval at which metrics should be scraped |  |  |
@@ -576,8 +578,8 @@ _Appears in:_
 - [GreptimeDBClusterSpec](#greptimedbclusterspec)
 - [GreptimeDBStandaloneSpec](#greptimedbstandalonespec)
 
-| Field | Description |
-| --- | --- |
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
 | `kafka` _[KafkaRemoteWal](#kafkaremotewal)_ |  |  |  |
 
 
@@ -592,8 +594,8 @@ _Appears in:_
 _Appears in:_
 - [ObjectStorageProvider](#objectstorageprovider)
 
-| Field | Description |
-| --- | --- |
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
 | `bucket` _string_ | The data will be stored in the bucket. |  |  |
 | `region` _string_ | The region of the bucket. |  |  |
 | `endpoint` _string_ | The endpoint of the bucket. |  |  |
@@ -613,8 +615,8 @@ _Appears in:_
 - [FrontendSpec](#frontendspec)
 - [GreptimeDBStandaloneSpec](#greptimedbstandalonespec)
 
-| Field | Description |
-| --- | --- |
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
 | `type` _[ServiceType](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#servicetype-v1-core)_ | type determines how the Service is exposed. |  |  |
 | `annotations` _object (keys:string, values:string)_ | Additional annotations for the service |  |  |
 | `labels` _object (keys:string, values:string)_ | Additional labels for the service |  |  |
@@ -633,8 +635,8 @@ Most of the fields in SlimPodSpec are copied from corev1.PodSpec.
 _Appears in:_
 - [PodTemplateSpec](#podtemplatespec)
 
-| Field | Description |
-| --- | --- |
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
 | `nodeSelector` _object (keys:string, values:string)_ | NodeSelector is a selector which must be true for the pod to fit on a node.<br />Selector which must match a node's labels for the pod to be scheduled on that node.<br />More info: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/<br />NodeSelector field is from 'corev1.PodSpec.NodeSelector'. |  |  |
 | `initContainers` _[Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#container-v1-core) array_ | List of initialization containers belonging to the pod.<br />Init containers are executed in order prior to containers being started. If any<br />init container fails, the pod is considered to have failed and is handled according<br />to its restartPolicy. The name for an init container or normal container must be<br />unique among all containers.<br />Init containers may not have Lifecycle actions, Readiness probes, Liveness probes, or Startup probes.<br />The resourceRequirements of an init container are taken into account during scheduling<br />by finding the highest request/limit for each resource type, and then using the max of<br />that value or the sum of the normal containers. Limits are applied to init containers<br />in a similar fashion.<br />Init containers cannot currently be added or removed.<br />Cannot be updated.<br />More info: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/<br />InitContainers field is from 'corev1.PodSpec.InitContainers'. |  |  |
 | `restartPolicy` _[RestartPolicy](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#restartpolicy-v1-core)_ | Restart policy for all containers within the pod.<br />One of Always, OnFailure, Never.<br />Default to Always.<br />More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#restart-policy<br />RestartPolicy field is from 'corev1.PodSpec.RestartPolicy'. |  |  |
@@ -663,6 +665,7 @@ _Appears in:_
 - [StorageSpec](#storagespec)
 
 | Field | Description |
+| --- | --- |
 | `Retain` | StorageRetainPolicyTypeRetain is the default options.<br />The storage(PVCs) will be retained when the cluster is deleted.<br /> |
 | `Delete` | StorageRetainPolicyTypeDelete specify that the storage will be deleted when the associated StatefulSet delete.<br /> |
 
@@ -679,8 +682,8 @@ _Appears in:_
 - [DatanodeSpec](#datanodespec)
 - [GreptimeDBStandaloneSpec](#greptimedbstandalonespec)
 
-| Field | Description |
-| --- | --- |
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
 | `name` _string_ | The name of the storage. |  |  |
 | `storageClassName` _string_ | The name of the storage class to use for the volume. |  |  |
 | `storageSize` _string_ | The size of the storage. |  | Pattern: `(^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$)` <br /> |
@@ -702,8 +705,8 @@ _Appears in:_
 - [FrontendSpec](#frontendspec)
 - [GreptimeDBStandaloneSpec](#greptimedbstandalonespec)
 
-| Field | Description |
-| --- | --- |
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
 | `secretName` _string_ | The secret name of the TLS certificate, and it must be in the same namespace of the cluster.<br />The secret must contain keys named ca.crt, tls.crt and tls.key. |  |  |
 
 

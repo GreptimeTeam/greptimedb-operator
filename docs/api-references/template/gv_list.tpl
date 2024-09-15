@@ -1,7 +1,7 @@
 {{- define "gvList" -}}
 {{- $groupVersions := . -}}
 
-# GreptimeDB Operator API Reference
+# GreptimeDB Operator API References
 
 ## Packages
 {{- range $groupVersions }}
