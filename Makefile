@@ -20,6 +20,11 @@ DOCKER_BUILD_OPTIONS ?= --network host
 OPERATOR_DOCKERFILE = ./docker/operator/Dockerfile
 INITIALIZER_DOCKERFILE = ./docker/initializer/Dockerfile
 
+ARCH := $(shell uname -m)
+ifeq ($(ARCH),x86_64)
+	ARCH := amd64
+endif
+
 MANIFESTS_DIR = ./manifests
 
 # Use the kubernetes version to run the tests.
@@ -64,7 +69,7 @@ all: build
 
 .PHONY: help
 help: ## Display this help.
-	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-25s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-31s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
 ##@ Development
 
@@ -132,6 +137,10 @@ build: generate fmt vet ## Build greptimedb-operator binary.
 fast-build: ## Build greptimedb-operator binary only.
 	GO111MODULE=on CGO_ENABLED=0 go build -ldflags '${LDFLAGS}' -o bin/greptimedb-operator ./cmd/operator/main.go
 
+.PHONY: build-for-linux
+build-for-linux: ## Build greptimedb-operator binary for linux.
+	GO111MODULE=on CGO_ENABLED=0 GOARCH=$(ARCH) GOOS=linux go build -ldflags '${LDFLAGS}' -o bin/greptimedb-operator ./cmd/operator/main.go
+
 .PHONY: initializer
 initializer: ## Build greptimedb-initializer binary.
 	GO111MODULE=on CGO_ENABLED=0 go build -ldflags '${LDFLAGS}' -o bin/greptimedb-initializer ./cmd/initializer/main.go
@@ -155,6 +164,16 @@ docker-push-operator: ## Push docker image with the greptimedb-operator.
 .PHONY: docker-push-initializer
 docker-push-initializer: ## Push docker image with the greptimedb-initializer.
 	docker push ${IMAGE_REPO}/greptimedb-initializer:${IMAGE_TAG}
+
+.PHONY: build-operator-local-test-image
+build-operator-local-test-image: build-for-linux ## Build the docker image for the greptimedb-operator locally for testing.
+	@cp bin/greptimedb-operator greptimedb-operator # Copy the binary to the root directory because the bin directory is ignored in the .dockerignore file.
+	docker build -t ${IMAGE_REPO}/greptimedb-operator:${IMAGE_TAG} . -f docker/operator/Dockerfile.local
+	@rm greptimedb-operator
+
+.PHONY: push-operator-local-test-image
+push-operator-local-test-image: ## Push the docker image for the greptimedb-operator locally for testing.
+	docker push ${IMAGE_REPO}/greptimedb-operator:${IMAGE_TAG}
 
 ##@ Deployment
 
@@ -184,11 +203,11 @@ undeploy: ## Undeploy controller from the K8s cluster specified in ~/.kube/confi
 .PHONY: api-docs
 api-docs: crd-ref-docs ## Generate api references docs.
 	$(CRD_REF_DOCS) \
-      --source-path=./apis \
-      --renderer=markdown \
-      --output-path=./docs/api-references/docs.md \
-      --templates-dir=./docs/api-references/template/ \
-      --config=./docs/api-references/config.yaml
+		--source-path=./apis \
+		--renderer=markdown \
+		--output-path=./docs/api-references/docs.md \
+		--templates-dir=./docs/api-references/template/ \
+		--config=./docs/api-references/config.yaml
 
 ##@ Build Dependencies
 

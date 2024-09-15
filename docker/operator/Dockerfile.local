@@ -1,0 +1,7 @@
+FROM ubuntu:22.04
+
+WORKDIR /greptimedb-operator
+COPY greptimedb-operator /greptimedb-operator/bin/
+ENV PATH=/greptimedb-operator/bin/:$PATH
+
+ENTRYPOINT [ "greptimedb-operator" ]
