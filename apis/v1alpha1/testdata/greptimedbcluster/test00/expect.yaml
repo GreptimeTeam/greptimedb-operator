@@ -11,6 +11,18 @@ spec:
   rpcPort: 4001
   mysqlPort: 4002
   postgreSQLPort: 4003
+  enableMultiplePVCs: false
+  storage:
+    file:
+      mountPath: /data/greptimedb/data
+      storageRetainPolicy: Retain
+      storageSize: 20Gi
+  wal:
+    raftEngine:
+      file:
+        mountPath: /data/greptimedb/wal
+        storageRetainPolicy: Retain
+        storageSize: 5Gi
   base:
     main:
       image: greptime/greptimedb:latest
@@ -22,6 +34,12 @@ spec:
     replicas: 3
     service:
       type: ClusterIP
+    logging:
+      level: info
+      logsDir: /data/greptimedb/logs
+      onlyLogToStdout: false
+      persistentWithData: false
+      logFormat: text
     template:
       main:
         image: greptime/greptimedb:latest
@@ -34,6 +52,12 @@ spec:
     httpPort: 4000
     rpcPort: 3002
     replicas: 3
+    logging:
+      level: info
+      logsDir: /data/greptimedb/logs
+      onlyLogToStdout: false
+      persistentWithData: false
+      logFormat: text
     template:
       main:
         image: greptime/greptimedb:latest
@@ -45,13 +69,12 @@ spec:
     httpPort: 4000
     rpcPort: 4001
     replicas: 1
-    storage:
-      dataHome: /data/greptimedb
-      mountPath: /data/greptimedb
-      name: datanode
-      storageRetainPolicy: Retain
-      storageSize: 10Gi
-      walDir: /data/greptimedb/wal
+    logging:
+      level: info
+      logsDir: /data/greptimedb/logs
+      onlyLogToStdout: false
+      persistentWithData: false
+      logFormat: text
     template:
       main:
         image: greptime/greptimedb:latest

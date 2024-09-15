@@ -2819,34 +2819,34 @@ spec:
                   httpPort:
                     format: int32
                     type: integer
+                  logging:
+                    properties:
+                      level:
+                        enum:
+                        - info
+                        - error
+                        - warn
+                        - debug
+                        type: string
+                      logFormat:
+                        enum:
+                        - json
+                        - text
+                        type: string
+                      logsDir:
+                        type: string
+                      onlyLogToStdout:
+                        type: boolean
+                      persistentWithData:
+                        type: boolean
+                    type: object
                   replicas:
                     format: int32
-                    minimum: 0
+                    minimum: 1
                     type: integer
                   rpcPort:
                     format: int32
                     type: integer
-                  storage:
-                    properties:
-                      dataHome:
-                        type: string
-                      mountPath:
-                        type: string
-                      name:
-                        type: string
-                      storageClassName:
-                        type: string
-                      storageRetainPolicy:
-                        enum:
-                        - Retain
-                        - Delete
-                        type: string
-                      storageSize:
-                        pattern: (^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$)
-                        type: string
-                      walDir:
-                        type: string
-                    type: object
                   template:
                     properties:
                       activeDeadlineSeconds:
@@ -5609,16 +5609,39 @@ spec:
                           type: object
                         type: array
                     type: object
+                required:
+                - replicas
                 type: object
-              enableInfluxDBProtocol:
+              enableMultiplePVCs:
                 type: boolean
               flownode:
                 properties:
                   config:
                     type: string
+                  logging:
+                    properties:
+                      level:
+                        enum:
+                        - info
+                        - error
+                        - warn
+                        - debug
+                        type: string
+                      logFormat:
+                        enum:
+                        - json
+                        - text
+                        type: string
+                      logsDir:
+                        type: string
+                      onlyLogToStdout:
+                        type: boolean
+                      persistentWithData:
+                        type: boolean
+                    type: object
                   replicas:
                     format: int32
-                    minimum: 0
+                    minimum: 1
                     type: integer
                   rpcPort:
                     format: int32
@@ -8385,14 +8408,37 @@ spec:
                           type: object
                         type: array
                     type: object
+                required:
+                - replicas
                 type: object
               frontend:
                 properties:
                   config:
                     type: string
+                  logging:
+                    properties:
+                      level:
+                        enum:
+                        - info
+                        - error
+                        - warn
+                        - debug
+                        type: string
+                      logFormat:
+                        enum:
+                        - json
+                        - text
+                        type: string
+                      logsDir:
+                        type: string
+                      onlyLogToStdout:
+                        type: boolean
+                      persistentWithData:
+                        type: boolean
+                    type: object
                   replicas:
                     format: int32
-                    minimum: 0
+                    minimum: 1
                     type: integer
                   service:
                     properties:
@@ -11176,6 +11222,8 @@ spec:
                       secretName:
                         type: string
                     type: object
+                required:
+                - replicas
                 type: object
               httpPort:
                 format: int32
@@ -11200,9 +11248,30 @@ spec:
                   httpPort:
                     format: int32
                     type: integer
+                  logging:
+                    properties:
+                      level:
+                        enum:
+                        - info
+                        - error
+                        - warn
+                        - debug
+                        type: string
+                      logFormat:
+                        enum:
+                        - json
+                        - text
+                        type: string
+                      logsDir:
+                        type: string
+                      onlyLogToStdout:
+                        type: boolean
+                      persistentWithData:
+                        type: boolean
+                    type: object
                   replicas:
                     format: int32
-                    minimum: 0
+                    minimum: 1
                     type: integer
                   rpcPort:
                     format: int32
@@ -13971,16 +14040,66 @@ spec:
                           type: object
                         type: array
                     type: object
+                required:
+                - replicas
                 type: object
               mysqlPort:
                 format: int32
                 type: integer
-              objectStorage:
+              postgreSQLPort:
+                format: int32
+                type: integer
+              prometheusMonitor:
                 properties:
-                  cacheCapacity:
+                  enabled:
+                    type: boolean
+                  interval:
                     type: string
-                  cachePath:
-                    type: string
+                  labels:
+                    additionalProperties:
+                      type: string
+                    type: object
+                type: object
+              rpcPort:
+                format: int32
+                type: integer
+              storage:
+                properties:
+                  cache:
+                    properties:
+                      cacheCapacity:
+                        type: string
+                      storage:
+                        properties:
+                          mountPath:
+                            type: string
+                          storageClassName:
+                            type: string
+                          storageRetainPolicy:
+                            enum:
+                            - Retain
+                            - Delete
+                            type: string
+                          storageSize:
+                            pattern: (^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$)
+                            type: string
+                        type: object
+                    type: object
+                  file:
+                    properties:
+                      mountPath:
+                        type: string
+                      storageClassName:
+                        type: string
+                      storageRetainPolicy:
+                        enum:
+                        - Retain
+                        - Delete
+                        type: string
+                      storageSize:
+                        pattern: (^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$)
+                        type: string
+                    type: object
                   gcs:
                     properties:
                       bucket:
@@ -14021,21 +14140,9 @@ spec:
                         type: string
                     type: object
                 type: object
-              postgreSQLPort:
-                format: int32
-                type: integer
-              prometheusMonitor:
-                properties:
-                  enabled:
-                    type: boolean
-                  interval:
-                    type: string
-                  labels:
-                    additionalProperties:
-                      type: string
-                    type: object
-                type: object
-              remoteWal:
+              version:
+                type: string
+              wal:
                 properties:
                   kafka:
                     properties:
@@ -14044,12 +14151,29 @@ spec:
                           type: string
                         type: array
                     type: object
+                  raftEngine:
+                    properties:
+                      file:
+                        properties:
+                          mountPath:
+                            type: string
+                          storageClassName:
+                            type: string
+                          storageRetainPolicy:
+                            enum:
+                            - Retain
+                            - Delete
+                            type: string
+                          storageSize:
+                            pattern: (^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$)
+                            type: string
+                        type: object
+                    type: object
                 type: object
-              rpcPort:
-                format: int32
-                type: integer
-              version:
-                type: string
+            required:
+            - datanode
+            - frontend
+            - meta
             type: object
           status:
             properties:

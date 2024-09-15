@@ -11,7 +11,15 @@ spec:
   rpcPort: 4001
   mysqlPort: 4002
   postgreSQLPort: 4003
-  remoteWal:
+  enableMultiplePVCs: false
+  storage:
+    s3:
+      bucket: greptimedb
+      endpoint: s3.amazonaws.com
+      region: us-west-2
+      root: /greptimedb
+      secretName: s3-credentials
+  wal:
     kafka:
       brokerEndpoints:
         - kafka.default:9092
@@ -26,6 +34,12 @@ spec:
     replicas: 1
     service:
       type: ClusterIP
+    logging:
+      level: info
+      logsDir: /data/greptimedb/logs
+      onlyLogToStdout: false
+      persistentWithData: false
+      logFormat: text
     template:
       main:
         image: greptime/greptimedb:latest
@@ -39,6 +53,12 @@ spec:
     httpPort: 4000
     rpcPort: 3002
     replicas: 1
+    logging:
+      level: info
+      logsDir: /data/greptimedb/logs
+      onlyLogToStdout: false
+      persistentWithData: false
+      logFormat: text
     template:
       main:
         image: greptime/greptimedb:latest
@@ -50,13 +70,12 @@ spec:
     httpPort: 4000
     rpcPort: 4001
     replicas: 1
-    storage:
-      dataHome: /data/greptimedb
-      mountPath: /data/greptimedb
-      name: datanode
-      storageRetainPolicy: Retain
-      storageSize: 10Gi
-      walDir: /data/greptimedb/wal
+    logging:
+      level: info
+      logsDir: /data/greptimedb/logs
+      onlyLogToStdout: false
+      persistentWithData: false
+      logFormat: text
     template:
       main:
         image: greptime/greptimedb:latest

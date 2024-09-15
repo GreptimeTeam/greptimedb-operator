@@ -24,6 +24,7 @@ type GreptimeDBStandaloneSpec struct {
 	// +optional
 	Base *PodTemplateSpec `json:"base,omitempty"`
 
+	// Service is the service configuration of greptimedb.
 	// +optional
 	Service *ServiceSpec `json:"service,omitempty"`
 
@@ -31,55 +32,71 @@ type GreptimeDBStandaloneSpec struct {
 	// +optional
 	TLS *TLSSpec `json:"tls,omitempty"`
 
+	// HTTPPort is the port of the greptimedb http service.
 	// +optional
-	HTTPServicePort int32 `json:"httpPort,omitempty"`
+	HTTPPort int32 `json:"httpPort,omitempty"`
 
+	// RPCPort is the port of the greptimedb rpc service.
 	// +optional
 	RPCPort int32 `json:"rpcPort,omitempty"`
 
+	// MySQLPort is the port of the greptimedb mysql service.
 	// +optional
 	MySQLPort int32 `json:"mysqlPort,omitempty"`
 
+	// PostgreSQLPort is the port of the greptimedb postgresql service.
 	// +optional
 	PostgreSQLPort int32 `json:"postgreSQLPort,omitempty"`
 
-	// +optional
-	EnableInfluxDBProtocol bool `json:"enableInfluxDBProtocol,omitempty"`
-
+	// PrometheusMonitor is the specification for creating PodMonitor or ServiceMonitor.
 	// +optional
 	PrometheusMonitor *PrometheusMonitorSpec `json:"prometheusMonitor,omitempty"`
 
+	// Version is the version of the greptimedb.
 	// +optional
-	// The version of greptimedb.
 	Version string `json:"version,omitempty"`
 
+	// Initializer is the init container to set up components configurations before running the container.
 	// +optional
 	Initializer *InitializerSpec `json:"initializer,omitempty"`
 
+	// StorageProvider is the storage provider for the greptimedb cluster.
 	// +optional
-	ObjectStorageProvider *ObjectStorageProvider `json:"objectStorage,omitempty"`
+	StorageProvider *StorageProviderSpec `json:"storage,omitempty"`
 
+	// WALProvider is the WAL provider for the greptimedb cluster.
 	// +optional
-	LocalStorage *StorageSpec `json:"localStorage,omitempty"`
+	WALProvider *WALProviderSpec `json:"wal,omitempty"`
 
-	// +optional
-	RemoteWalProvider *RemoteWalProvider `json:"remoteWal,omitempty"`
-
+	// The content of the configuration file of the component in TOML format.
 	// +optional
 	Config string `json:"config,omitempty"`
+
+	// EnableMultiplePVCs indicates whether to enable multiple PVCs for the greptimedb cluster.
+	// If it is true, the greptimedb cluster will create multiple PVCs of same storageclass for different file storages, such as WAL, cache etc.
+	// +optional
+	EnableMultiplePVCs *bool `json:"enableMultiplePVCs,omitempty"`
+
+	// Logging defines the logging configuration for the component.
+	// +optional
+	Logging *LoggingSpec `json:"logging,omitempty"`
 }
 
 // GreptimeDBStandaloneStatus defines the observed state of GreptimeDBStandalone
 type GreptimeDBStandaloneStatus struct {
+	// Version is the version of the greptimedb.
 	// +optional
 	Version string `json:"version,omitempty"`
 
+	// StandalonePhase is the phase of the greptimedb standalone.
 	// +optional
 	StandalonePhase Phase `json:"standalonePhase,omitempty"`
 
+	// Conditions represent the latest available observations of an object's current state.
 	// +optional
 	Conditions []Condition `json:"conditions,omitempty"`
 
+	// ObservedGeneration is the most recent generation observed for this GreptimeDBStandalone.
 	// +optional
 	ObservedGeneration *int64 `json:"observedGeneration,omitempty"`
 }
@@ -96,8 +113,51 @@ type GreptimeDBStandalone struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   GreptimeDBStandaloneSpec   `json:"spec,omitempty"`
+	// Spec is the specification of the desired state of the GreptimeDBStandalone.
+	Spec GreptimeDBStandaloneSpec `json:"spec,omitempty"`
+
+	// Status is the most recently observed status of the GreptimeDBStandalone.
 	Status GreptimeDBStandaloneStatus `json:"status,omitempty"`
+}
+
+func (in *GreptimeDBStandalone) GetRaftEngineWAL() *RaftEngineWAL {
+	if in.Spec.WALProvider != nil {
+		return in.Spec.WALProvider.RaftEngineWAL
+	}
+	return nil
+}
+
+func (in *GreptimeDBStandalone) GetKafkaWAL() *KafkaWAL {
+	if in.Spec.WALProvider != nil {
+		return in.Spec.WALProvider.KafkaWAL
+	}
+	return nil
+}
+
+func (in *GreptimeDBStandalone) GetMainContainer() *MainContainerSpec {
+	if in.Spec.Base != nil {
+		return in.Spec.Base.MainContainer
+	}
+	return nil
+}
+
+func (in *GreptimeDBStandalone) GetMainContainerImage() string {
+	if in.GetMainContainer() != nil {
+		return in.GetMainContainer().Image
+	}
+	return ""
+}
+
+func (in *GreptimeDBStandalone) GetVersion() string {
+	return in.Spec.Version
+}
+
+func (in *GreptimeDBStandalone) GetWALProvider() *WALProviderSpec {
+	return in.Spec.WALProvider
+}
+
+func (in *GreptimeDBStandalone) GetStorageProvider() *StorageProviderSpec {
+	return in.Spec.StorageProvider
 }
 
 func (in *GreptimeDBStandaloneStatus) GetCondition(conditionType ConditionType) *Condition {

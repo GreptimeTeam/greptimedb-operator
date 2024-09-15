@@ -1,0 +1,9 @@
+apiVersion: greptime.io/v1alpha1
+kind: GreptimeDBStandalone
+metadata:
+  name: test00
+  namespace: default
+spec:
+  base:
+    main:
+      image: greptime/greptimedb:latest

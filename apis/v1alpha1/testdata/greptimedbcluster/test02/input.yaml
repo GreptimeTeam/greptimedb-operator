@@ -13,7 +13,14 @@ spec:
     replicas: 1
   datanode:
     replicas: 1
-  remoteWal:
+  wal:
     kafka:
       brokerEndpoints:
         - kafka.default:9092
+  storage:
+    s3:
+      bucket: greptimedb
+      endpoint: s3.amazonaws.com
+      region: us-west-2
+      root: /greptimedb
+      secretName: s3-credentials

@@ -18,11 +18,11 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// ComponentSpec is the common specification for all components(frontend/meta/datanode).
+// ComponentSpec is the common specification for all components(`frontend`/`meta`/`datanode`/`flownode`).
 type ComponentSpec struct {
 	// The number of replicas of the components.
-	// +optional
-	// +kubebuilder:validation:Minimum=0
+	// +required
+	// +kubebuilder:validation:Minimum=1
 	Replicas *int32 `json:"replicas"`
 
 	// The content of the configuration file of the component in TOML format.
@@ -32,6 +32,10 @@ type ComponentSpec struct {
 	// Template defines the pod template for the component, if not specified, the pod template will use the default value.
 	// +optional
 	Template *PodTemplateSpec `json:"template,omitempty"`
+
+	// Logging defines the logging configuration for the component.
+	// +optional
+	Logging *LoggingSpec `json:"logging,omitempty"`
 }
 
 // MetaSpec is the specification for meta component.
@@ -46,6 +50,7 @@ type MetaSpec struct {
 	// +optional
 	HTTPPort int32 `json:"httpPort,omitempty"`
 
+	// EtcdEndpoints is the endpoints of the etcd cluster.
 	// +optional
 	EtcdEndpoints []string `json:"etcdEndpoints,omitempty"`
 
@@ -57,7 +62,7 @@ type MetaSpec struct {
 	// +optional
 	EnableRegionFailover *bool `json:"enableRegionFailover,omitempty"`
 
-	// The meta will store data with this key prefix.
+	// StoreKeyPrefix is the prefix of the key in the etcd. We can use it to isolate the data of different clusters.
 	// +optional
 	StoreKeyPrefix string `json:"storeKeyPrefix,omitempty"`
 }
@@ -66,8 +71,9 @@ type MetaSpec struct {
 type FrontendSpec struct {
 	ComponentSpec `json:",inline"`
 
+	// Service is the service configuration of the frontend.
 	// +optional
-	Service ServiceSpec `json:"service,omitempty"`
+	Service *ServiceSpec `json:"service,omitempty"`
 
 	// The TLS configurations of the frontend.
 	// +optional
@@ -85,10 +91,6 @@ type DatanodeSpec struct {
 	// The HTTP port of the datanode.
 	// +optional
 	HTTPPort int32 `json:"httpPort,omitempty"`
-
-	// Storage is the storage specification for the datanode.
-	// +optional
-	Storage StorageSpec `json:"storage,omitempty"`
 }
 
 // FlownodeSpec is the specification for flownode component.
@@ -102,6 +104,7 @@ type FlownodeSpec struct {
 
 // InitializerSpec is the init container to set up components configurations before running the container.
 type InitializerSpec struct {
+	// The image of the initializer.
 	// +optional
 	Image string `json:"image,omitempty"`
 }
@@ -113,102 +116,191 @@ type GreptimeDBClusterSpec struct {
 	Base *PodTemplateSpec `json:"base,omitempty"`
 
 	// Frontend is the specification of frontend node.
-	// +optional
+	// +required
 	Frontend *FrontendSpec `json:"frontend"`
 
 	// Meta is the specification of meta node.
-	// +optional
+	// +required
 	Meta *MetaSpec `json:"meta"`
 
 	// Datanode is the specification of datanode node.
-	// +optional
+	// +required
 	Datanode *DatanodeSpec `json:"datanode"`
 
 	// Flownode is the specification of flownode node.
 	// +optional
-	Flownode *FlownodeSpec `json:"flownode"`
+	Flownode *FlownodeSpec `json:"flownode,omitempty"`
 
+	// HTTPPort is the HTTP port of the greptimedb cluster.
 	// +optional
 	HTTPPort int32 `json:"httpPort,omitempty"`
 
+	// RPCPort is the RPC port of the greptimedb cluster.
 	// +optional
 	RPCPort int32 `json:"rpcPort,omitempty"`
 
+	// MySQLPort is the MySQL port of the greptimedb cluster.
 	// +optional
 	MySQLPort int32 `json:"mysqlPort,omitempty"`
 
+	// PostgreSQLPort is the PostgreSQL port of the greptimedb cluster.
 	// +optional
 	PostgreSQLPort int32 `json:"postgreSQLPort,omitempty"`
 
-	// +optional
-	EnableInfluxDBProtocol bool `json:"enableInfluxDBProtocol,omitempty"`
-
+	// PrometheusMonitor is the specification for creating PodMonitor or ServiceMonitor.
 	// +optional
 	PrometheusMonitor *PrometheusMonitorSpec `json:"prometheusMonitor,omitempty"`
 
+	// Version is the version of greptimedb.
 	// +optional
-	// The version of greptimedb.
 	Version string `json:"version,omitempty"`
 
+	// Initializer is the init container to set up components configurations before running the container.
 	// +optional
 	Initializer *InitializerSpec `json:"initializer,omitempty"`
 
+	// StorageProvider is the storage provider for the greptimedb cluster.
 	// +optional
-	ObjectStorageProvider *ObjectStorageProvider `json:"objectStorage,omitempty"`
+	StorageProvider *StorageProviderSpec `json:"storage,omitempty"`
 
+	// WALProvider is the WAL provider for the greptimedb cluster.
 	// +optional
-	RemoteWalProvider *RemoteWalProvider `json:"remoteWal,omitempty"`
+	WALProvider *WALProviderSpec `json:"wal,omitempty"`
 
-	// More cluster settings can be added here.
+	// EnableMultiplePVCs indicates whether to enable multiple PVCs for the greptimedb cluster.
+	// If it is true, the greptimedb cluster will create multiple PVCs of same storageclass for different file storages, such as WAL, cache etc.
+	// +optional
+	EnableMultiplePVCs *bool `json:"enableMultiplePVCs,omitempty"`
+}
+
+func (in *GreptimeDBCluster) GetRaftEngineWAL() *RaftEngineWAL {
+	if in.Spec.WALProvider != nil {
+		return in.Spec.WALProvider.RaftEngineWAL
+	}
+	return nil
+}
+
+func (in *GreptimeDBCluster) GetKafkaWAL() *KafkaWAL {
+	if in.Spec.WALProvider != nil {
+		return in.Spec.WALProvider.KafkaWAL
+	}
+	return nil
+}
+
+func (in *GreptimeDBCluster) GetMainContainer() *MainContainerSpec {
+	if in.Spec.Base != nil {
+		return in.Spec.Base.MainContainer
+	}
+	return nil
+}
+
+func (in *GreptimeDBCluster) GetMainContainerImage() string {
+	if in.GetMainContainer() != nil {
+		return in.GetMainContainer().Image
+	}
+	return ""
+}
+
+func (in *GreptimeDBCluster) GetVersion() string {
+	return in.Spec.Version
+}
+
+func (in *GreptimeDBCluster) GetFrontend() *FrontendSpec {
+	return in.Spec.Frontend
+}
+
+func (in *GreptimeDBCluster) GetMeta() *MetaSpec {
+	return in.Spec.Meta
+}
+
+func (in *GreptimeDBCluster) GetDatanode() *DatanodeSpec {
+	return in.Spec.Datanode
+}
+
+func (in *GreptimeDBCluster) GetFlownode() *FlownodeSpec {
+	return in.Spec.Flownode
+}
+
+func (in *GreptimeDBCluster) GetWALProvider() *WALProviderSpec {
+	return in.Spec.WALProvider
+}
+
+func (in *GreptimeDBCluster) GetStorageProvider() *StorageProviderSpec {
+	return in.Spec.StorageProvider
 }
 
 // GreptimeDBClusterStatus defines the observed state of GreptimeDBCluster
 type GreptimeDBClusterStatus struct {
+	// Frontend is the status of frontend node.
 	// +optional
 	Frontend FrontendStatus `json:"frontend,omitempty"`
 
+	// Meta is the status of meta node.
 	// +optional
 	Meta MetaStatus `json:"meta,omitempty"`
 
+	// Datanode is the status of datanode node.
 	// +optional
 	Datanode DatanodeStatus `json:"datanode,omitempty"`
 
+	// Flownode is the status of flownode node.
 	// +optional
 	Flownode FlownodeStatus `json:"flownode,omitempty"`
 
+	// Version is the version of greptimedb.
 	// +optional
 	Version string `json:"version,omitempty"`
 
+	// ClusterPhase is the phase of the greptimedb cluster.
 	// +optional
 	ClusterPhase Phase `json:"clusterPhase,omitempty"`
 
+	// Conditions is an array of current conditions.
 	// +optional
 	Conditions []Condition `json:"conditions,omitempty"`
 
+	// ObservedGeneration is the last observed generation.
 	// +optional
 	ObservedGeneration *int64 `json:"observedGeneration,omitempty"`
 }
 
+// FrontendStatus is the status of frontend node.
 type FrontendStatus struct {
-	Replicas      int32 `json:"replicas"`
+	// Replicas is the number of replicas of the frontend.
+	Replicas int32 `json:"replicas"`
+
+	// ReadyReplicas is the number of ready replicas of the frontend.
 	ReadyReplicas int32 `json:"readyReplicas"`
 }
 
+// MetaStatus is the status of meta node.
 type MetaStatus struct {
-	Replicas      int32 `json:"replicas"`
+	// Replicas is the number of replicas of the meta.
+	Replicas int32 `json:"replicas"`
+
+	// ReadyReplicas is the number of ready replicas of the meta.
 	ReadyReplicas int32 `json:"readyReplicas"`
 
+	// EtcdEndpoints is the endpoints of the etcd cluster.
 	// +optional
 	EtcdEndpoints []string `json:"etcdEndpoints,omitempty"`
 }
 
+// DatanodeStatus is the status of datanode node.
 type DatanodeStatus struct {
-	Replicas      int32 `json:"replicas"`
+	// Replicas is the number of replicas of the datanode.
+	Replicas int32 `json:"replicas"`
+
+	// ReadyReplicas is the number of ready replicas of the datanode.
 	ReadyReplicas int32 `json:"readyReplicas"`
 }
 
+// FlownodeStatus is the status of flownode node.
 type FlownodeStatus struct {
-	Replicas      int32 `json:"replicas"`
+	// Replicas is the number of replicas of the flownode.
+	Replicas int32 `json:"replicas"`
+
+	// ReadyReplicas is the number of ready replicas of the flownode.
 	ReadyReplicas int32 `json:"readyReplicas"`
 }
 
@@ -236,7 +328,10 @@ type GreptimeDBCluster struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   GreptimeDBClusterSpec   `json:"spec,omitempty"`
+	// Spec is the specification of the desired state of the GreptimeDBCluster.
+	Spec GreptimeDBClusterSpec `json:"spec,omitempty"`
+
+	// Status is the most recently observed status of the GreptimeDBCluster.
 	Status GreptimeDBClusterStatus `json:"status,omitempty"`
 }
 
