@@ -4,7 +4,6 @@ metadata:
   name: test00
   namespace: default
 spec:
-  enableMultiplePVCs: false
   version: latest
   httpPort: 4000
   mysqlPort: 4002
@@ -25,14 +24,10 @@ spec:
     logsDir: /data/greptimedb/logs
     onlyLogToStdout: false
     persistentWithData: false
-  storage:
-    file:
-      mountPath: /data/greptimedb/data
+  datanodeStorage:
+    dataHome: /data/greptimedb
+    fs:
+      name: datanode
+      mountPath: /data/greptimedb
       storageRetainPolicy: Retain
-      storageSize: 20Gi
-  wal:
-    raftEngine:
-      file:
-        mountPath: /data/greptimedb/wal
-        storageRetainPolicy: Retain
-        storageSize: 5Gi
+      storageSize: 10Gi

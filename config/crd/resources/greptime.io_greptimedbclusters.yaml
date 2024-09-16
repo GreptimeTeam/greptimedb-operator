@@ -2847,6 +2847,28 @@ spec:
                   rpcPort:
                     format: int32
                     type: integer
+                  storage:
+                    properties:
+                      dataHome:
+                        type: string
+                      fs:
+                        properties:
+                          mountPath:
+                            type: string
+                          name:
+                            type: string
+                          storageClassName:
+                            type: string
+                          storageRetainPolicy:
+                            enum:
+                            - Retain
+                            - Delete
+                            type: string
+                          storageSize:
+                            pattern: (^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$)
+                            type: string
+                        type: object
+                    type: object
                   template:
                     properties:
                       activeDeadlineSeconds:
@@ -5612,8 +5634,6 @@ spec:
                 required:
                 - replicas
                 type: object
-              enableMultiplePVCs:
-                type: boolean
               flownode:
                 properties:
                   config:
@@ -11221,6 +11241,8 @@ spec:
                     properties:
                       secretName:
                         type: string
+                    required:
+                    - secretName
                     type: object
                 required:
                 - replicas
@@ -14041,37 +14063,23 @@ spec:
                         type: array
                     type: object
                 required:
+                - etcdEndpoints
                 - replicas
                 type: object
               mysqlPort:
                 format: int32
                 type: integer
-              postgreSQLPort:
-                format: int32
-                type: integer
-              prometheusMonitor:
-                properties:
-                  enabled:
-                    type: boolean
-                  interval:
-                    type: string
-                  labels:
-                    additionalProperties:
-                      type: string
-                    type: object
-                type: object
-              rpcPort:
-                format: int32
-                type: integer
-              storage:
+              objectStorage:
                 properties:
                   cache:
                     properties:
                       cacheCapacity:
                         type: string
-                      storage:
+                      fs:
                         properties:
                           mountPath:
+                            type: string
+                          name:
                             type: string
                           storageClassName:
                             type: string
@@ -14085,21 +14093,6 @@ spec:
                             type: string
                         type: object
                     type: object
-                  file:
-                    properties:
-                      mountPath:
-                        type: string
-                      storageClassName:
-                        type: string
-                      storageRetainPolicy:
-                        enum:
-                        - Retain
-                        - Delete
-                        type: string
-                      storageSize:
-                        pattern: (^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$)
-                        type: string
-                    type: object
                   gcs:
                     properties:
                       bucket:
@@ -14112,6 +14105,9 @@ spec:
                         type: string
                       secretName:
                         type: string
+                    required:
+                    - bucket
+                    - root
                     type: object
                   oss:
                     properties:
@@ -14125,6 +14121,10 @@ spec:
                         type: string
                       secretName:
                         type: string
+                    required:
+                    - bucket
+                    - region
+                    - root
                     type: object
                   s3:
                     properties:
@@ -14138,8 +14138,32 @@ spec:
                         type: string
                       secretName:
                         type: string
+                    required:
+                    - bucket
+                    - region
+                    - root
                     type: object
                 type: object
+              postgreSQLPort:
+                format: int32
+                type: integer
+              prometheusMonitor:
+                properties:
+                  enabled:
+                    type: boolean
+                  interval:
+                    type: string
+                  labels:
+                    additionalProperties:
+                      type: string
+                    type: object
+                required:
+                - enabled
+                - labels
+                type: object
+              rpcPort:
+                format: int32
+                type: integer
               version:
                 type: string
               wal:
@@ -14150,12 +14174,16 @@ spec:
                         items:
                           type: string
                         type: array
+                    required:
+                    - brokerEndpoints
                     type: object
                   raftEngine:
                     properties:
-                      file:
+                      fs:
                         properties:
                           mountPath:
+                            type: string
+                          name:
                             type: string
                           storageClassName:
                             type: string

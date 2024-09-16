@@ -283,8 +283,12 @@ type PodTemplateSpec struct {
 	SlimPodSpec `json:",inline"`
 }
 
-// FileStorage defines the file storage specification.
+// FileStorage defines the file storage specification. It is used to generate the PVC that will be mounted to the container.
 type FileStorage struct {
+	// Name is the name of the PVC that will be created.
+	// +optional
+	Name string `json:"name,omitempty"`
+
 	// StorageClassName is the name of the StorageClass to use for the PVC.
 	// +optional
 	StorageClassName *string `json:"storageClassName,omitempty"`
@@ -317,16 +321,17 @@ type WALProviderSpec struct {
 
 // RaftEngineWAL is the specification for local WAL that uses raft-engine.
 type RaftEngineWAL struct {
-	// File is the file storage configuration for the raft-engine WAL.
+	// FileStorage is the file storage configuration for the raft-engine WAL.
+	// If the file storage is not specified, WAL will use DatanodeStorageSpec.
 	// +optional
-	File *FileStorage `json:"file,omitempty"`
+	FileStorage *FileStorage `json:"fs,omitempty"`
 }
 
 // KafkaWAL is the specification for Kafka remote WAL.
 type KafkaWAL struct {
 	// BrokerEndpoints is the list of Kafka broker endpoints.
-	// +optional
-	BrokerEndpoints []string `json:"brokerEndpoints,omitempty"`
+	// +required
+	BrokerEndpoints []string `json:"brokerEndpoints"`
 }
 
 // LoggingLevel is the level of the logging.
@@ -406,16 +411,12 @@ type TLSSpec struct {
 	// SecretName is the name of the secret that contains the TLS certificates.
 	// The secret must be in the same namespace with the greptime resource.
 	// The secret must contain keys named `ca.crt`, `tls.crt` and `tls.key`.
-	// +optional
-	SecretName string `json:"secretName,omitempty"`
+	// +required
+	SecretName string `json:"secretName"`
 }
 
-// StorageProviderSpec defines the storage provider for the cluster. The data will be stored in the storage.
-type StorageProviderSpec struct {
-	// File is the file storage configuration.
-	// +optional
-	File *FileStorage `json:"file,omitempty"`
-
+// ObjectStorageProviderSpec defines the object storage provider for the cluster. The data will be stored in the storage.
+type ObjectStorageProviderSpec struct {
 	// S3 is the S3 storage configuration.
 	// +optional
 	S3 *S3Storage `json:"s3,omitempty"`
@@ -433,28 +434,50 @@ type StorageProviderSpec struct {
 	Cache *CacheStorage `json:"cache,omitempty"`
 }
 
+type DatanodeStorageSpec struct {
+	// DataHome is the home directory of the data.
+	DataHome string `json:"dataHome,omitempty"`
+
+	// FileStorage is the file storage configuration.
+	// +optional
+	FileStorage *FileStorage `json:"fs,omitempty"`
+}
+
+func (in *ObjectStorageProviderSpec) getSetObjectStorageCount() int {
+	count := 0
+	if in.S3 != nil {
+		count++
+	}
+	if in.OSS != nil {
+		count++
+	}
+	if in.GCS != nil {
+		count++
+	}
+	return count
+}
+
 // CacheStorage defines the cache storage specification.
 type CacheStorage struct {
 	// Storage is the storage specification for the cache.
-	Storage *FileStorage `json:"storage,omitempty"`
+	// If the storage is not specified, the cache will use DatanodeStorageSpec.
+	// +optional
+	FileStorage *FileStorage `json:"fs,omitempty"`
 
 	// CacheCapacity is the capacity of the cache.
+	// +optional
 	CacheCapacity string `json:"cacheCapacity,omitempty"`
 }
 
 // S3Storage defines the S3 storage specification.
 type S3Storage struct {
 	// The data will be stored in the bucket.
-	// +optional
-	Bucket string `json:"bucket,omitempty"`
+	// +required
+	Bucket string `json:"bucket"`
 
 	// The region of the bucket.
-	// +optional
-	Region string `json:"region,omitempty"`
-
-	// The endpoint of the bucket.
-	// +optional
-	Endpoint string `json:"endpoint,omitempty"`
+	// +required
+	Region string `json:"region"`
 
 	// The secret of storing the credentials of access key id and secret access key.
 	// The secret must be the same namespace with the GreptimeDBCluster resource.
@@ -462,23 +485,23 @@ type S3Storage struct {
 	SecretName string `json:"secretName,omitempty"`
 
 	// The S3 directory path.
+	// +required
+	Root string `json:"root"`
+
+	// The endpoint of the bucket.
 	// +optional
-	Root string `json:"root,omitempty"`
+	Endpoint string `json:"endpoint,omitempty"`
 }
 
 // OSSStorage defines the Aliyun OSS storage specification.
 type OSSStorage struct {
 	// The data will be stored in the bucket.
-	// +optional
-	Bucket string `json:"bucket,omitempty"`
+	// +required
+	Bucket string `json:"bucket"`
 
 	// The region of the bucket.
-	// +optional
-	Region string `json:"region,omitempty"`
-
-	// The endpoint of the bucket.
-	// +optional
-	Endpoint string `json:"endpoint,omitempty"`
+	// +required
+	Region string `json:"region"`
 
 	// The secret of storing the credentials of access key id and secret access key.
 	// The secret must be the same namespace with the GreptimeDBCluster resource.
@@ -486,19 +509,28 @@ type OSSStorage struct {
 	SecretName string `json:"secretName,omitempty"`
 
 	// The OSS directory path.
+	// +required
+	Root string `json:"root"`
+
+	// The endpoint of the bucket.
 	// +optional
-	Root string `json:"root,omitempty"`
+	Endpoint string `json:"endpoint,omitempty"`
 }
 
 // GCSStorage defines the Google GCS storage specification.
 type GCSStorage struct {
 	// The data will be stored in the bucket.
-	// +optional
-	Bucket string `json:"bucket,omitempty"`
+	// +required
+	Bucket string `json:"bucket"`
 
 	// The gcs directory path.
-	// +optional
-	Root string `json:"root,omitempty"`
+	// +required
+	Root string `json:"root"`
+
+	// The secret of storing Credentials for gcs service OAuth2 authentication.
+	// The secret must be the same namespace with the GreptimeDBCluster resource.
+	// +op
+	SecretName string `json:"secretName,omitempty"`
 
 	// The scope for gcs.
 	// +optional
@@ -507,22 +539,17 @@ type GCSStorage struct {
 	// The endpoint URI of gcs service.
 	// +optional
 	Endpoint string `json:"endpoint,omitempty"`
-
-	// The secret of storing Credentials for gcs service OAuth2 authentication.
-	// The secret must be the same namespace with the GreptimeDBCluster resource.
-	// +optional
-	SecretName string `json:"secretName,omitempty"`
 }
 
 // PrometheusMonitorSpec defines the PodMonitor configuration.
 type PrometheusMonitorSpec struct {
 	// Enabled indicates whether the PodMonitor is enabled.
-	// +optional
-	Enabled bool `json:"enabled,omitempty"`
+	// +required
+	Enabled bool `json:"enabled"`
 
 	// Labels is the labels for the PodMonitor.
-	// +optional
-	Labels map[string]string `json:"labels,omitempty"`
+	// +required
+	Labels map[string]string `json:"labels"`
 
 	// Interval is the scape interval for the PodMonitor.
 	// +optional

@@ -11,14 +11,6 @@ spec:
   rpcPort: 4001
   mysqlPort: 4002
   postgreSQLPort: 4003
-  enableMultiplePVCs: false
-  storage:
-    s3:
-      bucket: greptimedb
-      endpoint: s3.amazonaws.com
-      region: us-west-2
-      root: /greptimedb
-      secretName: s3-credentials
   wal:
     kafka:
       brokerEndpoints:
@@ -48,7 +40,9 @@ spec:
             path: /health
             port: 4000
   meta:
-    # Should be true if remoteWal.kafka is set.
+    etcdEndpoints:
+      - etcd.etcd-cluster.svc.cluster.local:2379
+    # Should be true if wal.kafka is set.
     enableRegionFailover: true
     httpPort: 4000
     rpcPort: 3002
@@ -76,6 +70,13 @@ spec:
       onlyLogToStdout: false
       persistentWithData: false
       logFormat: text
+    storage:
+      dataHome: /data/greptimedb
+      fs:
+        name: datanode
+        mountPath: /data/greptimedb
+        storageRetainPolicy: Retain
+        storageSize: 10Gi
     template:
       main:
         image: greptime/greptimedb:latest

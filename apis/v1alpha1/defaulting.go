@@ -61,56 +61,30 @@ func (in *GreptimeDBCluster) defaultSpec() *GreptimeDBClusterSpec {
 				},
 			},
 		},
-		Initializer:        &InitializerSpec{Image: DefaultInitializerImage},
-		HTTPPort:           DefaultHTTPPort,
-		RPCPort:            DefaultRPCPort,
-		MySQLPort:          DefaultMySQLPort,
-		PostgreSQLPort:     DefaultPostgreSQLPort,
-		Version:            DefaultVersion,
-		EnableMultiplePVCs: pointer.Bool(false),
-	}
-
-	if in.GetFrontend() != nil {
-		defaultSpec.Frontend = in.defaultFrontendSpec()
-	}
-
-	if in.GetMeta() != nil {
-		defaultSpec.Meta = in.defaultMetaSpec()
-	}
-
-	if in.GetDatanode() != nil {
-		defaultSpec.Datanode = in.defaultDatanodeSpec()
+		Initializer:    &InitializerSpec{Image: DefaultInitializerImage},
+		HTTPPort:       DefaultHTTPPort,
+		RPCPort:        DefaultRPCPort,
+		MySQLPort:      DefaultMySQLPort,
+		PostgreSQLPort: DefaultPostgreSQLPort,
+		Version:        DefaultVersion,
+		Frontend:       in.defaultFrontend(),
+		Meta:           in.defaultMeta(),
+		Datanode:       in.defaultDatanode(),
 	}
 
 	if in.GetFlownode() != nil {
 		defaultSpec.Flownode = in.defaultFlownodeSpec()
 	}
 
-	// Set the default WALProvider if it is not set.
-	if in.GetWALProvider() == nil {
-		defaultSpec.WALProvider = defaultWALProvider()
-	}
-
-	// Set the default StorageProvider if it is not set.
-	if in.GetStorageProvider() == nil {
-		defaultSpec.StorageProvider = defaultStorageProvider()
-	}
-
 	return defaultSpec
 }
 
-func (in *GreptimeDBCluster) defaultFrontendSpec() *FrontendSpec {
+func (in *GreptimeDBCluster) defaultFrontend() *FrontendSpec {
 	return &FrontendSpec{
 		ComponentSpec: ComponentSpec{
 			Template: &PodTemplateSpec{},
 			Replicas: pointer.Int32(DefaultReplicas),
-			Logging: &LoggingSpec{
-				Level:              DefaultLogingLevel,
-				LogsDir:            DefaultLogsDir,
-				LogFormat:          LogFormatText,
-				PersistentWithData: pointer.Bool(false),
-				OnlyLogToStdout:    pointer.Bool(false),
-			},
+			Logging:  defaultLogging(),
 		},
 		Service: &ServiceSpec{
 			Type: corev1.ServiceTypeClusterIP,
@@ -118,7 +92,7 @@ func (in *GreptimeDBCluster) defaultFrontendSpec() *FrontendSpec {
 	}
 }
 
-func (in *GreptimeDBCluster) defaultMetaSpec() *MetaSpec {
+func (in *GreptimeDBCluster) defaultMeta() *MetaSpec {
 	enableRegionFailover := false
 	if in.GetKafkaWAL() != nil { // If remote wal provider is enabled, enable region failover by default.
 		enableRegionFailover = true
@@ -127,13 +101,7 @@ func (in *GreptimeDBCluster) defaultMetaSpec() *MetaSpec {
 		ComponentSpec: ComponentSpec{
 			Template: &PodTemplateSpec{},
 			Replicas: pointer.Int32(DefaultReplicas),
-			Logging: &LoggingSpec{
-				Level:              DefaultLogingLevel,
-				LogsDir:            DefaultLogsDir,
-				LogFormat:          LogFormatText,
-				PersistentWithData: pointer.Bool(false),
-				OnlyLogToStdout:    pointer.Bool(false),
-			},
+			Logging:  defaultLogging(),
 		},
 		RPCPort:              DefaultMetaRPCPort,
 		HTTPPort:             DefaultHTTPPort,
@@ -141,21 +109,16 @@ func (in *GreptimeDBCluster) defaultMetaSpec() *MetaSpec {
 	}
 }
 
-func (in *GreptimeDBCluster) defaultDatanodeSpec() *DatanodeSpec {
+func (in *GreptimeDBCluster) defaultDatanode() *DatanodeSpec {
 	return &DatanodeSpec{
 		ComponentSpec: ComponentSpec{
 			Template: &PodTemplateSpec{},
 			Replicas: pointer.Int32(DefaultReplicas),
-			Logging: &LoggingSpec{
-				Level:              DefaultLogingLevel,
-				LogsDir:            DefaultLogsDir,
-				LogFormat:          LogFormatText,
-				PersistentWithData: pointer.Bool(false),
-				OnlyLogToStdout:    pointer.Bool(false),
-			},
+			Logging:  defaultLogging(),
 		},
 		RPCPort:  DefaultRPCPort,
 		HTTPPort: DefaultHTTPPort,
+		Storage:  defaultDatanodeStorage(),
 	}
 }
 
@@ -164,13 +127,7 @@ func (in *GreptimeDBCluster) defaultFlownodeSpec() *FlownodeSpec {
 		ComponentSpec: ComponentSpec{
 			Template: &PodTemplateSpec{},
 			Replicas: pointer.Int32(DefaultReplicas),
-			Logging: &LoggingSpec{
-				Level:              DefaultLogingLevel,
-				LogsDir:            DefaultLogsDir,
-				LogFormat:          LogFormatText,
-				PersistentWithData: pointer.Bool(false),
-				OnlyLogToStdout:    pointer.Bool(false),
-			},
+			Logging:  defaultLogging(),
 		},
 		RPCPort: DefaultRPCPort,
 	}
@@ -204,7 +161,7 @@ func (in *GreptimeDBCluster) mergeFrontendTemplate() error {
 		}
 
 		// Reconfigure the probe settings based on the HTTP port.
-		in.Spec.Frontend.Template.MainContainer.LivenessProbe.HTTPGet.Port = intstr.FromInt(int(in.Spec.HTTPPort))
+		in.Spec.Frontend.Template.MainContainer.LivenessProbe.HTTPGet.Port = intstr.FromInt32(in.Spec.HTTPPort)
 	}
 
 	return nil
@@ -218,7 +175,7 @@ func (in *GreptimeDBCluster) mergeMetaTemplate() error {
 		}
 
 		// Reconfigure the probe settings based on the HTTP port.
-		in.Spec.Meta.Template.MainContainer.LivenessProbe.HTTPGet.Port = intstr.FromInt(int(in.Spec.Meta.HTTPPort))
+		in.Spec.Meta.Template.MainContainer.LivenessProbe.HTTPGet.Port = intstr.FromInt32(in.Spec.Meta.HTTPPort)
 	}
 
 	return nil
@@ -232,7 +189,7 @@ func (in *GreptimeDBCluster) mergeDatanodeTemplate() error {
 		}
 
 		// Reconfigure the probe settings based on the HTTP port.
-		in.Spec.Datanode.Template.MainContainer.LivenessProbe.HTTPGet.Port = intstr.FromInt(int(in.Spec.Datanode.HTTPPort))
+		in.Spec.Datanode.Template.MainContainer.LivenessProbe.HTTPGet.Port = intstr.FromInt32(in.Spec.Datanode.HTTPPort)
 	}
 
 	return nil
@@ -283,12 +240,11 @@ func (in *GreptimeDBStandalone) defaultSpec() *GreptimeDBStandaloneSpec {
 				},
 			},
 		},
-		HTTPPort:           DefaultHTTPPort,
-		RPCPort:            DefaultRPCPort,
-		MySQLPort:          DefaultMySQLPort,
-		PostgreSQLPort:     DefaultPostgreSQLPort,
-		Version:            DefaultVersion,
-		EnableMultiplePVCs: pointer.Bool(false),
+		HTTPPort:       DefaultHTTPPort,
+		RPCPort:        DefaultRPCPort,
+		MySQLPort:      DefaultMySQLPort,
+		PostgreSQLPort: DefaultPostgreSQLPort,
+		Version:        DefaultVersion,
 		Service: &ServiceSpec{
 			Type: corev1.ServiceTypeClusterIP,
 		},
@@ -299,40 +255,31 @@ func (in *GreptimeDBStandalone) defaultSpec() *GreptimeDBStandaloneSpec {
 			PersistentWithData: pointer.Bool(false),
 			OnlyLogToStdout:    pointer.Bool(false),
 		},
-	}
-
-	// Set the default WALProvider if it is not set.
-	if in.GetWALProvider() == nil {
-		defaultSpec.WALProvider = defaultWALProvider()
-	}
-
-	// Set the default StorageProvider if it is not set.
-	if in.GetStorageProvider() == nil {
-		defaultSpec.StorageProvider = defaultStorageProvider()
+		DatanodeStorage: defaultDatanodeStorage(),
 	}
 
 	return defaultSpec
 }
 
-func defaultWALProvider() *WALProviderSpec {
-	return &WALProviderSpec{
-		RaftEngineWAL: &RaftEngineWAL{
-			File: &FileStorage{
-				StorageSize:         DefaultWALDataSize,
-				MountPath:           DefaultWalDir,
-				StorageRetainPolicy: StorageRetainPolicyTypeRetain,
-			},
+func defaultDatanodeStorage() *DatanodeStorageSpec {
+	return &DatanodeStorageSpec{
+		DataHome: DefaultDataHome,
+		FileStorage: &FileStorage{
+			Name:                DefaultDatanodeFileStorageName,
+			StorageSize:         DefaultDataSize,
+			MountPath:           DefaultDataHome,
+			StorageRetainPolicy: DefaultStorageRetainPolicyType,
 		},
 	}
 }
 
-func defaultStorageProvider() *StorageProviderSpec {
-	return &StorageProviderSpec{
-		File: &FileStorage{
-			StorageSize:         DefaultDataSize,
-			MountPath:           DefaultDataDir,
-			StorageRetainPolicy: DefaultStorageRetainPolicyType,
-		},
+func defaultLogging() *LoggingSpec {
+	return &LoggingSpec{
+		Level:              DefaultLogingLevel,
+		LogsDir:            DefaultLogsDir,
+		LogFormat:          LogFormatText,
+		PersistentWithData: pointer.Bool(false),
+		OnlyLogToStdout:    pointer.Bool(false),
 	}
 }
 

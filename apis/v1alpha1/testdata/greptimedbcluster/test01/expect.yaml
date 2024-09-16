@@ -11,18 +11,6 @@ spec:
   rpcPort: 4001
   mysqlPort: 4002
   postgreSQLPort: 4003
-  enableMultiplePVCs: false
-  storage:
-    file:
-      mountPath: /data/greptimedb/data
-      storageRetainPolicy: Retain
-      storageSize: 20Gi
-  wal:
-    raftEngine:
-      file:
-        mountPath: /data/greptimedb/wal
-        storageRetainPolicy: Retain
-        storageSize: 5Gi
   base:
     main:
       image: greptime/greptimedb:latest
@@ -67,7 +55,7 @@ spec:
   meta:
     enableRegionFailover: false
     etcdEndpoints:
-      - etcd.default:2379
+      - etcd.etcd-cluster.svc.cluster.local:2379
     httpPort: 4000
     rpcPort: 3002
     replicas: 1
@@ -104,6 +92,13 @@ spec:
       onlyLogToStdout: false
       persistentWithData: false
       logFormat: text
+    storage:
+      dataHome: /data/greptimedb
+      fs:
+        name: datanode
+        mountPath: /data/greptimedb
+        storageRetainPolicy: Retain
+        storageSize: 10Gi
     template:
       main:
         image: greptime/greptimedb:latest

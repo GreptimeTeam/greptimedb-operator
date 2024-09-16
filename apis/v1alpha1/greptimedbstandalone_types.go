@@ -60,9 +60,13 @@ type GreptimeDBStandaloneSpec struct {
 	// +optional
 	Initializer *InitializerSpec `json:"initializer,omitempty"`
 
-	// StorageProvider is the storage provider for the greptimedb cluster.
+	// ObjectStorageProvider is the storage provider for the greptimedb cluster.
 	// +optional
-	StorageProvider *StorageProviderSpec `json:"storage,omitempty"`
+	ObjectStorageProvider *ObjectStorageProviderSpec `json:"objectStorage,omitempty"`
+
+	// DatanodeStorage is the default file storage of the datanode. For example, WAL, cache, index etc.
+	// +optional
+	DatanodeStorage *DatanodeStorageSpec `json:"datanodeStorage,omitempty"`
 
 	// WALProvider is the WAL provider for the greptimedb cluster.
 	// +optional
@@ -71,11 +75,6 @@ type GreptimeDBStandaloneSpec struct {
 	// The content of the configuration file of the component in TOML format.
 	// +optional
 	Config string `json:"config,omitempty"`
-
-	// EnableMultiplePVCs indicates whether to enable multiple PVCs for the greptimedb cluster.
-	// If it is true, the greptimedb cluster will create multiple PVCs of same storageclass for different file storages, such as WAL, cache etc.
-	// +optional
-	EnableMultiplePVCs *bool `json:"enableMultiplePVCs,omitempty"`
 
 	// Logging defines the logging configuration for the component.
 	// +optional
@@ -120,6 +119,10 @@ type GreptimeDBStandalone struct {
 	Status GreptimeDBStandaloneStatus `json:"status,omitempty"`
 }
 
+func (in *GreptimeDBStandalone) GetConfig() string {
+	return in.Spec.Config
+}
+
 func (in *GreptimeDBStandalone) GetRaftEngineWAL() *RaftEngineWAL {
 	if in.Spec.WALProvider != nil {
 		return in.Spec.WALProvider.RaftEngineWAL
@@ -156,8 +159,54 @@ func (in *GreptimeDBStandalone) GetWALProvider() *WALProviderSpec {
 	return in.Spec.WALProvider
 }
 
-func (in *GreptimeDBStandalone) GetStorageProvider() *StorageProviderSpec {
-	return in.Spec.StorageProvider
+func (in *GreptimeDBStandalone) GetStorageProvider() *ObjectStorageProviderSpec {
+	return in.Spec.ObjectStorageProvider
+}
+
+func (in *GreptimeDBStandalone) GetS3Storage() *S3Storage {
+	if in.Spec.ObjectStorageProvider != nil {
+		return in.Spec.ObjectStorageProvider.S3
+	}
+	return nil
+}
+
+func (in *GreptimeDBStandalone) GetGCSStorage() *GCSStorage {
+	if in.Spec.ObjectStorageProvider != nil {
+		return in.Spec.ObjectStorageProvider.GCS
+	}
+	return nil
+}
+
+func (in *GreptimeDBStandalone) GetOSSStorage() *OSSStorage {
+	if in.Spec.ObjectStorageProvider != nil {
+		return in.Spec.ObjectStorageProvider.OSS
+	}
+	return nil
+}
+
+func (in *GreptimeDBStandalone) GetFrontendTLSSecretName() string {
+	if in.Spec.TLS != nil {
+		return in.Spec.TLS.SecretName
+	}
+	return ""
+}
+
+func (in *GreptimeDBStandalone) EnablePrometheusMonitor() bool {
+	return in.Spec.PrometheusMonitor != nil && in.Spec.PrometheusMonitor.Enabled
+}
+
+func (in *GreptimeDBStandalone) GetWALDir() string {
+	if in.Spec.WALProvider != nil && in.Spec.WALProvider.RaftEngineWAL != nil {
+		return in.Spec.WALProvider.RaftEngineWAL.FileStorage.MountPath
+	}
+	return ""
+}
+
+func (in *GreptimeDBStandalone) GetDataHome() string {
+	if in.Spec.DatanodeStorage != nil {
+		return in.Spec.DatanodeStorage.DataHome
+	}
+	return ""
 }
 
 func (in *GreptimeDBStandaloneStatus) GetCondition(conditionType ConditionType) *Condition {

@@ -2802,8 +2802,28 @@ spec:
                 type: object
               config:
                 type: string
-              enableMultiplePVCs:
-                type: boolean
+              datanodeStorage:
+                properties:
+                  dataHome:
+                    type: string
+                  fs:
+                    properties:
+                      mountPath:
+                        type: string
+                      name:
+                        type: string
+                      storageClassName:
+                        type: string
+                      storageRetainPolicy:
+                        enum:
+                        - Retain
+                        - Delete
+                        type: string
+                      storageSize:
+                        pattern: (^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$)
+                        type: string
+                    type: object
+                type: object
               httpPort:
                 format: int32
                 type: integer
@@ -2836,6 +2856,81 @@ spec:
               mysqlPort:
                 format: int32
                 type: integer
+              objectStorage:
+                properties:
+                  cache:
+                    properties:
+                      cacheCapacity:
+                        type: string
+                      fs:
+                        properties:
+                          mountPath:
+                            type: string
+                          name:
+                            type: string
+                          storageClassName:
+                            type: string
+                          storageRetainPolicy:
+                            enum:
+                            - Retain
+                            - Delete
+                            type: string
+                          storageSize:
+                            pattern: (^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$)
+                            type: string
+                        type: object
+                    type: object
+                  gcs:
+                    properties:
+                      bucket:
+                        type: string
+                      endpoint:
+                        type: string
+                      root:
+                        type: string
+                      scope:
+                        type: string
+                      secretName:
+                        type: string
+                    required:
+                    - bucket
+                    - root
+                    type: object
+                  oss:
+                    properties:
+                      bucket:
+                        type: string
+                      endpoint:
+                        type: string
+                      region:
+                        type: string
+                      root:
+                        type: string
+                      secretName:
+                        type: string
+                    required:
+                    - bucket
+                    - region
+                    - root
+                    type: object
+                  s3:
+                    properties:
+                      bucket:
+                        type: string
+                      endpoint:
+                        type: string
+                      region:
+                        type: string
+                      root:
+                        type: string
+                      secretName:
+                        type: string
+                    required:
+                    - bucket
+                    - region
+                    - root
+                    type: object
+                type: object
               postgreSQLPort:
                 format: int32
                 type: integer
@@ -2849,6 +2944,9 @@ spec:
                     additionalProperties:
                       type: string
                     type: object
+                required:
+                - enabled
+                - labels
                 type: object
               rpcPort:
                 format: int32
@@ -2868,87 +2966,12 @@ spec:
                   type:
                     type: string
                 type: object
-              storage:
-                properties:
-                  cache:
-                    properties:
-                      cacheCapacity:
-                        type: string
-                      storage:
-                        properties:
-                          mountPath:
-                            type: string
-                          storageClassName:
-                            type: string
-                          storageRetainPolicy:
-                            enum:
-                            - Retain
-                            - Delete
-                            type: string
-                          storageSize:
-                            pattern: (^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$)
-                            type: string
-                        type: object
-                    type: object
-                  file:
-                    properties:
-                      mountPath:
-                        type: string
-                      storageClassName:
-                        type: string
-                      storageRetainPolicy:
-                        enum:
-                        - Retain
-                        - Delete
-                        type: string
-                      storageSize:
-                        pattern: (^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$)
-                        type: string
-                    type: object
-                  gcs:
-                    properties:
-                      bucket:
-                        type: string
-                      endpoint:
-                        type: string
-                      root:
-                        type: string
-                      scope:
-                        type: string
-                      secretName:
-                        type: string
-                    type: object
-                  oss:
-                    properties:
-                      bucket:
-                        type: string
-                      endpoint:
-                        type: string
-                      region:
-                        type: string
-                      root:
-                        type: string
-                      secretName:
-                        type: string
-                    type: object
-                  s3:
-                    properties:
-                      bucket:
-                        type: string
-                      endpoint:
-                        type: string
-                      region:
-                        type: string
-                      root:
-                        type: string
-                      secretName:
-                        type: string
-                    type: object
-                type: object
               tls:
                 properties:
                   secretName:
                     type: string
+                required:
+                - secretName
                 type: object
               version:
                 type: string
@@ -2960,12 +2983,16 @@ spec:
                         items:
                           type: string
                         type: array
+                    required:
+                    - brokerEndpoints
                     type: object
                   raftEngine:
                     properties:
-                      file:
+                      fs:
                         properties:
                           mountPath:
+                            type: string
+                          name:
                             type: string
                           storageClassName:
                             type: string

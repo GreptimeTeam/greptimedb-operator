@@ -8,9 +8,11 @@ spec:
     main:
       image: greptime/greptimedb:latest
   frontend:
-    replicas: 3
-  meta:
-    replicas: 3
-  datanode:
     replicas: 1
+  meta:
+    etcdEndpoints:
+      - etcd.etcd-cluster.svc.cluster.local:2379
+    replicas: 1
+  datanode:
+    replicas: 3
   httpPort: 5000

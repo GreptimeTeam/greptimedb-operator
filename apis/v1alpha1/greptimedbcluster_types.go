@@ -51,8 +51,8 @@ type MetaSpec struct {
 	HTTPPort int32 `json:"httpPort,omitempty"`
 
 	// EtcdEndpoints is the endpoints of the etcd cluster.
-	// +optional
-	EtcdEndpoints []string `json:"etcdEndpoints,omitempty"`
+	// +required
+	EtcdEndpoints []string `json:"etcdEndpoints"`
 
 	// EnableCheckEtcdService indicates whether to check etcd cluster health when starting meta.
 	// +optional
@@ -84,13 +84,17 @@ type FrontendSpec struct {
 type DatanodeSpec struct {
 	ComponentSpec `json:",inline"`
 
-	// The RPC port of the datanode.
+	// RPCPort is the gRPC port of the datanode.
 	// +optional
 	RPCPort int32 `json:"rpcPort,omitempty"`
 
-	// The HTTP port of the datanode.
+	// HTTPPort is the HTTP port of the datanode.
 	// +optional
 	HTTPPort int32 `json:"httpPort,omitempty"`
+
+	// Storage is the default file storage of the datanode. For example, WAL, cache, index etc.
+	// +optional
+	Storage *DatanodeStorageSpec `json:"storage,omitempty"`
 }
 
 // FlownodeSpec is the specification for flownode component.
@@ -159,32 +163,13 @@ type GreptimeDBClusterSpec struct {
 	// +optional
 	Initializer *InitializerSpec `json:"initializer,omitempty"`
 
-	// StorageProvider is the storage provider for the greptimedb cluster.
+	// ObjectStorageProvider is the storage provider for the greptimedb cluster.
 	// +optional
-	StorageProvider *StorageProviderSpec `json:"storage,omitempty"`
+	ObjectStorageProvider *ObjectStorageProviderSpec `json:"objectStorage,omitempty"`
 
 	// WALProvider is the WAL provider for the greptimedb cluster.
 	// +optional
 	WALProvider *WALProviderSpec `json:"wal,omitempty"`
-
-	// EnableMultiplePVCs indicates whether to enable multiple PVCs for the greptimedb cluster.
-	// If it is true, the greptimedb cluster will create multiple PVCs of same storageclass for different file storages, such as WAL, cache etc.
-	// +optional
-	EnableMultiplePVCs *bool `json:"enableMultiplePVCs,omitempty"`
-}
-
-func (in *GreptimeDBCluster) GetRaftEngineWAL() *RaftEngineWAL {
-	if in.Spec.WALProvider != nil {
-		return in.Spec.WALProvider.RaftEngineWAL
-	}
-	return nil
-}
-
-func (in *GreptimeDBCluster) GetKafkaWAL() *KafkaWAL {
-	if in.Spec.WALProvider != nil {
-		return in.Spec.WALProvider.KafkaWAL
-	}
-	return nil
 }
 
 func (in *GreptimeDBCluster) GetMainContainer() *MainContainerSpec {
@@ -209,24 +194,140 @@ func (in *GreptimeDBCluster) GetFrontend() *FrontendSpec {
 	return in.Spec.Frontend
 }
 
+func (in *GreptimeDBCluster) GetFrontendConfig() string {
+	if in.Spec.Frontend != nil {
+		return in.Spec.Frontend.Config
+	}
+	return ""
+}
+
+func (in *GreptimeDBCluster) GetFrontendTLSSecretName() string {
+	if in.Spec.Frontend != nil && in.Spec.Frontend.TLS != nil {
+		return in.Spec.Frontend.TLS.SecretName
+	}
+	return ""
+}
+
 func (in *GreptimeDBCluster) GetMeta() *MetaSpec {
 	return in.Spec.Meta
+}
+
+func (in *GreptimeDBCluster) GetMetaConfig() string {
+	if in.Spec.Meta != nil {
+		return in.Spec.Meta.Config
+	}
+	return ""
+}
+
+func (in *GreptimeDBCluster) EnableRegionFailover() bool {
+	if in.Spec.Meta != nil && in.Spec.Meta.EnableRegionFailover != nil {
+		return *in.Spec.Meta.EnableRegionFailover
+	}
+	return false
 }
 
 func (in *GreptimeDBCluster) GetDatanode() *DatanodeSpec {
 	return in.Spec.Datanode
 }
 
+func (in *GreptimeDBCluster) GetDatanodeConfig() string {
+	if in.Spec.Datanode != nil {
+		return in.Spec.Datanode.Config
+	}
+	return ""
+}
+
 func (in *GreptimeDBCluster) GetFlownode() *FlownodeSpec {
 	return in.Spec.Flownode
+}
+
+func (in *GreptimeDBCluster) GetFlownodeConfig() string {
+	if in.Spec.Flownode != nil {
+		return in.Spec.Flownode.Config
+	}
+	return ""
 }
 
 func (in *GreptimeDBCluster) GetWALProvider() *WALProviderSpec {
 	return in.Spec.WALProvider
 }
 
-func (in *GreptimeDBCluster) GetStorageProvider() *StorageProviderSpec {
-	return in.Spec.StorageProvider
+func (in *GreptimeDBCluster) GetWALDir() string {
+	if in.Spec.WALProvider != nil && in.Spec.WALProvider.RaftEngineWAL != nil {
+		return in.Spec.WALProvider.RaftEngineWAL.FileStorage.MountPath
+	}
+	return DefaultWalDir
+}
+
+func (in *GreptimeDBCluster) GetDataHome() string {
+	if in.Spec.Datanode != nil && in.Spec.Datanode.Storage != nil {
+		return in.Spec.Datanode.Storage.DataHome
+	}
+	return ""
+}
+
+func (in *GreptimeDBCluster) GetDatanodeFileStorage() *FileStorage {
+	if in.Spec.Datanode != nil && in.Spec.Datanode.Storage != nil {
+		return in.Spec.Datanode.Storage.FileStorage
+	}
+	return nil
+}
+
+func (in *GreptimeDBCluster) GetRaftEngineWAL() *RaftEngineWAL {
+	if in.Spec.WALProvider != nil {
+		return in.Spec.WALProvider.RaftEngineWAL
+	}
+	return nil
+}
+
+func (in *GreptimeDBCluster) GetRaftEngineWALFileStorage() *FileStorage {
+	if in.Spec.WALProvider != nil && in.Spec.WALProvider.RaftEngineWAL != nil {
+		return in.Spec.WALProvider.RaftEngineWAL.FileStorage
+	}
+	return nil
+}
+
+func (in *GreptimeDBCluster) GetKafkaWAL() *KafkaWAL {
+	if in.Spec.WALProvider != nil {
+		return in.Spec.WALProvider.KafkaWAL
+	}
+	return nil
+}
+
+func (in *GreptimeDBCluster) GetStorageProvider() *ObjectStorageProviderSpec {
+	return in.Spec.ObjectStorageProvider
+}
+
+func (in *GreptimeDBCluster) GetCacheFileStorage() *FileStorage {
+	if in.Spec.ObjectStorageProvider != nil && in.Spec.ObjectStorageProvider.Cache != nil {
+		return in.Spec.ObjectStorageProvider.Cache.FileStorage
+	}
+	return nil
+}
+
+func (in *GreptimeDBCluster) GetS3Storage() *S3Storage {
+	if in.Spec.ObjectStorageProvider != nil {
+		return in.Spec.ObjectStorageProvider.S3
+	}
+	return nil
+}
+
+func (in *GreptimeDBCluster) GetGCSStorage() *GCSStorage {
+	if in.Spec.ObjectStorageProvider != nil {
+		return in.Spec.ObjectStorageProvider.GCS
+	}
+	return nil
+}
+
+func (in *GreptimeDBCluster) GetOSSStorage() *OSSStorage {
+	if in.Spec.ObjectStorageProvider != nil {
+		return in.Spec.ObjectStorageProvider.OSS
+	}
+	return nil
+}
+
+func (in *GreptimeDBCluster) EnablePrometheusMonitor() bool {
+	return in.Spec.PrometheusMonitor != nil && in.Spec.PrometheusMonitor.Enabled
 }
 
 // GreptimeDBClusterStatus defines the observed state of GreptimeDBCluster

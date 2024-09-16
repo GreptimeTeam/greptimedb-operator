@@ -18,17 +18,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
-	"github.com/pelletier/go-toml"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/client-go/util/retry"
 	"k8s.io/klog/v2"
@@ -38,7 +33,6 @@ import (
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 	"github.com/GreptimeTeam/greptimedb-operator/cmd/operator/app/options"
-	"github.com/GreptimeTeam/greptimedb-operator/controllers/greptimedbcluster/deployers"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/deployer"
 )
 
@@ -114,7 +108,12 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, err
 	}
 
-	if err = r.validate(ctx, standalone); err != nil {
+	if err = standalone.Validate(); err != nil {
+		r.Recorder.Event(standalone, corev1.EventTypeWarning, "InvalidStandalone", fmt.Sprintf("Invalid standalone: %v", err))
+		return ctrl.Result{}, err
+	}
+
+	if err = standalone.Check(ctx, r.Client); err != nil {
 		r.Recorder.Event(standalone, corev1.EventTypeWarning, "InvalidStandalone", fmt.Sprintf("Invalid standalone: %v", err))
 		return ctrl.Result{}, err
 	}
@@ -239,97 +238,6 @@ func (r *Reconciler) setStandaloneStatus(ctx context.Context, standalone *v1alph
 	r.recordNormalEventByPhase(standalone)
 
 	return UpdateStatus(ctx, standalone, r.Client)
-}
-
-func (r *Reconciler) validate(ctx context.Context, standalone *v1alpha1.GreptimeDBStandalone) error {
-	if standalone.Spec.Base == nil {
-		return fmt.Errorf("no components spec in standalone")
-	}
-
-	if standalone.Spec.TLS != nil {
-		if len(standalone.Spec.TLS.SecretName) > 0 {
-			tlsSecret := &corev1.Secret{}
-			err := r.Get(ctx, types.NamespacedName{Namespace: standalone.Namespace, Name: standalone.Spec.TLS.SecretName}, tlsSecret)
-			if err != nil {
-				return fmt.Errorf("get tls secret '%s' failed, error: '%v'", standalone.Spec.TLS.SecretName, err)
-			}
-
-			if _, ok := tlsSecret.Data[deployers.TLSCrtSecretKey]; !ok {
-				return fmt.Errorf("tls secret '%s' does not contain key '%s'", standalone.Spec.TLS.SecretName, deployers.TLSCrtSecretKey)
-			}
-
-			if _, ok := tlsSecret.Data[deployers.TLSKeySecretKey]; !ok {
-				return fmt.Errorf("tls secret '%s' does not contain key '%s'", standalone.Spec.TLS.SecretName, deployers.TLSKeySecretKey)
-			}
-		}
-	}
-
-	// To detect if the CRD of podmonitor is installed.
-	if standalone.Spec.PrometheusMonitor != nil {
-		if standalone.Spec.PrometheusMonitor.Enabled {
-			// CheckPodMonitorCRDInstall is used to check if the CRD of podmonitor is installed, it is not used to create the podmonitor.
-			err := r.checkPodMonitorCRDInstall(ctx, metav1.GroupKind{
-				Group: "monitoring.coreos.com",
-				Kind:  "PodMonitor",
-			})
-			if err != nil {
-				if k8serrors.IsNotFound(err) {
-					return fmt.Errorf("the crd podmonitors.monitoring.coreos.com is not installed")
-				} else {
-					return fmt.Errorf("check crd of podmonitors.monitoring.coreos.com is installed error: %v", err)
-				}
-			}
-		}
-	}
-
-	if len(standalone.Spec.Config) > 0 {
-		if err := r.validateTomlConfig(standalone.Spec.Config); err != nil {
-			return fmt.Errorf("invalid meta toml config: %v", err)
-		}
-	}
-
-	if standalone.Spec.ObjectStorageProvider != nil {
-		checkProviders := func() bool {
-			providers := []bool{
-				standalone.Spec.ObjectStorageProvider.S3 != nil,
-				standalone.Spec.ObjectStorageProvider.OSS != nil,
-				standalone.Spec.ObjectStorageProvider.GCS != nil,
-			}
-			providerCount := 0
-			for _, p := range providers {
-				if p {
-					providerCount++
-				}
-			}
-			return providerCount > 1
-		}()
-		if checkProviders {
-			return fmt.Errorf("only one object storage provider can be specified")
-		}
-	}
-
-	return nil
-}
-
-func (r *Reconciler) validateTomlConfig(input string) error {
-	if len(input) > 0 {
-		data := make(map[string]interface{})
-		err := toml.Unmarshal([]byte(input), &data)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (r *Reconciler) checkPodMonitorCRDInstall(ctx context.Context, groupKind metav1.GroupKind) error {
-	var crd apiextensionsv1.CustomResourceDefinition
-	nameNamespace := types.NamespacedName{Name: fmt.Sprintf("%ss.%s", strings.ToLower(groupKind.Kind), groupKind.Group)}
-	err := r.Get(ctx, nameNamespace, &crd)
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func (r *Reconciler) recordNormalEventByPhase(standalone *v1alpha1.GreptimeDBStandalone) {

@@ -11,6 +11,8 @@ spec:
     replicas: 1
   meta:
     replicas: 1
+    etcdEndpoints:
+      - etcd.etcd-cluster.svc.cluster.local:2379
   datanode:
     replicas: 1
   wal:

@@ -24,11 +24,11 @@ CacheStorage defines the cache storage specification.
 
 
 _Appears in:_
-- [StorageProviderSpec](#storageproviderspec)
+- [ObjectStorageProviderSpec](#objectstorageproviderspec)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `storage` _[FileStorage](#filestorage)_ | Storage is the storage specification for the cache. |  |  |
+| `fs` _[FileStorage](#filestorage)_ | Storage is the storage specification for the cache.<br />If the storage is not specified, the cache will use DatanodeStorageSpec. |  |  |
 | `cacheCapacity` _string_ | CacheCapacity is the capacity of the cache. |  |  |
 
 
@@ -111,8 +111,9 @@ _Appears in:_
 | `config` _string_ | The content of the configuration file of the component in TOML format. |  |  |
 | `template` _[PodTemplateSpec](#podtemplatespec)_ | Template defines the pod template for the component, if not specified, the pod template will use the default value. |  |  |
 | `logging` _[LoggingSpec](#loggingspec)_ | Logging defines the logging configuration for the component. |  |  |
-| `rpcPort` _integer_ | The RPC port of the datanode. |  |  |
-| `httpPort` _integer_ | The HTTP port of the datanode. |  |  |
+| `rpcPort` _integer_ | RPCPort is the gRPC port of the datanode. |  |  |
+| `httpPort` _integer_ | HTTPPort is the HTTP port of the datanode. |  |  |
+| `storage` _[DatanodeStorageSpec](#datanodestoragespec)_ | Storage is the default file storage of the datanode. For example, WAL, cache, index etc. |  |  |
 
 
 #### DatanodeStatus
@@ -132,21 +133,40 @@ _Appears in:_
 | `readyReplicas` _integer_ | ReadyReplicas is the number of ready replicas of the datanode. |  |  |
 
 
+#### DatanodeStorageSpec
+
+
+
+
+
+
+
+_Appears in:_
+- [DatanodeSpec](#datanodespec)
+- [GreptimeDBStandaloneSpec](#greptimedbstandalonespec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `dataHome` _string_ | DataHome is the home directory of the data. |  |  |
+| `fs` _[FileStorage](#filestorage)_ | FileStorage is the file storage configuration. |  |  |
+
+
 #### FileStorage
 
 
 
-FileStorage defines the file storage specification.
+FileStorage defines the file storage specification. It is used to generate the PVC that will be mounted to the container.
 
 
 
 _Appears in:_
 - [CacheStorage](#cachestorage)
+- [DatanodeStorageSpec](#datanodestoragespec)
 - [RaftEngineWAL](#raftenginewal)
-- [StorageProviderSpec](#storageproviderspec)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
+| `name` _string_ | Name is the name of the PVC that will be created. |  |  |
 | `storageClassName` _string_ | StorageClassName is the name of the StorageClass to use for the PVC. |  |  |
 | `storageSize` _string_ | StorageSize is the size of the storage. |  | Pattern: `(^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$)` <br /> |
 | `mountPath` _string_ | MountPath is the path where the storage will be mounted in the container. |  |  |
@@ -237,15 +257,15 @@ GCSStorage defines the Google GCS storage specification.
 
 
 _Appears in:_
-- [StorageProviderSpec](#storageproviderspec)
+- [ObjectStorageProviderSpec](#objectstorageproviderspec)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `bucket` _string_ | The data will be stored in the bucket. |  |  |
 | `root` _string_ | The gcs directory path. |  |  |
+| `secretName` _string_ | The secret of storing Credentials for gcs service OAuth2 authentication.<br />The secret must be the same namespace with the GreptimeDBCluster resource. |  |  |
 | `scope` _string_ | The scope for gcs. |  |  |
 | `endpoint` _string_ | The endpoint URI of gcs service. |  |  |
-| `secretName` _string_ | The secret of storing Credentials for gcs service OAuth2 authentication.<br />The secret must be the same namespace with the GreptimeDBCluster resource. |  |  |
 
 
 #### GreptimeDBCluster
@@ -310,9 +330,8 @@ _Appears in:_
 | `prometheusMonitor` _[PrometheusMonitorSpec](#prometheusmonitorspec)_ | PrometheusMonitor is the specification for creating PodMonitor or ServiceMonitor. |  |  |
 | `version` _string_ | Version is the version of greptimedb. |  |  |
 | `initializer` _[InitializerSpec](#initializerspec)_ | Initializer is the init container to set up components configurations before running the container. |  |  |
-| `storage` _[StorageProviderSpec](#storageproviderspec)_ | StorageProvider is the storage provider for the greptimedb cluster. |  |  |
+| `objectStorage` _[ObjectStorageProviderSpec](#objectstorageproviderspec)_ | ObjectStorageProvider is the storage provider for the greptimedb cluster. |  |  |
 | `wal` _[WALProviderSpec](#walproviderspec)_ | WALProvider is the WAL provider for the greptimedb cluster. |  |  |
-| `enableMultiplePVCs` _boolean_ | EnableMultiplePVCs indicates whether to enable multiple PVCs for the greptimedb cluster.<br />If it is true, the greptimedb cluster will create multiple PVCs of same storageclass for different file storages, such as WAL, cache etc. |  |  |
 
 
 
@@ -377,10 +396,10 @@ _Appears in:_
 | `prometheusMonitor` _[PrometheusMonitorSpec](#prometheusmonitorspec)_ | PrometheusMonitor is the specification for creating PodMonitor or ServiceMonitor. |  |  |
 | `version` _string_ | Version is the version of the greptimedb. |  |  |
 | `initializer` _[InitializerSpec](#initializerspec)_ | Initializer is the init container to set up components configurations before running the container. |  |  |
-| `storage` _[StorageProviderSpec](#storageproviderspec)_ | StorageProvider is the storage provider for the greptimedb cluster. |  |  |
+| `objectStorage` _[ObjectStorageProviderSpec](#objectstorageproviderspec)_ | ObjectStorageProvider is the storage provider for the greptimedb cluster. |  |  |
+| `datanodeStorage` _[DatanodeStorageSpec](#datanodestoragespec)_ | DatanodeStorage is the default file storage of the datanode. For example, WAL, cache, index etc. |  |  |
 | `wal` _[WALProviderSpec](#walproviderspec)_ | WALProvider is the WAL provider for the greptimedb cluster. |  |  |
 | `config` _string_ | The content of the configuration file of the component in TOML format. |  |  |
-| `enableMultiplePVCs` _boolean_ | EnableMultiplePVCs indicates whether to enable multiple PVCs for the greptimedb cluster.<br />If it is true, the greptimedb cluster will create multiple PVCs of same storageclass for different file storages, such as WAL, cache etc. |  |  |
 | `logging` _[LoggingSpec](#loggingspec)_ | Logging defines the logging configuration for the component. |  |  |
 
 
@@ -559,15 +578,35 @@ OSSStorage defines the Aliyun OSS storage specification.
 
 
 _Appears in:_
-- [StorageProviderSpec](#storageproviderspec)
+- [ObjectStorageProviderSpec](#objectstorageproviderspec)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `bucket` _string_ | The data will be stored in the bucket. |  |  |
 | `region` _string_ | The region of the bucket. |  |  |
-| `endpoint` _string_ | The endpoint of the bucket. |  |  |
 | `secretName` _string_ | The secret of storing the credentials of access key id and secret access key.<br />The secret must be the same namespace with the GreptimeDBCluster resource. |  |  |
 | `root` _string_ | The OSS directory path. |  |  |
+| `endpoint` _string_ | The endpoint of the bucket. |  |  |
+
+
+#### ObjectStorageProviderSpec
+
+
+
+ObjectStorageProviderSpec defines the object storage provider for the cluster. The data will be stored in the storage.
+
+
+
+_Appears in:_
+- [GreptimeDBClusterSpec](#greptimedbclusterspec)
+- [GreptimeDBStandaloneSpec](#greptimedbstandalonespec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `s3` _[S3Storage](#s3storage)_ | S3 is the S3 storage configuration. |  |  |
+| `oss` _[OSSStorage](#ossstorage)_ | OSS is the Aliyun OSS storage configuration. |  |  |
+| `gcs` _[GCSStorage](#gcsstorage)_ | GCS is the Google GCS storage configuration. |  |  |
+| `cache` _[CacheStorage](#cachestorage)_ | Cache is the cache storage configuration. |  |  |
 
 
 #### Phase
@@ -661,7 +700,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `file` _[FileStorage](#filestorage)_ | File is the file storage configuration for the raft-engine WAL. |  |  |
+| `fs` _[FileStorage](#filestorage)_ | FileStorage is the file storage configuration for the raft-engine WAL.<br />If the file storage is not specified, WAL will use DatanodeStorageSpec. |  |  |
 
 
 #### S3Storage
@@ -673,15 +712,15 @@ S3Storage defines the S3 storage specification.
 
 
 _Appears in:_
-- [StorageProviderSpec](#storageproviderspec)
+- [ObjectStorageProviderSpec](#objectstorageproviderspec)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `bucket` _string_ | The data will be stored in the bucket. |  |  |
 | `region` _string_ | The region of the bucket. |  |  |
-| `endpoint` _string_ | The endpoint of the bucket. |  |  |
 | `secretName` _string_ | The secret of storing the credentials of access key id and secret access key.<br />The secret must be the same namespace with the GreptimeDBCluster resource. |  |  |
 | `root` _string_ | The S3 directory path. |  |  |
+| `endpoint` _string_ | The endpoint of the bucket. |  |  |
 
 
 #### ServiceSpec
@@ -732,27 +771,6 @@ _Appears in:_
 | `schedulerName` _string_ | If specified, the pod will be dispatched by specified scheduler.<br />If not specified, the pod will be dispatched by default scheduler.<br />SchedulerName field is from `corev1.PodSpec.SchedulerName`. |  |  |
 | `additionalContainers` _[Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#container-v1-core) array_ | For most time, there is one main container in a pod(`frontend`/`meta`/`datanode`/`flownode`).<br />If specified, additional containers will be added to the pod as sidecar containers. |  |  |
 | `volumes` _[Volume](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#volume-v1-core) array_ | List of volumes that can be mounted by containers belonging to the pod. |  |  |
-
-
-#### StorageProviderSpec
-
-
-
-StorageProviderSpec defines the storage provider for the cluster. The data will be stored in the storage.
-
-
-
-_Appears in:_
-- [GreptimeDBClusterSpec](#greptimedbclusterspec)
-- [GreptimeDBStandaloneSpec](#greptimedbstandalonespec)
-
-| Field | Description | Default | Validation |
-| --- | --- | --- | --- |
-| `file` _[FileStorage](#filestorage)_ | File is the file storage configuration. |  |  |
-| `s3` _[S3Storage](#s3storage)_ | S3 is the S3 storage configuration. |  |  |
-| `oss` _[OSSStorage](#ossstorage)_ | OSS is the Aliyun OSS storage configuration. |  |  |
-| `gcs` _[GCSStorage](#gcsstorage)_ | GCS is the Google GCS storage configuration. |  |  |
-| `cache` _[CacheStorage](#cachestorage)_ | Cache is the cache storage configuration. |  |  |
 
 
 #### StorageRetainPolicyType

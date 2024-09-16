@@ -14,6 +14,7 @@
 
 package v1alpha1
 
+// The following constants are the default values for the GreptimeDBCluster and GreptimeDBStandalone.
 const (
 	// DefaultVersion is the default version of the GreptimeDB.
 	DefaultVersion = "Unknown"
@@ -40,22 +41,19 @@ const (
 	DefaultReplicas = 1
 
 	// DefaultDataSize is the default size of the data when using the file storage.
-	DefaultDataSize = "20Gi"
+	DefaultDataSize = "10Gi"
 
-	// DefaultDataDir is the default directory for the data when using the file storage.
-	DefaultDataDir = "/data/greptimedb/data"
+	// DefaultDataHome is the default directory for the data.
+	DefaultDataHome = "/data/greptimedb"
 
-	// DefaultWALDataSize is the default size of the WAL data when using the raft-engine wal.
-	DefaultWALDataSize = "5Gi"
+	// DefaultDatanodeFileStorageName is the default file storage name for the datanode.
+	DefaultDatanodeFileStorageName = "datanode"
 
 	// DefaultWalDir is the default directory for the WAL data when using the raft-engine wal.
-	DefaultWalDir = "/data/greptimedb/wal"
+	DefaultWalDir = DefaultDataHome + "/wal"
 
 	// DefaultLogsDir is the default directory for the logs.
-	DefaultLogsDir = "/data/greptimedb/logs"
-
-	// DefaultCacheDir is the default directory for the cache.
-	DefaultCacheDir = "/data/greptimedb/cache"
+	DefaultLogsDir = DefaultDataHome + "/logs"
 
 	// DefaultStorageRetainPolicyType is the default storage retain policy type.
 	DefaultStorageRetainPolicyType = StorageRetainPolicyTypeRetain
@@ -65,4 +63,22 @@ const (
 
 	// DefaultLogingLevel is the default logging level for the GreptimeDB.
 	DefaultLogingLevel = LoggingLevelInfo
+)
+
+// The following constants are the constant configuration for the GreptimeDBCluster and GreptimeDBStandalone.
+const (
+	// TLSCrtSecretKey is the key for the TLS certificate in the secret.
+	TLSCrtSecretKey = "tls.crt"
+
+	// TLSKeySecretKey is the key for the TLS key in the secret.
+	TLSKeySecretKey = "tls.key"
+
+	// AccessKeyIDSecretKey is the key for the access key ID in the secret.
+	AccessKeyIDSecretKey = "access-key-id"
+
+	// SecretAccessKeySecretKey is the key for the secret access key in the secret.
+	SecretAccessKeySecretKey = "secret-access-key"
+
+	// ServiceAccountKey is the key for the service account in the secret.
+	ServiceAccountKey = "service-account-key"
 )
