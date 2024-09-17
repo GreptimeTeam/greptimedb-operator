@@ -15,8 +15,6 @@
 package dbconfig
 
 import (
-	"encoding/base64"
-
 	"k8s.io/utils/pointer"
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
@@ -26,20 +24,11 @@ var _ Config = &FrontendConfig{}
 
 // StandaloneConfig is the configuration for the frontend.
 type StandaloneConfig struct {
-	// Storage options.
-	StorageType            *string `tomlmapping:"storage.type"`
-	StorageDataHome        *string `tomlmapping:"storage.data_home"`
-	StorageAccessKeyID     *string `tomlmapping:"storage.access_key_id"`
-	StorageSecretAccessKey *string `tomlmapping:"storage.secret_access_key"`
-	StorageAccessKeySecret *string `tomlmapping:"storage.access_key_secret"`
-	StorageBucket          *string `tomlmapping:"storage.bucket"`
-	StorageRoot            *string `tomlmapping:"storage.root"`
-	StorageRegion          *string `tomlmapping:"storage.region"`
-	StorageEndpoint        *string `tomlmapping:"storage.endpoint"`
-	StorageScope           *string `tomlmapping:"storage.scope"`
-	StorageCredential      *string `tomlmapping:"storage.credential"`
+	// StorageConfig is the configuration for the storage.
+	StorageConfig `tomlmapping:",inline"`
 
-	WalDir *string `tomlmapping:"wal.dir"`
+	// WALConfig is the configuration for the WAL.
+	WALConfig `tomlmapping:",inline"`
 
 	// InputConfig is from config field of cluster spec.
 	InputConfig string
@@ -53,55 +42,25 @@ func (c *StandaloneConfig) ConfigureByCluster(_ *v1alpha1.GreptimeDBCluster) err
 // ConfigureByStandalone is not need to implement in cluster mode.
 func (c *StandaloneConfig) ConfigureByStandalone(standalone *v1alpha1.GreptimeDBStandalone) error {
 	if standalone.GetS3Storage() != nil {
-		s3 := standalone.GetS3Storage()
-		c.StorageType = pointer.String("S3")
-		c.StorageBucket = pointer.String(s3.Bucket)
-		c.StorageRoot = pointer.String(s3.Root)
-		c.StorageEndpoint = pointer.String(s3.Endpoint)
-		c.StorageRegion = pointer.String(s3.Region)
-
-		accessKeyID, secretAccessKey, err := getOCSCredentials(standalone.Namespace, s3.SecretName)
-		if err != nil {
+		if err := c.ConfigureS3Storage(standalone.Namespace, standalone.GetS3Storage()); err != nil {
 			return err
 		}
-		c.StorageAccessKeyID = pointer.String(string(accessKeyID))
-		c.StorageSecretAccessKey = pointer.String(string(secretAccessKey))
 	}
 
 	if standalone.GetOSSStorage() != nil {
-		oss := standalone.GetOSSStorage()
-		c.StorageType = pointer.String("Oss")
-		c.StorageBucket = pointer.String(oss.Bucket)
-		c.StorageRoot = pointer.String(oss.Root)
-		c.StorageEndpoint = pointer.String(oss.Endpoint)
-		c.StorageRegion = pointer.String(oss.Region)
-
-		accessKeyID, secretAccessKey, err := getOCSCredentials(standalone.Namespace, oss.SecretName)
-		if err != nil {
+		if err := c.ConfigureOSSStorage(standalone.Namespace, standalone.GetOSSStorage()); err != nil {
 			return err
 		}
-		c.StorageAccessKeyID = pointer.String(string(accessKeyID))
-		c.StorageAccessKeySecret = pointer.String(string(secretAccessKey))
 	}
 
 	if standalone.GetGCSStorage() != nil {
-		gcs := standalone.GetGCSStorage()
-		c.StorageType = pointer.String("Gcs")
-		c.StorageBucket = pointer.String(gcs.Bucket)
-		c.StorageRoot = pointer.String(gcs.Root)
-		c.StorageEndpoint = pointer.String(gcs.Endpoint)
-		c.StorageScope = pointer.String(gcs.Scope)
-
-		serviceAccountKey, err := getServiceAccountKey(standalone.Namespace, gcs.SecretName)
-		if err != nil {
+		if err := c.ConfigureGCSStorage(standalone.Namespace, standalone.GetGCSStorage()); err != nil {
 			return err
-		}
-		if len(serviceAccountKey) != 0 {
-			c.StorageCredential = pointer.String(base64.StdEncoding.EncodeToString(serviceAccountKey))
 		}
 	}
 
-	if standalone.GetWALDir() != "" {
+	// Set the wal dir if the kafka wal is not enabled.
+	if standalone.GetKafkaWAL() == nil && standalone.GetWALDir() != "" {
 		c.WalDir = pointer.String(standalone.GetWALDir())
 	}
 
@@ -113,6 +72,11 @@ func (c *StandaloneConfig) ConfigureByStandalone(standalone *v1alpha1.GreptimeDB
 		if err := c.SetInputConfig(standalone.GetConfig()); err != nil {
 			return err
 		}
+	}
+
+	if standalone.GetKafkaWAL() != nil {
+		c.WalProvider = pointer.String("kafka")
+		c.WalBrokerEndpoints = standalone.GetKafkaWAL().BrokerEndpoints
 	}
 
 	return nil

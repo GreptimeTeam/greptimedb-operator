@@ -15,8 +15,6 @@
 package dbconfig
 
 import (
-	"encoding/base64"
-
 	"k8s.io/utils/pointer"
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
@@ -30,27 +28,11 @@ type DatanodeConfig struct {
 	RPCAddr     *string `tomlmapping:"rpc_addr"`
 	RPCHostName *string `tomlmapping:"rpc_hostname"`
 
-	// Storage options.
-	StorageType            *string `tomlmapping:"storage.type"`
-	StorageDataHome        *string `tomlmapping:"storage.data_home"`
-	StorageAccessKeyID     *string `tomlmapping:"storage.access_key_id"`
-	StorageSecretAccessKey *string `tomlmapping:"storage.secret_access_key"`
-	StorageAccessKeySecret *string `tomlmapping:"storage.access_key_secret"`
-	StorageBucket          *string `tomlmapping:"storage.bucket"`
-	StorageRoot            *string `tomlmapping:"storage.root"`
-	StorageRegion          *string `tomlmapping:"storage.region"`
-	StorageEndpoint        *string `tomlmapping:"storage.endpoint"`
-	StorageScope           *string `tomlmapping:"storage.scope"`
-	StorageCredential      *string `tomlmapping:"storage.credential"`
+	// StorageConfig is the configuration for the storage.
+	StorageConfig `tomlmapping:",inline"`
 
-	// The wal file directory.
-	WalDir *string `tomlmapping:"wal.dir"`
-
-	// The wal provider.
-	WalProvider *string `tomlmapping:"wal.provider"`
-
-	// The kafka broker endpoints.
-	WalBrokerEndpoints []string `tomlmapping:"wal.broker_endpoints"`
+	// WALConfig is the configuration for the WAL.
+	WALConfig `tomlmapping:",inline"`
 
 	// InputConfig is from config field of cluster spec.
 	InputConfig string
@@ -59,57 +41,20 @@ type DatanodeConfig struct {
 // ConfigureByCluster configures the datanode config by the given cluster.
 func (c *DatanodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster) error {
 	if cluster.GetS3Storage() != nil {
-		s3 := cluster.GetS3Storage()
-		c.StorageType = pointer.String("S3")
-		c.StorageBucket = pointer.String(s3.Bucket)
-		c.StorageRoot = pointer.String(s3.Root)
-		c.StorageEndpoint = pointer.String(s3.Endpoint)
-		c.StorageRegion = pointer.String(s3.Region)
-
-		if s3.SecretName != "" {
-			accessKeyID, secretAccessKey, err := getOCSCredentials(cluster.Namespace, s3.SecretName)
-			if err != nil {
-				return err
-			}
-			c.StorageAccessKeyID = pointer.String(string(accessKeyID))
-			c.StorageSecretAccessKey = pointer.String(string(secretAccessKey))
+		if err := c.ConfigureS3Storage(cluster.Namespace, cluster.GetS3Storage()); err != nil {
+			return err
 		}
 	}
 
 	if cluster.GetOSSStorage() != nil {
-		oss := cluster.GetOSSStorage()
-		c.StorageType = pointer.String("Oss")
-		c.StorageBucket = pointer.String(oss.Bucket)
-		c.StorageRoot = pointer.String(oss.Root)
-		c.StorageEndpoint = pointer.String(oss.Endpoint)
-		c.StorageRegion = pointer.String(oss.Region)
-
-		if oss.SecretName != "" {
-			accessKeyID, secretAccessKey, err := getOCSCredentials(cluster.Namespace, oss.SecretName)
-			if err != nil {
-				return err
-			}
-			c.StorageAccessKeyID = pointer.String(string(accessKeyID))
-			c.StorageAccessKeySecret = pointer.String(string(secretAccessKey))
+		if err := c.ConfigureOSSStorage(cluster.Namespace, cluster.GetOSSStorage()); err != nil {
+			return err
 		}
 	}
 
 	if cluster.GetGCSStorage() != nil {
-		gcs := cluster.GetGCSStorage()
-		c.StorageType = pointer.String("Gcs")
-		c.StorageBucket = pointer.String(gcs.Bucket)
-		c.StorageRoot = pointer.String(gcs.Root)
-		c.StorageEndpoint = pointer.String(gcs.Endpoint)
-		c.StorageScope = pointer.String(gcs.Scope)
-
-		if gcs.SecretName != "" {
-			serviceAccountKey, err := getServiceAccountKey(cluster.Namespace, gcs.SecretName)
-			if err != nil {
-				return err
-			}
-			if len(serviceAccountKey) != 0 {
-				c.StorageCredential = pointer.String(base64.StdEncoding.EncodeToString(serviceAccountKey))
-			}
+		if err := c.ConfigureGCSStorage(cluster.Namespace, cluster.GetGCSStorage()); err != nil {
+			return err
 		}
 	}
 

@@ -20,14 +20,14 @@ import (
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 )
 
-var _ Config = &MetasrvConfig{}
+var _ Config = &MetaConfig{}
 
-// MetasrvConfig is the configuration for the metasrv.
-type MetasrvConfig struct {
+// MetaConfig is the configuration for the meta.
+type MetaConfig struct {
 	// Enable region failover.
 	EnableRegionFailover *bool `tomlmapping:"enable_region_failover"`
 
-	// If it's not empty, the metasrv will store all data with this key prefix.
+	// If it's not empty, the meta will store all data with this key prefix.
 	StoreKeyPrefix *string `tomlmapping:"store_key_prefix"`
 
 	// The wal provider.
@@ -40,8 +40,8 @@ type MetasrvConfig struct {
 	InputConfig string
 }
 
-// ConfigureByCluster configures the metasrv config by the given cluster.
-func (c *MetasrvConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster) error {
+// ConfigureByCluster configures the meta config by the given cluster.
+func (c *MetaConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster) error {
 	c.EnableRegionFailover = pointer.Bool(cluster.EnableRegionFailover())
 
 	if cluster.Spec.Meta.StoreKeyPrefix != "" {
@@ -63,22 +63,22 @@ func (c *MetasrvConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster) 
 }
 
 // ConfigureByStandalone is not need to implement in cluster mode.
-func (c *MetasrvConfig) ConfigureByStandalone(_ *v1alpha1.GreptimeDBStandalone) error {
+func (c *MetaConfig) ConfigureByStandalone(_ *v1alpha1.GreptimeDBStandalone) error {
 	return nil
 }
 
-// Kind returns the component kind of the metasrv.
-func (c *MetasrvConfig) Kind() v1alpha1.ComponentKind {
+// Kind returns the component kind of the meta.
+func (c *MetaConfig) Kind() v1alpha1.ComponentKind {
 	return v1alpha1.MetaComponentKind
 }
 
-// GetInputConfig returns the input config of the metasrv.
-func (c *MetasrvConfig) GetInputConfig() string {
+// GetInputConfig returns the input config of the meta.
+func (c *MetaConfig) GetInputConfig() string {
 	return c.InputConfig
 }
 
-// SetInputConfig sets the input config of the metasrv.
-func (c *MetasrvConfig) SetInputConfig(inputConfig string) error {
+// SetInputConfig sets the input config of the meta.
+func (c *MetaConfig) SetInputConfig(inputConfig string) error {
 	c.InputConfig = inputConfig
 	return nil
 }
