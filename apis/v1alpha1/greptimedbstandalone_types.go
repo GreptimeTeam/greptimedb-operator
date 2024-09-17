@@ -120,121 +120,88 @@ type GreptimeDBStandalone struct {
 }
 
 func (in *GreptimeDBStandalone) GetConfig() string {
-	return in.Spec.Config
-}
-
-func (in *GreptimeDBStandalone) GetRaftEngineWAL() *RaftEngineWAL {
-	if in.Spec.WALProvider != nil {
-		return in.Spec.WALProvider.RaftEngineWAL
+	if in != nil {
+		return in.Spec.Config
 	}
-	return nil
+	return ""
 }
 
-func (in *GreptimeDBStandalone) GetRaftEngineWALFileStorage() *FileStorage {
-	if in.Spec.WALProvider != nil && in.Spec.WALProvider.RaftEngineWAL != nil {
-		return in.Spec.WALProvider.RaftEngineWAL.FileStorage
-	}
-	return nil
-}
-
-func (in *GreptimeDBStandalone) GetKafkaWAL() *KafkaWAL {
-	if in.Spec.WALProvider != nil {
-		return in.Spec.WALProvider.KafkaWAL
-	}
-	return nil
-}
-
-func (in *GreptimeDBStandalone) GetMainContainer() *MainContainerSpec {
-	if in.Spec.Base != nil {
+func (in *GreptimeDBStandalone) GetBaseMainContainer() *MainContainerSpec {
+	if in != nil && in.Spec.Base != nil {
 		return in.Spec.Base.MainContainer
 	}
 	return nil
 }
 
-func (in *GreptimeDBStandalone) GetMainContainerImage() string {
-	if in.GetMainContainer() != nil {
-		return in.GetMainContainer().Image
+func (in *GreptimeDBStandalone) GetVersion() string {
+	if in != nil {
+		return in.Spec.Version
 	}
 	return ""
 }
 
-func (in *GreptimeDBStandalone) GetVersion() string {
-	return in.Spec.Version
+func (in *GreptimeDBStandalone) GetPrometheusMonitor() *PrometheusMonitorSpec {
+	if in != nil {
+		return in.Spec.PrometheusMonitor
+	}
+	return nil
+}
+
+func (in *GreptimeDBStandalone) GetTLS() *TLSSpec {
+	if in != nil {
+		return in.Spec.TLS
+	}
+	return nil
 }
 
 func (in *GreptimeDBStandalone) GetWALProvider() *WALProviderSpec {
-	return in.Spec.WALProvider
-}
-
-func (in *GreptimeDBStandalone) GetStorageProvider() *ObjectStorageProviderSpec {
-	return in.Spec.ObjectStorageProvider
-}
-
-func (in *GreptimeDBStandalone) GetS3Storage() *S3Storage {
-	if in.Spec.ObjectStorageProvider != nil {
-		return in.Spec.ObjectStorageProvider.S3
+	if in != nil {
+		return in.Spec.WALProvider
 	}
 	return nil
 }
 
-func (in *GreptimeDBStandalone) GetGCSStorage() *GCSStorage {
-	if in.Spec.ObjectStorageProvider != nil {
-		return in.Spec.ObjectStorageProvider.GCS
+func (in *GreptimeDBStandalone) GetObjectStorageProvider() *ObjectStorageProviderSpec {
+	if in != nil {
+		return in.Spec.ObjectStorageProvider
 	}
 	return nil
-}
-
-func (in *GreptimeDBStandalone) GetOSSStorage() *OSSStorage {
-	if in.Spec.ObjectStorageProvider != nil {
-		return in.Spec.ObjectStorageProvider.OSS
-	}
-	return nil
-}
-
-func (in *GreptimeDBStandalone) GetCacheFileStorage() *FileStorage {
-	if in.Spec.ObjectStorageProvider != nil && in.Spec.ObjectStorageProvider.Cache != nil {
-		return in.Spec.ObjectStorageProvider.Cache.FileStorage
-	}
-	return nil
-}
-
-func (in *GreptimeDBStandalone) GetFrontendTLSSecretName() string {
-	if in.Spec.TLS != nil {
-		return in.Spec.TLS.SecretName
-	}
-	return ""
-}
-
-func (in *GreptimeDBStandalone) EnablePrometheusMonitor() bool {
-	return in.Spec.PrometheusMonitor != nil && in.Spec.PrometheusMonitor.Enabled
 }
 
 func (in *GreptimeDBStandalone) GetWALDir() string {
+	if in == nil {
+		return ""
+	}
+
 	if in.Spec.WALProvider != nil && in.Spec.WALProvider.RaftEngineWAL != nil {
 		return in.Spec.WALProvider.RaftEngineWAL.FileStorage.MountPath
 	}
 	if in.Spec.DatanodeStorage != nil && in.Spec.DatanodeStorage.DataHome != "" {
 		return in.Spec.DatanodeStorage.DataHome + "/wal"
 	}
+
 	return ""
 }
 
 func (in *GreptimeDBStandalone) GetDatanodeFileStorage() *FileStorage {
-	if in.Spec.DatanodeStorage != nil {
+	if in != nil && in.Spec.DatanodeStorage != nil {
 		return in.Spec.DatanodeStorage.FileStorage
 	}
 	return nil
 }
 
 func (in *GreptimeDBStandalone) GetDataHome() string {
-	if in.Spec.DatanodeStorage != nil {
+	if in != nil && in.Spec.DatanodeStorage != nil {
 		return in.Spec.DatanodeStorage.DataHome
 	}
 	return ""
 }
 
 func (in *GreptimeDBStandalone) GetLogging() *LoggingSpec {
-	return in.Spec.Logging
+	if in != nil {
+		return in.Spec.Logging
+	}
+	return nil
 }
 
 func (in *GreptimeDBStandaloneStatus) GetCondition(conditionType ConditionType) *Condition {

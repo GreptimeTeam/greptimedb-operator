@@ -45,24 +45,24 @@ type MetaConfig struct {
 
 // ConfigureByCluster configures the meta config by the given cluster.
 func (c *MetaConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster) error {
-	c.EnableRegionFailover = pointer.Bool(cluster.EnableRegionFailover())
+	c.EnableRegionFailover = pointer.Bool(cluster.GetMeta().IsEnableRegionFailover())
 
 	if cluster.Spec.Meta.StoreKeyPrefix != "" {
 		c.StoreKeyPrefix = pointer.String(cluster.Spec.Meta.StoreKeyPrefix)
 	}
 
-	if cluster.GetMetaConfig() != "" {
-		if err := c.SetInputConfig(cluster.GetMetaConfig()); err != nil {
+	if cluster.GetMeta().GetConfig() != "" {
+		if err := c.SetInputConfig(cluster.GetMeta().GetConfig()); err != nil {
 			return err
 		}
 	}
 
-	if cluster.GetKafkaWAL() != nil {
+	if cluster.GetWALProvider().GetKafkaWAL() != nil {
 		c.WalProvider = pointer.String("kafka")
-		c.WalBrokerEndpoints = cluster.GetKafkaWAL().BrokerEndpoints
+		c.WalBrokerEndpoints = cluster.GetWALProvider().GetKafkaWAL().GetBrokerEndpoints()
 	}
 
-	c.ConfigureLogging(cluster.GetMetaLogging())
+	c.ConfigureLogging(cluster.GetMeta().GetLogging())
 
 	return nil
 }

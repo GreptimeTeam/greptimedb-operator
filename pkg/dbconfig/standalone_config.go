@@ -44,26 +44,26 @@ func (c *StandaloneConfig) ConfigureByCluster(_ *v1alpha1.GreptimeDBCluster) err
 
 // ConfigureByStandalone is not need to implement in cluster mode.
 func (c *StandaloneConfig) ConfigureByStandalone(standalone *v1alpha1.GreptimeDBStandalone) error {
-	if standalone.GetS3Storage() != nil {
-		if err := c.ConfigureS3Storage(standalone.Namespace, standalone.GetS3Storage()); err != nil {
+	if standalone.GetObjectStorageProvider().GetS3Storage() != nil {
+		if err := c.ConfigureS3Storage(standalone.GetNamespace(), standalone.GetObjectStorageProvider().GetS3Storage()); err != nil {
 			return err
 		}
 	}
 
-	if standalone.GetOSSStorage() != nil {
-		if err := c.ConfigureOSSStorage(standalone.Namespace, standalone.GetOSSStorage()); err != nil {
+	if standalone.GetObjectStorageProvider().GetOSSStorage() != nil {
+		if err := c.ConfigureOSSStorage(standalone.GetNamespace(), standalone.GetObjectStorageProvider().GetOSSStorage()); err != nil {
 			return err
 		}
 	}
 
-	if standalone.GetGCSStorage() != nil {
-		if err := c.ConfigureGCSStorage(standalone.Namespace, standalone.GetGCSStorage()); err != nil {
+	if standalone.GetObjectStorageProvider().GetGCSStorage() != nil {
+		if err := c.ConfigureGCSStorage(standalone.GetNamespace(), standalone.GetObjectStorageProvider().GetGCSStorage()); err != nil {
 			return err
 		}
 	}
 
 	// Set the wal dir if the kafka wal is not enabled.
-	if standalone.GetKafkaWAL() == nil && standalone.GetWALDir() != "" {
+	if standalone.GetWALProvider().GetKafkaWAL() == nil && standalone.GetWALDir() != "" {
 		c.WalDir = pointer.String(standalone.GetWALDir())
 	}
 
@@ -77,9 +77,9 @@ func (c *StandaloneConfig) ConfigureByStandalone(standalone *v1alpha1.GreptimeDB
 		}
 	}
 
-	if standalone.GetKafkaWAL() != nil {
+	if standalone.GetWALProvider().GetKafkaWAL() != nil {
 		c.WalProvider = pointer.String("kafka")
-		c.WalBrokerEndpoints = standalone.GetKafkaWAL().BrokerEndpoints
+		c.WalBrokerEndpoints = standalone.GetWALProvider().GetKafkaWAL().BrokerEndpoints
 	}
 
 	c.ConfigureLogging(standalone.GetLogging())

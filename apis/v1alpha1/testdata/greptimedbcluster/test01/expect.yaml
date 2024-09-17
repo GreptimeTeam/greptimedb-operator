@@ -34,7 +34,7 @@ spec:
       logsDir: /data/greptimedb/logs
       onlyLogToStdout: false
       persistentWithData: false
-      logFormat: text
+      format: text
     template:
       main:
         image: greptime/greptimedb:latest
@@ -64,7 +64,7 @@ spec:
       logsDir: /data/greptimedb/logs
       onlyLogToStdout: false
       persistentWithData: false
-      logFormat: text
+      format: text
     template:
       main:
         image: greptime/greptimedb:latest
@@ -91,7 +91,7 @@ spec:
       logsDir: /data/greptimedb/logs
       onlyLogToStdout: false
       persistentWithData: false
-      logFormat: text
+      format: text
     storage:
       dataHome: /data/greptimedb
       fs:

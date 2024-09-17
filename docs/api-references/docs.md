@@ -137,7 +137,7 @@ _Appears in:_
 
 
 
-
+DatanodeStorageSpec defines the storage specification for the datanode.
 
 
 

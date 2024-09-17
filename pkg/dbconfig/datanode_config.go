@@ -43,45 +43,45 @@ type DatanodeConfig struct {
 
 // ConfigureByCluster configures the datanode config by the given cluster.
 func (c *DatanodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster) error {
-	if cluster.GetS3Storage() != nil {
-		if err := c.ConfigureS3Storage(cluster.Namespace, cluster.GetS3Storage()); err != nil {
+	if cluster.GetObjectStorageProvider().GetS3Storage() != nil {
+		if err := c.ConfigureS3Storage(cluster.GetNamespace(), cluster.GetObjectStorageProvider().GetS3Storage()); err != nil {
 			return err
 		}
 	}
 
-	if cluster.GetOSSStorage() != nil {
-		if err := c.ConfigureOSSStorage(cluster.Namespace, cluster.GetOSSStorage()); err != nil {
+	if cluster.GetObjectStorageProvider().GetOSSStorage() != nil {
+		if err := c.ConfigureOSSStorage(cluster.GetNamespace(), cluster.GetObjectStorageProvider().GetOSSStorage()); err != nil {
 			return err
 		}
 	}
 
-	if cluster.GetGCSStorage() != nil {
-		if err := c.ConfigureGCSStorage(cluster.Namespace, cluster.GetGCSStorage()); err != nil {
+	if cluster.GetObjectStorageProvider().GetGCSStorage() != nil {
+		if err := c.ConfigureGCSStorage(cluster.GetNamespace(), cluster.GetObjectStorageProvider().GetGCSStorage()); err != nil {
 			return err
 		}
 	}
 
 	// Set the wal dir if the kafka wal is not enabled.
-	if cluster.GetKafkaWAL() == nil && cluster.GetWALDir() != "" {
+	if cluster.GetWALProvider().GetKafkaWAL() == nil && cluster.GetWALDir() != "" {
 		c.WalDir = pointer.String(cluster.GetWALDir())
 	}
 
-	if cluster.GetDataHome() != "" {
-		c.StorageDataHome = pointer.String(cluster.GetDataHome())
+	if cluster.GetDatanode().GetDataHome() != "" {
+		c.StorageDataHome = pointer.String(cluster.GetDatanode().GetDataHome())
 	}
 
-	if cluster.GetDatanodeConfig() != "" {
-		if err := c.SetInputConfig(cluster.Spec.Datanode.Config); err != nil {
+	if cluster.GetDatanode().GetConfig() != "" {
+		if err := c.SetInputConfig(cluster.GetDatanode().GetConfig()); err != nil {
 			return err
 		}
 	}
 
-	if cluster.GetKafkaWAL() != nil {
+	if cluster.GetWALProvider().GetKafkaWAL() != nil {
 		c.WalProvider = pointer.String("kafka")
-		c.WalBrokerEndpoints = cluster.GetKafkaWAL().BrokerEndpoints
+		c.WalBrokerEndpoints = cluster.GetWALProvider().GetKafkaWAL().GetBrokerEndpoints()
 	}
 
-	c.ConfigureLogging(cluster.GetDatanodeLogging())
+	c.ConfigureLogging(cluster.GetDatanode().GetLogging())
 
 	return nil
 }

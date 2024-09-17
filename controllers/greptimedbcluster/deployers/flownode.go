@@ -118,7 +118,7 @@ func (b *flownodeBuilder) BuildService() deployer.Builder {
 		return b
 	}
 
-	if b.Cluster.Spec.Flownode == nil {
+	if b.Cluster.GetFlownode() == nil {
 		return b
 	}
 
@@ -128,8 +128,8 @@ func (b *flownodeBuilder) BuildService() deployer.Builder {
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace: b.Cluster.Namespace,
-			Name:      common.ResourceName(b.Cluster.Name, b.ComponentKind),
+			Namespace: b.Cluster.GetNamespace(),
+			Name:      common.ResourceName(b.Cluster.GetName(), b.ComponentKind),
 		},
 		Spec: corev1.ServiceSpec{
 			ClusterIP: corev1.ClusterIPNone,
@@ -150,7 +150,7 @@ func (b *flownodeBuilder) BuildConfigMap() deployer.Builder {
 		return b
 	}
 
-	if b.Cluster.Spec.Flownode == nil {
+	if b.Cluster.GetFlownode() == nil {
 		return b
 	}
 
@@ -170,7 +170,7 @@ func (b *flownodeBuilder) BuildStatefulSet() deployer.Builder {
 		return b
 	}
 
-	if b.Cluster.Spec.Flownode == nil {
+	if b.Cluster.GetFlownode() == nil {
 		return b
 	}
 
@@ -180,16 +180,16 @@ func (b *flownodeBuilder) BuildStatefulSet() deployer.Builder {
 			APIVersion: "apps/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      common.ResourceName(b.Cluster.Name, b.ComponentKind),
-			Namespace: b.Cluster.Namespace,
+			Name:      common.ResourceName(b.Cluster.GetName(), b.ComponentKind),
+			Namespace: b.Cluster.GetNamespace(),
 		},
 		Spec: appsv1.StatefulSetSpec{
 			PodManagementPolicy: appsv1.ParallelPodManagement,
-			ServiceName:         common.ResourceName(b.Cluster.Name, b.ComponentKind),
+			ServiceName:         common.ResourceName(b.Cluster.GetName(), b.ComponentKind),
 			Replicas:            b.Cluster.Spec.Flownode.Replicas,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.ComponentKind),
+					constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.GetName(), b.ComponentKind),
 				},
 			},
 			Template: b.generatePodTemplateSpec(),
@@ -215,11 +215,11 @@ func (b *flownodeBuilder) BuildPodMonitor() deployer.Builder {
 		return b
 	}
 
-	if b.Cluster.Spec.Flownode == nil {
+	if b.Cluster.GetFlownode() == nil {
 		return b
 	}
 
-	if b.Cluster.Spec.PrometheusMonitor == nil || !b.Cluster.Spec.PrometheusMonitor.Enabled {
+	if !b.Cluster.GetPrometheusMonitor().IsEnablePrometheusMonitor() {
 		return b
 	}
 
@@ -237,7 +237,7 @@ func (b *flownodeBuilder) BuildPodMonitor() deployer.Builder {
 func (b *flownodeBuilder) generateMainContainerArgs() []string {
 	return []string{
 		"flownode", "start",
-		"--metasrv-addrs", fmt.Sprintf("%s.%s:%d", common.ResourceName(b.Cluster.Name, v1alpha1.MetaComponentKind), b.Cluster.Namespace, b.Cluster.Spec.Meta.RPCPort),
+		"--metasrv-addrs", fmt.Sprintf("%s.%s:%d", common.ResourceName(b.Cluster.GetName(), v1alpha1.MetaComponentKind), b.Cluster.GetNamespace(), b.Cluster.Spec.Meta.RPCPort),
 		"--config-file", path.Join(constant.GreptimeDBConfigDir, constant.GreptimeDBConfigFileName),
 	}
 }
@@ -253,8 +253,8 @@ func (b *flownodeBuilder) generatePodTemplateSpec() corev1.PodTemplateSpec {
 	b.mountConfigDir(podTemplateSpec)
 	b.addInitConfigDirVolume(podTemplateSpec)
 
-	if b.Cluster.GetFlownodeLogging() != nil && !b.Cluster.GetFlownodeLogging().IsOnlyLogToStdout() {
-		b.AddLogsVolume(podTemplateSpec, b.Cluster.GetFlownodeLogging().LogsDir)
+	if b.Cluster.GetFlownode().GetLogging().IsOnlyLogToStdout() {
+		b.AddLogsVolume(podTemplateSpec, b.Cluster.GetFlownode().GetLogging().GetLogsDir())
 	}
 
 	podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Ports = b.containerPorts()

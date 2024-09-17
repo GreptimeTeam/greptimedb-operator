@@ -264,6 +264,13 @@ type MainContainerSpec struct {
 	VolumeMounts []corev1.VolumeMount `json:"volumeMounts,omitempty"`
 }
 
+func (in *MainContainerSpec) GetImage() string {
+	if in != nil {
+		return in.Image
+	}
+	return ""
+}
+
 // PodTemplateSpec defines the template for a pod of cluster.
 type PodTemplateSpec struct {
 	// The annotations to be created to the pod.
@@ -308,6 +315,41 @@ type FileStorage struct {
 	StorageRetainPolicy StorageRetainPolicyType `json:"storageRetainPolicy,omitempty"`
 }
 
+func (in *FileStorage) GetName() string {
+	if in != nil {
+		return in.Name
+	}
+	return ""
+}
+
+func (in *FileStorage) GetStorageClassName() *string {
+	if in != nil {
+		return in.StorageClassName
+	}
+	return nil
+}
+
+func (in *FileStorage) GetSize() string {
+	if in != nil {
+		return in.StorageSize
+	}
+	return ""
+}
+
+func (in *FileStorage) GetMountPath() string {
+	if in != nil {
+		return in.MountPath
+	}
+	return ""
+}
+
+func (in *FileStorage) GetPolicy() StorageRetainPolicyType {
+	if in != nil {
+		return in.StorageRetainPolicy
+	}
+	return ""
+}
+
 // WALProviderSpec defines the WAL provider for the cluster.
 type WALProviderSpec struct {
 	// RaftEngineWAL is the specification for local WAL that uses raft-engine.
@@ -332,6 +374,34 @@ type KafkaWAL struct {
 	// BrokerEndpoints is the list of Kafka broker endpoints.
 	// +required
 	BrokerEndpoints []string `json:"brokerEndpoints"`
+}
+
+func (in *WALProviderSpec) GetRaftEngineWAL() *RaftEngineWAL {
+	if in != nil {
+		return in.RaftEngineWAL
+	}
+	return nil
+}
+
+func (in *WALProviderSpec) GetKafkaWAL() *KafkaWAL {
+	if in != nil {
+		return in.KafkaWAL
+	}
+	return nil
+}
+
+func (in *RaftEngineWAL) GetFileStorage() *FileStorage {
+	if in != nil {
+		return in.FileStorage
+	}
+	return nil
+}
+
+func (in *KafkaWAL) GetBrokerEndpoints() []string {
+	if in != nil {
+		return in.BrokerEndpoints
+	}
+	return nil
 }
 
 // LoggingLevel is the level of the logging.
@@ -387,6 +457,28 @@ type LoggingSpec struct {
 	Format LogFormat `json:"format,omitempty"`
 }
 
+func (in *LoggingSpec) GetLevel() LoggingLevel {
+	if in != nil {
+		return in.Level
+	}
+	return ""
+}
+
+func (in *LoggingSpec) GetLogsDir() string {
+	if in != nil {
+		return in.LogsDir
+	}
+	return ""
+}
+
+func (in *LoggingSpec) IsPersistentWithData() bool {
+	return in != nil && in.PersistentWithData != nil && *in.PersistentWithData
+}
+
+func (in *LoggingSpec) IsOnlyLogToStdout() bool {
+	return in != nil && in.OnlyLogToStdout != nil && *in.OnlyLogToStdout
+}
+
 // ServiceSpec defines the service configuration for the component.
 type ServiceSpec struct {
 	// Type is the type of the service.
@@ -415,6 +507,13 @@ type TLSSpec struct {
 	SecretName string `json:"secretName"`
 }
 
+func (in *TLSSpec) GetSecretName() string {
+	if in != nil {
+		return in.SecretName
+	}
+	return ""
+}
+
 // ObjectStorageProviderSpec defines the object storage provider for the cluster. The data will be stored in the storage.
 type ObjectStorageProviderSpec struct {
 	// S3 is the S3 storage configuration.
@@ -434,13 +533,32 @@ type ObjectStorageProviderSpec struct {
 	Cache *CacheStorage `json:"cache,omitempty"`
 }
 
-type DatanodeStorageSpec struct {
-	// DataHome is the home directory of the data.
-	DataHome string `json:"dataHome,omitempty"`
+func (in *ObjectStorageProviderSpec) GetCacheFileStorage() *FileStorage {
+	if in != nil && in.Cache != nil {
+		return in.Cache.FileStorage
+	}
+	return nil
+}
 
-	// FileStorage is the file storage configuration.
-	// +optional
-	FileStorage *FileStorage `json:"fs,omitempty"`
+func (in *ObjectStorageProviderSpec) GetS3Storage() *S3Storage {
+	if in != nil {
+		return in.S3
+	}
+	return nil
+}
+
+func (in *ObjectStorageProviderSpec) GetGCSStorage() *GCSStorage {
+	if in != nil {
+		return in.GCS
+	}
+	return nil
+}
+
+func (in *ObjectStorageProviderSpec) GetOSSStorage() *OSSStorage {
+	if in != nil {
+		return in.OSS
+	}
+	return nil
 }
 
 func (in *ObjectStorageProviderSpec) getSetObjectStorageCount() int {
@@ -455,6 +573,16 @@ func (in *ObjectStorageProviderSpec) getSetObjectStorageCount() int {
 		count++
 	}
 	return count
+}
+
+// DatanodeStorageSpec defines the storage specification for the datanode.
+type DatanodeStorageSpec struct {
+	// DataHome is the home directory of the data.
+	DataHome string `json:"dataHome,omitempty"`
+
+	// FileStorage is the file storage configuration.
+	// +optional
+	FileStorage *FileStorage `json:"fs,omitempty"`
 }
 
 // CacheStorage defines the cache storage specification.
@@ -494,6 +622,13 @@ type S3Storage struct {
 	Endpoint string `json:"endpoint,omitempty"`
 }
 
+func (in *S3Storage) GetSecretName() string {
+	if in != nil {
+		return in.SecretName
+	}
+	return ""
+}
+
 // OSSStorage defines the Aliyun OSS storage specification.
 type OSSStorage struct {
 	// The data will be stored in the bucket.
@@ -517,6 +652,13 @@ type OSSStorage struct {
 	// The endpoint of the bucket.
 	// +optional
 	Endpoint string `json:"endpoint,omitempty"`
+}
+
+func (in *OSSStorage) GetSecretName() string {
+	if in != nil {
+		return in.SecretName
+	}
+	return ""
 }
 
 // GCSStorage defines the Google GCS storage specification.
@@ -544,6 +686,13 @@ type GCSStorage struct {
 	Endpoint string `json:"endpoint,omitempty"`
 }
 
+func (in *GCSStorage) GetSecretName() string {
+	if in != nil {
+		return in.SecretName
+	}
+	return ""
+}
+
 // PrometheusMonitorSpec defines the PodMonitor configuration.
 type PrometheusMonitorSpec struct {
 	// Enabled indicates whether the PodMonitor is enabled.
@@ -557,6 +706,10 @@ type PrometheusMonitorSpec struct {
 	// Interval is the scape interval for the PodMonitor.
 	// +optional
 	Interval string `json:"interval,omitempty"`
+}
+
+func (in *PrometheusMonitorSpec) IsEnablePrometheusMonitor() bool {
+	return in != nil && in.Enabled
 }
 
 // ConditionType is the type of the condition.

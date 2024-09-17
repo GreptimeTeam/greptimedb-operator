@@ -55,8 +55,8 @@ func (in *GreptimeDBCluster) Validate() error {
 		}
 	}
 
-	if in.GetStorageProvider() != nil {
-		if err := valiateStorageProvider(in.GetStorageProvider()); err != nil {
+	if in.GetObjectStorageProvider() != nil {
+		if err := valiateStorageProvider(in.GetObjectStorageProvider()); err != nil {
 			return err
 		}
 	}
@@ -67,15 +67,33 @@ func (in *GreptimeDBCluster) Validate() error {
 // Check checks the GreptimeDBCluster with other resources and returns an error if it is invalid.
 func (in *GreptimeDBCluster) Check(ctx context.Context, client client.Client) error {
 	// Check if the TLS secret exists and contains the required keys.
-	if in.GetFrontendTLSSecretName() != "" {
-		if err := checkTLSSecret(ctx, client, in.GetNamespace(), in.GetFrontendTLSSecretName()); err != nil {
+	if in.GetFrontend().GetTLS().GetSecretName() != "" {
+		if err := checkTLSSecret(ctx, client, in.GetNamespace(), in.GetFrontend().GetTLS().GetSecretName()); err != nil {
 			return err
 		}
 	}
 
 	// Check if the PodMonitor CRD exists.
-	if in.EnablePrometheusMonitor() {
+	if in.GetPrometheusMonitor().IsEnablePrometheusMonitor() {
 		if err := checkPodMonitorExists(ctx, client); err != nil {
+			return err
+		}
+	}
+
+	if in.GetObjectStorageProvider().GetS3Storage().GetSecretName() != "" {
+		if err := checkS3CredentialsSecret(ctx, client, in.GetNamespace(), in.GetObjectStorageProvider().GetS3Storage().GetSecretName()); err != nil {
+			return err
+		}
+	}
+
+	if in.GetObjectStorageProvider().GetOSSStorage().GetSecretName() != "" {
+		if err := checkOSSCredentialsSecret(ctx, client, in.GetNamespace(), in.GetObjectStorageProvider().GetOSSStorage().GetSecretName()); err != nil {
+			return err
+		}
+	}
+
+	if in.GetObjectStorageProvider().GetGCSStorage().GetSecretName() != "" {
+		if err := checkGCSCredentialsSecret(ctx, client, in.GetNamespace(), in.GetObjectStorageProvider().GetGCSStorage().GetSecretName()); err != nil {
 			return err
 		}
 	}
@@ -84,19 +102,19 @@ func (in *GreptimeDBCluster) Check(ctx context.Context, client client.Client) er
 }
 
 func (in *GreptimeDBCluster) validateFrontend() error {
-	if err := validateTomlConfig(in.GetFrontendConfig()); err != nil {
+	if err := validateTomlConfig(in.GetFrontend().GetConfig()); err != nil {
 		return fmt.Errorf("invalid frontend toml config: '%v'", err)
 	}
 	return nil
 }
 
 func (in *GreptimeDBCluster) validateMeta() error {
-	if err := validateTomlConfig(in.GetMetaConfig()); err != nil {
+	if err := validateTomlConfig(in.GetMeta().GetConfig()); err != nil {
 		return fmt.Errorf("invalid meta toml config: '%v'", err)
 	}
 
-	if in.EnableRegionFailover() {
-		if in.GetKafkaWAL() == nil {
+	if in.GetMeta().IsEnableRegionFailover() {
+		if in.GetWALProvider().GetKafkaWAL() == nil {
 			return fmt.Errorf("meta enable region failover requires kafka WAL")
 		}
 	}
@@ -105,14 +123,14 @@ func (in *GreptimeDBCluster) validateMeta() error {
 }
 
 func (in *GreptimeDBCluster) validateDatanode() error {
-	if err := validateTomlConfig(in.GetDatanodeConfig()); err != nil {
+	if err := validateTomlConfig(in.GetDatanode().GetConfig()); err != nil {
 		return fmt.Errorf("invalid datanode toml config: '%v'", err)
 	}
 	return nil
 }
 
 func (in *GreptimeDBCluster) validateFlownode() error {
-	if err := validateTomlConfig(in.GetFlownodeConfig()); err != nil {
+	if err := validateTomlConfig(in.GetFlownode().GetConfig()); err != nil {
 		return fmt.Errorf("invalid flownode toml config: '%v'", err)
 	}
 	return nil
@@ -134,8 +152,8 @@ func (in *GreptimeDBStandalone) Validate() error {
 		}
 	}
 
-	if in.GetStorageProvider() != nil {
-		if err := valiateStorageProvider(in.GetStorageProvider()); err != nil {
+	if in.GetObjectStorageProvider() != nil {
+		if err := valiateStorageProvider(in.GetObjectStorageProvider()); err != nil {
 			return err
 		}
 	}
@@ -146,33 +164,33 @@ func (in *GreptimeDBStandalone) Validate() error {
 // Check checks the GreptimeDBStandalone with other resources and returns an error if it is invalid.
 func (in *GreptimeDBStandalone) Check(ctx context.Context, client client.Client) error {
 	// Check if the TLS secret exists and contains the required keys.
-	if in.GetFrontendTLSSecretName() != "" {
-		if err := checkTLSSecret(ctx, client, in.GetNamespace(), in.GetFrontendTLSSecretName()); err != nil {
+	if in.GetTLS().GetSecretName() != "" {
+		if err := checkTLSSecret(ctx, client, in.GetNamespace(), in.GetTLS().GetSecretName()); err != nil {
 			return err
 		}
 	}
 
 	// Check if the PodMonitor CRD exists.
-	if in.EnablePrometheusMonitor() {
+	if in.GetPrometheusMonitor().IsEnablePrometheusMonitor() {
 		if err := checkPodMonitorExists(ctx, client); err != nil {
 			return err
 		}
 	}
 
-	if in.GetS3Storage() != nil && in.GetS3Storage().SecretName != "" {
-		if err := checkS3CredentialsSecret(ctx, client, in.GetNamespace(), in.GetS3Storage().SecretName); err != nil {
+	if in.GetObjectStorageProvider().GetS3Storage().GetSecretName() != "" {
+		if err := checkS3CredentialsSecret(ctx, client, in.GetNamespace(), in.GetObjectStorageProvider().GetS3Storage().GetSecretName()); err != nil {
 			return err
 		}
 	}
 
-	if in.GetOSSStorage() != nil && in.GetOSSStorage().SecretName != "" {
-		if err := checkOSSCredentialsSecret(ctx, client, in.GetNamespace(), in.GetOSSStorage().SecretName); err != nil {
+	if in.GetObjectStorageProvider().GetOSSStorage().GetSecretName() != "" {
+		if err := checkOSSCredentialsSecret(ctx, client, in.GetNamespace(), in.GetObjectStorageProvider().GetOSSStorage().GetSecretName()); err != nil {
 			return err
 		}
 	}
 
-	if in.GetGCSStorage() != nil && in.GetGCSStorage().SecretName != "" {
-		if err := checkGCSCredentialsSecret(ctx, client, in.GetNamespace(), in.GetGCSStorage().SecretName); err != nil {
+	if in.GetObjectStorageProvider().GetGCSStorage().GetSecretName() != "" {
+		if err := checkGCSCredentialsSecret(ctx, client, in.GetNamespace(), in.GetObjectStorageProvider().GetGCSStorage().GetSecretName()); err != nil {
 			return err
 		}
 	}

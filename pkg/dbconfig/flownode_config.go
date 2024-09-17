@@ -35,13 +35,13 @@ type FlownodeConfig struct {
 
 // ConfigureByCluster configures the datanode config by the given cluster.
 func (c *FlownodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster) error {
-	if cluster.GetFlownodeConfig() != "" {
-		if err := c.SetInputConfig(cluster.GetFlownodeConfig()); err != nil {
+	if cluster.GetFlownode().GetConfig() != "" {
+		if err := c.SetInputConfig(cluster.GetFlownode().GetConfig()); err != nil {
 			return err
 		}
 	}
 
-	c.ConfigureLogging(cluster.GetFlownodeLogging())
+	c.ConfigureLogging(cluster.GetFlownode().GetLogging())
 
 	return nil
 }

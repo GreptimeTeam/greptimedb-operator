@@ -29,8 +29,8 @@ func (in *GreptimeDBCluster) SetDefaults() error {
 	}
 
 	// Set the version of the GreptimeDBClusterSpec if it is not set.
-	if in.GetVersion() == "" && in.GetMainContainerImage() != "" {
-		in.Spec.Version = getVersionFromImage(in.GetMainContainerImage())
+	if in.GetVersion() == "" && in.GetBaseMainContainer().GetImage() != "" {
+		in.Spec.Version = getVersionFromImage(in.GetBaseMainContainer().GetImage())
 	}
 
 	// Merge the default settings into the GreptimeDBClusterSpec.
@@ -94,7 +94,7 @@ func (in *GreptimeDBCluster) defaultFrontend() *FrontendSpec {
 
 func (in *GreptimeDBCluster) defaultMeta() *MetaSpec {
 	enableRegionFailover := false
-	if in.GetKafkaWAL() != nil { // If remote wal provider is enabled, enable region failover by default.
+	if in.GetWALProvider().GetKafkaWAL() != nil { // If remote wal provider is enabled, enable region failover by default.
 		enableRegionFailover = true
 	}
 	return &MetaSpec{
@@ -214,8 +214,8 @@ func (in *GreptimeDBStandalone) SetDefaults() error {
 		return nil
 	}
 
-	if in.GetVersion() == "" && in.GetMainContainerImage() != "" {
-		in.Spec.Version = getVersionFromImage(in.GetMainContainerImage())
+	if in.GetVersion() == "" && in.GetBaseMainContainer().GetImage() != "" {
+		in.Spec.Version = getVersionFromImage(in.GetBaseMainContainer().GetImage())
 	}
 
 	if err := mergo.Merge(&in.Spec, in.defaultSpec()); err != nil {

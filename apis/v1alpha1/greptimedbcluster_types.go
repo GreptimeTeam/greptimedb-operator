@@ -67,6 +67,42 @@ type MetaSpec struct {
 	StoreKeyPrefix string `json:"storeKeyPrefix,omitempty"`
 }
 
+func (in *MetaSpec) GetConfig() string {
+	if in != nil {
+		return in.Config
+	}
+	return ""
+}
+
+func (in *MetaSpec) GetLogging() *LoggingSpec {
+	if in != nil {
+		return in.Logging
+	}
+	return nil
+}
+
+func (in *MetaSpec) IsEnableRegionFailover() bool {
+	return in != nil && in.EnableRegionFailover != nil && *in.EnableRegionFailover
+}
+
+func (in *MetaSpec) GetStoreKeyPrefix() string {
+	if in != nil {
+		return in.StoreKeyPrefix
+	}
+	return ""
+}
+
+func (in *MetaSpec) GetEtcdEndpoints() []string {
+	if in != nil {
+		return in.EtcdEndpoints
+	}
+	return nil
+}
+
+func (in *MetaSpec) IsEnableCheckEtcdService() bool {
+	return in != nil && in.EnableCheckEtcdService
+}
+
 // FrontendSpec is the specification for frontend component.
 type FrontendSpec struct {
 	ComponentSpec `json:",inline"`
@@ -78,6 +114,34 @@ type FrontendSpec struct {
 	// TLS is the TLS configuration of the frontend.
 	// +optional
 	TLS *TLSSpec `json:"tls,omitempty"`
+}
+
+func (in *FrontendSpec) GetTLS() *TLSSpec {
+	if in != nil {
+		return in.TLS
+	}
+	return nil
+}
+
+func (in *FrontendSpec) GetService() *ServiceSpec {
+	if in != nil {
+		return in.Service
+	}
+	return nil
+}
+
+func (in *FrontendSpec) GetConfig() string {
+	if in != nil {
+		return in.Config
+	}
+	return ""
+}
+
+func (in *FrontendSpec) GetLogging() *LoggingSpec {
+	if in != nil {
+		return in.Logging
+	}
+	return nil
 }
 
 // DatanodeSpec is the specification for datanode component.
@@ -97,6 +161,34 @@ type DatanodeSpec struct {
 	Storage *DatanodeStorageSpec `json:"storage,omitempty"`
 }
 
+func (in *DatanodeSpec) GetConfig() string {
+	if in != nil {
+		return in.Config
+	}
+	return ""
+}
+
+func (in *DatanodeSpec) GetLogging() *LoggingSpec {
+	if in != nil {
+		return in.Logging
+	}
+	return nil
+}
+
+func (in *DatanodeSpec) GetFileStorage() *FileStorage {
+	if in != nil && in.Storage != nil {
+		return in.Storage.FileStorage
+	}
+	return nil
+}
+
+func (in *DatanodeSpec) GetDataHome() string {
+	if in != nil && in.Storage != nil {
+		return in.Storage.DataHome
+	}
+	return ""
+}
+
 // FlownodeSpec is the specification for flownode component.
 type FlownodeSpec struct {
 	ComponentSpec `json:",inline"`
@@ -104,6 +196,20 @@ type FlownodeSpec struct {
 	// The gRPC port of the flownode.
 	// +optional
 	RPCPort int32 `json:"rpcPort,omitempty"`
+}
+
+func (in *FlownodeSpec) GetConfig() string {
+	if in != nil {
+		return in.Config
+	}
+	return ""
+}
+
+func (in *FlownodeSpec) GetLogging() *LoggingSpec {
+	if in != nil {
+		return in.Logging
+	}
+	return nil
 }
 
 // InitializerSpec is the init container to set up components configurations before running the container.
@@ -172,97 +278,61 @@ type GreptimeDBClusterSpec struct {
 	WALProvider *WALProviderSpec `json:"wal,omitempty"`
 }
 
-func (in *GreptimeDBCluster) GetMainContainer() *MainContainerSpec {
-	if in.Spec.Base != nil {
+func (in *GreptimeDBCluster) GetBaseMainContainer() *MainContainerSpec {
+	if in != nil && in.Spec.Base != nil {
 		return in.Spec.Base.MainContainer
 	}
 	return nil
 }
 
-func (in *GreptimeDBCluster) GetMainContainerImage() string {
-	if in.GetMainContainer() != nil {
-		return in.GetMainContainer().Image
+func (in *GreptimeDBCluster) GetVersion() string {
+	if in != nil {
+		return in.Spec.Version
 	}
 	return ""
-}
-
-func (in *GreptimeDBCluster) GetVersion() string {
-	return in.Spec.Version
 }
 
 func (in *GreptimeDBCluster) GetFrontend() *FrontendSpec {
-	return in.Spec.Frontend
-}
-
-func (in *GreptimeDBCluster) GetFrontendConfig() string {
-	if in.Spec.Frontend != nil {
-		return in.Spec.Frontend.Config
-	}
-	return ""
-}
-
-func (in *GreptimeDBCluster) GetFrontendTLS() *TLSSpec {
-	if in.Spec.Frontend != nil {
-		return in.Spec.Frontend.TLS
+	if in != nil {
+		return in.Spec.Frontend
 	}
 	return nil
 }
 
-func (in *GreptimeDBCluster) GetFrontendTLSSecretName() string {
-	if in.Spec.Frontend != nil && in.Spec.Frontend.TLS != nil {
-		return in.Spec.Frontend.TLS.SecretName
-	}
-	return ""
-}
-
 func (in *GreptimeDBCluster) GetMeta() *MetaSpec {
-	return in.Spec.Meta
-}
-
-func (in *GreptimeDBCluster) GetMetaConfig() string {
-	if in.Spec.Meta != nil {
-		return in.Spec.Meta.Config
+	if in != nil {
+		return in.Spec.Meta
 	}
-	return ""
-}
-
-func (in *GreptimeDBCluster) EnableRegionFailover() bool {
-	if in.Spec.Meta != nil && in.Spec.Meta.EnableRegionFailover != nil {
-		return *in.Spec.Meta.EnableRegionFailover
-	}
-	return false
+	return nil
 }
 
 func (in *GreptimeDBCluster) GetDatanode() *DatanodeSpec {
-	return in.Spec.Datanode
-}
-
-func (in *GreptimeDBCluster) GetDatanodeConfig() string {
-	if in.Spec.Datanode != nil {
-		return in.Spec.Datanode.Config
+	if in != nil {
+		return in.Spec.Datanode
 	}
-	return ""
+	return nil
 }
 
 func (in *GreptimeDBCluster) GetFlownode() *FlownodeSpec {
 	return in.Spec.Flownode
 }
 
-func (in *GreptimeDBCluster) GetFlownodeConfig() string {
-	if in.Spec.Flownode != nil {
-		return in.Spec.Flownode.Config
-	}
-	return ""
-}
-
 func (in *GreptimeDBCluster) GetWALProvider() *WALProviderSpec {
-	return in.Spec.WALProvider
+	if in != nil {
+		return in.Spec.WALProvider
+	}
+	return nil
 }
 
 func (in *GreptimeDBCluster) GetWALDir() string {
+	if in == nil {
+		return ""
+	}
+
 	if in.Spec.WALProvider != nil && in.Spec.WALProvider.RaftEngineWAL != nil {
 		return in.Spec.WALProvider.RaftEngineWAL.FileStorage.MountPath
 	}
+
 	if in.Spec.Datanode != nil &&
 		in.Spec.Datanode.Storage != nil &&
 		in.Spec.Datanode.Storage.DataHome != "" {
@@ -272,109 +342,16 @@ func (in *GreptimeDBCluster) GetWALDir() string {
 	return ""
 }
 
-func (in *GreptimeDBCluster) GetDataHome() string {
-	if in.Spec.Datanode != nil && in.Spec.Datanode.Storage != nil {
-		return in.Spec.Datanode.Storage.DataHome
-	}
-	return ""
-}
-
-func (in *GreptimeDBCluster) GetDatanodeFileStorage() *FileStorage {
-	if in.Spec.Datanode != nil && in.Spec.Datanode.Storage != nil {
-		return in.Spec.Datanode.Storage.FileStorage
+func (in *GreptimeDBCluster) GetObjectStorageProvider() *ObjectStorageProviderSpec {
+	if in != nil {
+		return in.Spec.ObjectStorageProvider
 	}
 	return nil
 }
 
-func (in *GreptimeDBCluster) GetRaftEngineWAL() *RaftEngineWAL {
-	if in.Spec.WALProvider != nil {
-		return in.Spec.WALProvider.RaftEngineWAL
-	}
-	return nil
-}
-
-func (in *GreptimeDBCluster) GetRaftEngineWALFileStorage() *FileStorage {
-	if in.Spec.WALProvider != nil && in.Spec.WALProvider.RaftEngineWAL != nil {
-		return in.Spec.WALProvider.RaftEngineWAL.FileStorage
-	}
-	return nil
-}
-
-func (in *GreptimeDBCluster) GetKafkaWAL() *KafkaWAL {
-	if in.Spec.WALProvider != nil {
-		return in.Spec.WALProvider.KafkaWAL
-	}
-	return nil
-}
-
-func (in *GreptimeDBCluster) GetStorageProvider() *ObjectStorageProviderSpec {
-	return in.Spec.ObjectStorageProvider
-}
-
-func (in *GreptimeDBCluster) GetCacheFileStorage() *FileStorage {
-	if in.Spec.ObjectStorageProvider != nil && in.Spec.ObjectStorageProvider.Cache != nil {
-		return in.Spec.ObjectStorageProvider.Cache.FileStorage
-	}
-	return nil
-}
-
-func (in *GreptimeDBCluster) GetS3Storage() *S3Storage {
-	if in.Spec.ObjectStorageProvider != nil {
-		return in.Spec.ObjectStorageProvider.S3
-	}
-	return nil
-}
-
-func (in *GreptimeDBCluster) GetGCSStorage() *GCSStorage {
-	if in.Spec.ObjectStorageProvider != nil {
-		return in.Spec.ObjectStorageProvider.GCS
-	}
-	return nil
-}
-
-func (in *GreptimeDBCluster) GetOSSStorage() *OSSStorage {
-	if in.Spec.ObjectStorageProvider != nil {
-		return in.Spec.ObjectStorageProvider.OSS
-	}
-	return nil
-}
-
-func (in *GreptimeDBCluster) EnablePrometheusMonitor() bool {
-	return in.Spec.PrometheusMonitor != nil && in.Spec.PrometheusMonitor.Enabled
-}
-
-func (in *GreptimeDBCluster) GetFrontendLogging() *LoggingSpec {
-	if in.Spec.Frontend != nil {
-		return in.Spec.Frontend.Logging
-	}
-	return nil
-}
-
-func (in *GreptimeDBCluster) GetMetaLogging() *LoggingSpec {
-	if in.Spec.Meta != nil {
-		return in.Spec.Meta.Logging
-	}
-	return nil
-}
-
-func (in *GreptimeDBCluster) GetDatanodeLogging() *LoggingSpec {
-	if in.Spec.Datanode != nil {
-		return in.Spec.Datanode.Logging
-	}
-	return nil
-}
-
-func (in *LoggingSpec) IsPersistentWithData() bool {
-	return in != nil && in.PersistentWithData != nil && *in.PersistentWithData
-}
-
-func (in *LoggingSpec) IsOnlyLogToStdout() bool {
-	return in != nil && in.OnlyLogToStdout != nil && *in.OnlyLogToStdout
-}
-
-func (in *GreptimeDBCluster) GetFlownodeLogging() *LoggingSpec {
-	if in.Spec.Flownode != nil {
-		return in.Spec.Flownode.Logging
+func (in *GreptimeDBCluster) GetPrometheusMonitor() *PrometheusMonitorSpec {
+	if in != nil {
+		return in.Spec.PrometheusMonitor
 	}
 	return nil
 }

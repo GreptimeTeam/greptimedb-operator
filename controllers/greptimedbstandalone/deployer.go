@@ -97,22 +97,19 @@ func (d *StandaloneDeployer) CleanUp(ctx context.Context, crdObject client.Objec
 		return err
 	}
 
-	if standalone.GetDatanodeFileStorage() != nil &&
-		standalone.GetDatanodeFileStorage().StorageRetainPolicy == v1alpha1.StorageRetainPolicyTypeDelete {
+	if standalone.GetDatanodeFileStorage().GetPolicy() == v1alpha1.StorageRetainPolicyTypeDelete {
 		if err := d.deleteStorage(ctx, standalone.Namespace, standalone.Name, common.DatanodeFileStorageLabels); err != nil {
 			return err
 		}
 	}
 
-	if standalone.GetRaftEngineWALFileStorage() != nil &&
-		standalone.GetRaftEngineWALFileStorage().StorageRetainPolicy == v1alpha1.StorageRetainPolicyTypeDelete {
+	if standalone.GetWALProvider().GetRaftEngineWAL().GetFileStorage().GetPolicy() == v1alpha1.StorageRetainPolicyTypeDelete {
 		if err := d.deleteStorage(ctx, standalone.Namespace, standalone.Name, common.WALFileStorageLabels); err != nil {
 			return err
 		}
 	}
 
-	if standalone.GetCacheFileStorage() != nil &&
-		standalone.GetCacheFileStorage().StorageRetainPolicy == v1alpha1.StorageRetainPolicyTypeDelete {
+	if standalone.GetObjectStorageProvider().GetCacheFileStorage().GetPolicy() == v1alpha1.StorageRetainPolicyTypeDelete {
 		if err := d.deleteStorage(ctx, standalone.Namespace, standalone.Name, common.CacheFileStorageLabels); err != nil {
 			return err
 		}
@@ -169,9 +166,9 @@ func (d *StandaloneDeployer) deleteStorage(ctx context.Context, namespace, name 
 		return err
 	}
 
-	pvcList := new(corev1.PersistentVolumeClaimList)
+	claims := new(corev1.PersistentVolumeClaimList)
 
-	err = d.List(ctx, pvcList, client.InNamespace(namespace), client.MatchingLabelsSelector{Selector: selector})
+	err = d.List(ctx, claims, client.InNamespace(namespace), client.MatchingLabelsSelector{Selector: selector})
 	if errors.IsNotFound(err) {
 		return nil
 	}
@@ -179,7 +176,7 @@ func (d *StandaloneDeployer) deleteStorage(ctx context.Context, namespace, name 
 		return err
 	}
 
-	for _, pvc := range pvcList.Items {
+	for _, pvc := range claims.Items {
 		klog.Infof("Deleting standalone PVC: %s", pvc.Name)
 		if err := d.Delete(ctx, &pvc); err != nil {
 			return err
@@ -341,17 +338,17 @@ func (b *standaloneBuilder) generatePVCs() []corev1.PersistentVolumeClaim {
 	if b.standalone.GetDatanodeFileStorage() != nil {
 		claims = append(claims, corev1.PersistentVolumeClaim{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:   b.standalone.GetDatanodeFileStorage().Name,
+				Name:   b.standalone.GetDatanodeFileStorage().GetName(),
 				Labels: common.DatanodeFileStorageLabels,
 			},
 			Spec: corev1.PersistentVolumeClaimSpec{
-				StorageClassName: b.standalone.GetDatanodeFileStorage().StorageClassName,
+				StorageClassName: b.standalone.GetDatanodeFileStorage().GetStorageClassName(),
 				AccessModes: []corev1.PersistentVolumeAccessMode{
 					corev1.ReadWriteOnce,
 				},
 				Resources: corev1.ResourceRequirements{
 					Requests: corev1.ResourceList{
-						corev1.ResourceStorage: resource.MustParse(b.standalone.GetDatanodeFileStorage().StorageSize),
+						corev1.ResourceStorage: resource.MustParse(b.standalone.GetDatanodeFileStorage().GetSize()),
 					},
 				},
 			},
@@ -359,20 +356,20 @@ func (b *standaloneBuilder) generatePVCs() []corev1.PersistentVolumeClaim {
 	}
 
 	// Allocate the standalone WAL storage for the raft-engine.
-	if b.standalone.GetRaftEngineWALFileStorage() != nil {
+	if b.standalone.GetWALProvider().GetRaftEngineWAL().GetFileStorage() != nil {
 		claims = append(claims, corev1.PersistentVolumeClaim{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:   b.standalone.GetRaftEngineWALFileStorage().Name,
+				Name:   b.standalone.GetWALProvider().GetRaftEngineWAL().GetFileStorage().GetName(),
 				Labels: common.WALFileStorageLabels,
 			},
 			Spec: corev1.PersistentVolumeClaimSpec{
-				StorageClassName: b.standalone.GetRaftEngineWALFileStorage().StorageClassName,
+				StorageClassName: b.standalone.GetWALProvider().GetRaftEngineWAL().GetFileStorage().GetStorageClassName(),
 				AccessModes: []corev1.PersistentVolumeAccessMode{
 					corev1.ReadWriteOnce,
 				},
 				Resources: corev1.ResourceRequirements{
 					Requests: corev1.ResourceList{
-						corev1.ResourceStorage: resource.MustParse(b.standalone.GetRaftEngineWALFileStorage().StorageSize),
+						corev1.ResourceStorage: resource.MustParse(b.standalone.GetWALProvider().GetRaftEngineWAL().GetFileStorage().GetSize()),
 					},
 				},
 			},
@@ -380,20 +377,20 @@ func (b *standaloneBuilder) generatePVCs() []corev1.PersistentVolumeClaim {
 	}
 
 	// Allocate the standalone cache file storage for the datanode.
-	if b.standalone.GetCacheFileStorage() != nil {
+	if b.standalone.GetObjectStorageProvider().GetCacheFileStorage() != nil {
 		claims = append(claims, corev1.PersistentVolumeClaim{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:   b.standalone.GetCacheFileStorage().Name,
+				Name:   b.standalone.GetObjectStorageProvider().GetCacheFileStorage().GetName(),
 				Labels: common.CacheFileStorageLabels,
 			},
 			Spec: corev1.PersistentVolumeClaimSpec{
-				StorageClassName: b.standalone.GetCacheFileStorage().StorageClassName,
+				StorageClassName: b.standalone.GetObjectStorageProvider().GetCacheFileStorage().GetStorageClassName(),
 				AccessModes: []corev1.PersistentVolumeAccessMode{
 					corev1.ReadWriteOnce,
 				},
 				Resources: corev1.ResourceRequirements{
 					Requests: corev1.ResourceList{
-						corev1.ResourceStorage: resource.MustParse(b.standalone.GetCacheFileStorage().StorageSize),
+						corev1.ResourceStorage: resource.MustParse(b.standalone.GetObjectStorageProvider().GetCacheFileStorage().GetSize()),
 					},
 				},
 			},
@@ -486,22 +483,22 @@ func (b *standaloneBuilder) addVolumeMounts(template *corev1.PodTemplateSpec) {
 			)
 	}
 
-	if b.standalone.GetRaftEngineWALFileStorage() != nil {
+	if b.standalone.GetWALProvider().GetRaftEngineWAL().GetFileStorage() != nil {
 		template.Spec.Containers[constant.MainContainerIndex].VolumeMounts =
 			append(template.Spec.Containers[constant.MainContainerIndex].VolumeMounts,
 				corev1.VolumeMount{
-					Name:      b.standalone.GetRaftEngineWALFileStorage().Name,
-					MountPath: b.standalone.GetRaftEngineWALFileStorage().MountPath,
+					Name:      b.standalone.GetWALProvider().GetRaftEngineWAL().GetFileStorage().GetName(),
+					MountPath: b.standalone.GetWALProvider().GetRaftEngineWAL().GetFileStorage().GetMountPath(),
 				},
 			)
 	}
 
-	if b.standalone.GetCacheFileStorage() != nil {
+	if b.standalone.GetObjectStorageProvider().GetCacheFileStorage() != nil {
 		template.Spec.Containers[constant.MainContainerIndex].VolumeMounts =
 			append(template.Spec.Containers[constant.MainContainerIndex].VolumeMounts,
 				corev1.VolumeMount{
-					Name:      b.standalone.GetCacheFileStorage().Name,
-					MountPath: b.standalone.GetCacheFileStorage().MountPath,
+					Name:      b.standalone.GetObjectStorageProvider().GetCacheFileStorage().GetName(),
+					MountPath: b.standalone.GetObjectStorageProvider().GetCacheFileStorage().GetMountPath(),
 				},
 			)
 	}
@@ -517,7 +514,7 @@ func (b *standaloneBuilder) addVolumeMounts(template *corev1.PodTemplateSpec) {
 
 			template.Spec.Containers[constant.MainContainerIndex].VolumeMounts = append(template.Spec.Containers[constant.MainContainerIndex].VolumeMounts, corev1.VolumeMount{
 				Name:      "logs",
-				MountPath: b.standalone.GetLogging().LogsDir,
+				MountPath: b.standalone.GetLogging().GetLogsDir(),
 			})
 		}
 	}

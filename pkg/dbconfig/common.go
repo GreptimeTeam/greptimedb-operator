@@ -143,7 +143,7 @@ func (c *LoggingConfig) ConfigureLogging(spec *v1alpha1.LoggingSpec) {
 		return
 	}
 
-	if spec.OnlyLogToStdout != nil && *spec.OnlyLogToStdout {
+	if spec.IsOnlyLogToStdout() {
 		c.Dir = nil
 	} else {
 		if spec.LogsDir != "" {

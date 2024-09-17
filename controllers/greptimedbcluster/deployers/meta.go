@@ -142,16 +142,16 @@ func (d *MetaDeployer) checkEtcdService(ctx context.Context, crdObject client.Ob
 		return err
 	}
 
-	if cluster.Spec.Meta == nil || !cluster.Spec.Meta.EnableCheckEtcdService {
+	if !cluster.GetMeta().IsEnableCheckEtcdService() {
 		return nil
 	}
 
-	maintainer, err := d.etcdMaintenanceBuilder(cluster.Spec.Meta.EtcdEndpoints)
+	maintainer, err := d.etcdMaintenanceBuilder(cluster.GetMeta().GetEtcdEndpoints())
 	if err != nil {
 		return err
 	}
 
-	rsp, err := maintainer.Status(ctx, strings.Join(cluster.Spec.Meta.EtcdEndpoints, ","))
+	rsp, err := maintainer.Status(ctx, strings.Join(cluster.GetMeta().GetEtcdEndpoints(), ","))
 	if err != nil {
 		return err
 	}
@@ -194,7 +194,7 @@ func (b *metaBuilder) BuildService() deployer.Builder {
 		return b
 	}
 
-	if b.Cluster.Spec.Meta == nil {
+	if b.Cluster.GetMeta() == nil {
 		return b
 	}
 
@@ -226,7 +226,7 @@ func (b *metaBuilder) BuildDeployment() deployer.Builder {
 		return b
 	}
 
-	if b.Cluster.Spec.Meta == nil {
+	if b.Cluster.GetMeta() == nil {
 		return b
 	}
 
@@ -237,7 +237,7 @@ func (b *metaBuilder) BuildDeployment() deployer.Builder {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      common.ResourceName(b.Cluster.Name, b.ComponentKind),
-			Namespace: b.Cluster.Namespace,
+			Namespace: b.Cluster.GetNamespace(),
 		},
 		Spec: appsv1.DeploymentSpec{
 			Replicas: b.Cluster.Spec.Meta.Replicas,
@@ -269,7 +269,7 @@ func (b *metaBuilder) BuildConfigMap() deployer.Builder {
 		return b
 	}
 
-	if b.Cluster.Spec.Meta == nil {
+	if b.Cluster.GetMeta() == nil {
 		return b
 	}
 
@@ -289,11 +289,11 @@ func (b *metaBuilder) BuildPodMonitor() deployer.Builder {
 		return b
 	}
 
-	if b.Cluster.Spec.Meta == nil {
+	if b.Cluster.GetMeta() == nil {
 		return b
 	}
 
-	if b.Cluster.Spec.PrometheusMonitor == nil || !b.Cluster.Spec.PrometheusMonitor.Enabled {
+	if !b.Cluster.GetPrometheusMonitor().IsEnablePrometheusMonitor() {
 		return b
 	}
 
@@ -325,8 +325,8 @@ func (b *metaBuilder) generatePodTemplateSpec() *corev1.PodTemplateSpec {
 
 	b.MountConfigDir(podTemplateSpec)
 
-	if b.Cluster.GetMetaLogging() != nil && !b.Cluster.GetMetaLogging().IsOnlyLogToStdout() {
-		b.AddLogsVolume(podTemplateSpec, b.Cluster.GetMetaLogging().LogsDir)
+	if !b.Cluster.GetMeta().GetLogging().IsOnlyLogToStdout() {
+		b.AddLogsVolume(podTemplateSpec, b.Cluster.GetMeta().GetLogging().GetLogsDir())
 	}
 
 	podTemplateSpec.ObjectMeta.Labels = util.MergeStringMap(podTemplateSpec.ObjectMeta.Labels, map[string]string{

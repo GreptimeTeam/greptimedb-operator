@@ -82,22 +82,19 @@ func (d *DatanodeDeployer) CleanUp(ctx context.Context, crdObject client.Object)
 		return err
 	}
 
-	if cluster.GetDatanodeFileStorage() != nil &&
-		cluster.GetDatanodeFileStorage().StorageRetainPolicy == v1alpha1.StorageRetainPolicyTypeDelete {
+	if cluster.GetDatanode().GetFileStorage().GetPolicy() == v1alpha1.StorageRetainPolicyTypeDelete {
 		if err := d.deleteStorage(ctx, cluster.Namespace, cluster.Name, common.DatanodeFileStorageLabels); err != nil {
 			return err
 		}
 	}
 
-	if cluster.GetRaftEngineWALFileStorage() != nil &&
-		cluster.GetRaftEngineWALFileStorage().StorageRetainPolicy == v1alpha1.StorageRetainPolicyTypeDelete {
+	if cluster.GetWALProvider().GetRaftEngineWAL().GetFileStorage().GetPolicy() == v1alpha1.StorageRetainPolicyTypeDelete {
 		if err := d.deleteStorage(ctx, cluster.Namespace, cluster.Name, common.WALFileStorageLabels); err != nil {
 			return err
 		}
 	}
 
-	if cluster.GetCacheFileStorage() != nil &&
-		cluster.GetCacheFileStorage().StorageRetainPolicy == v1alpha1.StorageRetainPolicyTypeDelete {
+	if cluster.GetObjectStorageProvider().GetCacheFileStorage().GetPolicy() == v1alpha1.StorageRetainPolicyTypeDelete {
 		if err := d.deleteStorage(ctx, cluster.Namespace, cluster.Name, common.CacheFileStorageLabels); err != nil {
 			return err
 		}
@@ -315,7 +312,7 @@ func (d *DatanodeDeployer) isOldPodRestart(new, old appsv1.StatefulSet) bool {
 }
 
 func (d *DatanodeDeployer) shouldUserMaintenanceMode(cluster *v1alpha1.GreptimeDBCluster) bool {
-	if cluster.GetKafkaWAL() != nil && cluster.EnableRegionFailover() {
+	if cluster.GetWALProvider().GetKafkaWAL() != nil && cluster.GetMeta().IsEnableRegionFailover() {
 		return true
 	}
 	return false
@@ -364,7 +361,7 @@ func (b *datanodeBuilder) BuildConfigMap() deployer.Builder {
 		return b
 	}
 
-	if b.Cluster.Spec.Datanode == nil {
+	if b.Cluster.GetDatanode() == nil {
 		return b
 	}
 
@@ -384,7 +381,7 @@ func (b *datanodeBuilder) BuildStatefulSet() deployer.Builder {
 		return b
 	}
 
-	if b.Cluster.Spec.Datanode == nil {
+	if b.Cluster.GetDatanode() == nil {
 		return b
 	}
 
@@ -434,7 +431,7 @@ func (b *datanodeBuilder) BuildPodMonitor() deployer.Builder {
 		return b
 	}
 
-	if !b.Cluster.EnablePrometheusMonitor() {
+	if !b.Cluster.GetPrometheusMonitor().IsEnablePrometheusMonitor() {
 		return b
 	}
 
@@ -471,10 +468,9 @@ func (b *datanodeBuilder) generatePodTemplateSpec() corev1.PodTemplateSpec {
 	b.addVolumeMounts(podTemplateSpec)
 	b.addInitConfigDirVolume(podTemplateSpec)
 
-	if b.Cluster.GetDatanodeLogging() != nil &&
-		!b.Cluster.GetDatanodeLogging().IsOnlyLogToStdout() &&
-		!b.Cluster.GetDatanodeLogging().IsPersistentWithData() {
-		b.AddLogsVolume(podTemplateSpec, b.Cluster.GetDatanodeLogging().LogsDir)
+	if !b.Cluster.GetDatanode().GetLogging().IsOnlyLogToStdout() &&
+		!b.Cluster.GetDatanode().GetLogging().IsPersistentWithData() {
+		b.AddLogsVolume(podTemplateSpec, b.Cluster.GetDatanode().GetLogging().GetLogsDir())
 	}
 
 	podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Ports = b.containerPorts()
@@ -490,20 +486,20 @@ func (b *datanodeBuilder) generatePVCs() []corev1.PersistentVolumeClaim {
 	var claims []corev1.PersistentVolumeClaim
 
 	// It's always not nil because it's the default value.
-	if b.Cluster.GetDatanodeFileStorage() != nil {
+	if b.Cluster.GetDatanode().GetFileStorage() != nil {
 		claims = append(claims, corev1.PersistentVolumeClaim{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:   b.Cluster.GetDatanodeFileStorage().Name,
+				Name:   b.Cluster.GetDatanode().GetFileStorage().GetName(),
 				Labels: common.DatanodeFileStorageLabels,
 			},
 			Spec: corev1.PersistentVolumeClaimSpec{
-				StorageClassName: b.Cluster.GetDatanodeFileStorage().StorageClassName,
+				StorageClassName: b.Cluster.GetDatanode().GetFileStorage().GetStorageClassName(),
 				AccessModes: []corev1.PersistentVolumeAccessMode{
 					corev1.ReadWriteOnce,
 				},
 				Resources: corev1.ResourceRequirements{
 					Requests: corev1.ResourceList{
-						corev1.ResourceStorage: resource.MustParse(b.Cluster.GetDatanodeFileStorage().StorageSize),
+						corev1.ResourceStorage: resource.MustParse(b.Cluster.GetDatanode().GetFileStorage().GetSize()),
 					},
 				},
 			},
@@ -511,20 +507,20 @@ func (b *datanodeBuilder) generatePVCs() []corev1.PersistentVolumeClaim {
 	}
 
 	// Allocate the standalone WAL storage for the raft-engine.
-	if b.Cluster.GetRaftEngineWALFileStorage() != nil {
+	if b.Cluster.GetWALProvider().GetRaftEngineWAL().GetFileStorage() != nil {
 		claims = append(claims, corev1.PersistentVolumeClaim{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:   b.Cluster.GetRaftEngineWALFileStorage().Name,
+				Name:   b.Cluster.GetWALProvider().GetRaftEngineWAL().GetFileStorage().GetName(),
 				Labels: common.WALFileStorageLabels,
 			},
 			Spec: corev1.PersistentVolumeClaimSpec{
-				StorageClassName: b.Cluster.GetRaftEngineWALFileStorage().StorageClassName,
+				StorageClassName: b.Cluster.GetWALProvider().GetRaftEngineWAL().GetFileStorage().GetStorageClassName(),
 				AccessModes: []corev1.PersistentVolumeAccessMode{
 					corev1.ReadWriteOnce,
 				},
 				Resources: corev1.ResourceRequirements{
 					Requests: corev1.ResourceList{
-						corev1.ResourceStorage: resource.MustParse(b.Cluster.GetRaftEngineWALFileStorage().StorageSize),
+						corev1.ResourceStorage: resource.MustParse(b.Cluster.GetWALProvider().GetRaftEngineWAL().GetFileStorage().GetSize()),
 					},
 				},
 			},
@@ -532,20 +528,20 @@ func (b *datanodeBuilder) generatePVCs() []corev1.PersistentVolumeClaim {
 	}
 
 	// Allocate the standalone cache file storage for the datanode.
-	if b.Cluster.GetCacheFileStorage() != nil {
+	if b.Cluster.GetObjectStorageProvider().GetCacheFileStorage() != nil {
 		claims = append(claims, corev1.PersistentVolumeClaim{
 			ObjectMeta: metav1.ObjectMeta{
-				Name:   b.Cluster.GetCacheFileStorage().Name,
+				Name:   b.Cluster.GetObjectStorageProvider().GetCacheFileStorage().GetName(),
 				Labels: common.CacheFileStorageLabels,
 			},
 			Spec: corev1.PersistentVolumeClaimSpec{
-				StorageClassName: b.Cluster.GetCacheFileStorage().StorageClassName,
+				StorageClassName: b.Cluster.GetObjectStorageProvider().GetCacheFileStorage().GetStorageClassName(),
 				AccessModes: []corev1.PersistentVolumeAccessMode{
 					corev1.ReadWriteOnce,
 				},
 				Resources: corev1.ResourceRequirements{
 					Requests: corev1.ResourceList{
-						corev1.ResourceStorage: resource.MustParse(b.Cluster.GetCacheFileStorage().StorageSize),
+						corev1.ResourceStorage: resource.MustParse(b.Cluster.GetObjectStorageProvider().GetCacheFileStorage().GetSize()),
 					},
 				},
 			},
@@ -624,32 +620,32 @@ func (b *datanodeBuilder) mountConfigDir(template *corev1.PodTemplateSpec) {
 }
 
 func (b *datanodeBuilder) addVolumeMounts(template *corev1.PodTemplateSpec) {
-	if b.Cluster.GetDatanodeFileStorage() != nil {
+	if b.Cluster.GetDatanode().GetFileStorage() != nil {
 		template.Spec.Containers[constant.MainContainerIndex].VolumeMounts =
 			append(template.Spec.Containers[constant.MainContainerIndex].VolumeMounts,
 				corev1.VolumeMount{
-					Name:      b.Cluster.GetDatanodeFileStorage().Name,
-					MountPath: b.Cluster.GetDatanodeFileStorage().MountPath,
+					Name:      b.Cluster.GetDatanode().GetFileStorage().GetName(),
+					MountPath: b.Cluster.GetDatanode().GetFileStorage().GetMountPath(),
 				},
 			)
 	}
 
-	if b.Cluster.GetRaftEngineWALFileStorage() != nil {
+	if b.Cluster.GetWALProvider().GetRaftEngineWAL().GetFileStorage() != nil {
 		template.Spec.Containers[constant.MainContainerIndex].VolumeMounts =
 			append(template.Spec.Containers[constant.MainContainerIndex].VolumeMounts,
 				corev1.VolumeMount{
-					Name:      b.Cluster.GetRaftEngineWALFileStorage().Name,
-					MountPath: b.Cluster.GetRaftEngineWALFileStorage().MountPath,
+					Name:      b.Cluster.GetWALProvider().GetRaftEngineWAL().GetFileStorage().GetName(),
+					MountPath: b.Cluster.GetWALProvider().GetRaftEngineWAL().GetFileStorage().GetMountPath(),
 				},
 			)
 	}
 
-	if b.Cluster.GetCacheFileStorage() != nil {
+	if b.Cluster.GetObjectStorageProvider().GetCacheFileStorage() != nil {
 		template.Spec.Containers[constant.MainContainerIndex].VolumeMounts =
 			append(template.Spec.Containers[constant.MainContainerIndex].VolumeMounts,
 				corev1.VolumeMount{
-					Name:      b.Cluster.GetCacheFileStorage().Name,
-					MountPath: b.Cluster.GetCacheFileStorage().MountPath,
+					Name:      b.Cluster.GetObjectStorageProvider().GetCacheFileStorage().GetName(),
+					MountPath: b.Cluster.GetObjectStorageProvider().GetCacheFileStorage().GetMountPath(),
 				},
 			)
 	}

@@ -215,7 +215,7 @@ func (b *frontendBuilder) BuildPodMonitor() deployer.Builder {
 		return b
 	}
 
-	if !b.Cluster.EnablePrometheusMonitor() {
+	if !b.Cluster.GetPrometheusMonitor().IsEnablePrometheusMonitor() {
 		return b
 	}
 
@@ -246,7 +246,7 @@ func (b *frontendBuilder) generateMainContainerArgs() []string {
 		"--config-file", path.Join(constant.GreptimeDBConfigDir, constant.GreptimeDBConfigFileName),
 	}
 
-	if b.Cluster.GetFrontendTLS() != nil {
+	if b.Cluster.GetFrontend().GetTLS() != nil {
 		args = append(args, []string{
 			"--tls-mode", constant.DefaultTLSMode,
 			"--tls-cert-path", path.Join(constant.GreptimeDBTLSDir, v1alpha1.TLSCrtSecretKey),
@@ -273,11 +273,11 @@ func (b *frontendBuilder) generatePodTemplateSpec() *corev1.PodTemplateSpec {
 
 	b.MountConfigDir(podTemplateSpec)
 
-	if b.Cluster.GetFrontendLogging() != nil && !b.Cluster.GetFrontendLogging().IsOnlyLogToStdout() {
-		b.AddLogsVolume(podTemplateSpec, b.Cluster.GetFrontendLogging().LogsDir)
+	if !b.Cluster.GetFrontend().GetLogging().IsOnlyLogToStdout() {
+		b.AddLogsVolume(podTemplateSpec, b.Cluster.GetFrontend().GetLogging().GetLogsDir())
 	}
 
-	if b.Cluster.GetFrontendTLS() != nil {
+	if b.Cluster.GetFrontend().GetTLS() != nil {
 		b.mountTLSSecret(podTemplateSpec)
 	}
 
@@ -289,7 +289,7 @@ func (b *frontendBuilder) mountTLSSecret(template *corev1.PodTemplateSpec) {
 		Name: constant.TLSVolumeName,
 		VolumeSource: corev1.VolumeSource{
 			Secret: &corev1.SecretVolumeSource{
-				SecretName: b.Cluster.Spec.Frontend.TLS.SecretName,
+				SecretName: b.Cluster.GetFrontend().GetTLS().GetSecretName(),
 			},
 		},
 	})

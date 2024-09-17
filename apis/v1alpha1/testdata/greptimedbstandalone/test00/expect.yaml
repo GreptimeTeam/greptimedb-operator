@@ -20,7 +20,7 @@ spec:
     type: ClusterIP
   logging:
     level: info
-    logFormat: text
+    format: text
     logsDir: /data/greptimedb/logs
     onlyLogToStdout: false
     persistentWithData: false
