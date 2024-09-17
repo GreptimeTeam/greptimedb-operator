@@ -471,6 +471,12 @@ func (b *datanodeBuilder) generatePodTemplateSpec() corev1.PodTemplateSpec {
 	b.addVolumeMounts(podTemplateSpec)
 	b.addInitConfigDirVolume(podTemplateSpec)
 
+	if b.Cluster.GetDatanodeLogging() != nil &&
+		!b.Cluster.GetDatanodeLogging().IsOnlyLogToStdout() &&
+		!b.Cluster.GetDatanodeLogging().IsPersistentWithData() {
+		b.AddLogsVolume(podTemplateSpec, b.Cluster.GetDatanodeLogging().LogsDir)
+	}
+
 	podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Ports = b.containerPorts()
 	podTemplateSpec.Spec.InitContainers = append(podTemplateSpec.Spec.InitContainers, *b.generateInitializer())
 	podTemplateSpec.ObjectMeta.Labels = util.MergeStringMap(podTemplateSpec.ObjectMeta.Labels, map[string]string{

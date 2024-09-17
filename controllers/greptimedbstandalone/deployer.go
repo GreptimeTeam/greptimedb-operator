@@ -33,7 +33,6 @@ import (
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 	"github.com/GreptimeTeam/greptimedb-operator/controllers/common"
 	"github.com/GreptimeTeam/greptimedb-operator/controllers/constant"
-	"github.com/GreptimeTeam/greptimedb-operator/controllers/greptimedbcluster/deployers"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/dbconfig"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/deployer"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/util"
@@ -468,8 +467,8 @@ func (b *standaloneBuilder) generateMainContainerArgs() []string {
 	if b.standalone.Spec.TLS != nil {
 		args = append(args, []string{
 			"--tls-mode", "require",
-			"--tls-cert-path", path.Join(constant.GreptimeDBTLSDir, deployers.TLSCrtSecretKey),
-			"--tls-key-path", path.Join(constant.GreptimeDBTLSDir, deployers.TLSKeySecretKey),
+			"--tls-cert-path", path.Join(constant.GreptimeDBTLSDir, v1alpha1.TLSCrtSecretKey),
+			"--tls-key-path", path.Join(constant.GreptimeDBTLSDir, v1alpha1.TLSKeySecretKey),
 		}...)
 	}
 
@@ -505,5 +504,21 @@ func (b *standaloneBuilder) addVolumeMounts(template *corev1.PodTemplateSpec) {
 					MountPath: b.standalone.GetCacheFileStorage().MountPath,
 				},
 			)
+	}
+
+	if b.standalone.GetLogging() != nil {
+		if !b.standalone.GetLogging().IsOnlyLogToStdout() && !b.standalone.GetLogging().IsPersistentWithData() {
+			template.Spec.Volumes = append(template.Spec.Volumes, corev1.Volume{
+				Name: "logs",
+				VolumeSource: corev1.VolumeSource{
+					EmptyDir: &corev1.EmptyDirVolumeSource{},
+				},
+			})
+
+			template.Spec.Containers[constant.MainContainerIndex].VolumeMounts = append(template.Spec.Containers[constant.MainContainerIndex].VolumeMounts, corev1.VolumeMount{
+				Name:      "logs",
+				MountPath: b.standalone.GetLogging().LogsDir,
+			})
+		}
 	}
 }

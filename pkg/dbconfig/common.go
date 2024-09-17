@@ -134,7 +134,7 @@ type LoggingConfig struct {
 	Level *string `tomlmapping:"logging.level"`
 
 	// The log format. Can be `text`/`json`.
-	LogFormat *string `tomlmapping:"logging.format"`
+	LogFormat *string `tomlmapping:"logging.log_format"`
 }
 
 // ConfigureLogging configures the logging config with the given logging spec.
@@ -152,5 +152,5 @@ func (c *LoggingConfig) ConfigureLogging(spec *v1alpha1.LoggingSpec) {
 	}
 
 	c.Level = pointer.String(string(spec.Level))
-	c.LogFormat = pointer.String(string(spec.LogFormat))
+	c.LogFormat = pointer.String(string(spec.Format))
 }

@@ -36,11 +36,6 @@ import (
 	k8sutil "github.com/GreptimeTeam/greptimedb-operator/pkg/util/k8s"
 )
 
-const (
-	TLSCrtSecretKey = "tls.crt"
-	TLSKeySecretKey = "tls.key"
-)
-
 type FrontendDeployer struct {
 	*CommonDeployer
 }
@@ -118,7 +113,7 @@ func (b *frontendBuilder) BuildService() deployer.Builder {
 		return b
 	}
 
-	if b.Cluster.Spec.Frontend == nil {
+	if b.Cluster.GetFrontend() == nil {
 		return b
 	}
 
@@ -153,7 +148,7 @@ func (b *frontendBuilder) BuildDeployment() deployer.Builder {
 		return b
 	}
 
-	if b.Cluster.Spec.Frontend == nil {
+	if b.Cluster.GetFrontend() == nil {
 		return b
 	}
 
@@ -196,7 +191,7 @@ func (b *frontendBuilder) BuildConfigMap() deployer.Builder {
 		return b
 	}
 
-	if b.Cluster.Spec.Frontend == nil {
+	if b.Cluster.GetFrontend() == nil {
 		return b
 	}
 
@@ -216,11 +211,11 @@ func (b *frontendBuilder) BuildPodMonitor() deployer.Builder {
 		return b
 	}
 
-	if b.Cluster.Spec.Frontend == nil {
+	if b.Cluster.GetFrontend() == nil {
 		return b
 	}
 
-	if b.Cluster.Spec.PrometheusMonitor == nil || !b.Cluster.Spec.PrometheusMonitor.Enabled {
+	if !b.Cluster.EnablePrometheusMonitor() {
 		return b
 	}
 
@@ -251,11 +246,11 @@ func (b *frontendBuilder) generateMainContainerArgs() []string {
 		"--config-file", path.Join(constant.GreptimeDBConfigDir, constant.GreptimeDBConfigFileName),
 	}
 
-	if b.Cluster.Spec.Frontend != nil && b.Cluster.Spec.Frontend.TLS != nil {
+	if b.Cluster.GetFrontendTLS() != nil {
 		args = append(args, []string{
 			"--tls-mode", constant.DefaultTLSMode,
-			"--tls-cert-path", path.Join(constant.GreptimeDBTLSDir, TLSCrtSecretKey),
-			"--tls-key-path", path.Join(constant.GreptimeDBTLSDir, TLSKeySecretKey),
+			"--tls-cert-path", path.Join(constant.GreptimeDBTLSDir, v1alpha1.TLSCrtSecretKey),
+			"--tls-key-path", path.Join(constant.GreptimeDBTLSDir, v1alpha1.TLSKeySecretKey),
 		}...)
 	}
 
@@ -278,7 +273,11 @@ func (b *frontendBuilder) generatePodTemplateSpec() *corev1.PodTemplateSpec {
 
 	b.MountConfigDir(podTemplateSpec)
 
-	if b.Cluster.Spec.Frontend.TLS != nil {
+	if b.Cluster.GetFrontendLogging() != nil && !b.Cluster.GetFrontendLogging().IsOnlyLogToStdout() {
+		b.AddLogsVolume(podTemplateSpec, b.Cluster.GetFrontendLogging().LogsDir)
+	}
+
+	if b.Cluster.GetFrontendTLS() != nil {
 		b.mountTLSSecret(podTemplateSpec)
 	}
 

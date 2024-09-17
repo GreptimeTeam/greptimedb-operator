@@ -251,7 +251,7 @@ func (in *GreptimeDBStandalone) defaultSpec() *GreptimeDBStandaloneSpec {
 		Logging: &LoggingSpec{
 			Level:              DefaultLogingLevel,
 			LogsDir:            DefaultLogsDir,
-			LogFormat:          LogFormatText,
+			Format:             LogFormatText,
 			PersistentWithData: pointer.Bool(false),
 			OnlyLogToStdout:    pointer.Bool(false),
 		},
@@ -277,7 +277,7 @@ func defaultLogging() *LoggingSpec {
 	return &LoggingSpec{
 		Level:              DefaultLogingLevel,
 		LogsDir:            DefaultLogsDir,
-		LogFormat:          LogFormatText,
+		Format:             LogFormatText,
 		PersistentWithData: pointer.Bool(false),
 		OnlyLogToStdout:    pointer.Bool(false),
 	}

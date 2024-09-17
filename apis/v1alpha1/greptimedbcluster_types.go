@@ -201,6 +201,13 @@ func (in *GreptimeDBCluster) GetFrontendConfig() string {
 	return ""
 }
 
+func (in *GreptimeDBCluster) GetFrontendTLS() *TLSSpec {
+	if in.Spec.Frontend != nil {
+		return in.Spec.Frontend.TLS
+	}
+	return nil
+}
+
 func (in *GreptimeDBCluster) GetFrontendTLSSecretName() string {
 	if in.Spec.Frontend != nil && in.Spec.Frontend.TLS != nil {
 		return in.Spec.Frontend.TLS.SecretName
@@ -355,6 +362,14 @@ func (in *GreptimeDBCluster) GetDatanodeLogging() *LoggingSpec {
 		return in.Spec.Datanode.Logging
 	}
 	return nil
+}
+
+func (in *LoggingSpec) IsPersistentWithData() bool {
+	return in != nil && in.PersistentWithData != nil && *in.PersistentWithData
+}
+
+func (in *LoggingSpec) IsOnlyLogToStdout() bool {
+	return in != nil && in.OnlyLogToStdout != nil && *in.OnlyLogToStdout
 }
 
 func (in *GreptimeDBCluster) GetFlownodeLogging() *LoggingSpec {

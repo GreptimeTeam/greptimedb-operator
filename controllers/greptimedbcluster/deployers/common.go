@@ -18,6 +18,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/GreptimeTeam/greptimedb-operator/controllers/constant"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -104,6 +105,21 @@ func (c *CommonBuilder) GeneratePodMonitor() (*monitoringv1.PodMonitor, error) {
 // MountConfigDir mounts the configmap to the main container as '/etc/greptimedb/config.toml'.
 func (c *CommonBuilder) MountConfigDir(template *corev1.PodTemplateSpec) {
 	common.MountConfigDir(c.Cluster.Name, c.ComponentKind, template)
+}
+
+// AddLogsVolume will create a shared volume for logs and mount it to the main container and sidecar container.
+func (c *CommonBuilder) AddLogsVolume(template *corev1.PodTemplateSpec, mountPath string) {
+	template.Spec.Volumes = append(template.Spec.Volumes, corev1.Volume{
+		Name: "logs",
+		VolumeSource: corev1.VolumeSource{
+			EmptyDir: &corev1.EmptyDirVolumeSource{},
+		},
+	})
+
+	template.Spec.Containers[constant.MainContainerIndex].VolumeMounts = append(template.Spec.Containers[constant.MainContainerIndex].VolumeMounts, corev1.VolumeMount{
+		Name:      "logs",
+		MountPath: mountPath,
+	})
 }
 
 func UpdateStatus(ctx context.Context, input *v1alpha1.GreptimeDBCluster, kc client.Client, opts ...client.SubResourceUpdateOption) error {

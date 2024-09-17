@@ -372,7 +372,7 @@ type LoggingSpec struct {
 	// +optional
 	LogsDir string `json:"logsDir,omitempty"`
 
-	// PersistentWithData indicates whether to persist the log with the data.
+	// PersistentWithData indicates whether to persist the log with the datanode data.
 	// If false, the log will be stored in ephemeral storage.
 	// +optional
 	PersistentWithData *bool `json:"persistentWithData,omitempty"`
@@ -381,10 +381,10 @@ type LoggingSpec struct {
 	// +optional
 	OnlyLogToStdout *bool `json:"onlyLogToStdout,omitempty"`
 
-	// LogFormat is the format of the logging.
+	// Format is the format of the logging.
 	// +optional
 	// +kubebuilder:validation:Enum:={"json", "text"}
-	LogFormat LogFormat `json:"logFormat,omitempty"`
+	Format LogFormat `json:"format,omitempty"`
 }
 
 // ServiceSpec defines the service configuration for the component.

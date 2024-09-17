@@ -2820,17 +2820,17 @@ spec:
                     type: integer
                   logging:
                     properties:
+                      format:
+                        enum:
+                        - json
+                        - text
+                        type: string
                       level:
                         enum:
                         - info
                         - error
                         - warn
                         - debug
-                        type: string
-                      logFormat:
-                        enum:
-                        - json
-                        - text
                         type: string
                       logsDir:
                         type: string
@@ -5639,17 +5639,17 @@ spec:
                     type: string
                   logging:
                     properties:
+                      format:
+                        enum:
+                        - json
+                        - text
+                        type: string
                       level:
                         enum:
                         - info
                         - error
                         - warn
                         - debug
-                        type: string
-                      logFormat:
-                        enum:
-                        - json
-                        - text
                         type: string
                       logsDir:
                         type: string
@@ -8436,17 +8436,17 @@ spec:
                     type: string
                   logging:
                     properties:
+                      format:
+                        enum:
+                        - json
+                        - text
+                        type: string
                       level:
                         enum:
                         - info
                         - error
                         - warn
                         - debug
-                        type: string
-                      logFormat:
-                        enum:
-                        - json
-                        - text
                         type: string
                       logsDir:
                         type: string
@@ -11271,17 +11271,17 @@ spec:
                     type: integer
                   logging:
                     properties:
+                      format:
+                        enum:
+                        - json
+                        - text
+                        type: string
                       level:
                         enum:
                         - info
                         - error
                         - warn
                         - debug
-                        type: string
-                      logFormat:
-                        enum:
-                        - json
-                        - text
                         type: string
                       logsDir:
                         type: string
@@ -17127,17 +17127,17 @@ spec:
                 type: object
               logging:
                 properties:
+                  format:
+                    enum:
+                    - json
+                    - text
+                    type: string
                   level:
                     enum:
                     - info
                     - error
                     - warn
                     - debug
-                    type: string
-                  logFormat:
-                    enum:
-                    - json
-                    - text
                     type: string
                   logsDir:
                     type: string
