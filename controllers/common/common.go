@@ -23,6 +23,20 @@ import (
 	"github.com/GreptimeTeam/greptimedb-operator/controllers/constant"
 )
 
+var (
+	DatanodeFileStorageLabels = map[string]string{
+		"app.greptime.io/fileStorageType": "datanode",
+	}
+
+	WALFileStorageLabels = map[string]string{
+		"app.greptime.io/fileStorageType": "wal",
+	}
+
+	CacheFileStorageLabels = map[string]string{
+		"app.greptime.io/fileStorageType": "cache",
+	}
+)
+
 func ResourceName(name string, componentKind v1alpha1.ComponentKind) string {
 	return name + "-" + string(componentKind)
 }

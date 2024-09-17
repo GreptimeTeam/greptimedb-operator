@@ -82,11 +82,24 @@ func (d *DatanodeDeployer) CleanUp(ctx context.Context, crdObject client.Object)
 		return err
 	}
 
-	if cluster.Spec.Datanode != nil {
-		if cluster.Spec.Datanode.Storage.StorageRetainPolicy == v1alpha1.StorageRetainPolicyTypeDelete {
-			if err := d.deleteStorage(ctx, cluster); err != nil {
-				return err
-			}
+	if cluster.GetDatanodeFileStorage() != nil &&
+		cluster.GetDatanodeFileStorage().StorageRetainPolicy == v1alpha1.StorageRetainPolicyTypeDelete {
+		if err := d.deleteStorage(ctx, cluster.Namespace, cluster.Name, common.DatanodeFileStorageLabels); err != nil {
+			return err
+		}
+	}
+
+	if cluster.GetRaftEngineWALFileStorage() != nil &&
+		cluster.GetRaftEngineWALFileStorage().StorageRetainPolicy == v1alpha1.StorageRetainPolicyTypeDelete {
+		if err := d.deleteStorage(ctx, cluster.Namespace, cluster.Name, common.WALFileStorageLabels); err != nil {
+			return err
+		}
+	}
+
+	if cluster.GetCacheFileStorage() != nil &&
+		cluster.GetCacheFileStorage().StorageRetainPolicy == v1alpha1.StorageRetainPolicyTypeDelete {
+		if err := d.deleteStorage(ctx, cluster.Namespace, cluster.Name, common.CacheFileStorageLabels); err != nil {
+			return err
 		}
 	}
 
@@ -225,21 +238,23 @@ func (d *DatanodeDeployer) requestMetasrvForMaintenance(cluster *v1alpha1.Grepti
 	return nil
 }
 
-func (d *DatanodeDeployer) deleteStorage(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster) error {
+func (d *DatanodeDeployer) deleteStorage(ctx context.Context, namespace, name string, additionalLabels map[string]string) error {
 	klog.Infof("Deleting datanode storage...")
 
+	matachedLabels := map[string]string{
+		constant.GreptimeDBComponentName: common.ResourceName(name, v1alpha1.DatanodeComponentKind),
+	}
+
 	selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
-		MatchLabels: map[string]string{
-			constant.GreptimeDBComponentName: common.ResourceName(cluster.Name, v1alpha1.DatanodeComponentKind),
-		},
+		MatchLabels: util.MergeStringMap(matachedLabels, additionalLabels),
 	})
 	if err != nil {
 		return err
 	}
 
-	pvcList := new(corev1.PersistentVolumeClaimList)
+	claims := new(corev1.PersistentVolumeClaimList)
 
-	err = d.List(ctx, pvcList, client.InNamespace(cluster.Namespace), client.MatchingLabelsSelector{Selector: selector})
+	err = d.List(ctx, claims, client.InNamespace(namespace), client.MatchingLabelsSelector{Selector: selector})
 	if errors.IsNotFound(err) {
 		return nil
 	}
@@ -247,7 +262,7 @@ func (d *DatanodeDeployer) deleteStorage(ctx context.Context, cluster *v1alpha1.
 		return err
 	}
 
-	for _, pvc := range pvcList.Items {
+	for _, pvc := range claims.Items {
 		klog.Infof("Deleting datanode PVC: %s", pvc.Name)
 		if err := d.Delete(ctx, &pvc); err != nil {
 			return err
@@ -300,9 +315,7 @@ func (d *DatanodeDeployer) isOldPodRestart(new, old appsv1.StatefulSet) bool {
 }
 
 func (d *DatanodeDeployer) shouldUserMaintenanceMode(cluster *v1alpha1.GreptimeDBCluster) bool {
-	if cluster.Spec.RemoteWalProvider != nil &&
-		cluster.Spec.Meta.EnableRegionFailover != nil &&
-		*cluster.Spec.Meta.EnableRegionFailover {
+	if cluster.GetKafkaWAL() != nil && cluster.EnableRegionFailover() {
 		return true
 	}
 	return false
@@ -394,7 +407,7 @@ func (b *datanodeBuilder) BuildStatefulSet() deployer.Builder {
 				},
 			},
 			Template:             b.generatePodTemplateSpec(),
-			VolumeClaimTemplates: b.generatePVC(),
+			VolumeClaimTemplates: b.generatePVCs(),
 		},
 	}
 
@@ -417,11 +430,11 @@ func (b *datanodeBuilder) BuildPodMonitor() deployer.Builder {
 		return b
 	}
 
-	if b.Cluster.Spec.Datanode == nil {
+	if b.Cluster.GetDatanode() == nil {
 		return b
 	}
 
-	if b.Cluster.Spec.PrometheusMonitor == nil || !b.Cluster.Spec.PrometheusMonitor.Enabled {
+	if !b.Cluster.EnablePrometheusMonitor() {
 		return b
 	}
 
@@ -455,7 +468,7 @@ func (b *datanodeBuilder) generatePodTemplateSpec() corev1.PodTemplateSpec {
 	}
 
 	b.mountConfigDir(podTemplateSpec)
-	b.addStorageDirMounts(podTemplateSpec)
+	b.addVolumeMounts(podTemplateSpec)
 	b.addInitConfigDirVolume(podTemplateSpec)
 
 	podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Ports = b.containerPorts()
@@ -467,25 +480,73 @@ func (b *datanodeBuilder) generatePodTemplateSpec() corev1.PodTemplateSpec {
 	return *podTemplateSpec
 }
 
-func (b *datanodeBuilder) generatePVC() []corev1.PersistentVolumeClaim {
-	return []corev1.PersistentVolumeClaim{
-		{
+func (b *datanodeBuilder) generatePVCs() []corev1.PersistentVolumeClaim {
+	var claims []corev1.PersistentVolumeClaim
+
+	// It's always not nil because it's the default value.
+	if b.Cluster.GetDatanodeFileStorage() != nil {
+		claims = append(claims, corev1.PersistentVolumeClaim{
 			ObjectMeta: metav1.ObjectMeta{
-				Name: b.Cluster.Spec.Datanode.Storage.Name,
+				Name:   b.Cluster.GetDatanodeFileStorage().Name,
+				Labels: common.DatanodeFileStorageLabels,
 			},
 			Spec: corev1.PersistentVolumeClaimSpec{
-				StorageClassName: b.Cluster.Spec.Datanode.Storage.StorageClassName,
+				StorageClassName: b.Cluster.GetDatanodeFileStorage().StorageClassName,
 				AccessModes: []corev1.PersistentVolumeAccessMode{
 					corev1.ReadWriteOnce,
 				},
 				Resources: corev1.ResourceRequirements{
 					Requests: corev1.ResourceList{
-						corev1.ResourceStorage: resource.MustParse(b.Cluster.Spec.Datanode.Storage.StorageSize),
+						corev1.ResourceStorage: resource.MustParse(b.Cluster.GetDatanodeFileStorage().StorageSize),
 					},
 				},
 			},
-		},
+		})
 	}
+
+	// Allocate the standalone WAL storage for the raft-engine.
+	if b.Cluster.GetRaftEngineWALFileStorage() != nil {
+		claims = append(claims, corev1.PersistentVolumeClaim{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:   b.Cluster.GetRaftEngineWALFileStorage().Name,
+				Labels: common.WALFileStorageLabels,
+			},
+			Spec: corev1.PersistentVolumeClaimSpec{
+				StorageClassName: b.Cluster.GetRaftEngineWALFileStorage().StorageClassName,
+				AccessModes: []corev1.PersistentVolumeAccessMode{
+					corev1.ReadWriteOnce,
+				},
+				Resources: corev1.ResourceRequirements{
+					Requests: corev1.ResourceList{
+						corev1.ResourceStorage: resource.MustParse(b.Cluster.GetRaftEngineWALFileStorage().StorageSize),
+					},
+				},
+			},
+		})
+	}
+
+	// Allocate the standalone cache file storage for the datanode.
+	if b.Cluster.GetCacheFileStorage() != nil {
+		claims = append(claims, corev1.PersistentVolumeClaim{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:   b.Cluster.GetCacheFileStorage().Name,
+				Labels: common.CacheFileStorageLabels,
+			},
+			Spec: corev1.PersistentVolumeClaimSpec{
+				StorageClassName: b.Cluster.GetCacheFileStorage().StorageClassName,
+				AccessModes: []corev1.PersistentVolumeAccessMode{
+					corev1.ReadWriteOnce,
+				},
+				Resources: corev1.ResourceRequirements{
+					Requests: corev1.ResourceList{
+						corev1.ResourceStorage: resource.MustParse(b.Cluster.GetCacheFileStorage().StorageSize),
+					},
+				},
+			},
+		})
+	}
+
+	return claims
 }
 
 func (b *datanodeBuilder) generateInitializer() *corev1.Container {
@@ -556,15 +617,36 @@ func (b *datanodeBuilder) mountConfigDir(template *corev1.PodTemplateSpec) {
 		)
 }
 
-func (b *datanodeBuilder) addStorageDirMounts(template *corev1.PodTemplateSpec) {
-	// The volume is defined in the PVC.
-	template.Spec.Containers[constant.MainContainerIndex].VolumeMounts =
-		append(template.Spec.Containers[constant.MainContainerIndex].VolumeMounts,
-			corev1.VolumeMount{
-				Name:      b.Cluster.Spec.Datanode.Storage.Name,
-				MountPath: b.Cluster.Spec.Datanode.Storage.MountPath,
-			},
-		)
+func (b *datanodeBuilder) addVolumeMounts(template *corev1.PodTemplateSpec) {
+	if b.Cluster.GetDatanodeFileStorage() != nil {
+		template.Spec.Containers[constant.MainContainerIndex].VolumeMounts =
+			append(template.Spec.Containers[constant.MainContainerIndex].VolumeMounts,
+				corev1.VolumeMount{
+					Name:      b.Cluster.GetDatanodeFileStorage().Name,
+					MountPath: b.Cluster.GetDatanodeFileStorage().MountPath,
+				},
+			)
+	}
+
+	if b.Cluster.GetRaftEngineWALFileStorage() != nil {
+		template.Spec.Containers[constant.MainContainerIndex].VolumeMounts =
+			append(template.Spec.Containers[constant.MainContainerIndex].VolumeMounts,
+				corev1.VolumeMount{
+					Name:      b.Cluster.GetRaftEngineWALFileStorage().Name,
+					MountPath: b.Cluster.GetRaftEngineWALFileStorage().MountPath,
+				},
+			)
+	}
+
+	if b.Cluster.GetCacheFileStorage() != nil {
+		template.Spec.Containers[constant.MainContainerIndex].VolumeMounts =
+			append(template.Spec.Containers[constant.MainContainerIndex].VolumeMounts,
+				corev1.VolumeMount{
+					Name:      b.Cluster.GetCacheFileStorage().Name,
+					MountPath: b.Cluster.GetCacheFileStorage().MountPath,
+				},
+			)
+	}
 }
 
 // The init-config volume is used for initializer.

@@ -130,6 +130,13 @@ func (in *GreptimeDBStandalone) GetRaftEngineWAL() *RaftEngineWAL {
 	return nil
 }
 
+func (in *GreptimeDBStandalone) GetRaftEngineWALFileStorage() *FileStorage {
+	if in.Spec.WALProvider != nil && in.Spec.WALProvider.RaftEngineWAL != nil {
+		return in.Spec.WALProvider.RaftEngineWAL.FileStorage
+	}
+	return nil
+}
+
 func (in *GreptimeDBStandalone) GetKafkaWAL() *KafkaWAL {
 	if in.Spec.WALProvider != nil {
 		return in.Spec.WALProvider.KafkaWAL
@@ -184,6 +191,13 @@ func (in *GreptimeDBStandalone) GetOSSStorage() *OSSStorage {
 	return nil
 }
 
+func (in *GreptimeDBStandalone) GetCacheFileStorage() *FileStorage {
+	if in.Spec.ObjectStorageProvider != nil && in.Spec.ObjectStorageProvider.Cache != nil {
+		return in.Spec.ObjectStorageProvider.Cache.FileStorage
+	}
+	return nil
+}
+
 func (in *GreptimeDBStandalone) GetFrontendTLSSecretName() string {
 	if in.Spec.TLS != nil {
 		return in.Spec.TLS.SecretName
@@ -199,7 +213,17 @@ func (in *GreptimeDBStandalone) GetWALDir() string {
 	if in.Spec.WALProvider != nil && in.Spec.WALProvider.RaftEngineWAL != nil {
 		return in.Spec.WALProvider.RaftEngineWAL.FileStorage.MountPath
 	}
+	if in.Spec.DatanodeStorage != nil && in.Spec.DatanodeStorage.DataHome != "" {
+		return in.Spec.DatanodeStorage.DataHome + "/wal"
+	}
 	return ""
+}
+
+func (in *GreptimeDBStandalone) GetDatanodeFileStorage() *FileStorage {
+	if in.Spec.DatanodeStorage != nil {
+		return in.Spec.DatanodeStorage.FileStorage
+	}
+	return nil
 }
 
 func (in *GreptimeDBStandalone) GetDataHome() string {
