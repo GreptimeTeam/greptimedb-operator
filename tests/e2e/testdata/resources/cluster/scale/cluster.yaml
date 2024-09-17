@@ -32,7 +32,8 @@ spec:
   datanode:
     replicas: 1
     storage:
-      storageRetainPolicy: Delete
+      fs:
+        storageRetainPolicy: Delete
   httpPort: 4000
   rpcPort: 4001
   mysqlPort: 4002
