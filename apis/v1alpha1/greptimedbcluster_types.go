@@ -42,11 +42,11 @@ type ComponentSpec struct {
 type MetaSpec struct {
 	ComponentSpec `json:",inline"`
 
-	// The RPC port of the meta.
+	// RPCPort is the gRPC port of the meta.
 	// +optional
 	RPCPort int32 `json:"rpcPort,omitempty"`
 
-	// The HTTP port of the meta.
+	// HTTPPort is the HTTP port of the meta.
 	// +optional
 	HTTPPort int32 `json:"httpPort,omitempty"`
 
@@ -75,7 +75,7 @@ type FrontendSpec struct {
 	// +optional
 	Service *ServiceSpec `json:"service,omitempty"`
 
-	// The TLS configurations of the frontend.
+	// TLS is the TLS configuration of the frontend.
 	// +optional
 	TLS *TLSSpec `json:"tls,omitempty"`
 }

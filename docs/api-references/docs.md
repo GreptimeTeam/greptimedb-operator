@@ -228,7 +228,7 @@ _Appears in:_
 | `template` _[PodTemplateSpec](#podtemplatespec)_ | Template defines the pod template for the component, if not specified, the pod template will use the default value. |  |  |
 | `logging` _[LoggingSpec](#loggingspec)_ | Logging defines the logging configuration for the component. |  |  |
 | `service` _[ServiceSpec](#servicespec)_ | Service is the service configuration of the frontend. |  |  |
-| `tls` _[TLSSpec](#tlsspec)_ | The TLS configurations of the frontend. |  |  |
+| `tls` _[TLSSpec](#tlsspec)_ | TLS is the TLS configuration of the frontend. |  |  |
 
 
 #### FrontendStatus
@@ -263,7 +263,7 @@ _Appears in:_
 | --- | --- | --- | --- |
 | `bucket` _string_ | The data will be stored in the bucket. |  |  |
 | `root` _string_ | The gcs directory path. |  |  |
-| `secretName` _string_ | The secret of storing Credentials for gcs service OAuth2 authentication.<br />The secret must be the same namespace with the GreptimeDBCluster resource. |  |  |
+| `secretName` _string_ | The secret of storing Credentials for gcs service OAuth2 authentication.<br />The secret should contain keys named `service-account-key`.<br />The secret must be the same namespace with the GreptimeDBCluster resource. |  |  |
 | `scope` _string_ | The scope for gcs. |  |  |
 | `endpoint` _string_ | The endpoint URI of gcs service. |  |  |
 
@@ -543,8 +543,8 @@ _Appears in:_
 | `config` _string_ | The content of the configuration file of the component in TOML format. |  |  |
 | `template` _[PodTemplateSpec](#podtemplatespec)_ | Template defines the pod template for the component, if not specified, the pod template will use the default value. |  |  |
 | `logging` _[LoggingSpec](#loggingspec)_ | Logging defines the logging configuration for the component. |  |  |
-| `rpcPort` _integer_ | The RPC port of the meta. |  |  |
-| `httpPort` _integer_ | The HTTP port of the meta. |  |  |
+| `rpcPort` _integer_ | RPCPort is the gRPC port of the meta. |  |  |
+| `httpPort` _integer_ | HTTPPort is the HTTP port of the meta. |  |  |
 | `etcdEndpoints` _string array_ | EtcdEndpoints is the endpoints of the etcd cluster. |  |  |
 | `enableCheckEtcdService` _boolean_ | EnableCheckEtcdService indicates whether to check etcd cluster health when starting meta. |  |  |
 | `enableRegionFailover` _boolean_ | EnableRegionFailover indicates whether to enable region failover. |  |  |
@@ -584,7 +584,7 @@ _Appears in:_
 | --- | --- | --- | --- |
 | `bucket` _string_ | The data will be stored in the bucket. |  |  |
 | `region` _string_ | The region of the bucket. |  |  |
-| `secretName` _string_ | The secret of storing the credentials of access key id and secret access key.<br />The secret must be the same namespace with the GreptimeDBCluster resource. |  |  |
+| `secretName` _string_ | The secret of storing the credentials of access key id and secret access key.<br />The secret should contain keys named `access-key-id` and `secret-access-key`.<br />The secret must be the same namespace with the GreptimeDBCluster resource. |  |  |
 | `root` _string_ | The OSS directory path. |  |  |
 | `endpoint` _string_ | The endpoint of the bucket. |  |  |
 
@@ -606,7 +606,7 @@ _Appears in:_
 | `s3` _[S3Storage](#s3storage)_ | S3 is the S3 storage configuration. |  |  |
 | `oss` _[OSSStorage](#ossstorage)_ | OSS is the Aliyun OSS storage configuration. |  |  |
 | `gcs` _[GCSStorage](#gcsstorage)_ | GCS is the Google GCS storage configuration. |  |  |
-| `cache` _[CacheStorage](#cachestorage)_ | Cache is the cache storage configuration. |  |  |
+| `cache` _[CacheStorage](#cachestorage)_ | Cache is the cache storage configuration for object storage. |  |  |
 
 
 #### Phase
@@ -718,7 +718,7 @@ _Appears in:_
 | --- | --- | --- | --- |
 | `bucket` _string_ | The data will be stored in the bucket. |  |  |
 | `region` _string_ | The region of the bucket. |  |  |
-| `secretName` _string_ | The secret of storing the credentials of access key id and secret access key.<br />The secret must be the same namespace with the GreptimeDBCluster resource. |  |  |
+| `secretName` _string_ | The secret of storing the credentials of access key id and secret access key.<br />The secret should contain keys named `access-key-id` and `secret-access-key`.<br />The secret must be the same namespace with the GreptimeDBCluster resource. |  |  |
 | `root` _string_ | The S3 directory path. |  |  |
 | `endpoint` _string_ | The endpoint of the bucket. |  |  |
 
@@ -804,7 +804,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `secretName` _string_ | SecretName is the name of the secret that contains the TLS certificates.<br />The secret must be in the same namespace with the greptime resource.<br />The secret must contain keys named `ca.crt`, `tls.crt` and `tls.key`. |  |  |
+| `secretName` _string_ | SecretName is the name of the secret that contains the TLS certificates.<br />The secret must be in the same namespace with the greptime resource.<br />The secret must contain keys named `tls.crt` and `tls.key`. |  |  |
 
 
 #### WALProviderSpec

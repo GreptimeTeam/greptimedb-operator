@@ -410,7 +410,7 @@ type ServiceSpec struct {
 type TLSSpec struct {
 	// SecretName is the name of the secret that contains the TLS certificates.
 	// The secret must be in the same namespace with the greptime resource.
-	// The secret must contain keys named `ca.crt`, `tls.crt` and `tls.key`.
+	// The secret must contain keys named `tls.crt` and `tls.key`.
 	// +required
 	SecretName string `json:"secretName"`
 }
@@ -429,7 +429,7 @@ type ObjectStorageProviderSpec struct {
 	// +optional
 	GCS *GCSStorage `json:"gcs,omitempty"`
 
-	// Cache is the cache storage configuration.
+	// Cache is the cache storage configuration for object storage.
 	// +optional
 	Cache *CacheStorage `json:"cache,omitempty"`
 }
@@ -480,6 +480,7 @@ type S3Storage struct {
 	Region string `json:"region"`
 
 	// The secret of storing the credentials of access key id and secret access key.
+	// The secret should contain keys named `access-key-id` and `secret-access-key`.
 	// The secret must be the same namespace with the GreptimeDBCluster resource.
 	// +optional
 	SecretName string `json:"secretName,omitempty"`
@@ -504,6 +505,7 @@ type OSSStorage struct {
 	Region string `json:"region"`
 
 	// The secret of storing the credentials of access key id and secret access key.
+	// The secret should contain keys named `access-key-id` and `secret-access-key`.
 	// The secret must be the same namespace with the GreptimeDBCluster resource.
 	// +optional
 	SecretName string `json:"secretName,omitempty"`
@@ -528,8 +530,9 @@ type GCSStorage struct {
 	Root string `json:"root"`
 
 	// The secret of storing Credentials for gcs service OAuth2 authentication.
+	// The secret should contain keys named `service-account-key`.
 	// The secret must be the same namespace with the GreptimeDBCluster resource.
-	// +op
+	// +optional
 	SecretName string `json:"secretName,omitempty"`
 
 	// The scope for gcs.
