@@ -34,6 +34,9 @@ type DatanodeConfig struct {
 	// WALConfig is the configuration for the WAL.
 	WALConfig `tomlmapping:",inline"`
 
+	// LoggingConfig is the configuration for the logging.
+	LoggingConfig `tomlmapping:",inline"`
+
 	// InputConfig is from config field of cluster spec.
 	InputConfig string
 }
@@ -77,6 +80,8 @@ func (c *DatanodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster)
 		c.WalProvider = pointer.String("kafka")
 		c.WalBrokerEndpoints = cluster.GetKafkaWAL().BrokerEndpoints
 	}
+
+	c.ConfigureLogging(cluster.GetDatanodeLogging())
 
 	return nil
 }

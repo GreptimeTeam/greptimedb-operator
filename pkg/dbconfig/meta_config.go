@@ -36,6 +36,9 @@ type MetaConfig struct {
 	// The kafka broker endpoints.
 	WalBrokerEndpoints []string `tomlmapping:"wal.broker_endpoints"`
 
+	// LoggingConfig is the configuration for the logging.
+	LoggingConfig `tomlmapping:",inline"`
+
 	// InputConfig is from config field of cluster spec.
 	InputConfig string
 }
@@ -58,6 +61,8 @@ func (c *MetaConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster) err
 		c.WalProvider = pointer.String("kafka")
 		c.WalBrokerEndpoints = cluster.GetKafkaWAL().BrokerEndpoints
 	}
+
+	c.ConfigureLogging(cluster.GetMetaLogging())
 
 	return nil
 }

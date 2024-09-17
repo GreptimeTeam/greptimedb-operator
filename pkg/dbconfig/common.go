@@ -39,52 +39,64 @@ type StorageConfig struct {
 }
 
 // ConfigureS3Storage configures the storage config with the given S3 storage.
-func (s *StorageConfig) ConfigureS3Storage(namespace string, s3 *v1alpha1.S3Storage) error {
-	s.StorageType = pointer.String("S3")
-	s.StorageBucket = pointer.String(s3.Bucket)
-	s.StorageRoot = pointer.String(s3.Root)
-	s.StorageEndpoint = pointer.String(s3.Endpoint)
-	s.StorageRegion = pointer.String(s3.Region)
+func (c *StorageConfig) ConfigureS3Storage(namespace string, s3 *v1alpha1.S3Storage) error {
+	if s3 == nil {
+		return nil
+	}
+
+	c.StorageType = pointer.String("S3")
+	c.StorageBucket = pointer.String(s3.Bucket)
+	c.StorageRoot = pointer.String(s3.Root)
+	c.StorageEndpoint = pointer.String(s3.Endpoint)
+	c.StorageRegion = pointer.String(s3.Region)
 
 	if s3.SecretName != "" {
 		data, err := k8sutil.GetSecretsData(namespace, s3.SecretName, []string{v1alpha1.AccessKeyIDSecretKey, v1alpha1.SecretAccessKeySecretKey})
 		if err != nil {
 			return err
 		}
-		s.StorageAccessKeyID = pointer.String(string(data[0]))
-		s.StorageSecretAccessKey = pointer.String(string(data[1]))
+		c.StorageAccessKeyID = pointer.String(string(data[0]))
+		c.StorageSecretAccessKey = pointer.String(string(data[1]))
 	}
 
 	return nil
 }
 
 // ConfigureOSSStorage configures the storage config with the given OSS storage.
-func (s *StorageConfig) ConfigureOSSStorage(namespace string, oss *v1alpha1.OSSStorage) error {
-	s.StorageType = pointer.String("Oss")
-	s.StorageBucket = pointer.String(oss.Bucket)
-	s.StorageRoot = pointer.String(oss.Root)
-	s.StorageEndpoint = pointer.String(oss.Endpoint)
-	s.StorageRegion = pointer.String(oss.Region)
+func (c *StorageConfig) ConfigureOSSStorage(namespace string, oss *v1alpha1.OSSStorage) error {
+	if oss == nil {
+		return nil
+	}
+
+	c.StorageType = pointer.String("Oss")
+	c.StorageBucket = pointer.String(oss.Bucket)
+	c.StorageRoot = pointer.String(oss.Root)
+	c.StorageEndpoint = pointer.String(oss.Endpoint)
+	c.StorageRegion = pointer.String(oss.Region)
 
 	if oss.SecretName != "" {
 		data, err := k8sutil.GetSecretsData(namespace, oss.SecretName, []string{v1alpha1.AccessKeyIDSecretKey, v1alpha1.SecretAccessKeySecretKey})
 		if err != nil {
 			return err
 		}
-		s.StorageAccessKeyID = pointer.String(string(data[0]))
-		s.StorageAccessKeySecret = pointer.String(string(data[1]))
+		c.StorageAccessKeyID = pointer.String(string(data[0]))
+		c.StorageAccessKeySecret = pointer.String(string(data[1]))
 	}
 
 	return nil
 }
 
 // ConfigureGCSStorage configures the storage config with the given GCS storage.
-func (s *StorageConfig) ConfigureGCSStorage(namespace string, gcs *v1alpha1.GCSStorage) error {
-	s.StorageType = pointer.String("Gcs")
-	s.StorageBucket = pointer.String(gcs.Bucket)
-	s.StorageRoot = pointer.String(gcs.Root)
-	s.StorageEndpoint = pointer.String(gcs.Endpoint)
-	s.StorageScope = pointer.String(gcs.Scope)
+func (c *StorageConfig) ConfigureGCSStorage(namespace string, gcs *v1alpha1.GCSStorage) error {
+	if gcs == nil {
+		return nil
+	}
+
+	c.StorageType = pointer.String("Gcs")
+	c.StorageBucket = pointer.String(gcs.Bucket)
+	c.StorageRoot = pointer.String(gcs.Root)
+	c.StorageEndpoint = pointer.String(gcs.Endpoint)
+	c.StorageScope = pointer.String(gcs.Scope)
 
 	if gcs.SecretName != "" {
 		data, err := k8sutil.GetSecretsData(namespace, gcs.SecretName, []string{v1alpha1.ServiceAccountKey})
@@ -94,7 +106,7 @@ func (s *StorageConfig) ConfigureGCSStorage(namespace string, gcs *v1alpha1.GCSS
 
 		serviceAccount := data[0]
 		if len(serviceAccount) != 0 {
-			s.StorageCredential = pointer.String(base64.StdEncoding.EncodeToString(serviceAccount))
+			c.StorageCredential = pointer.String(base64.StdEncoding.EncodeToString(serviceAccount))
 		}
 	}
 
@@ -111,4 +123,34 @@ type WALConfig struct {
 
 	// The kafka broker endpoints.
 	WalBrokerEndpoints []string `tomlmapping:"wal.broker_endpoints"`
+}
+
+// LoggingConfig is the configuration for the logging.
+type LoggingConfig struct {
+	// The directory to store the log files. If set to empty, logs will not be written to files.
+	Dir *string `tomlmapping:"logging.dir"`
+
+	// The log level. Can be `info`/`debug`/`warn`/`error`.
+	Level *string `tomlmapping:"logging.level"`
+
+	// The log format. Can be `text`/`json`.
+	LogFormat *string `tomlmapping:"logging.format"`
+}
+
+// ConfigureLogging configures the logging config with the given logging spec.
+func (c *LoggingConfig) ConfigureLogging(spec *v1alpha1.LoggingSpec) {
+	if spec == nil {
+		return
+	}
+
+	if spec.OnlyLogToStdout != nil && *spec.OnlyLogToStdout {
+		c.Dir = nil
+	} else {
+		if spec.LogsDir != "" {
+			c.Dir = pointer.String(spec.LogsDir)
+		}
+	}
+
+	c.Level = pointer.String(string(spec.Level))
+	c.LogFormat = pointer.String(string(spec.LogFormat))
 }

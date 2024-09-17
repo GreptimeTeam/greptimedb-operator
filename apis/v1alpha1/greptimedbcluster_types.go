@@ -336,6 +336,34 @@ func (in *GreptimeDBCluster) EnablePrometheusMonitor() bool {
 	return in.Spec.PrometheusMonitor != nil && in.Spec.PrometheusMonitor.Enabled
 }
 
+func (in *GreptimeDBCluster) GetFrontendLogging() *LoggingSpec {
+	if in.Spec.Frontend != nil {
+		return in.Spec.Frontend.Logging
+	}
+	return nil
+}
+
+func (in *GreptimeDBCluster) GetMetaLogging() *LoggingSpec {
+	if in.Spec.Meta != nil {
+		return in.Spec.Meta.Logging
+	}
+	return nil
+}
+
+func (in *GreptimeDBCluster) GetDatanodeLogging() *LoggingSpec {
+	if in.Spec.Datanode != nil {
+		return in.Spec.Datanode.Logging
+	}
+	return nil
+}
+
+func (in *GreptimeDBCluster) GetFlownodeLogging() *LoggingSpec {
+	if in.Spec.Flownode != nil {
+		return in.Spec.Flownode.Logging
+	}
+	return nil
+}
+
 // GreptimeDBClusterStatus defines the observed state of GreptimeDBCluster
 type GreptimeDBClusterStatus struct {
 	// Frontend is the status of frontend node.

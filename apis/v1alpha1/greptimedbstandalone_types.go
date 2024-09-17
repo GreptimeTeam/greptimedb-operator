@@ -233,6 +233,10 @@ func (in *GreptimeDBStandalone) GetDataHome() string {
 	return ""
 }
 
+func (in *GreptimeDBStandalone) GetLogging() *LoggingSpec {
+	return in.Spec.Logging
+}
+
 func (in *GreptimeDBStandaloneStatus) GetCondition(conditionType ConditionType) *Condition {
 	return GetCondition(in.Conditions, conditionType)
 }

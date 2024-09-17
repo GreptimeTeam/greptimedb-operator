@@ -22,6 +22,9 @@ var _ Config = &FrontendConfig{}
 
 // FrontendConfig is the configuration for the frontend.
 type FrontendConfig struct {
+	// LoggingConfig is the configuration for the logging.
+	LoggingConfig `tomlmapping:",inline"`
+
 	// InputConfig is from config field of cluster spec.
 	InputConfig string
 }
@@ -33,6 +36,8 @@ func (c *FrontendConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster)
 			return err
 		}
 	}
+
+	c.ConfigureLogging(cluster.GetFrontendLogging())
 
 	return nil
 }
