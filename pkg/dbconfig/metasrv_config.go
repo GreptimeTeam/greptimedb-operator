@@ -15,8 +15,9 @@
 package dbconfig
 
 import (
+	"k8s.io/utils/pointer"
+
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
-	"github.com/GreptimeTeam/greptimedb-operator/pkg/util"
 )
 
 var _ Config = &MetasrvConfig{}
@@ -41,23 +42,21 @@ type MetasrvConfig struct {
 
 // ConfigureByCluster configures the metasrv config by the given cluster.
 func (c *MetasrvConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster) error {
-	if cluster.Spec.Meta != nil {
-		c.EnableRegionFailover = cluster.Spec.Meta.EnableRegionFailover
+	c.EnableRegionFailover = pointer.Bool(cluster.EnableRegionFailover())
 
-		if len(cluster.Spec.Meta.StoreKeyPrefix) > 0 {
-			c.StoreKeyPrefix = &cluster.Spec.Meta.StoreKeyPrefix
-		}
+	if cluster.Spec.Meta.StoreKeyPrefix != "" {
+		c.StoreKeyPrefix = pointer.String(cluster.Spec.Meta.StoreKeyPrefix)
+	}
 
-		if len(cluster.Spec.Meta.Config) > 0 {
-			if err := c.SetInputConfig(cluster.Spec.Meta.Config); err != nil {
-				return err
-			}
+	if cluster.GetMetaConfig() != "" {
+		if err := c.SetInputConfig(cluster.GetMetaConfig()); err != nil {
+			return err
 		}
+	}
 
-		if cluster.Spec.RemoteWalProvider != nil && cluster.Spec.RemoteWalProvider.KafkaRemoteWal != nil {
-			c.WalProvider = util.StringPtr("kafka")
-			c.WalBrokerEndpoints = cluster.Spec.RemoteWalProvider.KafkaRemoteWal.BrokerEndpoints
-		}
+	if cluster.GetKafkaWAL() != nil {
+		c.WalProvider = pointer.String("kafka")
+		c.WalBrokerEndpoints = cluster.GetKafkaWAL().BrokerEndpoints
 	}
 
 	return nil

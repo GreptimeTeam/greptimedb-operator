@@ -49,9 +49,6 @@ const (
 	// DefaultDatanodeFileStorageName is the default file storage name for the datanode.
 	DefaultDatanodeFileStorageName = "datanode"
 
-	// DefaultWalDir is the default directory for the WAL data when using the raft-engine wal.
-	DefaultWalDir = DefaultDataHome + "/wal"
-
 	// DefaultLogsDir is the default directory for the logs.
 	DefaultLogsDir = DefaultDataHome + "/logs"
 

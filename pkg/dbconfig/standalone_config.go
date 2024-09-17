@@ -17,8 +17,9 @@ package dbconfig
 import (
 	"encoding/base64"
 
+	"k8s.io/utils/pointer"
+
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
-	"github.com/GreptimeTeam/greptimedb-operator/pkg/util"
 )
 
 var _ Config = &FrontendConfig{}
@@ -45,68 +46,71 @@ type StandaloneConfig struct {
 }
 
 // ConfigureByCluster is not need to implement in standalone mode.
-func (c *StandaloneConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster) error {
+func (c *StandaloneConfig) ConfigureByCluster(_ *v1alpha1.GreptimeDBCluster) error {
 	return nil
 }
 
 // ConfigureByStandalone is not need to implement in cluster mode.
 func (c *StandaloneConfig) ConfigureByStandalone(standalone *v1alpha1.GreptimeDBStandalone) error {
-	// TODO(zyy17): need to refactor the following code. It's too ugly.
-	if standalone.Spec.ObjectStorageProvider != nil {
-		switch {
-		case standalone.Spec.ObjectStorageProvider.S3 != nil:
-			if standalone.Spec.ObjectStorageProvider.S3.SecretName != "" {
-				accessKeyID, secretAccessKey, err := getOCSCredentials(standalone.Namespace, standalone.Spec.ObjectStorageProvider.S3.SecretName)
-				if err != nil {
-					return err
-				}
-				c.StorageAccessKeyID = util.StringPtr(string(accessKeyID))
-				c.StorageSecretAccessKey = util.StringPtr(string(secretAccessKey))
-			}
-			c.StorageType = util.StringPtr("S3")
-			c.StorageBucket = util.StringPtr(standalone.Spec.ObjectStorageProvider.S3.Bucket)
-			c.StorageRoot = util.StringPtr(standalone.Spec.ObjectStorageProvider.S3.Root)
-			c.StorageEndpoint = util.StringPtr(standalone.Spec.ObjectStorageProvider.S3.Endpoint)
-			c.StorageRegion = util.StringPtr(standalone.Spec.ObjectStorageProvider.S3.Region)
+	if standalone.GetS3Storage() != nil {
+		s3 := standalone.GetS3Storage()
+		c.StorageType = pointer.String("S3")
+		c.StorageBucket = pointer.String(s3.Bucket)
+		c.StorageRoot = pointer.String(s3.Root)
+		c.StorageEndpoint = pointer.String(s3.Endpoint)
+		c.StorageRegion = pointer.String(s3.Region)
 
-		case standalone.Spec.ObjectStorageProvider.OSS != nil:
-			if standalone.Spec.ObjectStorageProvider.OSS.SecretName != "" {
-				accessKeyID, secretAccessKey, err := getOCSCredentials(standalone.Namespace, standalone.Spec.ObjectStorageProvider.OSS.SecretName)
-				if err != nil {
-					return err
-				}
-				c.StorageAccessKeyID = util.StringPtr(string(accessKeyID))
-				c.StorageAccessKeySecret = util.StringPtr(string(secretAccessKey))
-			}
-			c.StorageType = util.StringPtr("Oss")
-			c.StorageBucket = util.StringPtr(standalone.Spec.ObjectStorageProvider.OSS.Bucket)
-			c.StorageRoot = util.StringPtr(standalone.Spec.ObjectStorageProvider.OSS.Root)
-			c.StorageEndpoint = util.StringPtr(standalone.Spec.ObjectStorageProvider.OSS.Endpoint)
-			c.StorageRegion = util.StringPtr(standalone.Spec.ObjectStorageProvider.OSS.Region)
+		accessKeyID, secretAccessKey, err := getOCSCredentials(standalone.Namespace, s3.SecretName)
+		if err != nil {
+			return err
+		}
+		c.StorageAccessKeyID = pointer.String(string(accessKeyID))
+		c.StorageSecretAccessKey = pointer.String(string(secretAccessKey))
+	}
 
-		case standalone.Spec.ObjectStorageProvider.GCS != nil:
-			if standalone.Spec.ObjectStorageProvider.GCS.SecretName != "" {
-				serviceAccountKey, err := getServiceAccountKey(standalone.Namespace, standalone.Spec.ObjectStorageProvider.GCS.SecretName)
-				if err != nil {
-					return err
-				}
-				if len(serviceAccountKey) != 0 {
-					c.StorageCredential = util.StringPtr(base64.StdEncoding.EncodeToString(serviceAccountKey))
-				}
-			}
-			c.StorageType = util.StringPtr("Gcs")
-			c.StorageBucket = util.StringPtr(standalone.Spec.ObjectStorageProvider.GCS.Bucket)
-			c.StorageRoot = util.StringPtr(standalone.Spec.ObjectStorageProvider.GCS.Root)
-			c.StorageEndpoint = util.StringPtr(standalone.Spec.ObjectStorageProvider.GCS.Endpoint)
-			c.StorageScope = util.StringPtr(standalone.Spec.ObjectStorageProvider.GCS.Scope)
+	if standalone.GetOSSStorage() != nil {
+		oss := standalone.GetOSSStorage()
+		c.StorageType = pointer.String("Oss")
+		c.StorageBucket = pointer.String(oss.Bucket)
+		c.StorageRoot = pointer.String(oss.Root)
+		c.StorageEndpoint = pointer.String(oss.Endpoint)
+		c.StorageRegion = pointer.String(oss.Region)
+
+		accessKeyID, secretAccessKey, err := getOCSCredentials(standalone.Namespace, oss.SecretName)
+		if err != nil {
+			return err
+		}
+		c.StorageAccessKeyID = pointer.String(string(accessKeyID))
+		c.StorageAccessKeySecret = pointer.String(string(secretAccessKey))
+	}
+
+	if standalone.GetGCSStorage() != nil {
+		gcs := standalone.GetGCSStorage()
+		c.StorageType = pointer.String("Gcs")
+		c.StorageBucket = pointer.String(gcs.Bucket)
+		c.StorageRoot = pointer.String(gcs.Root)
+		c.StorageEndpoint = pointer.String(gcs.Endpoint)
+		c.StorageScope = pointer.String(gcs.Scope)
+
+		serviceAccountKey, err := getServiceAccountKey(standalone.Namespace, gcs.SecretName)
+		if err != nil {
+			return err
+		}
+		if len(serviceAccountKey) != 0 {
+			c.StorageCredential = pointer.String(base64.StdEncoding.EncodeToString(serviceAccountKey))
 		}
 	}
 
-	c.WalDir = util.StringPtr(standalone.Spec.LocalStorage.WalDir)
-	c.StorageDataHome = util.StringPtr(standalone.Spec.LocalStorage.DataHome)
+	if standalone.GetWALDir() != "" {
+		c.WalDir = pointer.String(standalone.GetWALDir())
+	}
 
-	if len(standalone.Spec.Config) > 0 {
-		if err := c.SetInputConfig(standalone.Spec.Config); err != nil {
+	if standalone.GetDataHome() != "" {
+		c.StorageDataHome = pointer.String(standalone.GetDataHome())
+	}
+
+	if standalone.GetConfig() != "" {
+		if err := c.SetInputConfig(standalone.GetConfig()); err != nil {
 			return err
 		}
 	}

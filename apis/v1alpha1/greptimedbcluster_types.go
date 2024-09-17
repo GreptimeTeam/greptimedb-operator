@@ -256,7 +256,13 @@ func (in *GreptimeDBCluster) GetWALDir() string {
 	if in.Spec.WALProvider != nil && in.Spec.WALProvider.RaftEngineWAL != nil {
 		return in.Spec.WALProvider.RaftEngineWAL.FileStorage.MountPath
 	}
-	return DefaultWalDir
+	if in.Spec.Datanode != nil &&
+		in.Spec.Datanode.Storage != nil &&
+		in.Spec.Datanode.Storage.DataHome != "" {
+		return in.Spec.Datanode.Storage.DataHome + "/wal"
+	}
+
+	return ""
 }
 
 func (in *GreptimeDBCluster) GetDataHome() string {
