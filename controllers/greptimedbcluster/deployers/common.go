@@ -18,7 +18,6 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/GreptimeTeam/greptimedb-operator/controllers/constant"
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -28,6 +27,7 @@ import (
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 	"github.com/GreptimeTeam/greptimedb-operator/controllers/common"
+	"github.com/GreptimeTeam/greptimedb-operator/controllers/constant"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/dbconfig"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/deployer"
 )

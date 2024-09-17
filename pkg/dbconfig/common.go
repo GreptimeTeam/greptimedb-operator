@@ -145,10 +145,8 @@ func (c *LoggingConfig) ConfigureLogging(spec *v1alpha1.LoggingSpec) {
 
 	if spec.IsOnlyLogToStdout() {
 		c.Dir = nil
-	} else {
-		if spec.LogsDir != "" {
-			c.Dir = pointer.String(spec.LogsDir)
-		}
+	} else if spec.LogsDir != "" {
+		c.Dir = pointer.String(spec.LogsDir)
 	}
 
 	c.Level = pointer.String(string(spec.Level))
