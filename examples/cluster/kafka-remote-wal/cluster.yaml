@@ -14,7 +14,7 @@ spec:
       - "etcd.etcd-cluster.svc.cluster.local:2379"
   datanode:
     replicas: 1
-  remoteWal:
+  wal:
     kafka:
       brokerEndpoints:
         - "kafka-bootstrap.kafka.svc.cluster.local:9092"

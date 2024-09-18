@@ -1,0 +1,23 @@
+apiVersion: greptime.io/v1alpha1
+kind: GreptimeDBCluster
+metadata:
+  name: cluster-with-standalone-wal
+spec:
+  base:
+    main:
+      image: greptime/greptimedb:latest
+  frontend:
+    replicas: 1
+  meta:
+    replicas: 1
+    etcdEndpoints:
+      - "etcd.etcd-cluster:2379"
+  datanode:
+    replicas: 1
+  wal:
+    raftEngine:
+      fs:
+        storageClassName: io2 # Use io2 storage class for WAL for better performance.
+        name: wal
+        storageSize: 5Gi
+        mountPath: /wal

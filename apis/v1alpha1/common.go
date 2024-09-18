@@ -19,6 +19,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+// StorageRetainPolicyType is the type of the storage retain policy.
 type StorageRetainPolicyType string
 
 const (
@@ -34,19 +35,19 @@ const (
 type Phase string
 
 const (
-	// PhaseStarting means the controller start to create cluster.
+	// PhaseStarting means the controller start to create cluster or standalone.
 	PhaseStarting Phase = "Starting"
 
-	// PhaseRunning means all the components of cluster is ready.
+	// PhaseRunning means all the components of cluster or standalone is ready.
 	PhaseRunning Phase = "Running"
 
-	// PhaseUpdating means the cluster is updating.
+	// PhaseUpdating means the cluster or standalone is updating.
 	PhaseUpdating Phase = "Updating"
 
 	// PhaseError means some kind of error happen in reconcile.
 	PhaseError Phase = "Error"
 
-	// PhaseTerminating means the cluster is terminating.
+	// PhaseTerminating means the cluster or standalone is terminating.
 	PhaseTerminating Phase = "Terminating"
 )
 
@@ -54,20 +55,29 @@ const (
 type ComponentKind string
 
 const (
+	// FrontendComponentKind is the frontend component kind.
 	FrontendComponentKind ComponentKind = "frontend"
+
+	// DatanodeComponentKind is the datanode component kind.
 	DatanodeComponentKind ComponentKind = "datanode"
-	MetaComponentKind     ComponentKind = "meta"
+
+	// MetaComponentKind is the meta component kind.
+	MetaComponentKind ComponentKind = "meta"
+
+	// FlownodeComponentKind is the flownode component kind.
 	FlownodeComponentKind ComponentKind = "flownode"
-	StandaloneKind        ComponentKind = "standalone"
+
+	// StandaloneKind is the standalone component kind.
+	StandaloneKind ComponentKind = "standalone"
 )
 
 // SlimPodSpec is a slimmed down version of corev1.PodSpec.
-// Most of the fields in SlimPodSpec are copied from corev1.PodSpec.
+// Most of the fields in SlimPodSpec are copied from `corev1.PodSpec`.
 type SlimPodSpec struct {
 	// NodeSelector is a selector which must be true for the pod to fit on a node.
 	// Selector which must match a node's labels for the pod to be scheduled on that node.
-	// More info: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/
-	// NodeSelector field is from 'corev1.PodSpec.NodeSelector'.
+	// More info: `https://kubernetes.io/docs/concepts/configuration/assign-pod-node/`
+	// NodeSelector field is from `corev1.PodSpec.NodeSelector`.
 	// +optional
 	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
 
@@ -83,16 +93,16 @@ type SlimPodSpec struct {
 	// in a similar fashion.
 	// Init containers cannot currently be added or removed.
 	// Cannot be updated.
-	// More info: https://kubernetes.io/docs/concepts/workloads/pods/init-containers/
-	// InitContainers field is from 'corev1.PodSpec.InitContainers'.
+	// More info: `https://kubernetes.io/docs/concepts/workloads/pods/init-containers/`
+	// InitContainers field is from `corev1.PodSpec.InitContainers`.
 	// +optional
 	InitContainers []corev1.Container `json:"initContainers,omitempty"`
 
 	// Restart policy for all containers within the pod.
-	// One of Always, OnFailure, Never.
-	// Default to Always.
-	// More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#restart-policy
-	// RestartPolicy field is from 'corev1.PodSpec.RestartPolicy'.
+	// One of `Always`, `OnFailure`, `Never`.
+	// Default to `Always`.
+	// More info: `https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#restart-policy`
+	// RestartPolicy field is from `corev1.PodSpec.RestartPolicy`.
 	// +optional
 	RestartPolicy corev1.RestartPolicy `json:"restartPolicy,omitempty"`
 
@@ -104,49 +114,49 @@ type SlimPodSpec struct {
 	// a termination signal and the time when the processes are forcibly halted with a kill signal.
 	// Set this value longer than the expected cleanup time for your process.
 	// Defaults to 30 seconds.
-	// TerminationGracePeriodSeconds field is from 'corev1.PodSpec.TerminationGracePeriodSeconds'.
+	// TerminationGracePeriodSeconds field is from `corev1.PodSpec.TerminationGracePeriodSeconds`.
 	// +optional
 	TerminationGracePeriodSeconds *int64 `json:"terminationGracePeriodSeconds,omitempty"`
 
 	// Optional duration in seconds the pod may be active on the node relative to
 	// StartTime before the system will actively try to mark it failed and kill associated containers.
 	// Value must be a positive integer.
-	// ActiveDeadlineSeconds field is from 'corev1.PodSpec.ActiveDeadlineSeconds'.
+	// ActiveDeadlineSeconds field is from `corev1.PodSpec.ActiveDeadlineSeconds`.
 	// +optional
 	ActiveDeadlineSeconds *int64 `json:"activeDeadlineSeconds,omitempty"`
 
 	// Set DNS policy for the pod.
-	// Defaults to "ClusterFirst".
-	// Valid values are 'ClusterFirstWithHostNet', 'ClusterFirst', 'Default' or 'None'.
+	// Defaults to `ClusterFirst`.
+	// Valid values are `ClusterFirstWithHostNet`, `ClusterFirst`, `Default` or `None`.
 	// DNS parameters given in DNSConfig will be merged with the policy selected with DNSPolicy.
 	// To have DNS options set along with hostNetwork, you have to specify DNS policy
-	// explicitly to 'ClusterFirstWithHostNet'.
-	// DNSPolicy field is from 'corev1.PodSpec.DNSPolicy'.
+	// explicitly to `ClusterFirstWithHostNet`.
+	// DNSPolicy field is from `corev1.PodSpec.DNSPolicy`.
 	// +optional
 	DNSPolicy corev1.DNSPolicy `json:"dnsPolicy,omitempty"`
 
 	// ServiceAccountName is the name of the ServiceAccount to use to run this pod.
-	// More info: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
-	// ServiceAccountName field is from 'corev1.PodSpec.ServiceAccountName'.
+	// More info: `https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/`
+	// ServiceAccountName field is from `corev1.PodSpec.ServiceAccountName`.
 	// +optional
 	ServiceAccountName string `json:"serviceAccountName,omitempty"`
 
 	// Host networking requested for this pod. Use the host's network namespace.
 	// If this option is set, the ports that will be used must be specified.
-	// Default to false.
-	// HostNetwork field is from 'corev1.PodSpec.HostNetwork'.
+	// Default to `false`.
+	// HostNetwork field is from `corev1.PodSpec.HostNetwork`.
 	// +optional
 	HostNetwork bool `json:"hostNetwork,omitempty"`
 
 	// ImagePullSecrets is an optional list of references to secrets in the same namespace to use for pulling any of the images used by this PodSpec.
 	// If specified, these secrets will be passed to individual puller implementations for them to use.
-	// More info: https://kubernetes.io/docs/concepts/containers/images#specifying-imagepullsecrets-on-a-pod
-	// ImagePullSecrets field is from 'corev1.PodSpec.ImagePullSecrets'.
+	// More info: `https://kubernetes.io/docs/concepts/containers/images#specifying-imagepullsecrets-on-a-pod`
+	// ImagePullSecrets field is from `corev1.PodSpec.ImagePullSecrets`.
 	// +optional
 	ImagePullSecrets []corev1.LocalObjectReference `json:"imagePullSecrets,omitempty"`
 
 	// If specified, the pod's scheduling constraints
-	// Affinity field is from 'corev1.PodSpec.Affinity'.
+	// Affinity field is from `corev1.PodSpec.Affinity`.
 	// +optional
 	Affinity *corev1.Affinity `json:"affinity,omitempty"`
 
@@ -156,11 +166,11 @@ type SlimPodSpec struct {
 
 	// If specified, the pod will be dispatched by specified scheduler.
 	// If not specified, the pod will be dispatched by default scheduler.
-	// SchedulerName field is from 'corev1.PodSpec.SchedulerName'.
+	// SchedulerName field is from `corev1.PodSpec.SchedulerName`.
 	// +optional
 	SchedulerName string `json:"schedulerName,omitempty"`
 
-	// For most time, there is one main container in a pod(frontend/meta/datanode).
+	// For most time, there is one main container in a pod(`frontend`/`meta`/`datanode`/`flownode`).
 	// If specified, additional containers will be added to the pod as sidecar containers.
 	// +optional
 	AdditionalContainers []corev1.Container `json:"additionalContainers,omitempty"`
@@ -183,25 +193,25 @@ type MainContainerSpec struct {
 
 	// Entrypoint array. Not executed within a shell.
 	// The container image's ENTRYPOINT is used if this is not provided.
-	// Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
-	// cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
-	// to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
-	// produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
+	// Variable references `$(VAR_NAME)` are expanded using the container's environment. If a variable
+	// cannot be resolved, the reference in the input string will be unchanged. Double `$$` are reduced
+	// to a single `$`, which allows for escaping the `$(VAR_NAME)` syntax: i.e. `$$(VAR_NAME)` will
+	// produce the string literal `$(VAR_NAME)`. Escaped references will never be expanded, regardless
 	// of whether the variable exists or not. Cannot be updated.
-	// More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell
-	// Command field is from 'corev1.Container.Command'.
+	// More info: `https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell`
+	// Command field is from `corev1.Container.Command`.
 	// +optional
 	Command []string `json:"command,omitempty"`
 
 	// Arguments to the entrypoint.
 	// The container image's CMD is used if this is not provided.
-	// Variable references $(VAR_NAME) are expanded using the container's environment. If a variable
-	// cannot be resolved, the reference in the input string will be unchanged. Double $$ are reduced
-	// to a single $, which allows for escaping the $(VAR_NAME) syntax: i.e. "$$(VAR_NAME)" will
-	// produce the string literal "$(VAR_NAME)". Escaped references will never be expanded, regardless
+	// Variable references `$(VAR_NAME)` are expanded using the container's environment. If a variable
+	// cannot be resolved, the reference in the input string will be unchanged. Double `$$` are reduced
+	// to a single `$`, which allows for escaping the `$(VAR_NAME)` syntax: i.e. `$$(VAR_NAME)` will
+	// produce the string literal `$(VAR_NAME)`. Escaped references will never be expanded, regardless
 	// of whether the variable exists or not. Cannot be updated.
-	// More info: https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell
-	// Args field is from 'corev1.Container.Args'.
+	// More info: `https://kubernetes.io/docs/tasks/inject-data-application/define-command-argument-container/#running-a-command-in-a-shell`
+	// Args field is from `corev1.Container.Args`.
 	// +optional
 	Args []string `json:"args,omitempty"`
 
@@ -209,42 +219,42 @@ type MainContainerSpec struct {
 	// If not specified, the container runtime's default will be used, which
 	// might be configured in the container image.
 	// Cannot be updated.
-	// WorkingDir field is from 'corev1.Container.WorkingDir'.
+	// WorkingDir field is from `corev1.Container.WorkingDir`.
 	// +optional
 	WorkingDir string `json:"workingDir,omitempty"`
 
 	// List of environment variables to set in the container.
 	// Cannot be updated.
-	// Env field is from 'corev1.Container.Env'.
+	// Env field is from `corev1.Container.Env`.
 	// +optional
 	Env []corev1.EnvVar `json:"env,omitempty"`
 
 	// Periodic probe of container liveness.
 	// Container will be restarted if the probe fails.
-	// More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
-	// LivenessProbe field is from 'corev1.Container.LivenessProbe'.
+	// More info: `https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes`
+	// LivenessProbe field is from `corev1.Container.LivenessProbe`.
 	// +optional
 	LivenessProbe *corev1.Probe `json:"livenessProbe,omitempty"`
 
 	// Periodic probe of container service readiness.
 	// Container will be removed from service endpoints if the probe fails.
-	// ReadinessProbe field is from 'corev1.Container.LivenessProbe'.
-	// More info: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes
+	// ReadinessProbe field is from `corev1.Container.LivenessProbe`.
+	// More info: `https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes`
 	// +optional
 	ReadinessProbe *corev1.Probe `json:"readinessProbe,omitempty"`
 
 	// Actions that the management system should take in response to container lifecycle events.
 	// Cannot be updated.
-	// Lifecycle field is from 'corev1.Container.Lifecycle'.
+	// Lifecycle field is from `corev1.Container.Lifecycle`.
 	// +optional
 	Lifecycle *corev1.Lifecycle `json:"lifecycle,omitempty"`
 
 	// Image pull policy.
-	// One of Always, Never, IfNotPresent.
-	// Defaults to Always if :latest tag is specified, or IfNotPresent otherwise.
+	// One of `Always`, `Never`, `IfNotPresent`.
+	// Defaults to `Always` if `:latest` tag is specified, or IfNotPresent otherwise.
 	// Cannot be updated.
-	// More info: https://kubernetes.io/docs/concepts/containers/images#updating-images
-	// ImagePullPolicy field is from 'corev1.Container.ImagePullPolicy'.
+	// More info: `https://kubernetes.io/docs/concepts/containers/images#updating-images`
+	// ImagePullPolicy field is from `orev1.Container.ImagePullPolicy`.
 	// +optional
 	ImagePullPolicy corev1.PullPolicy `json:"imagePullPolicy,omitempty"`
 
@@ -252,6 +262,13 @@ type MainContainerSpec struct {
 	// Cannot be updated.
 	// +optional
 	VolumeMounts []corev1.VolumeMount `json:"volumeMounts,omitempty"`
+}
+
+func (in *MainContainerSpec) GetImage() string {
+	if in != nil {
+		return in.Image
+	}
+	return ""
 }
 
 // PodTemplateSpec defines the template for a pod of cluster.
@@ -273,138 +290,327 @@ type PodTemplateSpec struct {
 	SlimPodSpec `json:",inline"`
 }
 
-// StorageSpec will generate PVC.
-type StorageSpec struct {
-	// The name of the storage.
+// FileStorage defines the file storage specification. It is used to generate the PVC that will be mounted to the container.
+type FileStorage struct {
+	// Name is the name of the PVC that will be created.
 	// +optional
 	Name string `json:"name,omitempty"`
 
-	// The name of the storage class to use for the volume.
+	// StorageClassName is the name of the StorageClass to use for the PVC.
 	// +optional
 	StorageClassName *string `json:"storageClassName,omitempty"`
 
-	// The size of the storage.
+	// StorageSize is the size of the storage.
 	// +optional
 	// +kubebuilder:validation:Pattern=(^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$)
 	StorageSize string `json:"storageSize,omitempty"`
 
-	// The mount path of the storage in datanode container.
+	// MountPath is the path where the storage will be mounted in the container.
 	// +optional
 	MountPath string `json:"mountPath,omitempty"`
 
-	// The PVCs will retain or delete when the cluster is deleted, default to Retain.
+	// StorageRetainPolicy is the policy of the storage. It can be `Retain` or `Delete`.
 	// +optional
 	// +kubebuilder:validation:Enum:={"Retain", "Delete"}
 	StorageRetainPolicy StorageRetainPolicyType `json:"storageRetainPolicy,omitempty"`
-
-	// The wal directory of the storage.
-	WalDir string `json:"walDir,omitempty"`
-
-	// The datahome directory.
-	// +optional
-	DataHome string `json:"dataHome,omitempty"`
 }
 
-// RemoteWalProvider defines the remote wal provider for the cluster.
-type RemoteWalProvider struct {
-	// +optional
-	KafkaRemoteWal *KafkaRemoteWal `json:"kafka,omitempty"`
+// FileStorageAccessor is the interface that wraps the basic methods for the FileStorage.
+// +kubebuilder:object:generate=false
+type FileStorageAccessor interface {
+	GetName() string
+	GetStorageClassName() *string
+	GetSize() string
+	GetMountPath() string
+	GetPolicy() StorageRetainPolicyType
 }
 
-// KafkaRemoteWal is the specification for remote WAL that uses Kafka.
-type KafkaRemoteWal struct {
-	// +optional
-	BrokerEndpoints []string `json:"brokerEndpoints,omitempty"`
+func (in *FileStorage) GetName() string {
+	if in != nil {
+		return in.Name
+	}
+	return ""
 }
 
+func (in *FileStorage) GetStorageClassName() *string {
+	if in != nil {
+		return in.StorageClassName
+	}
+	return nil
+}
+
+func (in *FileStorage) GetSize() string {
+	if in != nil {
+		return in.StorageSize
+	}
+	return ""
+}
+
+func (in *FileStorage) GetMountPath() string {
+	if in != nil {
+		return in.MountPath
+	}
+	return ""
+}
+
+func (in *FileStorage) GetPolicy() StorageRetainPolicyType {
+	if in != nil {
+		return in.StorageRetainPolicy
+	}
+	return ""
+}
+
+// WALProviderSpec defines the WAL provider for the cluster.
+type WALProviderSpec struct {
+	// RaftEngineWAL is the specification for local WAL that uses raft-engine.
+	// +optional
+	RaftEngineWAL *RaftEngineWAL `json:"raftEngine,omitempty"`
+
+	// KafkaWAL is the specification for remote WAL that uses Kafka.
+	// +optional
+	KafkaWAL *KafkaWAL `json:"kafka,omitempty"`
+}
+
+// RaftEngineWAL is the specification for local WAL that uses raft-engine.
+type RaftEngineWAL struct {
+	// FileStorage is the file storage configuration for the raft-engine WAL.
+	// If the file storage is not specified, WAL will use DatanodeStorageSpec.
+	// +optional
+	FileStorage *FileStorage `json:"fs,omitempty"`
+}
+
+// KafkaWAL is the specification for Kafka remote WAL.
+type KafkaWAL struct {
+	// BrokerEndpoints is the list of Kafka broker endpoints.
+	// +required
+	BrokerEndpoints []string `json:"brokerEndpoints"`
+}
+
+func (in *WALProviderSpec) GetRaftEngineWAL() *RaftEngineWAL {
+	if in != nil {
+		return in.RaftEngineWAL
+	}
+	return nil
+}
+
+func (in *WALProviderSpec) GetKafkaWAL() *KafkaWAL {
+	if in != nil {
+		return in.KafkaWAL
+	}
+	return nil
+}
+
+func (in *RaftEngineWAL) GetFileStorage() *FileStorage {
+	if in != nil {
+		return in.FileStorage
+	}
+	return nil
+}
+
+func (in *KafkaWAL) GetBrokerEndpoints() []string {
+	if in != nil {
+		return in.BrokerEndpoints
+	}
+	return nil
+}
+
+// ServiceSpec defines the service configuration for the component.
 type ServiceSpec struct {
-	// type determines how the Service is exposed.
+	// Type is the type of the service.
 	// +optional
 	Type corev1.ServiceType `json:"type,omitempty"`
 
-	// Additional annotations for the service
+	// Annotations is the annotations for the service.
 	// +optional
 	Annotations map[string]string `json:"annotations,omitempty"`
 
-	// Additional labels for the service
+	// Labels is the labels for the service.
 	// +optional
 	Labels map[string]string `json:"labels,omitempty"`
 
-	// loadBalancerClass is the class of the load balancer implementation this Service belongs to.
+	// LoadBalancerClass is the class of the load balancer.
 	// +optional
 	LoadBalancerClass *string `json:"loadBalancerClass,omitempty"`
 }
 
+// TLSSpec defines the TLS configurations for the component.
 type TLSSpec struct {
-	// The secret name of the TLS certificate, and it must be in the same namespace of the cluster.
-	// The secret must contain keys named ca.crt, tls.crt and tls.key.
+	// SecretName is the name of the secret that contains the TLS certificates.
+	// The secret must be in the same namespace with the greptime resource.
+	// The secret must contain keys named `tls.crt` and `tls.key`.
+	// +required
+	SecretName string `json:"secretName"`
+}
+
+func (in *TLSSpec) GetSecretName() string {
+	if in != nil {
+		return in.SecretName
+	}
+	return ""
+}
+
+// ObjectStorageProviderSpec defines the object storage provider for the cluster. The data will be stored in the storage.
+type ObjectStorageProviderSpec struct {
+	// S3 is the S3 storage configuration.
 	// +optional
-	SecretName string `json:"secretName,omitempty"`
+	S3 *S3Storage `json:"s3,omitempty"`
+
+	// OSS is the Aliyun OSS storage configuration.
+	// +optional
+	OSS *OSSStorage `json:"oss,omitempty"`
+
+	// GCS is the Google GCS storage configuration.
+	// +optional
+	GCS *GCSStorage `json:"gcs,omitempty"`
+
+	// Cache is the cache storage configuration for object storage.
+	// +optional
+	Cache *CacheStorage `json:"cache,omitempty"`
 }
 
-// ObjectStorageProvider defines the storage provider for the cluster. The data will be stored in the storage.
-type ObjectStorageProvider struct {
-	S3            *S3StorageProvider  `json:"s3,omitempty"`
-	OSS           *OSSStorageProvider `json:"oss,omitempty"`
-	GCS           *GCSStorageProvider `json:"gcs,omitempty"`
-	CachePath     string              `json:"cachePath,omitempty"`
-	CacheCapacity string              `json:"cacheCapacity,omitempty"`
+func (in *ObjectStorageProviderSpec) GetCacheFileStorage() *FileStorage {
+	if in != nil && in.Cache != nil {
+		return in.Cache.FileStorage
+	}
+	return nil
 }
 
-type S3StorageProvider struct {
+func (in *ObjectStorageProviderSpec) GetS3Storage() *S3Storage {
+	if in != nil {
+		return in.S3
+	}
+	return nil
+}
+
+func (in *ObjectStorageProviderSpec) GetGCSStorage() *GCSStorage {
+	if in != nil {
+		return in.GCS
+	}
+	return nil
+}
+
+func (in *ObjectStorageProviderSpec) GetOSSStorage() *OSSStorage {
+	if in != nil {
+		return in.OSS
+	}
+	return nil
+}
+
+func (in *ObjectStorageProviderSpec) getSetObjectStorageCount() int {
+	count := 0
+	if in.S3 != nil {
+		count++
+	}
+	if in.OSS != nil {
+		count++
+	}
+	if in.GCS != nil {
+		count++
+	}
+	return count
+}
+
+// DatanodeStorageSpec defines the storage specification for the datanode.
+type DatanodeStorageSpec struct {
+	// DataHome is the home directory of the data.
+	DataHome string `json:"dataHome,omitempty"`
+
+	// FileStorage is the file storage configuration.
+	// +optional
+	FileStorage *FileStorage `json:"fs,omitempty"`
+}
+
+// CacheStorage defines the cache storage specification.
+type CacheStorage struct {
+	// Storage is the storage specification for the cache.
+	// If the storage is not specified, the cache will use DatanodeStorageSpec.
+	// +optional
+	FileStorage *FileStorage `json:"fs,omitempty"`
+
+	// CacheCapacity is the capacity of the cache.
+	// +optional
+	CacheCapacity string `json:"cacheCapacity,omitempty"`
+}
+
+// S3Storage defines the S3 storage specification.
+type S3Storage struct {
 	// The data will be stored in the bucket.
-	// +optional
-	Bucket string `json:"bucket,omitempty"`
+	// +required
+	Bucket string `json:"bucket"`
 
 	// The region of the bucket.
-	// +optional
-	Region string `json:"region,omitempty"`
-
-	// The endpoint of the bucket.
-	// +optional
-	Endpoint string `json:"endpoint,omitempty"`
+	// +required
+	Region string `json:"region"`
 
 	// The secret of storing the credentials of access key id and secret access key.
+	// The secret should contain keys named `access-key-id` and `secret-access-key`.
 	// The secret must be the same namespace with the GreptimeDBCluster resource.
 	// +optional
 	SecretName string `json:"secretName,omitempty"`
 
 	// The S3 directory path.
-	// +optional
-	Root string `json:"root,omitempty"`
-}
-
-type OSSStorageProvider struct {
-	// The data will be stored in the bucket.
-	// +optional
-	Bucket string `json:"bucket,omitempty"`
-
-	// The region of the bucket.
-	// +optional
-	Region string `json:"region,omitempty"`
+	// +required
+	Root string `json:"root"`
 
 	// The endpoint of the bucket.
 	// +optional
 	Endpoint string `json:"endpoint,omitempty"`
+}
+
+func (in *S3Storage) GetSecretName() string {
+	if in != nil {
+		return in.SecretName
+	}
+	return ""
+}
+
+// OSSStorage defines the Aliyun OSS storage specification.
+type OSSStorage struct {
+	// The data will be stored in the bucket.
+	// +required
+	Bucket string `json:"bucket"`
+
+	// The region of the bucket.
+	// +required
+	Region string `json:"region"`
 
 	// The secret of storing the credentials of access key id and secret access key.
+	// The secret should contain keys named `access-key-id` and `secret-access-key`.
 	// The secret must be the same namespace with the GreptimeDBCluster resource.
 	// +optional
 	SecretName string `json:"secretName,omitempty"`
 
 	// The OSS directory path.
+	// +required
+	Root string `json:"root"`
+
+	// The endpoint of the bucket.
 	// +optional
-	Root string `json:"root,omitempty"`
+	Endpoint string `json:"endpoint,omitempty"`
 }
 
-type GCSStorageProvider struct {
+func (in *OSSStorage) GetSecretName() string {
+	if in != nil {
+		return in.SecretName
+	}
+	return ""
+}
+
+// GCSStorage defines the Google GCS storage specification.
+type GCSStorage struct {
 	// The data will be stored in the bucket.
-	// +optional
-	Bucket string `json:"bucket,omitempty"`
+	// +required
+	Bucket string `json:"bucket"`
 
 	// The gcs directory path.
+	// +required
+	Root string `json:"root"`
+
+	// The secret of storing Credentials for gcs service OAuth2 authentication.
+	// The secret should contain keys named `service-account-key`.
+	// The secret must be the same namespace with the GreptimeDBCluster resource.
 	// +optional
-	Root string `json:"root,omitempty"`
+	SecretName string `json:"secretName,omitempty"`
 
 	// The scope for gcs.
 	// +optional
@@ -413,31 +619,37 @@ type GCSStorageProvider struct {
 	// The endpoint URI of gcs service.
 	// +optional
 	Endpoint string `json:"endpoint,omitempty"`
+}
 
-	// The secret of storing Credentials for gcs service OAuth2 authentication.
-	// The secret must be the same namespace with the GreptimeDBCluster resource.
-	// +optional
-	SecretName string `json:"secretName,omitempty"`
+func (in *GCSStorage) GetSecretName() string {
+	if in != nil {
+		return in.SecretName
+	}
+	return ""
 }
 
 // PrometheusMonitorSpec defines the PodMonitor configuration.
 type PrometheusMonitorSpec struct {
-	// Enable a Prometheus PodMonitor
-	// +optional
-	Enabled bool `json:"enabled,omitempty"`
+	// Enabled indicates whether the PodMonitor is enabled.
+	// +required
+	Enabled bool `json:"enabled"`
 
-	// Prometheus PodMonitor labels.
-	// +optional
-	Labels map[string]string `json:"labels,omitempty"`
+	// Labels is the labels for the PodMonitor.
+	// +required
+	Labels map[string]string `json:"labels"`
 
-	// Interval at which metrics should be scraped
+	// Interval is the scape interval for the PodMonitor.
 	// +optional
 	Interval string `json:"interval,omitempty"`
 }
 
+func (in *PrometheusMonitorSpec) IsEnablePrometheusMonitor() bool {
+	return in != nil && in.Enabled
+}
+
+// ConditionType is the type of the condition.
 type ConditionType string
 
-// These are valid conditions of a GreptimeDBCluster and GreptimeDBStandalone.
 const (
 	// ConditionTypeReady indicates that the GreptimeDB cluster is ready to serve requests.
 	// Every component in the cluster are all ready.

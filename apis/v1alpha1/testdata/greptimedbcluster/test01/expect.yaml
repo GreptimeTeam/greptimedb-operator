@@ -49,7 +49,7 @@ spec:
   meta:
     enableRegionFailover: false
     etcdEndpoints:
-      - etcd.default:2379
+      - etcd.etcd-cluster.svc.cluster.local:2379
     httpPort: 4000
     rpcPort: 3002
     replicas: 1
@@ -76,11 +76,11 @@ spec:
     replicas: 1
     storage:
       dataHome: /data/greptimedb
-      mountPath: /data/greptimedb
-      name: datanode
-      storageRetainPolicy: Retain
-      storageSize: 10Gi
-      walDir: /data/greptimedb/wal
+      fs:
+        name: datanode
+        mountPath: /data/greptimedb
+        storageRetainPolicy: Retain
+        storageSize: 10Gi
     template:
       main:
         image: greptime/greptimedb:latest

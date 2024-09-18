@@ -1,0 +1,27 @@
+apiVersion: greptime.io/v1alpha1
+kind: GreptimeDBStandalone
+metadata:
+  name: test00
+  namespace: default
+spec:
+  version: latest
+  httpPort: 4000
+  mysqlPort: 4002
+  postgreSQLPort: 4003
+  rpcPort: 4001
+  base:
+    main:
+      image: greptime/greptimedb:latest
+      livenessProbe:
+        httpGet:
+          path: /health
+          port: 4000
+  service:
+    type: ClusterIP
+  datanodeStorage:
+    dataHome: /data/greptimedb
+    fs:
+      name: datanode
+      mountPath: /data/greptimedb
+      storageRetainPolicy: Retain
+      storageSize: 10Gi

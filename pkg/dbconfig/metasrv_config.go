@@ -48,15 +48,15 @@ func (c *MetasrvConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster) 
 			c.StoreKeyPrefix = &cluster.Spec.Meta.StoreKeyPrefix
 		}
 
-		if len(cluster.Spec.Meta.Config) > 0 {
-			if err := c.SetInputConfig(cluster.Spec.Meta.Config); err != nil {
+		if cfg := cluster.GetMeta().GetConfig(); cfg != "" {
+			if err := c.SetInputConfig(cfg); err != nil {
 				return err
 			}
 		}
 
-		if cluster.Spec.RemoteWalProvider != nil && cluster.Spec.RemoteWalProvider.KafkaRemoteWal != nil {
+		if kafka := cluster.GetWALProvider().GetKafkaWAL(); kafka != nil {
 			c.WalProvider = util.StringPtr("kafka")
-			c.WalBrokerEndpoints = cluster.Spec.RemoteWalProvider.KafkaRemoteWal.BrokerEndpoints
+			c.WalBrokerEndpoints = kafka.GetBrokerEndpoints()
 		}
 	}
 

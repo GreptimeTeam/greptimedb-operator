@@ -108,12 +108,6 @@ func FromStandalone(standalone *v1alpha1.GreptimeDBStandalone) ([]byte, error) {
 	return Marshal(cfg)
 }
 
-const (
-	AccessKeyIDSecretKey     = "access-key-id"
-	SecretAccessKeySecretKey = "secret-access-key"
-	ServiceAccountKey        = "service-account-key"
-)
-
 func getServiceAccountKey(namespace, name string) (secretAccessKey []byte, err error) {
 	var secret corev1.Secret
 	if err = k8sutil.GetK8sResource(namespace, name, &secret); err != nil {
@@ -125,9 +119,9 @@ func getServiceAccountKey(namespace, name string) (secretAccessKey []byte, err e
 		return
 	}
 
-	secretAccessKey = secret.Data[ServiceAccountKey]
+	secretAccessKey = secret.Data[v1alpha1.ServiceAccountKey]
 	if secretAccessKey == nil {
-		err = fmt.Errorf("secret '%s/%s' does not have service account key '%s'", namespace, name, ServiceAccountKey)
+		err = fmt.Errorf("secret '%s/%s' does not have service account key '%s'", namespace, name, v1alpha1.ServiceAccountKey)
 		return
 	}
 	return
@@ -145,15 +139,15 @@ func getOCSCredentials(namespace, name string) (accessKeyID, secretAccessKey []b
 		return
 	}
 
-	accessKeyID = ocsCredentials.Data[AccessKeyIDSecretKey]
+	accessKeyID = ocsCredentials.Data[v1alpha1.AccessKeyIDSecretKey]
 	if accessKeyID == nil {
-		err = fmt.Errorf("secret '%s/%s' does not have access key id '%s'", namespace, name, AccessKeyIDSecretKey)
+		err = fmt.Errorf("secret '%s/%s' does not have access key id '%s'", namespace, name, v1alpha1.AccessKeyIDSecretKey)
 		return
 	}
 
-	secretAccessKey = ocsCredentials.Data[SecretAccessKeySecretKey]
+	secretAccessKey = ocsCredentials.Data[v1alpha1.SecretAccessKeySecretKey]
 	if secretAccessKey == nil {
-		err = fmt.Errorf("secret '%s/%s' does not have secret access key '%s'", namespace, name, SecretAccessKeySecretKey)
+		err = fmt.Errorf("secret '%s/%s' does not have secret access key '%s'", namespace, name, v1alpha1.SecretAccessKeySecretKey)
 		return
 	}
 

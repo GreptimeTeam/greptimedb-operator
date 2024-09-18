@@ -2821,7 +2821,7 @@ spec:
                     type: integer
                   replicas:
                     format: int32
-                    minimum: 0
+                    minimum: 1
                     type: integer
                   rpcPort:
                     format: int32
@@ -2830,22 +2830,23 @@ spec:
                     properties:
                       dataHome:
                         type: string
-                      mountPath:
-                        type: string
-                      name:
-                        type: string
-                      storageClassName:
-                        type: string
-                      storageRetainPolicy:
-                        enum:
-                        - Retain
-                        - Delete
-                        type: string
-                      storageSize:
-                        pattern: (^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$)
-                        type: string
-                      walDir:
-                        type: string
+                      fs:
+                        properties:
+                          mountPath:
+                            type: string
+                          name:
+                            type: string
+                          storageClassName:
+                            type: string
+                          storageRetainPolicy:
+                            enum:
+                            - Retain
+                            - Delete
+                            type: string
+                          storageSize:
+                            pattern: (^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$)
+                            type: string
+                        type: object
                     type: object
                   template:
                     properties:
@@ -5609,16 +5610,16 @@ spec:
                           type: object
                         type: array
                     type: object
+                required:
+                - replicas
                 type: object
-              enableInfluxDBProtocol:
-                type: boolean
               flownode:
                 properties:
                   config:
                     type: string
                   replicas:
                     format: int32
-                    minimum: 0
+                    minimum: 1
                     type: integer
                   rpcPort:
                     format: int32
@@ -8385,6 +8386,8 @@ spec:
                           type: object
                         type: array
                     type: object
+                required:
+                - replicas
                 type: object
               frontend:
                 properties:
@@ -8392,7 +8395,7 @@ spec:
                     type: string
                   replicas:
                     format: int32
-                    minimum: 0
+                    minimum: 1
                     type: integer
                   service:
                     properties:
@@ -11175,7 +11178,11 @@ spec:
                     properties:
                       secretName:
                         type: string
+                    required:
+                    - secretName
                     type: object
+                required:
+                - replicas
                 type: object
               httpPort:
                 format: int32
@@ -11202,7 +11209,7 @@ spec:
                     type: integer
                   replicas:
                     format: int32
-                    minimum: 0
+                    minimum: 1
                     type: integer
                   rpcPort:
                     format: int32
@@ -13971,16 +13978,37 @@ spec:
                           type: object
                         type: array
                     type: object
+                required:
+                - etcdEndpoints
+                - replicas
                 type: object
               mysqlPort:
                 format: int32
                 type: integer
               objectStorage:
                 properties:
-                  cacheCapacity:
-                    type: string
-                  cachePath:
-                    type: string
+                  cache:
+                    properties:
+                      cacheCapacity:
+                        type: string
+                      fs:
+                        properties:
+                          mountPath:
+                            type: string
+                          name:
+                            type: string
+                          storageClassName:
+                            type: string
+                          storageRetainPolicy:
+                            enum:
+                            - Retain
+                            - Delete
+                            type: string
+                          storageSize:
+                            pattern: (^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$)
+                            type: string
+                        type: object
+                    type: object
                   gcs:
                     properties:
                       bucket:
@@ -13993,6 +14021,9 @@ spec:
                         type: string
                       secretName:
                         type: string
+                    required:
+                    - bucket
+                    - root
                     type: object
                   oss:
                     properties:
@@ -14006,6 +14037,10 @@ spec:
                         type: string
                       secretName:
                         type: string
+                    required:
+                    - bucket
+                    - region
+                    - root
                     type: object
                   s3:
                     properties:
@@ -14019,6 +14054,10 @@ spec:
                         type: string
                       secretName:
                         type: string
+                    required:
+                    - bucket
+                    - region
+                    - root
                     type: object
                 type: object
               postgreSQLPort:
@@ -14034,8 +14073,16 @@ spec:
                     additionalProperties:
                       type: string
                     type: object
+                required:
+                - enabled
+                - labels
                 type: object
-              remoteWal:
+              rpcPort:
+                format: int32
+                type: integer
+              version:
+                type: string
+              wal:
                 properties:
                   kafka:
                     properties:
@@ -14043,13 +14090,34 @@ spec:
                         items:
                           type: string
                         type: array
+                    required:
+                    - brokerEndpoints
+                    type: object
+                  raftEngine:
+                    properties:
+                      fs:
+                        properties:
+                          mountPath:
+                            type: string
+                          name:
+                            type: string
+                          storageClassName:
+                            type: string
+                          storageRetainPolicy:
+                            enum:
+                            - Retain
+                            - Delete
+                            type: string
+                          storageSize:
+                            pattern: (^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$)
+                            type: string
+                        type: object
                     type: object
                 type: object
-              rpcPort:
-                format: int32
-                type: integer
-              version:
-                type: string
+            required:
+            - datanode
+            - frontend
+            - meta
             type: object
           status:
             properties:

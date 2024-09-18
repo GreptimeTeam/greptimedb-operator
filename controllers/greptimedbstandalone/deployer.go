@@ -22,17 +22,16 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/klog/v2"
+	"k8s.io/utils/pointer"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 	"github.com/GreptimeTeam/greptimedb-operator/controllers/common"
 	"github.com/GreptimeTeam/greptimedb-operator/controllers/constant"
-	"github.com/GreptimeTeam/greptimedb-operator/controllers/greptimedbcluster/deployers"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/dbconfig"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/deployer"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/util"
@@ -59,15 +58,15 @@ func NewStandaloneDeployer(mgr ctrl.Manager) *StandaloneDeployer {
 	}
 }
 
-func (s *StandaloneDeployer) NewBuilder(crdObject client.Object) deployer.Builder {
+func (d *StandaloneDeployer) NewBuilder(crdObject client.Object) deployer.Builder {
 	sb := &standaloneBuilder{
 		DefaultBuilder: &deployer.DefaultBuilder{
-			Scheme: s.Scheme,
+			Scheme: d.Scheme,
 			Owner:  crdObject,
 		},
 	}
 
-	standalone, err := s.getStandalone(crdObject)
+	standalone, err := d.getStandalone(crdObject)
 	if err != nil {
 		sb.Err = err
 	}
@@ -76,8 +75,8 @@ func (s *StandaloneDeployer) NewBuilder(crdObject client.Object) deployer.Builde
 	return sb
 }
 
-func (s *StandaloneDeployer) Generate(crdObject client.Object) ([]client.Object, error) {
-	objects, err := s.NewBuilder(crdObject).
+func (d *StandaloneDeployer) Generate(crdObject client.Object) ([]client.Object, error) {
+	objects, err := d.NewBuilder(crdObject).
 		BuildService().
 		BuildConfigMap().
 		BuildStatefulSet().
@@ -91,14 +90,26 @@ func (s *StandaloneDeployer) Generate(crdObject client.Object) ([]client.Object,
 	return objects, nil
 }
 
-func (s *StandaloneDeployer) CleanUp(ctx context.Context, crdObject client.Object) error {
-	cluster, err := s.getStandalone(crdObject)
+func (d *StandaloneDeployer) CleanUp(ctx context.Context, crdObject client.Object) error {
+	standalone, err := d.getStandalone(crdObject)
 	if err != nil {
 		return err
 	}
 
-	if cluster.Spec.LocalStorage != nil && cluster.Spec.LocalStorage.StorageRetainPolicy == v1alpha1.StorageRetainPolicyTypeDelete {
-		if err := s.deleteStorage(ctx, cluster); err != nil {
+	if standalone.GetDatanodeFileStorage().GetPolicy() == v1alpha1.StorageRetainPolicyTypeDelete {
+		if err := d.deleteStorage(ctx, standalone.Namespace, standalone.Name, common.DatanodeFileStorageLabels); err != nil {
+			return err
+		}
+	}
+
+	if standalone.GetWALProvider().GetRaftEngineWAL().GetFileStorage().GetPolicy() == v1alpha1.StorageRetainPolicyTypeDelete {
+		if err := d.deleteStorage(ctx, standalone.Namespace, standalone.Name, common.WALFileStorageLabels); err != nil {
+			return err
+		}
+	}
+
+	if standalone.GetObjectStorageProvider().GetCacheFileStorage().GetPolicy() == v1alpha1.StorageRetainPolicyTypeDelete {
+		if err := d.deleteStorage(ctx, standalone.Namespace, standalone.Name, common.CacheFileStorageLabels); err != nil {
 			return err
 		}
 	}
@@ -106,8 +117,8 @@ func (s *StandaloneDeployer) CleanUp(ctx context.Context, crdObject client.Objec
 	return nil
 }
 
-func (s *StandaloneDeployer) CheckAndUpdateStatus(ctx context.Context, crdObject client.Object) (bool, error) {
-	standalone, err := s.getStandalone(crdObject)
+func (d *StandaloneDeployer) CheckAndUpdateStatus(ctx context.Context, crdObject client.Object) (bool, error) {
+	standalone, err := d.getStandalone(crdObject)
 	if err != nil {
 		return false, err
 	}
@@ -121,7 +132,7 @@ func (s *StandaloneDeployer) CheckAndUpdateStatus(ctx context.Context, crdObject
 		}
 	)
 
-	err = s.Get(ctx, objectKey, sts)
+	err = d.Get(ctx, objectKey, sts)
 	if errors.IsNotFound(err) {
 		return false, nil
 	}
@@ -132,7 +143,7 @@ func (s *StandaloneDeployer) CheckAndUpdateStatus(ctx context.Context, crdObject
 	return k8sutil.IsStatefulSetReady(sts), nil
 }
 
-func (s *StandaloneDeployer) getStandalone(crdObject client.Object) (*v1alpha1.GreptimeDBStandalone, error) {
+func (d *StandaloneDeployer) getStandalone(crdObject client.Object) (*v1alpha1.GreptimeDBStandalone, error) {
 	standalone, ok := crdObject.(*v1alpha1.GreptimeDBStandalone)
 	if !ok {
 		return nil, fmt.Errorf("the object is not a GreptimeDBStandalone")
@@ -140,21 +151,23 @@ func (s *StandaloneDeployer) getStandalone(crdObject client.Object) (*v1alpha1.G
 	return standalone, nil
 }
 
-func (d *StandaloneDeployer) deleteStorage(ctx context.Context, standalone *v1alpha1.GreptimeDBStandalone) error {
+func (d *StandaloneDeployer) deleteStorage(ctx context.Context, namespace, name string, additionalLabels map[string]string) error {
 	klog.Infof("Deleting standalone storage...")
 
+	matachedLabels := map[string]string{
+		constant.GreptimeDBComponentName: common.ResourceName(name, v1alpha1.StandaloneKind),
+	}
+
 	selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
-		MatchLabels: map[string]string{
-			constant.GreptimeDBComponentName: common.ResourceName(standalone.Name, v1alpha1.StandaloneKind),
-		},
+		MatchLabels: util.MergeStringMap(matachedLabels, additionalLabels),
 	})
 	if err != nil {
 		return err
 	}
 
-	pvcList := new(corev1.PersistentVolumeClaimList)
+	claims := new(corev1.PersistentVolumeClaimList)
 
-	err = d.List(ctx, pvcList, client.InNamespace(standalone.Namespace), client.MatchingLabelsSelector{Selector: selector})
+	err = d.List(ctx, claims, client.InNamespace(namespace), client.MatchingLabelsSelector{Selector: selector})
 	if errors.IsNotFound(err) {
 		return nil
 	}
@@ -162,7 +175,7 @@ func (d *StandaloneDeployer) deleteStorage(ctx context.Context, standalone *v1al
 		return err
 	}
 
-	for _, pvc := range pvcList.Items {
+	for _, pvc := range claims.Items {
 		klog.Infof("Deleting standalone PVC: %s", pvc.Name)
 		if err := d.Delete(ctx, &pvc); err != nil {
 			return err
@@ -179,9 +192,9 @@ type standaloneBuilder struct {
 	*deployer.DefaultBuilder
 }
 
-func (s *standaloneBuilder) BuildService() deployer.Builder {
-	if s.Err != nil {
-		return s
+func (b *standaloneBuilder) BuildService() deployer.Builder {
+	if b.Err != nil {
+		return b
 	}
 
 	svc := &corev1.Service{
@@ -190,55 +203,52 @@ func (s *standaloneBuilder) BuildService() deployer.Builder {
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Namespace:   s.standalone.Namespace,
-			Name:        common.ResourceName(s.standalone.Name, v1alpha1.StandaloneKind),
-			Annotations: s.standalone.Spec.Service.Annotations,
-			Labels:      s.standalone.Spec.Service.Labels,
+			Namespace:   b.standalone.Namespace,
+			Name:        common.ResourceName(b.standalone.Name, v1alpha1.StandaloneKind),
+			Annotations: b.standalone.Spec.Service.Annotations,
+			Labels:      b.standalone.Spec.Service.Labels,
 		},
 		Spec: corev1.ServiceSpec{
-			Type: s.standalone.Spec.Service.Type,
+			Type: b.standalone.Spec.Service.Type,
 			Selector: map[string]string{
-				constant.GreptimeDBComponentName: common.ResourceName(s.standalone.Name, v1alpha1.StandaloneKind),
+				constant.GreptimeDBComponentName: common.ResourceName(b.standalone.Name, v1alpha1.StandaloneKind),
 			},
-			Ports:             s.servicePorts(),
-			LoadBalancerClass: s.standalone.Spec.Service.LoadBalancerClass,
+			Ports:             b.servicePorts(),
+			LoadBalancerClass: b.standalone.Spec.Service.LoadBalancerClass,
 		},
 	}
 
-	s.Objects = append(s.Objects, svc)
+	b.Objects = append(b.Objects, svc)
 
-	return s
+	return b
 }
 
-func (s *standaloneBuilder) BuildConfigMap() deployer.Builder {
-	if s.Err != nil {
-		return s
+func (b *standaloneBuilder) BuildConfigMap() deployer.Builder {
+	if b.Err != nil {
+		return b
 	}
 
-	configData, err := dbconfig.FromStandalone(s.standalone)
+	configData, err := dbconfig.FromStandalone(b.standalone)
 	if err != nil {
-		s.Err = err
-		return s
+		b.Err = err
+		return b
 	}
 
-	cm, err := common.GenerateConfigMap(s.standalone.Namespace, s.standalone.Name, v1alpha1.StandaloneKind, configData)
+	cm, err := common.GenerateConfigMap(b.standalone.Namespace, b.standalone.Name, v1alpha1.StandaloneKind, configData)
 	if err != nil {
-		s.Err = err
-		return s
+		b.Err = err
+		return b
 	}
 
-	s.Objects = append(s.Objects, cm)
+	b.Objects = append(b.Objects, cm)
 
-	return s
+	return b
 }
 
-func (s *standaloneBuilder) BuildStatefulSet() deployer.Builder {
-	if s.Err != nil {
-		return s
+func (b *standaloneBuilder) BuildStatefulSet() deployer.Builder {
+	if b.Err != nil {
+		return b
 	}
-
-	// Always set replicas to 1 for standalone mode.
-	replicas := int32(1)
 
 	sts := &appsv1.StatefulSet{
 		TypeMeta: metav1.TypeMeta{
@@ -246,72 +256,66 @@ func (s *standaloneBuilder) BuildStatefulSet() deployer.Builder {
 			APIVersion: "apps/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      common.ResourceName(s.standalone.Name, v1alpha1.StandaloneKind),
-			Namespace: s.standalone.Namespace,
+			Name:      common.ResourceName(b.standalone.Name, v1alpha1.StandaloneKind),
+			Namespace: b.standalone.Namespace,
 		},
 		Spec: appsv1.StatefulSetSpec{
-			Replicas: &replicas,
+			// Always set replicas to 1 for standalone mode.
+			Replicas: pointer.Int32(1),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					constant.GreptimeDBComponentName: common.ResourceName(s.standalone.Name, v1alpha1.StandaloneKind),
+					constant.GreptimeDBComponentName: common.ResourceName(b.standalone.Name, v1alpha1.StandaloneKind),
 				},
 			},
-			Template:             s.generatePodTemplateSpec(),
-			VolumeClaimTemplates: s.generatePVC(),
+			Template:             b.generatePodTemplateSpec(),
+			VolumeClaimTemplates: b.generatePVCs(),
 		},
 	}
 
-	configData, err := dbconfig.FromStandalone(s.standalone)
+	configData, err := dbconfig.FromStandalone(b.standalone)
 	if err != nil {
-		s.Err = err
-		return s
+		b.Err = err
+		return b
 	}
 
 	sts.Spec.Template.Annotations = util.MergeStringMap(sts.Spec.Template.Annotations,
 		map[string]string{deployer.ConfigHash: util.CalculateConfigHash(configData)})
 
-	s.Objects = append(s.Objects, sts)
+	b.Objects = append(b.Objects, sts)
 
-	return s
+	return b
 }
 
-func (s *standaloneBuilder) generatePodTemplateSpec() corev1.PodTemplateSpec {
-	template := common.GeneratePodTemplateSpec(v1alpha1.StandaloneKind, s.standalone.Spec.Base)
+func (b *standaloneBuilder) generatePodTemplateSpec() corev1.PodTemplateSpec {
+	template := common.GeneratePodTemplateSpec(v1alpha1.StandaloneKind, b.standalone.Spec.Base)
 
-	if len(s.standalone.Spec.Base.MainContainer.Args) == 0 {
+	if len(b.standalone.Spec.Base.MainContainer.Args) == 0 {
 		// Setup main container args.
-		template.Spec.Containers[constant.MainContainerIndex].Args = s.generateMainContainerArgs()
+		template.Spec.Containers[constant.MainContainerIndex].Args = b.generateMainContainerArgs()
 	}
 
-	// Add Storage Dir.
-	template.Spec.Containers[constant.MainContainerIndex].VolumeMounts =
-		append(template.Spec.Containers[constant.MainContainerIndex].VolumeMounts,
-			corev1.VolumeMount{
-				Name:      s.standalone.Spec.LocalStorage.Name,
-				MountPath: s.standalone.Spec.LocalStorage.MountPath,
-			},
-		)
+	b.addVolumeMounts(template)
 
-	template.Spec.Containers[constant.MainContainerIndex].Ports = s.containerPorts()
+	template.Spec.Containers[constant.MainContainerIndex].Ports = b.containerPorts()
 	template.ObjectMeta.Labels = util.MergeStringMap(template.ObjectMeta.Labels, map[string]string{
-		constant.GreptimeDBComponentName: common.ResourceName(s.standalone.Name, v1alpha1.StandaloneKind),
+		constant.GreptimeDBComponentName: common.ResourceName(b.standalone.Name, v1alpha1.StandaloneKind),
 	})
 
-	common.MountConfigDir(s.standalone.Name, v1alpha1.StandaloneKind, template)
+	common.MountConfigDir(b.standalone.Name, v1alpha1.StandaloneKind, template)
 
-	if s.standalone.Spec.TLS != nil {
-		s.mountTLSSecret(template)
+	if b.standalone.Spec.TLS != nil {
+		b.mountTLSSecret(template)
 	}
 
 	return *template
 }
 
-func (s *standaloneBuilder) mountTLSSecret(template *corev1.PodTemplateSpec) {
+func (b *standaloneBuilder) mountTLSSecret(template *corev1.PodTemplateSpec) {
 	template.Spec.Volumes = append(template.Spec.Volumes, corev1.Volume{
 		Name: constant.TLSVolumeName,
 		VolumeSource: corev1.VolumeSource{
 			Secret: &corev1.SecretVolumeSource{
-				SecretName: s.standalone.Spec.TLS.SecretName,
+				SecretName: b.standalone.Spec.TLS.SecretName,
 			},
 		},
 	})
@@ -326,95 +330,127 @@ func (s *standaloneBuilder) mountTLSSecret(template *corev1.PodTemplateSpec) {
 		)
 }
 
-func (s *standaloneBuilder) generatePVC() []corev1.PersistentVolumeClaim {
-	return []corev1.PersistentVolumeClaim{
-		{
-			ObjectMeta: metav1.ObjectMeta{
-				Name: s.standalone.Spec.LocalStorage.Name,
-			},
-			Spec: corev1.PersistentVolumeClaimSpec{
-				StorageClassName: s.standalone.Spec.LocalStorage.StorageClassName,
-				AccessModes: []corev1.PersistentVolumeAccessMode{
-					corev1.ReadWriteOnce,
-				},
-				Resources: corev1.ResourceRequirements{
-					Requests: corev1.ResourceList{
-						corev1.ResourceStorage: resource.MustParse(s.standalone.Spec.LocalStorage.StorageSize),
-					},
-				},
-			},
-		},
+func (b *standaloneBuilder) generatePVCs() []corev1.PersistentVolumeClaim {
+	var claims []corev1.PersistentVolumeClaim
+
+	// It's always not nil because it's the default value.
+	if fs := b.standalone.GetDatanodeFileStorage(); fs != nil {
+		claims = append(claims, *common.FileStorageToPVC(fs, common.DatanodeFileStorageLabels))
 	}
+
+	// Allocate the standalone WAL storage for the raft-engine.
+	if fs := b.standalone.GetWALProvider().GetRaftEngineWAL().GetFileStorage(); fs != nil {
+		claims = append(claims, *common.FileStorageToPVC(fs, common.WALFileStorageLabels))
+	}
+
+	// Allocate the standalone cache file storage for the datanode.
+	if fs := b.standalone.GetObjectStorageProvider().GetCacheFileStorage(); fs != nil {
+		claims = append(claims, *common.FileStorageToPVC(fs, common.CacheFileStorageLabels))
+	}
+
+	return claims
 }
 
-func (s *standaloneBuilder) servicePorts() []corev1.ServicePort {
+func (b *standaloneBuilder) servicePorts() []corev1.ServicePort {
 	return []corev1.ServicePort{
 		{
 			Name:     "grpc",
 			Protocol: corev1.ProtocolTCP,
-			Port:     s.standalone.Spec.RPCPort,
+			Port:     b.standalone.Spec.RPCPort,
 		},
 		{
 			Name:     "http",
 			Protocol: corev1.ProtocolTCP,
-			Port:     s.standalone.Spec.HTTPServicePort,
+			Port:     b.standalone.Spec.HTTPPort,
 		},
 		{
 			Name:     "mysql",
 			Protocol: corev1.ProtocolTCP,
-			Port:     s.standalone.Spec.MySQLPort,
+			Port:     b.standalone.Spec.MySQLPort,
 		},
 		{
 			Name:     "postgres",
 			Protocol: corev1.ProtocolTCP,
-			Port:     s.standalone.Spec.PostgreSQLPort,
+			Port:     b.standalone.Spec.PostgreSQLPort,
 		},
 	}
 }
 
-func (s *standaloneBuilder) containerPorts() []corev1.ContainerPort {
+func (b *standaloneBuilder) containerPorts() []corev1.ContainerPort {
 	return []corev1.ContainerPort{
 		{
 			Name:          "grpc",
 			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: s.standalone.Spec.RPCPort,
+			ContainerPort: b.standalone.Spec.RPCPort,
 		},
 		{
 			Name:          "http",
 			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: s.standalone.Spec.HTTPServicePort,
+			ContainerPort: b.standalone.Spec.HTTPPort,
 		},
 		{
 			Name:          "mysql",
 			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: s.standalone.Spec.MySQLPort,
+			ContainerPort: b.standalone.Spec.MySQLPort,
 		},
 		{
 			Name:          "postgres",
 			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: s.standalone.Spec.PostgreSQLPort,
+			ContainerPort: b.standalone.Spec.PostgreSQLPort,
 		},
 	}
 }
 
-func (s *standaloneBuilder) generateMainContainerArgs() []string {
+func (b *standaloneBuilder) generateMainContainerArgs() []string {
 	var args = []string{
 		"standalone", "start",
 		"--data-home", "/data",
-		"--rpc-addr", fmt.Sprintf("0.0.0.0:%d", s.standalone.Spec.RPCPort),
-		"--mysql-addr", fmt.Sprintf("0.0.0.0:%d", s.standalone.Spec.MySQLPort),
-		"--http-addr", fmt.Sprintf("0.0.0.0:%d", s.standalone.Spec.HTTPServicePort),
-		"--postgres-addr", fmt.Sprintf("0.0.0.0:%d", s.standalone.Spec.PostgreSQLPort),
+		"--rpc-addr", fmt.Sprintf("0.0.0.0:%d", b.standalone.Spec.RPCPort),
+		"--mysql-addr", fmt.Sprintf("0.0.0.0:%d", b.standalone.Spec.MySQLPort),
+		"--http-addr", fmt.Sprintf("0.0.0.0:%d", b.standalone.Spec.HTTPPort),
+		"--postgres-addr", fmt.Sprintf("0.0.0.0:%d", b.standalone.Spec.PostgreSQLPort),
 		"--config-file", path.Join(constant.GreptimeDBConfigDir, constant.GreptimeDBConfigFileName),
 	}
 
-	if s.standalone.Spec.TLS != nil {
+	if b.standalone.Spec.TLS != nil {
 		args = append(args, []string{
 			"--tls-mode", "require",
-			"--tls-cert-path", path.Join(constant.GreptimeDBTLSDir, deployers.TLSCrtSecretKey),
-			"--tls-key-path", path.Join(constant.GreptimeDBTLSDir, deployers.TLSKeySecretKey),
+			"--tls-cert-path", path.Join(constant.GreptimeDBTLSDir, v1alpha1.TLSCrtSecretKey),
+			"--tls-key-path", path.Join(constant.GreptimeDBTLSDir, v1alpha1.TLSKeySecretKey),
 		}...)
 	}
 
 	return args
+}
+
+func (b *standaloneBuilder) addVolumeMounts(template *corev1.PodTemplateSpec) {
+	if fs := b.standalone.GetDatanodeFileStorage(); fs != nil {
+		template.Spec.Containers[constant.MainContainerIndex].VolumeMounts =
+			append(template.Spec.Containers[constant.MainContainerIndex].VolumeMounts,
+				corev1.VolumeMount{
+					Name:      fs.GetName(),
+					MountPath: fs.GetMountPath(),
+				},
+			)
+	}
+
+	if fs := b.standalone.GetWALProvider().GetRaftEngineWAL().GetFileStorage(); fs != nil {
+		template.Spec.Containers[constant.MainContainerIndex].VolumeMounts =
+			append(template.Spec.Containers[constant.MainContainerIndex].VolumeMounts,
+				corev1.VolumeMount{
+					Name:      fs.GetName(),
+					MountPath: fs.GetMountPath(),
+				},
+			)
+	}
+
+	if fs := b.standalone.GetObjectStorageProvider().GetCacheFileStorage(); fs != nil {
+		template.Spec.Containers[constant.MainContainerIndex].VolumeMounts =
+			append(template.Spec.Containers[constant.MainContainerIndex].VolumeMounts,
+				corev1.VolumeMount{
+					Name:      fs.GetName(),
+					MountPath: fs.GetMountPath(),
+				},
+			)
+	}
 }

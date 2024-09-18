@@ -15,6 +15,7 @@ spec:
           cpu: "1"
           memory: "1Gi"
   frontend:
+    replicas: 1
     template:
       main:
         image: greptime/greptimedb:latest
@@ -22,8 +23,9 @@ spec:
           - --metasrv-addrs
           - meta.default:3002
   meta:
+    replicas: 1
     etcdEndpoints:
-      - etcd.default:2379
+      - etcd.etcd-cluster.svc.cluster.local:2379
     template:
       main:
         image: greptime/greptimedb:latest
@@ -31,6 +33,7 @@ spec:
           - --store-addr
           - etcd.default:2379
   datanode:
+    replicas: 1
     template:
       main:
         image: greptime/greptimedb:latest

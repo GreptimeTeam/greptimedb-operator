@@ -19,7 +19,7 @@ spec:
           path: /health
           port: 4000
   frontend:
-    replicas: 3
+    replicas: 1
     service:
       type: ClusterIP
     template:
@@ -30,10 +30,12 @@ spec:
             path: /health
             port: 5000
   meta:
+    etcdEndpoints:
+      - etcd.etcd-cluster.svc.cluster.local:2379
     enableRegionFailover: false
     httpPort: 4000
     rpcPort: 3002
-    replicas: 3
+    replicas: 1
     template:
       main:
         image: greptime/greptimedb:latest
@@ -44,14 +46,14 @@ spec:
   datanode:
     httpPort: 4000
     rpcPort: 4001
-    replicas: 1
+    replicas: 3
     storage:
       dataHome: /data/greptimedb
-      mountPath: /data/greptimedb
-      name: datanode
-      storageRetainPolicy: Retain
-      storageSize: 10Gi
-      walDir: /data/greptimedb/wal
+      fs:
+        name: datanode
+        mountPath: /data/greptimedb
+        storageRetainPolicy: Retain
+        storageSize: 10Gi
     template:
       main:
         image: greptime/greptimedb:latest

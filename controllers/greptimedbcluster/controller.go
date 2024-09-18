@@ -277,12 +277,12 @@ func (r *Reconciler) validate(ctx context.Context, cluster *v1alpha1.GreptimeDBC
 				return fmt.Errorf("get tls secret '%s' failed, error: '%v'", cluster.Spec.Frontend.TLS.SecretName, err)
 			}
 
-			if _, ok := tlsSecret.Data[deployers.TLSCrtSecretKey]; !ok {
-				return fmt.Errorf("tls secret '%s' does not contain key '%s'", cluster.Spec.Frontend.TLS.SecretName, deployers.TLSCrtSecretKey)
+			if _, ok := tlsSecret.Data[v1alpha1.TLSCrtSecretKey]; !ok {
+				return fmt.Errorf("tls secret '%s' does not contain key '%s'", cluster.Spec.Frontend.TLS.SecretName, v1alpha1.TLSCrtSecretKey)
 			}
 
-			if _, ok := tlsSecret.Data[deployers.TLSKeySecretKey]; !ok {
-				return fmt.Errorf("tls secret '%s' does not contain key '%s'", cluster.Spec.Frontend.TLS.SecretName, deployers.TLSKeySecretKey)
+			if _, ok := tlsSecret.Data[v1alpha1.TLSKeySecretKey]; !ok {
+				return fmt.Errorf("tls secret '%s' does not contain key '%s'", cluster.Spec.Frontend.TLS.SecretName, v1alpha1.TLSKeySecretKey)
 			}
 		}
 	}
@@ -309,9 +309,9 @@ func (r *Reconciler) validate(ctx context.Context, cluster *v1alpha1.GreptimeDBC
 		if err := r.validateTomlConfig(cluster.Spec.Meta.Config); err != nil {
 			return fmt.Errorf("invalid meta toml config: %v", err)
 		}
-		if cluster.Spec.Meta.EnableRegionFailover != nil && *cluster.Spec.Meta.EnableRegionFailover {
-			if cluster.Spec.RemoteWalProvider == nil {
-				return fmt.Errorf("remote wal provider must be specified when enable region failover")
+		if cluster.GetMeta().IsEnableRegionFailover() {
+			if cluster.GetWALProvider().GetKafkaWAL() == nil {
+				return fmt.Errorf("meta enable region failover requires kafka WAL")
 			}
 		}
 	}
