@@ -117,10 +117,10 @@ make help
    make deploy
    ```
 
-   The operator will deploy in `greptimedb-operator-system` namespace:
+   The operator will deploy in `greptimedb-admin` namespace:
    
    ```console
-   kubectl get pod -n greptimedb-operator-system
+   kubectl get pod -n greptimedb-admin
    NAME                                   READY   STATUS    RESTARTS   AGE
    greptimedb-operator-7b4496c84d-bpwbm   1/1     Running   0          76s
    ```

@@ -76,8 +76,8 @@ help: ## Display this help.
 .PHONY: manifests
 manifests: kustomize controller-gen ## Generate WebhookConfiguration, ClusterRole and CustomResourceDefinition objects.
 	$(CONTROLLER_GEN) rbac:roleName=greptimedb-operator-role crd:maxDescLen=0 webhook paths="./..." output:crd:artifacts:config=config/crd/resources
-	$(KUSTOMIZE) build config/crd > ${MANIFESTS_DIR}/greptimedb-operator-crd.yaml
-	$(KUSTOMIZE) build config/default > ${MANIFESTS_DIR}/greptimedb-operator-deployment.yaml
+	$(KUSTOMIZE) build config/crd > ${MANIFESTS_DIR}/crds.yaml
+	$(KUSTOMIZE) build config/default > ${MANIFESTS_DIR}/bundle.yaml
 
 .PHONY: generate
 generate: kustomize controller-gen ## Generate code containing DeepCopy, DeepCopyInto, and DeepCopyObject method implementations.
