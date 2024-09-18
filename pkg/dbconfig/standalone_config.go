@@ -20,7 +20,7 @@ import (
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 )
 
-var _ Config = &FrontendConfig{}
+var _ Config = &StandaloneConfig{}
 
 // StandaloneConfig is the configuration for the frontend.
 type StandaloneConfig struct {
@@ -42,19 +42,19 @@ func (c *StandaloneConfig) ConfigureByCluster(_ *v1alpha1.GreptimeDBCluster) err
 // ConfigureByStandalone is not need to implement in cluster mode.
 func (c *StandaloneConfig) ConfigureByStandalone(standalone *v1alpha1.GreptimeDBStandalone) error {
 	if s3 := standalone.GetObjectStorageProvider().GetS3Storage(); s3 != nil {
-		if err := c.ConfigureS3Storage(standalone.GetNamespace(), s3); err != nil {
+		if err := c.ConfigureS3(standalone.GetNamespace(), s3); err != nil {
 			return err
 		}
 	}
 
 	if oss := standalone.GetObjectStorageProvider().GetOSSStorage(); oss != nil {
-		if err := c.ConfigureOSSStorage(standalone.GetNamespace(), oss); err != nil {
+		if err := c.ConfigureOSS(standalone.GetNamespace(), oss); err != nil {
 			return err
 		}
 	}
 
 	if gcs := standalone.GetObjectStorageProvider().GetGCSStorage(); gcs != nil {
-		if err := c.ConfigureGCSStorage(standalone.GetNamespace(), gcs); err != nil {
+		if err := c.ConfigureGCS(standalone.GetNamespace(), gcs); err != nil {
 			return err
 		}
 	}

@@ -21,10 +21,10 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"google.golang.org/protobuf/proto"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/pointer"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
@@ -126,12 +126,12 @@ func createCluster(name, namespace string) *v1alpha1.GreptimeDBCluster {
 			},
 			Frontend: &v1alpha1.FrontendSpec{
 				ComponentSpec: v1alpha1.ComponentSpec{
-					Replicas: proto.Int32(1),
+					Replicas: pointer.Int32(1),
 				},
 			},
 			Meta: &v1alpha1.MetaSpec{
 				ComponentSpec: v1alpha1.ComponentSpec{
-					Replicas: proto.Int32(1),
+					Replicas: pointer.Int32(1),
 				},
 				EtcdEndpoints: []string{
 					"etcd.default:2379",
@@ -139,7 +139,7 @@ func createCluster(name, namespace string) *v1alpha1.GreptimeDBCluster {
 			},
 			Datanode: &v1alpha1.DatanodeSpec{
 				ComponentSpec: v1alpha1.ComponentSpec{
-					Replicas: proto.Int32(3),
+					Replicas: pointer.Int32(3),
 				},
 			},
 		},
