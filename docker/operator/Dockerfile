@@ -19,6 +19,6 @@ FROM ubuntu:22.04 as base
 
 WORKDIR /greptimedb-operator
 COPY --from=builder /greptimedb-operator/bin/greptimedb-operator /greptimedb-operator/bin/
-ENV PATH /greptimedb-operator/bin/:$PATH
+ENV PATH=/greptimedb-operator/bin/:$PATH
 
 ENTRYPOINT [ "greptimedb-operator" ]
