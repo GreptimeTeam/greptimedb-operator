@@ -19,14 +19,17 @@ import (
 	"reflect"
 
 	"github.com/pelletier/go-toml"
-	corev1 "k8s.io/api/core/v1"
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
-	k8sutil "github.com/GreptimeTeam/greptimedb-operator/pkg/util/k8s"
 )
 
 const (
+	// TOMLMappingFieldTag is the special tag for the field in the config struct.
+	// The value of the tag is the key in the toml.
 	TOMLMappingFieldTag = "tomlmapping"
+
+	// InlinedFieldTag indicates the field should be inlined.
+	InlinedFieldTag = ",inline"
 )
 
 // Config is the interface for the config of greptimedb.
@@ -51,7 +54,7 @@ type Config interface {
 func NewFromComponentKind(kind v1alpha1.ComponentKind) (Config, error) {
 	switch kind {
 	case v1alpha1.MetaComponentKind:
-		return &MetasrvConfig{}, nil
+		return &MetaConfig{}, nil
 	case v1alpha1.DatanodeComponentKind:
 		return &DatanodeConfig{}, nil
 	case v1alpha1.FrontendComponentKind:
@@ -72,7 +75,7 @@ func Marshal(config Config) ([]byte, error) {
 		return nil, err
 	}
 
-	output, err := setConfig(tree, config)
+	output, err := mergeConfig(tree, config)
 	if err != nil {
 		return nil, err
 	}
@@ -108,67 +111,39 @@ func FromStandalone(standalone *v1alpha1.GreptimeDBStandalone) ([]byte, error) {
 	return Marshal(cfg)
 }
 
-func getServiceAccountKey(namespace, name string) (secretAccessKey []byte, err error) {
-	var secret corev1.Secret
-	if err = k8sutil.GetK8sResource(namespace, name, &secret); err != nil {
-		return
-	}
-
-	if secret.Data == nil {
-		err = fmt.Errorf("secret '%s/%s' is empty", namespace, name)
-		return
-	}
-
-	secretAccessKey = secret.Data[v1alpha1.ServiceAccountKey]
-	if secretAccessKey == nil {
-		err = fmt.Errorf("secret '%s/%s' does not have service account key '%s'", namespace, name, v1alpha1.ServiceAccountKey)
-		return
-	}
-	return
-}
-
-func getOCSCredentials(namespace, name string) (accessKeyID, secretAccessKey []byte, err error) {
-	var ocsCredentials corev1.Secret
-
-	if err = k8sutil.GetK8sResource(namespace, name, &ocsCredentials); err != nil {
-		return
-	}
-
-	if ocsCredentials.Data == nil {
-		err = fmt.Errorf("secret '%s/%s' is empty", namespace, name)
-		return
-	}
-
-	accessKeyID = ocsCredentials.Data[v1alpha1.AccessKeyIDSecretKey]
-	if accessKeyID == nil {
-		err = fmt.Errorf("secret '%s/%s' does not have access key id '%s'", namespace, name, v1alpha1.AccessKeyIDSecretKey)
-		return
-	}
-
-	secretAccessKey = ocsCredentials.Data[v1alpha1.SecretAccessKeySecretKey]
-	if secretAccessKey == nil {
-		err = fmt.Errorf("secret '%s/%s' does not have secret access key '%s'", namespace, name, v1alpha1.SecretAccessKeySecretKey)
-		return
-	}
-
-	return
-}
-
-func setConfig(input *toml.Tree, config interface{}) (string, error) {
+// mergeConfig merges the input config data with the config struct.
+// The config struct have higher priority than the input config data.
+func mergeConfig(input *toml.Tree, config interface{}) (string, error) {
 	valueOf := reflect.ValueOf(config)
 
 	if valueOf.Kind() == reflect.Ptr {
+		// Get the real value of the pointer.
 		config = valueOf.Elem().Interface()
 		valueOf = reflect.ValueOf(config)
 	}
 
-	// The 'config' will override the 'input'.
+	if valueOf.Kind() == reflect.Struct {
+		config = valueOf.Interface()
+		valueOf = reflect.ValueOf(config)
+	}
+
+	// The `config` will override the `input`.
 	typeOf := reflect.TypeOf(config)
 	for i := 0; i < valueOf.NumField(); i++ {
 		tag := typeOf.Field(i).Tag.Get(TOMLMappingFieldTag)
 		if tag == "" {
 			continue
 		}
+
+		// Handle the `,inline` field.
+		if tag == InlinedFieldTag {
+			_, err := mergeConfig(input, valueOf.Field(i).Interface())
+			if err != nil {
+				return "", err
+			}
+			continue
+		}
+
 		field := valueOf.Field(i)
 		switch field.Kind() {
 		case reflect.Ptr:
@@ -194,7 +169,7 @@ func setConfig(input *toml.Tree, config interface{}) (string, error) {
 				input.Set(tag, field.Interface())
 			}
 		default:
-			return "", fmt.Errorf("field %s is not a pointer", tag)
+			return "", fmt.Errorf("field %s is not a pointer type, got %s", tag, field.Kind())
 		}
 	}
 
