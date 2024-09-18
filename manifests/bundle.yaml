@@ -3,7 +3,7 @@ kind: Namespace
 metadata:
   labels:
     control-plane: controller-manager
-  name: greptimedb-operator-system
+  name: greptimedb-admin
 ---
 apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
@@ -17122,13 +17122,13 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: greptimedb-operator
-  namespace: greptimedb-operator-system
+  namespace: greptimedb-admin
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: greptimedb-operator-leader-election-role
-  namespace: greptimedb-operator-system
+  namespace: greptimedb-admin
 rules:
 - apiGroups:
   - ""
@@ -17332,7 +17332,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: greptimedb-operator-leader-election-rolebinding
-  namespace: greptimedb-operator-system
+  namespace: greptimedb-admin
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -17340,7 +17340,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: greptimedb-operator
-  namespace: greptimedb-operator-system
+  namespace: greptimedb-admin
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -17353,7 +17353,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: greptimedb-operator
-  namespace: greptimedb-operator-system
+  namespace: greptimedb-admin
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -17361,7 +17361,7 @@ metadata:
   labels:
     control-plane: controller-manager
   name: greptimedb-operator
-  namespace: greptimedb-operator-system
+  namespace: greptimedb-admin
 spec:
   replicas: 1
   selector:

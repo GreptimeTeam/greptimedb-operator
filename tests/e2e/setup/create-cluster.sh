@@ -265,7 +265,7 @@ function wait_all_service_ready() {
   # Wait for greptimedb-operator to be ready.
   kubectl rollout \
     status deployment/greptimedb-operator \
-    -n greptimedb-operator-system \
+    -n greptimedb-admin \
     --timeout="$DEFAULT_TIMEOUT"
 
   echo -e "${GREEN}<= All services are ready.${RESET}"

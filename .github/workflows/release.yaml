@@ -104,6 +104,8 @@ jobs:
         run: |
           cp ./config/crd/resources/greptime.io_greptimedbclusters.yaml ./greptimedbclusters.yaml
           cp ./config/crd/resources/greptime.io_greptimedbstandalones.yaml ./greptimedbstandalones.yaml
+          cp ./manifests/bundle.yaml ./bundle.yaml
+          cp ./manifests/crds.yaml ./crds.yaml
 
       - name: Publish release
         uses: softprops/action-gh-release@v2
@@ -112,3 +114,5 @@ jobs:
           files: |
             greptimedbclusters.yaml
             greptimedbstandalones.yaml
+            bundle.yaml
+            crds.yaml
