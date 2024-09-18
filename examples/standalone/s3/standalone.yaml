@@ -1,0 +1,14 @@
+apiVersion: greptime.io/v1alpha1
+kind: GreptimeDBStandalone
+metadata:
+  name: standalone-with-s3
+spec:
+  base:
+    main:
+      image: greptime/greptimedb:latest
+  objectStorage:
+    s3:
+      bucket: "greptimedb"
+      region: "ap-southeast-1"
+      secretName: "s3-credentials"
+      root: "standalone-with-s3-data"

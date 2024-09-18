@@ -1,0 +1,13 @@
+apiVersion: greptime.io/v1alpha1
+kind: GreptimeDBStandalone
+metadata:
+  name: standalone-with-gcs
+spec:
+  base:
+    main:
+      image: greptime/greptimedb:latest
+  objectStorage:
+    gcs:
+      bucket: "greptimedb"
+      secretName: "gcs-credentials"
+      root: "standalone-with-gcs-data"
