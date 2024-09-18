@@ -2,9 +2,9 @@
 
 ## Overview
 
-The GreptimeDB Operator manages [GreptimeDB](https://github.com/GrepTimeTeam/greptimedb) clusters on [Kubernetes](https://kubernetes.io/) by using [Operator pattern](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/).
+The GreptimeDB Operator manages the [GreptimeDB](https://github.com/GrepTimeTeam/greptimedb) resources on [Kubernetes](https://kubernetes.io/) using the [Operator pattern](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/). It is like an autopilot that automates the deployment, provisioning, and orchestration of the GreptimeDB cluster and standalone.
 
-The GreptimeDB operator abstract the model of maintaining the high available GreptimeDB cluster, you can create you own cluster as easy as possible:
+You can create a minimum GreptimeDB cluster by following YAML:
 
 ```console
 cat <<EOF | kubectl apply -f -
@@ -15,15 +15,10 @@ metadata:
 spec:
   base:
     main:
-      image: greptime/greptimedb
-  frontend:
-    replicas: 1
+      image: greptime/greptimedb:latest
   meta:
-    replicas: 1
     etcdEndpoints:
-      - "etcd.default:2379"
-  datanode:
-    replicas: 3
+      - "etcd.etcd-cluster.svc.cluster.local:2379"
 EOF
 ```
 
