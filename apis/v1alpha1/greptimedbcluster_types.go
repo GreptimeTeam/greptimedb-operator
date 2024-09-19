@@ -21,9 +21,9 @@ import (
 // ComponentSpec is the common specification for all components(`frontend`/`meta`/`datanode`/`flownode`).
 type ComponentSpec struct {
 	// The number of replicas of the components.
-	// +required
-	// +kubebuilder:validation:Minimum=1
-	Replicas *int32 `json:"replicas"`
+	// +optional
+	// +kubebuilder:validation:Minimum=0
+	Replicas *int32 `json:"replicas,omitempty"`
 
 	// The content of the configuration file of the component in TOML format.
 	// +optional

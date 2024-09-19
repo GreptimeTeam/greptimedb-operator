@@ -50,7 +50,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `replicas` _integer_ | The number of replicas of the components. |  | Minimum: 1 <br /> |
+| `replicas` _integer_ | The number of replicas of the components. |  | Minimum: 0 <br /> |
 | `config` _string_ | The content of the configuration file of the component in TOML format. |  |  |
 | `template` _[PodTemplateSpec](#podtemplatespec)_ | Template defines the pod template for the component, if not specified, the pod template will use the default value. |  |  |
 
@@ -106,7 +106,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `replicas` _integer_ | The number of replicas of the components. |  | Minimum: 1 <br /> |
+| `replicas` _integer_ | The number of replicas of the components. |  | Minimum: 0 <br /> |
 | `config` _string_ | The content of the configuration file of the component in TOML format. |  |  |
 | `template` _[PodTemplateSpec](#podtemplatespec)_ | Template defines the pod template for the component, if not specified, the pod template will use the default value. |  |  |
 | `rpcPort` _integer_ | RPCPort is the gRPC port of the datanode. |  |  |
@@ -186,7 +186,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `replicas` _integer_ | The number of replicas of the components. |  | Minimum: 1 <br /> |
+| `replicas` _integer_ | The number of replicas of the components. |  | Minimum: 0 <br /> |
 | `config` _string_ | The content of the configuration file of the component in TOML format. |  |  |
 | `template` _[PodTemplateSpec](#podtemplatespec)_ | Template defines the pod template for the component, if not specified, the pod template will use the default value. |  |  |
 | `rpcPort` _integer_ | The gRPC port of the flownode. |  |  |
@@ -222,7 +222,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `replicas` _integer_ | The number of replicas of the components. |  | Minimum: 1 <br /> |
+| `replicas` _integer_ | The number of replicas of the components. |  | Minimum: 0 <br /> |
 | `config` _string_ | The content of the configuration file of the component in TOML format. |  |  |
 | `template` _[PodTemplateSpec](#podtemplatespec)_ | Template defines the pod template for the component, if not specified, the pod template will use the default value. |  |  |
 | `service` _[ServiceSpec](#servicespec)_ | Service is the service configuration of the frontend. |  |  |
@@ -458,7 +458,7 @@ _Appears in:_
 | `livenessProbe` _[Probe](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#probe-v1-core)_ | Periodic probe of container liveness.<br />Container will be restarted if the probe fails.<br />More info: `https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes`<br />LivenessProbe field is from `corev1.Container.LivenessProbe`. |  |  |
 | `readinessProbe` _[Probe](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#probe-v1-core)_ | Periodic probe of container service readiness.<br />Container will be removed from service endpoints if the probe fails.<br />ReadinessProbe field is from `corev1.Container.LivenessProbe`.<br />More info: `https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes` |  |  |
 | `lifecycle` _[Lifecycle](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#lifecycle-v1-core)_ | Actions that the management system should take in response to container lifecycle events.<br />Cannot be updated.<br />Lifecycle field is from `corev1.Container.Lifecycle`. |  |  |
-| `imagePullPolicy` _[PullPolicy](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#pullpolicy-v1-core)_ | Image pull policy.<br />One of `Always`, `Never`, `IfNotPresent`.<br />Defaults to `Always` if `:latest` tag is specified, or IfNotPresent otherwise.<br />Cannot be updated.<br />More info: `https://kubernetes.io/docs/concepts/containers/images#updating-images`<br />ImagePullPolicy field is from `orev1.Container.ImagePullPolicy`. |  |  |
+| `imagePullPolicy` _[PullPolicy](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#pullpolicy-v1-core)_ | Image pull policy.<br />One of `Always`, `Never`, `IfNotPresent`.<br />Defaults to `Always` if `:latest` tag is specified, or IfNotPresent otherwise.<br />Cannot be updated.<br />More info: `https://kubernetes.io/docs/concepts/containers/images#updating-images`<br />ImagePullPolicy field is from `corev1.Container.ImagePullPolicy`. |  |  |
 | `volumeMounts` _[VolumeMount](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#volumemount-v1-core) array_ | Pod volumes to mount into the container's filesystem.<br />Cannot be updated. |  |  |
 
 
@@ -475,7 +475,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `replicas` _integer_ | The number of replicas of the components. |  | Minimum: 1 <br /> |
+| `replicas` _integer_ | The number of replicas of the components. |  | Minimum: 0 <br /> |
 | `config` _string_ | The content of the configuration file of the component in TOML format. |  |  |
 | `template` _[PodTemplateSpec](#podtemplatespec)_ | Template defines the pod template for the component, if not specified, the pod template will use the default value. |  |  |
 | `rpcPort` _integer_ | RPCPort is the gRPC port of the meta. |  |  |

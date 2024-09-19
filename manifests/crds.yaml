@@ -2820,7 +2820,7 @@ spec:
                     type: integer
                   replicas:
                     format: int32
-                    minimum: 1
+                    minimum: 0
                     type: integer
                   rpcPort:
                     format: int32
@@ -5609,8 +5609,6 @@ spec:
                           type: object
                         type: array
                     type: object
-                required:
-                - replicas
                 type: object
               flownode:
                 properties:
@@ -5618,7 +5616,7 @@ spec:
                     type: string
                   replicas:
                     format: int32
-                    minimum: 1
+                    minimum: 0
                     type: integer
                   rpcPort:
                     format: int32
@@ -8385,8 +8383,6 @@ spec:
                           type: object
                         type: array
                     type: object
-                required:
-                - replicas
                 type: object
               frontend:
                 properties:
@@ -8394,7 +8390,7 @@ spec:
                     type: string
                   replicas:
                     format: int32
-                    minimum: 1
+                    minimum: 0
                     type: integer
                   service:
                     properties:
@@ -11180,8 +11176,6 @@ spec:
                     required:
                     - secretName
                     type: object
-                required:
-                - replicas
                 type: object
               httpPort:
                 format: int32
@@ -11208,7 +11202,7 @@ spec:
                     type: integer
                   replicas:
                     format: int32
-                    minimum: 1
+                    minimum: 0
                     type: integer
                   rpcPort:
                     format: int32
@@ -13979,7 +13973,6 @@ spec:
                     type: object
                 required:
                 - etcdEndpoints
-                - replicas
                 type: object
               mysqlPort:
                 format: int32
@@ -14074,7 +14067,6 @@ spec:
                     type: object
                 required:
                 - enabled
-                - labels
                 type: object
               rpcPort:
                 format: int32
@@ -17134,7 +17126,6 @@ spec:
                     type: object
                 required:
                 - enabled
-                - labels
                 type: object
               rpcPort:
                 format: int32

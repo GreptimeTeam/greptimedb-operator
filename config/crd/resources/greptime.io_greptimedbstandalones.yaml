@@ -2925,7 +2925,6 @@ spec:
                     type: object
                 required:
                 - enabled
-                - labels
                 type: object
               rpcPort:
                 format: int32

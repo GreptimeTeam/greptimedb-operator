@@ -254,7 +254,7 @@ type MainContainerSpec struct {
 	// Defaults to `Always` if `:latest` tag is specified, or IfNotPresent otherwise.
 	// Cannot be updated.
 	// More info: `https://kubernetes.io/docs/concepts/containers/images#updating-images`
-	// ImagePullPolicy field is from `orev1.Container.ImagePullPolicy`.
+	// ImagePullPolicy field is from `corev1.Container.ImagePullPolicy`.
 	// +optional
 	ImagePullPolicy corev1.PullPolicy `json:"imagePullPolicy,omitempty"`
 
@@ -635,7 +635,7 @@ type PrometheusMonitorSpec struct {
 	Enabled bool `json:"enabled"`
 
 	// Labels is the labels for the PodMonitor.
-	// +required
+	// +optional
 	Labels map[string]string `json:"labels"`
 
 	// Interval is the scape interval for the PodMonitor.
