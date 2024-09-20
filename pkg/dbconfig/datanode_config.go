@@ -15,10 +15,9 @@
 package dbconfig
 
 import (
-	"encoding/base64"
+	"k8s.io/utils/pointer"
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
-	"github.com/GreptimeTeam/greptimedb-operator/pkg/util"
 )
 
 var _ Config = &DatanodeConfig{}
@@ -29,27 +28,11 @@ type DatanodeConfig struct {
 	RPCAddr     *string `tomlmapping:"rpc_addr"`
 	RPCHostName *string `tomlmapping:"rpc_hostname"`
 
-	// Storage options.
-	StorageType            *string `tomlmapping:"storage.type"`
-	StorageDataHome        *string `tomlmapping:"storage.data_home"`
-	StorageAccessKeyID     *string `tomlmapping:"storage.access_key_id"`
-	StorageSecretAccessKey *string `tomlmapping:"storage.secret_access_key"`
-	StorageAccessKeySecret *string `tomlmapping:"storage.access_key_secret"`
-	StorageBucket          *string `tomlmapping:"storage.bucket"`
-	StorageRoot            *string `tomlmapping:"storage.root"`
-	StorageRegion          *string `tomlmapping:"storage.region"`
-	StorageEndpoint        *string `tomlmapping:"storage.endpoint"`
-	StorageScope           *string `tomlmapping:"storage.scope"`
-	StorageCredential      *string `tomlmapping:"storage.credential"`
+	// StorageConfig is the configuration for the storage.
+	StorageConfig `tomlmapping:",inline"`
 
-	// The wal file directory.
-	WalDir *string `tomlmapping:"wal.dir"`
-
-	// The wal provider.
-	WalProvider *string `tomlmapping:"wal.provider"`
-
-	// The kafka broker endpoints.
-	WalBrokerEndpoints []string `tomlmapping:"wal.broker_endpoints"`
+	// WALConfig is the configuration for the WAL.
+	WALConfig `tomlmapping:",inline"`
 
 	// InputConfig is from config field of cluster spec.
 	InputConfig string
@@ -57,75 +40,30 @@ type DatanodeConfig struct {
 
 // ConfigureByCluster configures the datanode config by the given cluster.
 func (c *DatanodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster) error {
-	// TODO(zyy17): need to refactor the following code. It's too ugly.
-	if cluster.Spec.ObjectStorageProvider != nil {
-		switch {
-		case cluster.Spec.ObjectStorageProvider.S3 != nil:
-			if cluster.Spec.ObjectStorageProvider.S3.SecretName != "" {
-				accessKeyID, secretAccessKey, err := getOCSCredentials(cluster.Namespace, cluster.Spec.ObjectStorageProvider.S3.SecretName)
-				if err != nil {
-					return err
-				}
-				c.StorageAccessKeyID = util.StringPtr(string(accessKeyID))
-				c.StorageSecretAccessKey = util.StringPtr(string(secretAccessKey))
-			}
-			c.StorageType = util.StringPtr("S3")
-			c.StorageBucket = util.StringPtr(cluster.Spec.ObjectStorageProvider.S3.Bucket)
-			c.StorageRoot = util.StringPtr(cluster.Spec.ObjectStorageProvider.S3.Root)
-			c.StorageEndpoint = util.StringPtr(cluster.Spec.ObjectStorageProvider.S3.Endpoint)
-			c.StorageRegion = util.StringPtr(cluster.Spec.ObjectStorageProvider.S3.Region)
-
-		case cluster.Spec.ObjectStorageProvider.OSS != nil:
-			if cluster.Spec.ObjectStorageProvider.OSS.SecretName != "" {
-				accessKeyID, secretAccessKey, err := getOCSCredentials(cluster.Namespace, cluster.Spec.ObjectStorageProvider.OSS.SecretName)
-				if err != nil {
-					return err
-				}
-				c.StorageAccessKeyID = util.StringPtr(string(accessKeyID))
-				c.StorageAccessKeySecret = util.StringPtr(string(secretAccessKey))
-			}
-			c.StorageType = util.StringPtr("Oss")
-			c.StorageBucket = util.StringPtr(cluster.Spec.ObjectStorageProvider.OSS.Bucket)
-			c.StorageRoot = util.StringPtr(cluster.Spec.ObjectStorageProvider.OSS.Root)
-			c.StorageEndpoint = util.StringPtr(cluster.Spec.ObjectStorageProvider.OSS.Endpoint)
-			c.StorageRegion = util.StringPtr(cluster.Spec.ObjectStorageProvider.OSS.Region)
-
-		case cluster.Spec.ObjectStorageProvider.GCS != nil:
-			if cluster.Spec.ObjectStorageProvider.GCS.SecretName != "" {
-				serviceAccountKey, err := getServiceAccountKey(cluster.Namespace, cluster.Spec.ObjectStorageProvider.GCS.SecretName)
-				if err != nil {
-					return err
-				}
-				if len(serviceAccountKey) != 0 {
-					c.StorageCredential = util.StringPtr(base64.StdEncoding.EncodeToString(serviceAccountKey))
-				}
-			}
-			c.StorageType = util.StringPtr("Gcs")
-			c.StorageBucket = util.StringPtr(cluster.Spec.ObjectStorageProvider.GCS.Bucket)
-			c.StorageRoot = util.StringPtr(cluster.Spec.ObjectStorageProvider.GCS.Root)
-			c.StorageEndpoint = util.StringPtr(cluster.Spec.ObjectStorageProvider.GCS.Endpoint)
-			c.StorageScope = util.StringPtr(cluster.Spec.ObjectStorageProvider.GCS.Scope)
+	if objectStorage := cluster.GetObjectStorageProvider(); objectStorage != nil {
+		if err := c.ConfigureObjectStorage(cluster.GetNamespace(), objectStorage); err != nil {
+			return err
 		}
 	}
 
 	// Set the wal dir if the kafka wal is not enabled.
 	if cluster.GetWALProvider().GetKafkaWAL() == nil && cluster.GetWALDir() != "" {
-		c.WalDir = util.StringPtr(cluster.GetWALDir())
+		c.WalDir = pointer.String(cluster.GetWALDir())
 	}
 
-	if cluster.GetDatanode().GetDataHome() != "" {
-		c.StorageDataHome = util.StringPtr(cluster.GetDatanode().GetDataHome())
+	if dataHome := cluster.GetDatanode().GetDataHome(); dataHome != "" {
+		c.StorageDataHome = pointer.String(dataHome)
 	}
 
-	if cluster.GetDatanode().GetConfig() != "" {
-		if err := c.SetInputConfig(cluster.GetDatanode().GetConfig()); err != nil {
+	if cfg := cluster.GetDatanode().GetConfig(); cfg != "" {
+		if err := c.SetInputConfig(cfg); err != nil {
 			return err
 		}
 	}
 
-	if cluster.GetWALProvider().GetKafkaWAL() != nil {
-		c.WalProvider = util.StringPtr("kafka")
-		c.WalBrokerEndpoints = cluster.GetWALProvider().GetKafkaWAL().GetBrokerEndpoints()
+	if kafka := cluster.GetWALProvider().GetKafkaWAL(); kafka != nil {
+		c.WalProvider = pointer.String("kafka")
+		c.WalBrokerEndpoints = kafka.GetBrokerEndpoints()
 	}
 
 	return nil

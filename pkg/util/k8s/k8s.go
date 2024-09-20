@@ -21,6 +21,7 @@ import (
 	"reflect"
 
 	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -132,4 +133,27 @@ func SourceObject(input client.Object) client.Object {
 	u.SetGroupVersionKind(input.GetObjectKind().GroupVersionKind())
 
 	return u
+}
+
+// GetSecretsData returns data of according keys from the secret.
+func GetSecretsData(namespace, name string, keys []string) ([][]byte, error) {
+	var secret corev1.Secret
+	if err := GetK8sResource(namespace, name, &secret); err != nil {
+		return nil, err
+	}
+
+	if secret.Data == nil {
+		return nil, fmt.Errorf("secret '%s/%s' is empty", namespace, name)
+	}
+
+	var values [][]byte
+	for _, key := range keys {
+		value := secret.Data[key]
+		if value == nil {
+			return nil, fmt.Errorf("secret '%s/%s' does not have key '%s'", namespace, name, key)
+		}
+		values = append(values, value)
+	}
+
+	return values, nil
 }

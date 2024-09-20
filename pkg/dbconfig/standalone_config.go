@@ -15,106 +15,56 @@
 package dbconfig
 
 import (
-	"encoding/base64"
+	"k8s.io/utils/pointer"
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
-	"github.com/GreptimeTeam/greptimedb-operator/pkg/util"
 )
 
-var _ Config = &FrontendConfig{}
+var _ Config = &StandaloneConfig{}
 
 // StandaloneConfig is the configuration for the frontend.
 type StandaloneConfig struct {
-	// Storage options.
-	StorageType            *string `tomlmapping:"storage.type"`
-	StorageDataHome        *string `tomlmapping:"storage.data_home"`
-	StorageAccessKeyID     *string `tomlmapping:"storage.access_key_id"`
-	StorageSecretAccessKey *string `tomlmapping:"storage.secret_access_key"`
-	StorageAccessKeySecret *string `tomlmapping:"storage.access_key_secret"`
-	StorageBucket          *string `tomlmapping:"storage.bucket"`
-	StorageRoot            *string `tomlmapping:"storage.root"`
-	StorageRegion          *string `tomlmapping:"storage.region"`
-	StorageEndpoint        *string `tomlmapping:"storage.endpoint"`
-	StorageScope           *string `tomlmapping:"storage.scope"`
-	StorageCredential      *string `tomlmapping:"storage.credential"`
+	// StorageConfig is the configuration for the storage.
+	StorageConfig `tomlmapping:",inline"`
 
-	WalDir *string `tomlmapping:"wal.dir"`
+	// WALConfig is the configuration for the WAL.
+	WALConfig `tomlmapping:",inline"`
 
 	// InputConfig is from config field of cluster spec.
 	InputConfig string
 }
 
 // ConfigureByCluster is not need to implement in standalone mode.
-func (c *StandaloneConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster) error {
+func (c *StandaloneConfig) ConfigureByCluster(_ *v1alpha1.GreptimeDBCluster) error {
 	return nil
 }
 
 // ConfigureByStandalone is not need to implement in cluster mode.
 func (c *StandaloneConfig) ConfigureByStandalone(standalone *v1alpha1.GreptimeDBStandalone) error {
-	// TODO(zyy17): need to refactor the following code. It's too ugly.
-	if standalone.Spec.ObjectStorageProvider != nil {
-		switch {
-		case standalone.Spec.ObjectStorageProvider.S3 != nil:
-			if standalone.Spec.ObjectStorageProvider.S3.SecretName != "" {
-				accessKeyID, secretAccessKey, err := getOCSCredentials(standalone.Namespace, standalone.Spec.ObjectStorageProvider.S3.SecretName)
-				if err != nil {
-					return err
-				}
-				c.StorageAccessKeyID = util.StringPtr(string(accessKeyID))
-				c.StorageSecretAccessKey = util.StringPtr(string(secretAccessKey))
-			}
-			c.StorageType = util.StringPtr("S3")
-			c.StorageBucket = util.StringPtr(standalone.Spec.ObjectStorageProvider.S3.Bucket)
-			c.StorageRoot = util.StringPtr(standalone.Spec.ObjectStorageProvider.S3.Root)
-			c.StorageEndpoint = util.StringPtr(standalone.Spec.ObjectStorageProvider.S3.Endpoint)
-			c.StorageRegion = util.StringPtr(standalone.Spec.ObjectStorageProvider.S3.Region)
-
-		case standalone.Spec.ObjectStorageProvider.OSS != nil:
-			if standalone.Spec.ObjectStorageProvider.OSS.SecretName != "" {
-				accessKeyID, secretAccessKey, err := getOCSCredentials(standalone.Namespace, standalone.Spec.ObjectStorageProvider.OSS.SecretName)
-				if err != nil {
-					return err
-				}
-				c.StorageAccessKeyID = util.StringPtr(string(accessKeyID))
-				c.StorageAccessKeySecret = util.StringPtr(string(secretAccessKey))
-			}
-			c.StorageType = util.StringPtr("Oss")
-			c.StorageBucket = util.StringPtr(standalone.Spec.ObjectStorageProvider.OSS.Bucket)
-			c.StorageRoot = util.StringPtr(standalone.Spec.ObjectStorageProvider.OSS.Root)
-			c.StorageEndpoint = util.StringPtr(standalone.Spec.ObjectStorageProvider.OSS.Endpoint)
-			c.StorageRegion = util.StringPtr(standalone.Spec.ObjectStorageProvider.OSS.Region)
-
-		case standalone.Spec.ObjectStorageProvider.GCS != nil:
-			if standalone.Spec.ObjectStorageProvider.GCS.SecretName != "" {
-				serviceAccountKey, err := getServiceAccountKey(standalone.Namespace, standalone.Spec.ObjectStorageProvider.GCS.SecretName)
-				if err != nil {
-					return err
-				}
-				if len(serviceAccountKey) != 0 {
-					c.StorageCredential = util.StringPtr(base64.StdEncoding.EncodeToString(serviceAccountKey))
-				}
-			}
-			c.StorageType = util.StringPtr("Gcs")
-			c.StorageBucket = util.StringPtr(standalone.Spec.ObjectStorageProvider.GCS.Bucket)
-			c.StorageRoot = util.StringPtr(standalone.Spec.ObjectStorageProvider.GCS.Root)
-			c.StorageEndpoint = util.StringPtr(standalone.Spec.ObjectStorageProvider.GCS.Endpoint)
-			c.StorageScope = util.StringPtr(standalone.Spec.ObjectStorageProvider.GCS.Scope)
+	if objectStorage := standalone.GetObjectStorageProvider(); objectStorage != nil {
+		if err := c.ConfigureObjectStorage(standalone.GetNamespace(), objectStorage); err != nil {
+			return err
 		}
 	}
 
 	// Set the wal dir if the kafka wal is not enabled.
 	if standalone.GetWALProvider().GetKafkaWAL() == nil && standalone.GetWALDir() != "" {
-		c.WalDir = util.StringPtr(standalone.GetWALDir())
+		c.WalDir = pointer.String(standalone.GetWALDir())
 	}
 
-	if standalone.GetDataHome() != "" {
-		c.StorageDataHome = util.StringPtr(standalone.GetDataHome())
+	if dataHome := standalone.GetDataHome(); dataHome != "" {
+		c.StorageDataHome = pointer.String(dataHome)
 	}
 
 	if cfg := standalone.GetConfig(); cfg != "" {
 		if err := c.SetInputConfig(cfg); err != nil {
 			return err
 		}
+	}
+
+	if kafka := standalone.GetWALProvider().GetKafkaWAL(); kafka != nil {
+		c.WalProvider = pointer.String("kafka")
+		c.WalBrokerEndpoints = kafka.GetBrokerEndpoints()
 	}
 
 	return nil

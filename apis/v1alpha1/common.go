@@ -468,6 +468,17 @@ type ObjectStorageProviderSpec struct {
 	Cache *CacheStorage `json:"cache,omitempty"`
 }
 
+// ObjectStorageProviderAccessor is the interface that wraps the basic methods for the ObjectStorageProviderSpec.
+// +kubebuilder:object:generate=false
+type ObjectStorageProviderAccessor interface {
+	GetS3Storage() *S3Storage
+	GetGCSStorage() *GCSStorage
+	GetOSSStorage() *OSSStorage
+	GetCacheFileStorage() *FileStorage
+}
+
+var _ ObjectStorageProviderAccessor = &ObjectStorageProviderSpec{}
+
 func (in *ObjectStorageProviderSpec) GetCacheFileStorage() *FileStorage {
 	if in != nil && in.Cache != nil {
 		return in.Cache.FileStorage
