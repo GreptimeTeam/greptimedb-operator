@@ -120,9 +120,9 @@ func (c *StorageConfig) configureGCS(namespace string, gcs *v1alpha1.GCSStorage)
 			return err
 		}
 
-		serviceAccount := data[0]
-		if len(serviceAccount) != 0 {
-			c.StorageCredential = pointer.String(base64.StdEncoding.EncodeToString(serviceAccount))
+		serviceAccountKey := data[0]
+		if len(serviceAccountKey) != 0 {
+			c.StorageCredential = pointer.String(base64.StdEncoding.EncodeToString(serviceAccountKey))
 		}
 	}
 
