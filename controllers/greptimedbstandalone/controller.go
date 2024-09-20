@@ -38,7 +38,6 @@ import (
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 	"github.com/GreptimeTeam/greptimedb-operator/cmd/operator/app/options"
-	"github.com/GreptimeTeam/greptimedb-operator/controllers/greptimedbcluster/deployers"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/deployer"
 )
 
@@ -254,12 +253,12 @@ func (r *Reconciler) validate(ctx context.Context, standalone *v1alpha1.Greptime
 				return fmt.Errorf("get tls secret '%s' failed, error: '%v'", standalone.Spec.TLS.SecretName, err)
 			}
 
-			if _, ok := tlsSecret.Data[deployers.TLSCrtSecretKey]; !ok {
-				return fmt.Errorf("tls secret '%s' does not contain key '%s'", standalone.Spec.TLS.SecretName, deployers.TLSCrtSecretKey)
+			if _, ok := tlsSecret.Data[v1alpha1.TLSCrtSecretKey]; !ok {
+				return fmt.Errorf("tls secret '%s' does not contain key '%s'", standalone.Spec.TLS.SecretName, v1alpha1.TLSCrtSecretKey)
 			}
 
-			if _, ok := tlsSecret.Data[deployers.TLSKeySecretKey]; !ok {
-				return fmt.Errorf("tls secret '%s' does not contain key '%s'", standalone.Spec.TLS.SecretName, deployers.TLSKeySecretKey)
+			if _, ok := tlsSecret.Data[v1alpha1.TLSKeySecretKey]; !ok {
+				return fmt.Errorf("tls secret '%s' does not contain key '%s'", standalone.Spec.TLS.SecretName, v1alpha1.TLSKeySecretKey)
 			}
 		}
 	}

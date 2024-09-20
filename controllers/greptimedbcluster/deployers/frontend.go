@@ -36,11 +36,6 @@ import (
 	k8sutil "github.com/GreptimeTeam/greptimedb-operator/pkg/util/k8s"
 )
 
-const (
-	TLSCrtSecretKey = "tls.crt"
-	TLSKeySecretKey = "tls.key"
-)
-
 type FrontendDeployer struct {
 	*CommonDeployer
 }
@@ -254,8 +249,8 @@ func (b *frontendBuilder) generateMainContainerArgs() []string {
 	if b.Cluster.Spec.Frontend != nil && b.Cluster.Spec.Frontend.TLS != nil {
 		args = append(args, []string{
 			"--tls-mode", constant.DefaultTLSMode,
-			"--tls-cert-path", path.Join(constant.GreptimeDBTLSDir, TLSCrtSecretKey),
-			"--tls-key-path", path.Join(constant.GreptimeDBTLSDir, TLSKeySecretKey),
+			"--tls-cert-path", path.Join(constant.GreptimeDBTLSDir, v1alpha1.TLSCrtSecretKey),
+			"--tls-key-path", path.Join(constant.GreptimeDBTLSDir, v1alpha1.TLSKeySecretKey),
 		}...)
 	}
 

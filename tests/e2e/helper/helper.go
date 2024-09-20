@@ -32,6 +32,7 @@ import (
 	greptimev1alpha1 "github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 	"github.com/GreptimeTeam/greptimedb-operator/controllers/common"
 	"github.com/GreptimeTeam/greptimedb-operator/controllers/constant"
+	"github.com/GreptimeTeam/greptimedb-operator/pkg/util"
 )
 
 const (
@@ -124,24 +125,30 @@ func (h *Helper) GetPhase(ctx context.Context, namespace, name string, object cl
 }
 
 // GetPVCs returns the PVC list of the given component.
-func (h *Helper) GetPVCs(ctx context.Context, namespace, name string, kind greptimev1alpha1.ComponentKind) ([]corev1.PersistentVolumeClaim, error) {
+func (h *Helper) GetPVCs(ctx context.Context, namespace, name string, kind greptimev1alpha1.ComponentKind, additionalLabels map[string]string) ([]corev1.PersistentVolumeClaim, error) {
+	matachedLabels := map[string]string{
+		constant.GreptimeDBComponentName: common.ResourceName(name, kind),
+	}
+
+	if additionalLabels != nil {
+		matachedLabels = util.MergeStringMap(matachedLabels, additionalLabels)
+	}
+
 	selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
-		MatchLabels: map[string]string{
-			constant.GreptimeDBComponentName: common.ResourceName(name, kind),
-		},
+		MatchLabels: matachedLabels,
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	pvcList := new(corev1.PersistentVolumeClaimList)
+	claims := new(corev1.PersistentVolumeClaimList)
 
-	if err = h.List(ctx, pvcList, client.InNamespace(namespace),
+	if err = h.List(ctx, claims, client.InNamespace(namespace),
 		client.MatchingLabelsSelector{Selector: selector}); err != nil {
 		return nil, err
 	}
 
-	return pvcList.Items, nil
+	return claims.Items, nil
 }
 
 // CleanEtcdData cleans up all data in etcd by executing the etcdctl command in the given pod.

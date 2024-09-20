@@ -11,9 +11,18 @@ spec:
     replicas: 1
   meta:
     replicas: 1
+    etcdEndpoints:
+      - etcd.etcd-cluster.svc.cluster.local:2379
   datanode:
     replicas: 1
-  remoteWal:
+  wal:
     kafka:
       brokerEndpoints:
         - kafka.default:9092
+  objectStorage:
+    s3:
+      bucket: greptimedb
+      endpoint: s3.amazonaws.com
+      region: us-west-2
+      root: /greptimedb
+      secretName: s3-credentials

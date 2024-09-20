@@ -1,0 +1,25 @@
+apiVersion: greptime.io/v1alpha1
+kind: GreptimeDBCluster
+metadata:
+  name: cluster-with-standalone-wal
+  namespace: default
+spec:
+  base:
+    main:
+      image: greptime/greptimedb:latest
+  frontend:
+    replicas: 1
+  meta:
+    replicas: 1
+    etcdEndpoints:
+      - "etcd.etcd-cluster:2379"
+  datanode:
+    replicas: 1
+  wal:
+    raftEngine:
+      fs:
+        name: wal
+        storageClassName: standard
+        storageSize: 5Gi
+        mountPath: /wal
+        storageRetainPolicy: Delete # The wal will be deleted after cluster is destroyed.

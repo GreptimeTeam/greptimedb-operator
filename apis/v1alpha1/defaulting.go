@@ -15,42 +15,12 @@
 package v1alpha1
 
 import (
-	"path"
 	"strings"
 
 	"dario.cat/mergo"
-	"google.golang.org/protobuf/proto"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-)
-
-var (
-	defaultVersion = "Unknown"
-
-	defautlHealthEndpoint = "/health"
-
-	// The default settings for GreptimeDBClusterSpec.
-	defaultHTTPPort       = 4000
-	defaultRPCPort        = 4001
-	defaultMySQLPort      = 4002
-	defaultPostgreSQLPort = 4003
-	defaultMetaRPCPort    = 3002
-
-	// The default replicas for frontend/meta/datanode.
-	defaultFrontendReplicas int32 = 1
-	defaultMetaReplicas     int32 = 1
-	defaultDatanodeReplicas int32 = 1
-	defaultFlownodeReplicas int32 = 1
-
-	// The default storage settings for datanode.
-	defaultDataNodeStorageName      = "datanode"
-	defaultStandaloneStorageName    = "standalone"
-	defaultDataNodeStorageSize      = "10Gi"
-	defaultDataNodeStorageMountPath = "/data/greptimedb"
-	defaultStorageRetainPolicyType  = StorageRetainPolicyTypeRetain
-	defaultWalDir                   = path.Join(defaultDataNodeStorageMountPath, "wal")
-
-	defaultInitializer = "greptime/greptimedb-initializer:latest"
+	"k8s.io/utils/pointer"
 )
 
 func (in *GreptimeDBCluster) SetDefaults() error {
@@ -58,8 +28,13 @@ func (in *GreptimeDBCluster) SetDefaults() error {
 		return nil
 	}
 
+	// Set the version of the GreptimeDBClusterSpec if it is not set.
+	if in.GetVersion() == "" && in.GetBaseMainContainer().GetImage() != "" {
+		in.Spec.Version = getVersionFromImage(in.GetBaseMainContainer().GetImage())
+	}
+
 	// Merge the default settings into the GreptimeDBClusterSpec.
-	if err := mergo.Merge(&in.Spec, in.defaultClusterSpec()); err != nil {
+	if err := mergo.Merge(&in.Spec, in.defaultSpec()); err != nil {
 		return err
 	}
 
@@ -71,153 +46,87 @@ func (in *GreptimeDBCluster) SetDefaults() error {
 	return nil
 }
 
-func (in *GreptimeDBStandalone) SetDefaults() error {
-	if in == nil {
-		return nil
-	}
-
-	var defaultGreptimeDBStandaloneSpec = &GreptimeDBStandaloneSpec{
-		Base: &PodTemplateSpec{
-			MainContainer: &MainContainerSpec{
-				// The default liveness probe for the main container of GreptimeDBStandalone.
-				LivenessProbe: &corev1.Probe{
-					ProbeHandler: corev1.ProbeHandler{
-						HTTPGet: &corev1.HTTPGetAction{
-							Path: defautlHealthEndpoint,
-							Port: intstr.FromInt(defaultHTTPPort),
-						},
-					},
-				},
-			},
-		},
-		HTTPServicePort: int32(defaultHTTPPort),
-		RPCPort:         int32(defaultRPCPort),
-		MySQLPort:       int32(defaultMySQLPort),
-		PostgreSQLPort:  int32(defaultPostgreSQLPort),
-		Version:         defaultVersion,
-		LocalStorage: &StorageSpec{
-			Name:                defaultStandaloneStorageName,
-			StorageSize:         defaultDataNodeStorageSize,
-			MountPath:           defaultDataNodeStorageMountPath,
-			StorageRetainPolicy: defaultStorageRetainPolicyType,
-			WalDir:              defaultWalDir,
-			DataHome:            defaultDataNodeStorageMountPath,
-		},
-		Service: &ServiceSpec{
-			Type: corev1.ServiceTypeClusterIP,
-		},
-	}
-
-	if in.Spec.Version == "" &&
-		in.Spec.Base != nil &&
-		in.Spec.Base.MainContainer != nil &&
-		in.Spec.Base.MainContainer.Image != "" {
-		in.Spec.Version = getVersionFromImage(in.Spec.Base.MainContainer.Image)
-	}
-
-	if err := mergo.Merge(&in.Spec, defaultGreptimeDBStandaloneSpec); err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (in *GreptimeDBCluster) defaultClusterSpec() *GreptimeDBClusterSpec {
-	var defaultGreptimeDBClusterSpec = &GreptimeDBClusterSpec{
+func (in *GreptimeDBCluster) defaultSpec() *GreptimeDBClusterSpec {
+	var defaultSpec = &GreptimeDBClusterSpec{
 		Base: &PodTemplateSpec{
 			MainContainer: &MainContainerSpec{
 				// The default liveness probe for the main container of GreptimeDBCluster.
 				LivenessProbe: &corev1.Probe{
 					ProbeHandler: corev1.ProbeHandler{
 						HTTPGet: &corev1.HTTPGetAction{
-							Path: defautlHealthEndpoint,
-							Port: intstr.FromInt(defaultHTTPPort),
+							Path: DefautlHealthEndpoint,
+							Port: intstr.FromInt32(DefaultHTTPPort),
 						},
 					},
 				},
 			},
 		},
-		Initializer:    &InitializerSpec{Image: defaultInitializer},
-		HTTPPort:       int32(defaultHTTPPort),
-		RPCPort:        int32(defaultRPCPort),
-		MySQLPort:      int32(defaultMySQLPort),
-		PostgreSQLPort: int32(defaultPostgreSQLPort),
-		Version:        defaultVersion,
+		Initializer:    &InitializerSpec{Image: DefaultInitializerImage},
+		HTTPPort:       DefaultHTTPPort,
+		RPCPort:        DefaultRPCPort,
+		MySQLPort:      DefaultMySQLPort,
+		PostgreSQLPort: DefaultPostgreSQLPort,
+		Version:        DefaultVersion,
+		Frontend:       in.defaultFrontend(),
+		Meta:           in.defaultMeta(),
+		Datanode:       in.defaultDatanode(),
 	}
 
-	if in.Spec.Version == "" &&
-		in.Spec.Base != nil &&
-		in.Spec.Base.MainContainer != nil &&
-		in.Spec.Base.MainContainer.Image != "" {
-		in.Spec.Version = getVersionFromImage(in.Spec.Base.MainContainer.Image)
+	if in.GetFlownode() != nil {
+		defaultSpec.Flownode = in.defaultFlownodeSpec()
 	}
 
-	if in.Spec.Frontend != nil {
-		defaultGreptimeDBClusterSpec.Frontend = &FrontendSpec{
-			ComponentSpec: ComponentSpec{
-				Template: &PodTemplateSpec{},
-			},
-			Service: ServiceSpec{
-				Type: corev1.ServiceTypeClusterIP,
-			},
-		}
-		if in.Spec.Frontend.Replicas == nil {
-			in.Spec.Frontend.Replicas = proto.Int32(defaultFrontendReplicas)
-		}
-	}
+	return defaultSpec
+}
 
-	if in.Spec.Meta != nil {
-		enableRegionFailover := false
-		if in.Spec.RemoteWalProvider != nil { // If remote wal provider is enabled, enable region failover by default.
-			enableRegionFailover = true
-		}
-		defaultGreptimeDBClusterSpec.Meta = &MetaSpec{
-			ComponentSpec: ComponentSpec{
-				Template: &PodTemplateSpec{},
-			},
-			RPCPort:              int32(defaultMetaRPCPort),
-			HTTPPort:             int32(defaultHTTPPort),
-			EnableRegionFailover: &enableRegionFailover,
-		}
-		if in.Spec.Meta.Replicas == nil {
-			in.Spec.Meta.Replicas = proto.Int32(defaultMetaReplicas)
-		}
+func (in *GreptimeDBCluster) defaultFrontend() *FrontendSpec {
+	return &FrontendSpec{
+		ComponentSpec: ComponentSpec{
+			Template: &PodTemplateSpec{},
+			Replicas: pointer.Int32(DefaultReplicas),
+		},
+		Service: &ServiceSpec{
+			Type: corev1.ServiceTypeClusterIP,
+		},
 	}
+}
 
-	if in.Spec.Datanode != nil {
-		defaultGreptimeDBClusterSpec.Datanode = &DatanodeSpec{
-			ComponentSpec: ComponentSpec{
-				Template: &PodTemplateSpec{},
-			},
-			Storage: StorageSpec{
-				Name:                defaultDataNodeStorageName,
-				StorageSize:         defaultDataNodeStorageSize,
-				MountPath:           defaultDataNodeStorageMountPath,
-				StorageRetainPolicy: defaultStorageRetainPolicyType,
-				WalDir:              defaultWalDir,
-				DataHome:            defaultDataNodeStorageMountPath,
-			},
-			RPCPort:  int32(defaultRPCPort),
-			HTTPPort: int32(defaultHTTPPort),
-		}
-		if in.Spec.Datanode.Replicas == nil {
-			in.Spec.Datanode.Replicas = proto.Int32(defaultDatanodeReplicas)
-		}
+func (in *GreptimeDBCluster) defaultMeta() *MetaSpec {
+	enableRegionFailover := false
+	if in.GetWALProvider().GetKafkaWAL() != nil { // If remote wal provider is enabled, enable region failover by default.
+		enableRegionFailover = true
 	}
-
-	if in.Spec.Flownode != nil {
-		defaultGreptimeDBClusterSpec.Flownode = &FlownodeSpec{
-			ComponentSpec: ComponentSpec{
-				Template: &PodTemplateSpec{},
-			},
-			RPCPort: int32(defaultRPCPort),
-		}
-		if in.Spec.Flownode.Replicas == nil {
-			in.Spec.Flownode.Replicas = proto.Int32(defaultFlownodeReplicas)
-		}
+	return &MetaSpec{
+		ComponentSpec: ComponentSpec{
+			Template: &PodTemplateSpec{},
+			Replicas: pointer.Int32(DefaultReplicas),
+		},
+		RPCPort:              DefaultMetaRPCPort,
+		HTTPPort:             DefaultHTTPPort,
+		EnableRegionFailover: &enableRegionFailover,
 	}
+}
 
-	return defaultGreptimeDBClusterSpec
+func (in *GreptimeDBCluster) defaultDatanode() *DatanodeSpec {
+	return &DatanodeSpec{
+		ComponentSpec: ComponentSpec{
+			Template: &PodTemplateSpec{},
+			Replicas: pointer.Int32(DefaultReplicas),
+		},
+		RPCPort:  DefaultRPCPort,
+		HTTPPort: DefaultHTTPPort,
+		Storage:  defaultDatanodeStorage(),
+	}
+}
+
+func (in *GreptimeDBCluster) defaultFlownodeSpec() *FlownodeSpec {
+	return &FlownodeSpec{
+		ComponentSpec: ComponentSpec{
+			Template: &PodTemplateSpec{},
+			Replicas: pointer.Int32(DefaultReplicas),
+		},
+		RPCPort: DefaultRPCPort,
+	}
 }
 
 func (in *GreptimeDBCluster) mergeTemplate() error {
@@ -248,7 +157,7 @@ func (in *GreptimeDBCluster) mergeFrontendTemplate() error {
 		}
 
 		// Reconfigure the probe settings based on the HTTP port.
-		in.Spec.Frontend.Template.MainContainer.LivenessProbe.HTTPGet.Port = intstr.FromInt(int(in.Spec.HTTPPort))
+		in.Spec.Frontend.Template.MainContainer.LivenessProbe.HTTPGet.Port = intstr.FromInt32(in.Spec.HTTPPort)
 	}
 
 	return nil
@@ -262,7 +171,7 @@ func (in *GreptimeDBCluster) mergeMetaTemplate() error {
 		}
 
 		// Reconfigure the probe settings based on the HTTP port.
-		in.Spec.Meta.Template.MainContainer.LivenessProbe.HTTPGet.Port = intstr.FromInt(int(in.Spec.Meta.HTTPPort))
+		in.Spec.Meta.Template.MainContainer.LivenessProbe.HTTPGet.Port = intstr.FromInt32(in.Spec.Meta.HTTPPort)
 	}
 
 	return nil
@@ -276,7 +185,7 @@ func (in *GreptimeDBCluster) mergeDatanodeTemplate() error {
 		}
 
 		// Reconfigure the probe settings based on the HTTP port.
-		in.Spec.Datanode.Template.MainContainer.LivenessProbe.HTTPGet.Port = intstr.FromInt(int(in.Spec.Datanode.HTTPPort))
+		in.Spec.Datanode.Template.MainContainer.LivenessProbe.HTTPGet.Port = intstr.FromInt32(in.Spec.Datanode.HTTPPort)
 	}
 
 	return nil
@@ -296,6 +205,63 @@ func (in *GreptimeDBCluster) mergeFlownodeTemplate() error {
 	return nil
 }
 
+func (in *GreptimeDBStandalone) SetDefaults() error {
+	if in == nil {
+		return nil
+	}
+
+	if in.GetVersion() == "" && in.GetBaseMainContainer().GetImage() != "" {
+		in.Spec.Version = getVersionFromImage(in.GetBaseMainContainer().GetImage())
+	}
+
+	if err := mergo.Merge(&in.Spec, in.defaultSpec()); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (in *GreptimeDBStandalone) defaultSpec() *GreptimeDBStandaloneSpec {
+	var defaultSpec = &GreptimeDBStandaloneSpec{
+		Base: &PodTemplateSpec{
+			MainContainer: &MainContainerSpec{
+				// The default liveness probe for the main container of GreptimeDBStandalone.
+				LivenessProbe: &corev1.Probe{
+					ProbeHandler: corev1.ProbeHandler{
+						HTTPGet: &corev1.HTTPGetAction{
+							Path: DefautlHealthEndpoint,
+							Port: intstr.FromInt32(DefaultHTTPPort),
+						},
+					},
+				},
+			},
+		},
+		HTTPPort:       DefaultHTTPPort,
+		RPCPort:        DefaultRPCPort,
+		MySQLPort:      DefaultMySQLPort,
+		PostgreSQLPort: DefaultPostgreSQLPort,
+		Version:        DefaultVersion,
+		Service: &ServiceSpec{
+			Type: corev1.ServiceTypeClusterIP,
+		},
+		DatanodeStorage: defaultDatanodeStorage(),
+	}
+
+	return defaultSpec
+}
+
+func defaultDatanodeStorage() *DatanodeStorageSpec {
+	return &DatanodeStorageSpec{
+		DataHome: DefaultDataHome,
+		FileStorage: &FileStorage{
+			Name:                DefaultDatanodeFileStorageName,
+			StorageSize:         DefaultDataSize,
+			MountPath:           DefaultDataHome,
+			StorageRetainPolicy: DefaultStorageRetainPolicyType,
+		},
+	}
+}
+
 func getVersionFromImage(imageURL string) string {
 	tokens := strings.Split(imageURL, "/")
 	if len(tokens) > 0 {
@@ -305,5 +271,5 @@ func getVersionFromImage(imageURL string) string {
 			return tokens[1]
 		}
 	}
-	return defaultVersion
+	return DefaultVersion
 }

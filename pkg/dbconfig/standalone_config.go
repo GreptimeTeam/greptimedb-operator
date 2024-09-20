@@ -102,11 +102,17 @@ func (c *StandaloneConfig) ConfigureByStandalone(standalone *v1alpha1.GreptimeDB
 		}
 	}
 
-	c.WalDir = util.StringPtr(standalone.Spec.LocalStorage.WalDir)
-	c.StorageDataHome = util.StringPtr(standalone.Spec.LocalStorage.DataHome)
+	// Set the wal dir if the kafka wal is not enabled.
+	if standalone.GetWALProvider().GetKafkaWAL() == nil && standalone.GetWALDir() != "" {
+		c.WalDir = util.StringPtr(standalone.GetWALDir())
+	}
 
-	if len(standalone.Spec.Config) > 0 {
-		if err := c.SetInputConfig(standalone.Spec.Config); err != nil {
+	if standalone.GetDataHome() != "" {
+		c.StorageDataHome = util.StringPtr(standalone.GetDataHome())
+	}
+
+	if cfg := standalone.GetConfig(); cfg != "" {
+		if err := c.SetInputConfig(cfg); err != nil {
 			return err
 		}
 	}

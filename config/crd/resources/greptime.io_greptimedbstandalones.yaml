@@ -2802,8 +2802,28 @@ spec:
                 type: object
               config:
                 type: string
-              enableInfluxDBProtocol:
-                type: boolean
+              datanodeStorage:
+                properties:
+                  dataHome:
+                    type: string
+                  fs:
+                    properties:
+                      mountPath:
+                        type: string
+                      name:
+                        type: string
+                      storageClassName:
+                        type: string
+                      storageRetainPolicy:
+                        enum:
+                        - Retain
+                        - Delete
+                        type: string
+                      storageSize:
+                        pattern: (^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$)
+                        type: string
+                    type: object
+                type: object
               httpPort:
                 format: int32
                 type: integer
@@ -2812,36 +2832,33 @@ spec:
                   image:
                     type: string
                 type: object
-              localStorage:
-                properties:
-                  dataHome:
-                    type: string
-                  mountPath:
-                    type: string
-                  name:
-                    type: string
-                  storageClassName:
-                    type: string
-                  storageRetainPolicy:
-                    enum:
-                    - Retain
-                    - Delete
-                    type: string
-                  storageSize:
-                    pattern: (^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$)
-                    type: string
-                  walDir:
-                    type: string
-                type: object
               mysqlPort:
                 format: int32
                 type: integer
               objectStorage:
                 properties:
-                  cacheCapacity:
-                    type: string
-                  cachePath:
-                    type: string
+                  cache:
+                    properties:
+                      cacheCapacity:
+                        type: string
+                      fs:
+                        properties:
+                          mountPath:
+                            type: string
+                          name:
+                            type: string
+                          storageClassName:
+                            type: string
+                          storageRetainPolicy:
+                            enum:
+                            - Retain
+                            - Delete
+                            type: string
+                          storageSize:
+                            pattern: (^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$)
+                            type: string
+                        type: object
+                    type: object
                   gcs:
                     properties:
                       bucket:
@@ -2854,6 +2871,9 @@ spec:
                         type: string
                       secretName:
                         type: string
+                    required:
+                    - bucket
+                    - root
                     type: object
                   oss:
                     properties:
@@ -2867,6 +2887,10 @@ spec:
                         type: string
                       secretName:
                         type: string
+                    required:
+                    - bucket
+                    - region
+                    - root
                     type: object
                   s3:
                     properties:
@@ -2880,6 +2904,10 @@ spec:
                         type: string
                       secretName:
                         type: string
+                    required:
+                    - bucket
+                    - region
+                    - root
                     type: object
                 type: object
               postgreSQLPort:
@@ -2895,16 +2923,8 @@ spec:
                     additionalProperties:
                       type: string
                     type: object
-                type: object
-              remoteWal:
-                properties:
-                  kafka:
-                    properties:
-                      brokerEndpoints:
-                        items:
-                          type: string
-                        type: array
-                    type: object
+                required:
+                - enabled
                 type: object
               rpcPort:
                 format: int32
@@ -2928,9 +2948,43 @@ spec:
                 properties:
                   secretName:
                     type: string
+                required:
+                - secretName
                 type: object
               version:
                 type: string
+              wal:
+                properties:
+                  kafka:
+                    properties:
+                      brokerEndpoints:
+                        items:
+                          type: string
+                        type: array
+                    required:
+                    - brokerEndpoints
+                    type: object
+                  raftEngine:
+                    properties:
+                      fs:
+                        properties:
+                          mountPath:
+                            type: string
+                          name:
+                            type: string
+                          storageClassName:
+                            type: string
+                          storageRetainPolicy:
+                            enum:
+                            - Retain
+                            - Delete
+                            type: string
+                          storageSize:
+                            pattern: (^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$)
+                            type: string
+                        type: object
+                    type: object
+                type: object
             type: object
           status:
             properties:

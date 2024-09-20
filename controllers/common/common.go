@@ -17,10 +17,25 @@ package common
 import (
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 	"github.com/GreptimeTeam/greptimedb-operator/controllers/constant"
+)
+
+var (
+	DatanodeFileStorageLabels = map[string]string{
+		"app.greptime.io/fileStorageType": "datanode",
+	}
+
+	WALFileStorageLabels = map[string]string{
+		"app.greptime.io/fileStorageType": "wal",
+	}
+
+	CacheFileStorageLabels = map[string]string{
+		"app.greptime.io/fileStorageType": "cache",
+	}
 )
 
 func ResourceName(name string, componentKind v1alpha1.ComponentKind) string {
@@ -152,4 +167,24 @@ func GeneratePodTemplateSpec(kind v1alpha1.ComponentKind, template *v1alpha1.Pod
 	}
 
 	return spec
+}
+
+func FileStorageToPVC(fs v1alpha1.FileStorageAccessor, labels map[string]string) *corev1.PersistentVolumeClaim {
+	return &corev1.PersistentVolumeClaim{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   fs.GetName(),
+			Labels: labels,
+		},
+		Spec: corev1.PersistentVolumeClaimSpec{
+			StorageClassName: fs.GetStorageClassName(),
+			AccessModes: []corev1.PersistentVolumeAccessMode{
+				corev1.ReadWriteOnce,
+			},
+			Resources: corev1.ResourceRequirements{
+				Requests: corev1.ResourceList{
+					corev1.ResourceStorage: resource.MustParse(fs.GetSize()),
+				},
+			},
+		},
+	}
 }

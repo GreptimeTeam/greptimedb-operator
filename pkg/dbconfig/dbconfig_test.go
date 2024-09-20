@@ -30,14 +30,16 @@ func TestFromClusterForDatanodeConfig(t *testing.T) {
 			Namespace: "default",
 		},
 		Spec: v1alpha1.GreptimeDBClusterSpec{
-			ObjectStorageProvider: &v1alpha1.ObjectStorageProvider{
-				S3: &v1alpha1.S3StorageProvider{
-					Root:   "testcluster",
-					Bucket: "testbucket",
+			ObjectStorageProvider: &v1alpha1.ObjectStorageProviderSpec{
+				S3: &v1alpha1.S3Storage{
+					Root:     "testcluster",
+					Bucket:   "testbucket",
+					Endpoint: "s3.amazonaws.com",
+					Region:   "us-west-2",
 				},
 			},
-			RemoteWalProvider: &v1alpha1.RemoteWalProvider{
-				KafkaRemoteWal: &v1alpha1.KafkaRemoteWal{
+			WALProvider: &v1alpha1.WALProviderSpec{
+				KafkaWAL: &v1alpha1.KafkaWAL{
 					BrokerEndpoints: []string{
 						"broker1:9092",
 						"broker2:9092",
@@ -50,6 +52,8 @@ func TestFromClusterForDatanodeConfig(t *testing.T) {
 	testConfig := `
 [storage]
   bucket = "testbucket"
+  endpoint = "s3.amazonaws.com"
+  region = "us-west-2"
   root = "testcluster"
   type = "S3"
 
@@ -79,10 +83,12 @@ level = 'error'
 			Namespace: "default",
 		},
 		Spec: v1alpha1.GreptimeDBClusterSpec{
-			ObjectStorageProvider: &v1alpha1.ObjectStorageProvider{
-				S3: &v1alpha1.S3StorageProvider{
-					Root:   "testcluster",
-					Bucket: "testbucket",
+			ObjectStorageProvider: &v1alpha1.ObjectStorageProviderSpec{
+				S3: &v1alpha1.S3Storage{
+					Root:     "testcluster",
+					Bucket:   "testbucket",
+					Endpoint: "s3.amazonaws.com",
+					Region:   "us-west-2",
 				},
 			},
 			Datanode: &v1alpha1.DatanodeSpec{
@@ -100,6 +106,8 @@ level = 'error'
 
 [storage]
   bucket = "testbucket"
+  endpoint = "s3.amazonaws.com"
+  region = "us-west-2"
   root = "testcluster"
   type = "S3"
 `

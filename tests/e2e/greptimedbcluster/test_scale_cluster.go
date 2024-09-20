@@ -157,6 +157,6 @@ func TestScaleCluster(ctx context.Context, h *helper.Helper) {
 	Expect(err).NotTo(HaveOccurred(), "failed to delete cluster")
 	Eventually(func() error {
 		// The cluster will be deleted eventually.
-		return h.Get(ctx, client.ObjectKey{Name: testCluster.Namespace, Namespace: testCluster.Namespace}, testCluster)
+		return h.Get(ctx, client.ObjectKey{Name: testCluster.Name, Namespace: testCluster.Namespace}, testCluster)
 	}, helper.DefaultTimeout, time.Second).Should(HaveOccurred())
 }

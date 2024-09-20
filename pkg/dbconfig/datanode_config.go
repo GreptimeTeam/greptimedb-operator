@@ -108,23 +108,24 @@ func (c *DatanodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster)
 		}
 	}
 
-	if cluster.Spec.Datanode != nil {
-		c.WalDir = util.StringPtr(cluster.Spec.Datanode.Storage.WalDir)
-		c.StorageDataHome = util.StringPtr(cluster.Spec.Datanode.Storage.DataHome)
+	// Set the wal dir if the kafka wal is not enabled.
+	if cluster.GetWALProvider().GetKafkaWAL() == nil && cluster.GetWALDir() != "" {
+		c.WalDir = util.StringPtr(cluster.GetWALDir())
+	}
 
-		if len(cluster.Spec.Datanode.Config) > 0 {
-			if err := c.SetInputConfig(cluster.Spec.Datanode.Config); err != nil {
-				return err
-			}
+	if cluster.GetDatanode().GetDataHome() != "" {
+		c.StorageDataHome = util.StringPtr(cluster.GetDatanode().GetDataHome())
+	}
+
+	if cluster.GetDatanode().GetConfig() != "" {
+		if err := c.SetInputConfig(cluster.GetDatanode().GetConfig()); err != nil {
+			return err
 		}
 	}
 
-	if cluster.Spec.RemoteWalProvider != nil && cluster.Spec.RemoteWalProvider.KafkaRemoteWal != nil {
+	if cluster.GetWALProvider().GetKafkaWAL() != nil {
 		c.WalProvider = util.StringPtr("kafka")
-		c.WalBrokerEndpoints = cluster.Spec.RemoteWalProvider.KafkaRemoteWal.BrokerEndpoints
-
-		// FIXME(zyy17): Unset the wal dir if the wal provider is kafka. It's a temporary solution.
-		c.WalDir = nil
+		c.WalBrokerEndpoints = cluster.GetWALProvider().GetKafkaWAL().GetBrokerEndpoints()
 	}
 
 	return nil
