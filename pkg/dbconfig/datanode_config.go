@@ -40,20 +40,8 @@ type DatanodeConfig struct {
 
 // ConfigureByCluster configures the datanode config by the given cluster.
 func (c *DatanodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster) error {
-	if s3 := cluster.GetObjectStorageProvider().GetS3Storage(); s3 != nil {
-		if err := c.ConfigureS3(cluster.GetNamespace(), s3); err != nil {
-			return err
-		}
-	}
-
-	if oss := cluster.GetObjectStorageProvider().GetOSSStorage(); oss != nil {
-		if err := c.ConfigureOSS(cluster.GetNamespace(), oss); err != nil {
-			return err
-		}
-	}
-
-	if gcs := cluster.GetObjectStorageProvider().GetGCSStorage(); gcs != nil {
-		if err := c.ConfigureGCS(cluster.GetNamespace(), gcs); err != nil {
+	if objectStorage := cluster.GetObjectStorageProvider(); objectStorage != nil {
+		if err := c.ConfigureObjectStorage(cluster.GetNamespace(), objectStorage); err != nil {
 			return err
 		}
 	}

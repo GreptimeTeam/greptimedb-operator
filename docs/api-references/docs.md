@@ -524,6 +524,8 @@ _Appears in:_
 | `endpoint` _string_ | The endpoint of the bucket. |  |  |
 
 
+
+
 #### ObjectStorageProviderSpec
 
 

@@ -38,8 +38,26 @@ type StorageConfig struct {
 	StorageCredential      *string `tomlmapping:"storage.credential"`
 }
 
-// ConfigureS3 configures the storage config with the given S3 storage.
-func (c *StorageConfig) ConfigureS3(namespace string, s3 *v1alpha1.S3Storage) error {
+// ConfigureObjectStorage configures the storage config by the given object storage provider accessor.
+func (c *StorageConfig) ConfigureObjectStorage(namespace string, accessor v1alpha1.ObjectStorageProviderAccessor) error {
+	if s3 := accessor.GetS3Storage(); s3 != nil {
+		if err := c.configureS3(namespace, s3); err != nil {
+			return err
+		}
+	} else if oss := accessor.GetOSSStorage(); oss != nil {
+		if err := c.configureOSS(namespace, oss); err != nil {
+			return err
+		}
+	} else if gcs := accessor.GetGCSStorage(); gcs != nil {
+		if err := c.configureGCS(namespace, gcs); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (c *StorageConfig) configureS3(namespace string, s3 *v1alpha1.S3Storage) error {
 	if s3 == nil {
 		return nil
 	}
@@ -62,8 +80,7 @@ func (c *StorageConfig) ConfigureS3(namespace string, s3 *v1alpha1.S3Storage) er
 	return nil
 }
 
-// ConfigureOSS configures the storage config with the given OSS storage.
-func (c *StorageConfig) ConfigureOSS(namespace string, oss *v1alpha1.OSSStorage) error {
+func (c *StorageConfig) configureOSS(namespace string, oss *v1alpha1.OSSStorage) error {
 	if oss == nil {
 		return nil
 	}
@@ -86,8 +103,7 @@ func (c *StorageConfig) ConfigureOSS(namespace string, oss *v1alpha1.OSSStorage)
 	return nil
 }
 
-// ConfigureGCS configures the storage config with the given GCS storage.
-func (c *StorageConfig) ConfigureGCS(namespace string, gcs *v1alpha1.GCSStorage) error {
+func (c *StorageConfig) configureGCS(namespace string, gcs *v1alpha1.GCSStorage) error {
 	if gcs == nil {
 		return nil
 	}
