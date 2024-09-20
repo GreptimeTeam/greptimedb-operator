@@ -15,6 +15,10 @@ spec:
       - "etcd.etcd-cluster:2379"
   datanode:
     replicas: 1
+  httpPort: 4000
+  rpcPort: 4001
+  mysqlPort: 4002
+  postgreSQLPort: 4003
   wal:
     raftEngine:
       fs:
