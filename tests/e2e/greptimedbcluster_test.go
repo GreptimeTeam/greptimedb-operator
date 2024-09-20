@@ -48,4 +48,8 @@ var _ = Describe("Test GreptimeDBCluster", func() {
 	It("Test scaling a cluster up and down", func() {
 		greptimedbcluster.TestScaleCluster(ctx, h)
 	})
+
+	It("Test a cluster with standalone WAL", func() {
+		greptimedbcluster.TestClusterStandaloneWAL(ctx, h)
+	})
 })
