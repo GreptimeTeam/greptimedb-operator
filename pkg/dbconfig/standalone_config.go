@@ -30,6 +30,9 @@ type StandaloneConfig struct {
 	// WALConfig is the configuration for the WAL.
 	WALConfig `tomlmapping:",inline"`
 
+	// LoggingConfig is the configuration for the logging.
+	LoggingConfig `tomlmapping:",inline"`
+
 	// InputConfig is from config field of cluster spec.
 	InputConfig string
 }
@@ -66,6 +69,8 @@ func (c *StandaloneConfig) ConfigureByStandalone(standalone *v1alpha1.GreptimeDB
 		c.WalProvider = pointer.String("kafka")
 		c.WalBrokerEndpoints = kafka.GetBrokerEndpoints()
 	}
+
+	c.ConfigureLogging(standalone.GetLogging(), nil)
 
 	return nil
 }

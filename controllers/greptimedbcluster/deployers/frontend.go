@@ -273,6 +273,10 @@ func (b *frontendBuilder) generatePodTemplateSpec() *corev1.PodTemplateSpec {
 
 	b.MountConfigDir(podTemplateSpec)
 
+	if logging := b.Cluster.GetFrontend().GetLogging(); logging != nil && !logging.IsOnlyLogToStdout() {
+		b.AddLogsVolume(podTemplateSpec, logging.GetLogsDir())
+	}
+
 	if b.Cluster.Spec.Frontend.TLS != nil {
 		b.mountTLSSecret(podTemplateSpec)
 	}

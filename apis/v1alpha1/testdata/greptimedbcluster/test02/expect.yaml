@@ -22,6 +22,12 @@ spec:
       region: us-west-2
       root: /greptimedb
       secretName: s3-credentials
+  logging:
+    format: text
+    level: info
+    logsDir: /data/greptimedb/logs
+    onlyLogToStdout: false
+    persistentWithData: false
   base:
     main:
       image: greptime/greptimedb:latest

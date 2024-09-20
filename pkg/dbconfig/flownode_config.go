@@ -26,6 +26,9 @@ type FlownodeConfig struct {
 	Addr     *string `tomlmapping:"grpc.addr"`
 	Hostname *string `tomlmapping:"grpc.hostname"`
 
+	// LoggingConfig is the configuration for the logging.
+	LoggingConfig `tomlmapping:",inline"`
+
 	// InputConfig is from config field of cluster spec.
 	InputConfig string
 }
@@ -37,6 +40,8 @@ func (c *FlownodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster)
 			return err
 		}
 	}
+
+	c.ConfigureLogging(cluster.GetLogging(), cluster.GetFlownode().GetLogging())
 
 	return nil
 }

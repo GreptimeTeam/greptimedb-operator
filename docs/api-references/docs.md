@@ -53,6 +53,7 @@ _Appears in:_
 | `replicas` _integer_ | The number of replicas of the components. |  | Minimum: 0 <br /> |
 | `config` _string_ | The content of the configuration file of the component in TOML format. |  |  |
 | `template` _[PodTemplateSpec](#podtemplatespec)_ | Template defines the pod template for the component, if not specified, the pod template will use the default value. |  |  |
+| `logging` _[LoggingSpec](#loggingspec)_ | Logging defines the logging configuration for the component. |  |  |
 
 
 #### Condition
@@ -109,6 +110,7 @@ _Appears in:_
 | `replicas` _integer_ | The number of replicas of the components. |  | Minimum: 0 <br /> |
 | `config` _string_ | The content of the configuration file of the component in TOML format. |  |  |
 | `template` _[PodTemplateSpec](#podtemplatespec)_ | Template defines the pod template for the component, if not specified, the pod template will use the default value. |  |  |
+| `logging` _[LoggingSpec](#loggingspec)_ | Logging defines the logging configuration for the component. |  |  |
 | `rpcPort` _integer_ | RPCPort is the gRPC port of the datanode. |  |  |
 | `httpPort` _integer_ | HTTPPort is the HTTP port of the datanode. |  |  |
 | `storage` _[DatanodeStorageSpec](#datanodestoragespec)_ | Storage is the default file storage of the datanode. For example, WAL, cache, index etc. |  |  |
@@ -189,6 +191,7 @@ _Appears in:_
 | `replicas` _integer_ | The number of replicas of the components. |  | Minimum: 0 <br /> |
 | `config` _string_ | The content of the configuration file of the component in TOML format. |  |  |
 | `template` _[PodTemplateSpec](#podtemplatespec)_ | Template defines the pod template for the component, if not specified, the pod template will use the default value. |  |  |
+| `logging` _[LoggingSpec](#loggingspec)_ | Logging defines the logging configuration for the component. |  |  |
 | `rpcPort` _integer_ | The gRPC port of the flownode. |  |  |
 
 
@@ -225,6 +228,7 @@ _Appears in:_
 | `replicas` _integer_ | The number of replicas of the components. |  | Minimum: 0 <br /> |
 | `config` _string_ | The content of the configuration file of the component in TOML format. |  |  |
 | `template` _[PodTemplateSpec](#podtemplatespec)_ | Template defines the pod template for the component, if not specified, the pod template will use the default value. |  |  |
+| `logging` _[LoggingSpec](#loggingspec)_ | Logging defines the logging configuration for the component. |  |  |
 | `service` _[ServiceSpec](#servicespec)_ | Service is the service configuration of the frontend. |  |  |
 | `tls` _[TLSSpec](#tlsspec)_ | TLS is the TLS configuration of the frontend. |  |  |
 
@@ -330,6 +334,7 @@ _Appears in:_
 | `initializer` _[InitializerSpec](#initializerspec)_ | Initializer is the init container to set up components configurations before running the container. |  |  |
 | `objectStorage` _[ObjectStorageProviderSpec](#objectstorageproviderspec)_ | ObjectStorageProvider is the storage provider for the greptimedb cluster. |  |  |
 | `wal` _[WALProviderSpec](#walproviderspec)_ | WALProvider is the WAL provider for the greptimedb cluster. |  |  |
+| `logging` _[LoggingSpec](#loggingspec)_ | The global logging configuration for all components. It can be overridden by the logging configuration of individual component. |  |  |
 
 
 
@@ -398,6 +403,7 @@ _Appears in:_
 | `datanodeStorage` _[DatanodeStorageSpec](#datanodestoragespec)_ | DatanodeStorage is the default file storage of the datanode. For example, WAL, cache, index etc. |  |  |
 | `wal` _[WALProviderSpec](#walproviderspec)_ | WALProvider is the WAL provider for the greptimedb cluster. |  |  |
 | `config` _string_ | The content of the configuration file of the component in TOML format. |  |  |
+| `logging` _[LoggingSpec](#loggingspec)_ | Logging defines the logging configuration for the component. |  |  |
 
 
 
@@ -433,6 +439,68 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `brokerEndpoints` _string array_ | BrokerEndpoints is the list of Kafka broker endpoints. |  |  |
+
+
+#### LogFormat
+
+_Underlying type:_ _string_
+
+
+
+
+
+_Appears in:_
+- [LoggingSpec](#loggingspec)
+
+| Field | Description |
+| --- | --- |
+| `json` | LogFormatJSON is the `json` format of the logging.<br /> |
+| `text` | LogFormatText is the `text` format of the logging.<br /> |
+
+
+#### LoggingLevel
+
+_Underlying type:_ _string_
+
+LoggingLevel is the level of the logging.
+
+
+
+_Appears in:_
+- [LoggingSpec](#loggingspec)
+
+| Field | Description |
+| --- | --- |
+| `info` | LoggingLevelInfo is the `info` level of the logging.<br /> |
+| `error` | LoggingLevelError is the `error` level of the logging.<br /> |
+| `warn` | LoggingLevelWarn is the `warn` level of the logging.<br /> |
+| `debug` | LoggingLevelDebug is the `debug` level of the logging.<br /> |
+
+
+#### LoggingSpec
+
+
+
+LoggingSpec defines the logging configuration for the component.
+
+
+
+_Appears in:_
+- [ComponentSpec](#componentspec)
+- [DatanodeSpec](#datanodespec)
+- [FlownodeSpec](#flownodespec)
+- [FrontendSpec](#frontendspec)
+- [GreptimeDBClusterSpec](#greptimedbclusterspec)
+- [GreptimeDBStandaloneSpec](#greptimedbstandalonespec)
+- [MetaSpec](#metaspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `level` _[LoggingLevel](#logginglevel)_ | Level is the level of the logging. |  | Enum: [info error warn debug] <br /> |
+| `logsDir` _string_ | LogsDir is the directory path of the logs. |  |  |
+| `persistentWithData` _boolean_ | PersistentWithData indicates whether to persist the log with the datanode data storage. It **ONLY** works for the datanode component.<br />If false, the log will be stored in ephemeral storage. |  |  |
+| `onlyLogToStdout` _boolean_ | OnlyLogToStdout indicates whether to only log to stdout. If true, the log will not be stored in the storage even if the storage is configured. |  |  |
+| `format` _[LogFormat](#logformat)_ | Format is the format of the logging. |  | Enum: [json text] <br /> |
 
 
 #### MainContainerSpec
@@ -478,6 +546,7 @@ _Appears in:_
 | `replicas` _integer_ | The number of replicas of the components. |  | Minimum: 0 <br /> |
 | `config` _string_ | The content of the configuration file of the component in TOML format. |  |  |
 | `template` _[PodTemplateSpec](#podtemplatespec)_ | Template defines the pod template for the component, if not specified, the pod template will use the default value. |  |  |
+| `logging` _[LoggingSpec](#loggingspec)_ | Logging defines the logging configuration for the component. |  |  |
 | `rpcPort` _integer_ | RPCPort is the gRPC port of the meta. |  |  |
 | `httpPort` _integer_ | HTTPPort is the HTTP port of the meta. |  |  |
 | `etcdEndpoints` _string array_ | EtcdEndpoints is the endpoints of the etcd cluster. |  |  |

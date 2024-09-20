@@ -49,11 +49,17 @@ const (
 	// DefaultDatanodeFileStorageName is the default file storage name for the datanode.
 	DefaultDatanodeFileStorageName = "datanode"
 
+	// DefaultLogsDir is the default directory for the logs.
+	DefaultLogsDir = DefaultDataHome + "/logs"
+
 	// DefaultStorageRetainPolicyType is the default storage retain policy type.
 	DefaultStorageRetainPolicyType = StorageRetainPolicyTypeRetain
 
 	// DefaultInitializerImage is the default image for the GreptimeDB initializer.
 	DefaultInitializerImage = "greptime/greptimedb-initializer:latest"
+
+	// DefaultLoggingLevel is the default logging level for the GreptimeDB.
+	DefaultLoggingLevel = LoggingLevelInfo
 )
 
 // The following constants are the constant configuration for the GreptimeDBCluster and GreptimeDBStandalone.

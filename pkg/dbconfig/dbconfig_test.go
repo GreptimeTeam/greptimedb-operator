@@ -73,9 +73,9 @@ func TestFromClusterForDatanodeConfig(t *testing.T) {
 }
 
 func TestFromClusterForDatanodeConfigWithExtraConfig(t *testing.T) {
-	extraConfig := `[logging]
-dir = '/other/dir'
-level = 'error'
+	extraConfig := `[extra]
+key1 = 'value1'
+key2 = 'value2'
 `
 	testCluster := &v1alpha1.GreptimeDBCluster{
 		ObjectMeta: metav1.ObjectMeta{
@@ -94,15 +94,25 @@ level = 'error'
 			Datanode: &v1alpha1.DatanodeSpec{
 				ComponentSpec: v1alpha1.ComponentSpec{
 					Config: extraConfig,
+					Logging: &v1alpha1.LoggingSpec{
+						Level:   v1alpha1.LoggingLevelInfo,
+						LogsDir: "/data/greptimedb/logs",
+						Format:  v1alpha1.LogFormatJSON,
+					},
 				},
 			},
 		},
 	}
 
 	testConfig := `
+[extra]
+  key1 = "value1"
+  key2 = "value2"
+
 [logging]
-  dir = "/other/dir"
-  level = "error"
+  dir = "/data/greptimedb/logs"
+  level = "info"
+  log_format = "json"
 
 [storage]
   bucket = "testbucket"

@@ -76,6 +76,8 @@ func (in *GreptimeDBCluster) defaultSpec() *GreptimeDBClusterSpec {
 		defaultSpec.Flownode = in.defaultFlownodeSpec()
 	}
 
+	defaultSpec.Logging = defaultLogging()
+
 	return defaultSpec
 }
 
@@ -244,6 +246,13 @@ func (in *GreptimeDBStandalone) defaultSpec() *GreptimeDBStandaloneSpec {
 		Service: &ServiceSpec{
 			Type: corev1.ServiceTypeClusterIP,
 		},
+		Logging: &LoggingSpec{
+			Level:              DefaultLoggingLevel,
+			LogsDir:            DefaultLogsDir,
+			Format:             LogFormatText,
+			PersistentWithData: pointer.Bool(false),
+			OnlyLogToStdout:    pointer.Bool(false),
+		},
 		DatanodeStorage: defaultDatanodeStorage(),
 	}
 
@@ -259,6 +268,16 @@ func defaultDatanodeStorage() *DatanodeStorageSpec {
 			MountPath:           DefaultDataHome,
 			StorageRetainPolicy: DefaultStorageRetainPolicyType,
 		},
+	}
+}
+
+func defaultLogging() *LoggingSpec {
+	return &LoggingSpec{
+		Level:              DefaultLoggingLevel,
+		LogsDir:            DefaultLogsDir,
+		Format:             LogFormatText,
+		PersistentWithData: pointer.Bool(false),
+		OnlyLogToStdout:    pointer.Bool(false),
 	}
 }
 

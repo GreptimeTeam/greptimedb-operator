@@ -253,6 +253,10 @@ func (b *flownodeBuilder) generatePodTemplateSpec() corev1.PodTemplateSpec {
 	b.mountConfigDir(podTemplateSpec)
 	b.addInitConfigDirVolume(podTemplateSpec)
 
+	if logging := b.Cluster.GetFlownode().GetLogging(); logging != nil && !logging.IsOnlyLogToStdout() {
+		b.AddLogsVolume(podTemplateSpec, logging.GetLogsDir())
+	}
+
 	podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Ports = b.containerPorts()
 	podTemplateSpec.Spec.InitContainers = append(podTemplateSpec.Spec.InitContainers, *b.generateInitializer())
 	podTemplateSpec.ObjectMeta.Labels = util.MergeStringMap(podTemplateSpec.ObjectMeta.Labels, map[string]string{

@@ -2832,6 +2832,27 @@ spec:
                   image:
                     type: string
                 type: object
+              logging:
+                properties:
+                  format:
+                    enum:
+                    - json
+                    - text
+                    type: string
+                  level:
+                    enum:
+                    - info
+                    - error
+                    - warn
+                    - debug
+                    type: string
+                  logsDir:
+                    type: string
+                  onlyLogToStdout:
+                    type: boolean
+                  persistentWithData:
+                    type: boolean
+                type: object
               mysqlPort:
                 format: int32
                 type: integer
