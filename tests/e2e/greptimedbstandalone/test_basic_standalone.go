@@ -83,11 +83,11 @@ func TestBasicStandalone(ctx context.Context, h *helper.Helper) {
 	Expect(err).NotTo(HaveOccurred(), "failed to delete standalone")
 	Eventually(func() error {
 		// The standalone will be deleted eventually.
-		return h.Get(ctx, client.ObjectKey{Name: testStandalone.Namespace, Namespace: testStandalone.Namespace}, testStandalone)
+		return h.Get(ctx, client.ObjectKey{Name: testStandalone.Name, Namespace: testStandalone.Namespace}, testStandalone)
 	}, helper.DefaultTimeout, time.Second).Should(HaveOccurred())
 
 	By("The PVC of the database should be retained")
-	dataPVCs, err := h.GetPVCs(ctx, testStandalone.Namespace, testStandalone.Name, greptimev1alpha1.StandaloneKind)
+	dataPVCs, err := h.GetPVCs(ctx, testStandalone.Namespace, testStandalone.Name, greptimev1alpha1.StandaloneKind, nil)
 	Expect(err).NotTo(HaveOccurred(), "failed to get data PVCs")
 	Expect(len(dataPVCs)).To(Equal(1), "the number of datanode PVCs should be equal to 1")
 

@@ -30,10 +30,10 @@ import (
 	"github.com/GreptimeTeam/greptimedb-operator/tests/e2e/helper"
 )
 
-// TestBasicCluster tests a basic cluster.
-func TestBasicCluster(ctx context.Context, h *helper.Helper) {
+// TestClusterStandaloneWAL tests a basic cluster.
+func TestClusterStandaloneWAL(ctx context.Context, h *helper.Helper) {
 	const (
-		testCRFile  = "./testdata/resources/cluster/basic/cluster.yaml"
+		testCRFile  = "./testdata/resources/cluster/standalone-wal/cluster.yaml"
 		testSQLFile = "./testdata/sql/cluster/partition.sql"
 	)
 
@@ -87,9 +87,21 @@ func TestBasicCluster(ctx context.Context, h *helper.Helper) {
 	}, helper.DefaultTimeout, time.Second).Should(HaveOccurred())
 
 	By("The PVC of the datanode should be retained")
-	datanodePVCs, err := h.GetPVCs(ctx, testCluster.Namespace, testCluster.Name, greptimev1alpha1.DatanodeComponentKind, nil)
+	datanodePVCs, err := h.GetPVCs(ctx, testCluster.Namespace, testCluster.Name, greptimev1alpha1.DatanodeComponentKind, common.DatanodeFileStorageLabels)
 	Expect(err).NotTo(HaveOccurred(), "failed to get datanode PVCs")
 	Expect(int32(len(datanodePVCs))).To(Equal(*testCluster.Spec.Datanode.Replicas), "the number of datanode PVCs should be equal to the number of datanode replicas")
+
+	By("The PVC of the WAL should be deleted")
+	Eventually(func() error {
+		walPVCs, err := h.GetPVCs(ctx, testCluster.Namespace, testCluster.Name, greptimev1alpha1.DatanodeComponentKind, common.WALFileStorageLabels)
+		if err != nil {
+			return err
+		}
+		if len(walPVCs) != 0 {
+			return fmt.Errorf("the number of WAL PVCs should be 0")
+		}
+		return nil
+	}, helper.DefaultTimeout, time.Second).ShouldNot(HaveOccurred())
 
 	By("Remove the PVC of the datanode")
 	for _, pvc := range datanodePVCs {

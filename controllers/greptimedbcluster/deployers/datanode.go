@@ -237,12 +237,12 @@ func (d *DatanodeDeployer) requestMetasrvForMaintenance(cluster *v1alpha1.Grepti
 func (d *DatanodeDeployer) deleteStorage(ctx context.Context, namespace, name string, additionalLabels map[string]string) error {
 	klog.Infof("Deleting datanode storage...")
 
-	matachedLabels := map[string]string{
+	matchedLabels := map[string]string{
 		constant.GreptimeDBComponentName: common.ResourceName(name, v1alpha1.DatanodeComponentKind),
 	}
 
 	selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
-		MatchLabels: util.MergeStringMap(matachedLabels, additionalLabels),
+		MatchLabels: util.MergeStringMap(matchedLabels, additionalLabels),
 	})
 	if err != nil {
 		return err

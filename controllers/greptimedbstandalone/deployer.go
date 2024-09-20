@@ -154,12 +154,16 @@ func (d *StandaloneDeployer) getStandalone(crdObject client.Object) (*v1alpha1.G
 func (d *StandaloneDeployer) deleteStorage(ctx context.Context, namespace, name string, additionalLabels map[string]string) error {
 	klog.Infof("Deleting standalone storage...")
 
-	matachedLabels := map[string]string{
+	matchedLabels := map[string]string{
 		constant.GreptimeDBComponentName: common.ResourceName(name, v1alpha1.StandaloneKind),
 	}
 
+	if additionalLabels != nil {
+		matchedLabels = util.MergeStringMap(matchedLabels, additionalLabels)
+	}
+
 	selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
-		MatchLabels: util.MergeStringMap(matachedLabels, additionalLabels),
+		MatchLabels: matchedLabels,
 	})
 	if err != nil {
 		return err
