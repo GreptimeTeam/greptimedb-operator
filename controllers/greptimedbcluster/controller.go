@@ -21,6 +21,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/pelletier/go-toml"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -138,21 +139,23 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, err
 	}
 
-	// Means the cluster is just created.
-	if len(cluster.Status.ClusterPhase) == 0 {
-		klog.Infof("Start to create the cluster '%s/%s'", cluster.Namespace, cluster.Name)
+	originalObject := cluster.DeepCopy()
+	if err = cluster.SetDefaults(); err != nil {
+		r.Recorder.Event(cluster, corev1.EventTypeWarning, "SetDefaultValuesFailed", fmt.Sprintf("Set default values failed: %v", err))
+		return ctrl.Result{}, err
+	}
 
-		if err = cluster.SetDefaults(); err != nil {
-			r.Recorder.Event(cluster, corev1.EventTypeWarning, "SetDefaultValuesFailed", fmt.Sprintf("Set default values failed: %v", err))
-			return ctrl.Result{}, err
-		}
-
-		// Update the default values to the cluster spec.
+	// Update the default values to the cluster spec if it is not set.
+	if !cmp.Equal(originalObject.Spec, cluster.Spec) {
 		if err = r.Update(ctx, cluster); err != nil {
 			r.Recorder.Event(cluster, corev1.EventTypeWarning, "UpdateClusterFailed", fmt.Sprintf("Update cluster failed: %v", err))
 			return ctrl.Result{}, err
 		}
+	}
 
+	// Means the cluster is just created.
+	if len(cluster.Status.ClusterPhase) == 0 {
+		klog.Infof("Start to create the cluster '%s/%s'", cluster.Namespace, cluster.Name)
 		if err = r.updateClusterStatus(ctx, cluster, v1alpha1.PhaseStarting); err != nil {
 			return ctrl.Result{}, err
 		}
