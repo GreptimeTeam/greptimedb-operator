@@ -87,7 +87,7 @@ func TestClusterEnableFlow(ctx context.Context, h *helper.Helper) {
 	}, helper.DefaultTimeout, time.Second).Should(HaveOccurred())
 
 	By("The PVC of the datanode should be retained")
-	datanodePVCs, err := h.GetPVCs(ctx, testCluster.Namespace, testCluster.Name, greptimev1alpha1.DatanodeComponentKind, nil)
+	datanodePVCs, err := h.GetPVCs(ctx, testCluster.Namespace, testCluster.Name, greptimev1alpha1.DatanodeComponentKind, common.FileStorageTypeDatanode)
 	Expect(err).NotTo(HaveOccurred(), "failed to get datanode PVCs")
 	Expect(int32(len(datanodePVCs))).To(Equal(*testCluster.Spec.Datanode.Replicas), "the number of datanode PVCs should be equal to the number of datanode replicas")
 

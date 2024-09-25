@@ -145,8 +145,8 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, err
 	}
 
-	// Update the default values to the cluster spec if it is not set.
 	if !cmp.Equal(originalObject.Spec, cluster.Spec) {
+		// Update the default values to the cluster spec if it is not set.
 		if err = r.Update(ctx, cluster); err != nil {
 			r.Recorder.Event(cluster, corev1.EventTypeWarning, "UpdateClusterFailed", fmt.Sprintf("Update cluster failed: %v", err))
 			return ctrl.Result{}, err

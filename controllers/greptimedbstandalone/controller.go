@@ -125,8 +125,8 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, err
 	}
 
-	// Update the default values to the standalone spec if it is not set.
 	if !cmp.Equal(originalObject.Spec, standalone.Spec) {
+		// Update the default values to the standalone spec if it is not set.
 		if err = r.Update(ctx, standalone); err != nil {
 			r.Recorder.Event(standalone, corev1.EventTypeWarning, "UpdateStandaloneFailed", fmt.Sprintf("Update standalone failed: %v", err))
 			return ctrl.Result{}, err

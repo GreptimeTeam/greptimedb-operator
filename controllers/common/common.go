@@ -15,27 +15,30 @@
 package common
 
 import (
+	"context"
+
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 	"github.com/GreptimeTeam/greptimedb-operator/controllers/constant"
 )
 
-var (
-	DatanodeFileStorageLabels = map[string]string{
-		"app.greptime.io/fileStorageType": "datanode",
-	}
+const (
+	// FileStorageTypeLabelKey is the key for PVC labels that indicate the type of file storage.
+	FileStorageTypeLabelKey = "app.greptime.io/fileStorageType"
+)
 
-	WALFileStorageLabels = map[string]string{
-		"app.greptime.io/fileStorageType": "wal",
-	}
+type FileStorageType string
 
-	CacheFileStorageLabels = map[string]string{
-		"app.greptime.io/fileStorageType": "cache",
-	}
+const (
+	FileStorageTypeDatanode FileStorageType = "datanode"
+	FileStorageTypeWAL      FileStorageType = "wal"
+	FileStorageTypeCache    FileStorageType = "cache"
 )
 
 func ResourceName(name string, componentKind v1alpha1.ComponentKind) string {
@@ -169,7 +172,21 @@ func GeneratePodTemplateSpec(kind v1alpha1.ComponentKind, template *v1alpha1.Pod
 	return spec
 }
 
-func FileStorageToPVC(fs v1alpha1.FileStorageAccessor, labels map[string]string) *corev1.PersistentVolumeClaim {
+func FileStorageToPVC(fs v1alpha1.FileStorageAccessor, fsType FileStorageType) *corev1.PersistentVolumeClaim {
+	var labels map[string]string
+	switch fsType {
+	case FileStorageTypeWAL:
+		labels = map[string]string{
+			FileStorageTypeLabelKey: string(FileStorageTypeWAL),
+		}
+	case FileStorageTypeCache:
+		labels = map[string]string{
+			FileStorageTypeLabelKey: string(FileStorageTypeCache),
+		}
+	default:
+		// For legacy datanode PVCs, we don't need to set the file storage type label because statefulset doesn't support to modify the PVC labels.
+		labels = nil
+	}
 	return &corev1.PersistentVolumeClaim{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   fs.GetName(),
@@ -187,4 +204,56 @@ func FileStorageToPVC(fs v1alpha1.FileStorageAccessor, labels map[string]string)
 			},
 		},
 	}
+}
+
+func GetPVCs(ctx context.Context, k8sClient client.Client, namespace, name string, kind v1alpha1.ComponentKind, fsType FileStorageType) ([]corev1.PersistentVolumeClaim, error) {
+	var labelSelector *metav1.LabelSelector
+	switch fsType {
+	case FileStorageTypeDatanode:
+		// Every PVC has the label of the datanode component.
+		// If we want to delete the datanode PVCs, we need to filter out the WAL and cache PVCs from the datanode PVCs.
+		labelSelector = &metav1.LabelSelector{
+			MatchExpressions: []metav1.LabelSelectorRequirement{
+				{
+					Key:      FileStorageTypeLabelKey,
+					Operator: metav1.LabelSelectorOpNotIn,
+					Values:   []string{string(FileStorageTypeWAL), string(FileStorageTypeCache)},
+				},
+				{
+					Key:      constant.GreptimeDBComponentName,
+					Operator: metav1.LabelSelectorOpIn,
+					Values:   []string{ResourceName(name, kind)},
+				},
+			},
+		}
+	case FileStorageTypeWAL:
+		labelSelector = &metav1.LabelSelector{
+			MatchLabels: map[string]string{
+				FileStorageTypeLabelKey: string(FileStorageTypeWAL),
+			},
+		}
+	case FileStorageTypeCache:
+		labelSelector = &metav1.LabelSelector{
+			MatchLabels: map[string]string{
+				FileStorageTypeLabelKey: string(FileStorageTypeCache),
+			},
+		}
+	}
+
+	selector, err := metav1.LabelSelectorAsSelector(labelSelector)
+	if err != nil {
+		return nil, err
+	}
+
+	claims := new(corev1.PersistentVolumeClaimList)
+
+	err = k8sClient.List(ctx, claims, client.InNamespace(namespace), client.MatchingLabelsSelector{Selector: selector})
+	if errors.IsNotFound(err) {
+		return nil, err
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	return claims.Items, nil
 }
