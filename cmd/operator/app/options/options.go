@@ -27,12 +27,16 @@ type Options struct {
 	MetricsAddr          string
 	HealthProbeAddr      string
 	EnableLeaderElection bool
+	EnableAPIServer      bool
+	APIServerPort        int
 }
 
 func NewDefaultOptions() *Options {
 	return &Options{
 		MetricsAddr:     defaultMetricsAddr,
 		HealthProbeAddr: defaultHealthProbeAddr,
+		EnableAPIServer: false,
+		APIServerPort:   8081,
 	}
 }
 
@@ -40,4 +44,6 @@ func (o *Options) AddFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&o.MetricsAddr, "metrics-bind-address", o.MetricsAddr, "The address the metric endpoint binds to.")
 	fs.StringVar(&o.HealthProbeAddr, "health-probe-bind-address", o.HealthProbeAddr, "The address the probe endpoint binds to.")
 	fs.BoolVar(&o.EnableLeaderElection, "enable-leader-election", o.EnableLeaderElection, "Enable leader election for controller manager. Enabling this will ensure there is only one active controller manager.")
+	fs.BoolVar(&o.EnableAPIServer, "enable-apiserver", o.EnableAPIServer, "Enable API server for GreptimeDB operator.")
+	fs.IntVar(&o.APIServerPort, "apiserver-port", o.APIServerPort, "The port the API server binds to.")
 }
