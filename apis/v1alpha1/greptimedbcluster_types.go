@@ -32,6 +32,10 @@ type ComponentSpec struct {
 	// Template defines the pod template for the component, if not specified, the pod template will use the default value.
 	// +optional
 	Template *PodTemplateSpec `json:"template,omitempty"`
+
+	// Logging defines the logging configuration for the component.
+	// +optional
+	Logging *LoggingSpec `json:"logging,omitempty"`
 }
 
 // MetaSpec is the specification for meta component.
@@ -68,6 +72,13 @@ func (in *MetaSpec) GetConfig() string {
 		return in.Config
 	}
 	return ""
+}
+
+func (in *MetaSpec) GetLogging() *LoggingSpec {
+	if in != nil {
+		return in.Logging
+	}
+	return nil
 }
 
 func (in *MetaSpec) IsEnableRegionFailover() bool {
@@ -126,6 +137,13 @@ func (in *FrontendSpec) GetConfig() string {
 	return ""
 }
 
+func (in *FrontendSpec) GetLogging() *LoggingSpec {
+	if in != nil {
+		return in.Logging
+	}
+	return nil
+}
+
 // DatanodeSpec is the specification for datanode component.
 type DatanodeSpec struct {
 	ComponentSpec `json:",inline"`
@@ -148,6 +166,13 @@ func (in *DatanodeSpec) GetConfig() string {
 		return in.Config
 	}
 	return ""
+}
+
+func (in *DatanodeSpec) GetLogging() *LoggingSpec {
+	if in != nil {
+		return in.Logging
+	}
+	return nil
 }
 
 func (in *DatanodeSpec) GetFileStorage() *FileStorage {
@@ -178,6 +203,13 @@ func (in *FlownodeSpec) GetConfig() string {
 		return in.Config
 	}
 	return ""
+}
+
+func (in *FlownodeSpec) GetLogging() *LoggingSpec {
+	if in != nil {
+		return in.Logging
+	}
+	return nil
 }
 
 // InitializerSpec is the init container to set up components configurations before running the container.
@@ -244,6 +276,10 @@ type GreptimeDBClusterSpec struct {
 	// WALProvider is the WAL provider for the greptimedb cluster.
 	// +optional
 	WALProvider *WALProviderSpec `json:"wal,omitempty"`
+
+	// The global logging configuration for all components. It can be overridden by the logging configuration of individual component.
+	// +optional
+	Logging *LoggingSpec `json:"logging,omitempty"`
 }
 
 func (in *GreptimeDBCluster) GetBaseMainContainer() *MainContainerSpec {
@@ -258,6 +294,13 @@ func (in *GreptimeDBCluster) GetVersion() string {
 		return in.Spec.Version
 	}
 	return ""
+}
+
+func (in *GreptimeDBCluster) GetLogging() *LoggingSpec {
+	if in != nil {
+		return in.Spec.Logging
+	}
+	return nil
 }
 
 func (in *GreptimeDBCluster) GetFrontend() *FrontendSpec {

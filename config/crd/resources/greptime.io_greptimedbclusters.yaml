@@ -2819,6 +2819,27 @@ spec:
                   httpPort:
                     format: int32
                     type: integer
+                  logging:
+                    properties:
+                      format:
+                        enum:
+                        - json
+                        - text
+                        type: string
+                      level:
+                        enum:
+                        - info
+                        - error
+                        - warn
+                        - debug
+                        type: string
+                      logsDir:
+                        type: string
+                      onlyLogToStdout:
+                        type: boolean
+                      persistentWithData:
+                        type: boolean
+                    type: object
                   replicas:
                     format: int32
                     minimum: 0
@@ -5615,6 +5636,27 @@ spec:
                 properties:
                   config:
                     type: string
+                  logging:
+                    properties:
+                      format:
+                        enum:
+                        - json
+                        - text
+                        type: string
+                      level:
+                        enum:
+                        - info
+                        - error
+                        - warn
+                        - debug
+                        type: string
+                      logsDir:
+                        type: string
+                      onlyLogToStdout:
+                        type: boolean
+                      persistentWithData:
+                        type: boolean
+                    type: object
                   replicas:
                     format: int32
                     minimum: 0
@@ -8389,6 +8431,27 @@ spec:
                 properties:
                   config:
                     type: string
+                  logging:
+                    properties:
+                      format:
+                        enum:
+                        - json
+                        - text
+                        type: string
+                      level:
+                        enum:
+                        - info
+                        - error
+                        - warn
+                        - debug
+                        type: string
+                      logsDir:
+                        type: string
+                      onlyLogToStdout:
+                        type: boolean
+                      persistentWithData:
+                        type: boolean
+                    type: object
                   replicas:
                     format: int32
                     minimum: 0
@@ -11186,6 +11249,27 @@ spec:
                   image:
                     type: string
                 type: object
+              logging:
+                properties:
+                  format:
+                    enum:
+                    - json
+                    - text
+                    type: string
+                  level:
+                    enum:
+                    - info
+                    - error
+                    - warn
+                    - debug
+                    type: string
+                  logsDir:
+                    type: string
+                  onlyLogToStdout:
+                    type: boolean
+                  persistentWithData:
+                    type: boolean
+                type: object
               meta:
                 properties:
                   config:
@@ -11201,6 +11285,27 @@ spec:
                   httpPort:
                     format: int32
                     type: integer
+                  logging:
+                    properties:
+                      format:
+                        enum:
+                        - json
+                        - text
+                        type: string
+                      level:
+                        enum:
+                        - info
+                        - error
+                        - warn
+                        - debug
+                        type: string
+                      logsDir:
+                        type: string
+                      onlyLogToStdout:
+                        type: boolean
+                      persistentWithData:
+                        type: boolean
+                    type: object
                   replicas:
                     format: int32
                     minimum: 0

@@ -325,6 +325,10 @@ func (b *metaBuilder) generatePodTemplateSpec() *corev1.PodTemplateSpec {
 
 	b.MountConfigDir(podTemplateSpec)
 
+	if logging := b.Cluster.GetMeta().GetLogging(); logging != nil && !logging.IsOnlyLogToStdout() {
+		b.AddLogsVolume(podTemplateSpec, logging.GetLogsDir())
+	}
+
 	podTemplateSpec.ObjectMeta.Labels = util.MergeStringMap(podTemplateSpec.ObjectMeta.Labels, map[string]string{
 		constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.ComponentKind),
 	})

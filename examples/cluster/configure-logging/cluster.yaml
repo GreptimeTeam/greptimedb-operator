@@ -1,0 +1,21 @@
+apiVersion: greptime.io/v1alpha1
+kind: GreptimeDBCluster
+metadata:
+  name: basic
+spec:
+  logging:
+    format: json
+    level: debug
+    logsDir: /data/greptimedb/logs
+    onlyLogToStdout: false
+  base:
+    main:
+      image: greptime/greptimedb:latest
+  frontend:
+    replicas: 1
+  meta:
+    replicas: 1
+    etcdEndpoints:
+      - "etcd.etcd-cluster.svc.cluster.local:2379"
+  datanode:
+    replicas: 1

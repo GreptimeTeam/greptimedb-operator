@@ -18,6 +18,12 @@ spec:
           port: 4000
   service:
     type: ClusterIP
+  logging:
+    format: text
+    level: info
+    logsDir: /data/greptimedb/logs
+    onlyLogToStdout: false
+    persistentWithData: false
   datanodeStorage:
     dataHome: /data/greptimedb
     fs:

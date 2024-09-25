@@ -140,3 +140,39 @@ type WALConfig struct {
 	// The kafka broker endpoints.
 	WalBrokerEndpoints []string `tomlmapping:"wal.broker_endpoints"`
 }
+
+// LoggingConfig is the configuration for the logging.
+type LoggingConfig struct {
+	// The directory to store the log files. If set to empty, logs will not be written to files.
+	Dir *string `tomlmapping:"logging.dir"`
+
+	// The log level. Can be `info`/`debug`/`warn`/`error`.
+	Level *string `tomlmapping:"logging.level"`
+
+	// The log format. Can be `text`/`json`.
+	LogFormat *string `tomlmapping:"logging.log_format"`
+}
+
+// ConfigureLogging configures the logging config with the given logging spec.
+func (c *LoggingConfig) ConfigureLogging(global *v1alpha1.LoggingSpec, component *v1alpha1.LoggingSpec) {
+	if global == nil && component == nil {
+		return
+	}
+
+	// Use the component logging config if it's not nil.
+	var spec *v1alpha1.LoggingSpec
+	if component != nil {
+		spec = component
+	} else {
+		spec = global
+	}
+
+	if spec.IsOnlyLogToStdout() {
+		c.Dir = nil
+	} else if spec.LogsDir != "" {
+		c.Dir = pointer.String(spec.LogsDir)
+	}
+
+	c.Level = pointer.String(string(spec.Level))
+	c.LogFormat = pointer.String(string(spec.Format))
+}

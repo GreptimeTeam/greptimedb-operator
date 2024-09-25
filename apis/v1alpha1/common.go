@@ -414,6 +414,81 @@ func (in *KafkaWAL) GetBrokerEndpoints() []string {
 	return nil
 }
 
+// LoggingLevel is the level of the logging.
+type LoggingLevel string
+
+const (
+	// LoggingLevelInfo is the `info` level of the logging.
+	LoggingLevelInfo LoggingLevel = "info"
+
+	// LoggingLevelError is the `error` level of the logging.
+	LoggingLevelError LoggingLevel = "error"
+
+	// LoggingLevelWarn is the `warn` level of the logging.
+	LoggingLevelWarn LoggingLevel = "warn"
+
+	// LoggingLevelDebug is the `debug` level of the logging.
+	LoggingLevelDebug LoggingLevel = "debug"
+)
+
+type LogFormat string
+
+const (
+	// LogFormatJSON is the `json` format of the logging.
+	LogFormatJSON LogFormat = "json"
+
+	// LogFormatText is the `text` format of the logging.
+	LogFormatText LogFormat = "text"
+)
+
+// LoggingSpec defines the logging configuration for the component.
+type LoggingSpec struct {
+	// Level is the level of the logging.
+	// +optional
+	// +kubebuilder:validation:Enum:={"info", "error", "warn", "debug"}
+	Level LoggingLevel `json:"level,omitempty"`
+
+	// LogsDir is the directory path of the logs.
+	// +optional
+	LogsDir string `json:"logsDir,omitempty"`
+
+	// PersistentWithData indicates whether to persist the log with the datanode data storage. It **ONLY** works for the datanode component.
+	// If false, the log will be stored in ephemeral storage.
+	// +optional
+	PersistentWithData *bool `json:"persistentWithData,omitempty"`
+
+	// OnlyLogToStdout indicates whether to only log to stdout. If true, the log will not be stored in the storage even if the storage is configured.
+	// +optional
+	OnlyLogToStdout *bool `json:"onlyLogToStdout,omitempty"`
+
+	// Format is the format of the logging.
+	// +optional
+	// +kubebuilder:validation:Enum:={"json", "text"}
+	Format LogFormat `json:"format,omitempty"`
+}
+
+func (in *LoggingSpec) GetLevel() LoggingLevel {
+	if in != nil {
+		return in.Level
+	}
+	return ""
+}
+
+func (in *LoggingSpec) GetLogsDir() string {
+	if in != nil {
+		return in.LogsDir
+	}
+	return ""
+}
+
+func (in *LoggingSpec) IsPersistentWithData() bool {
+	return in != nil && in.PersistentWithData != nil && *in.PersistentWithData
+}
+
+func (in *LoggingSpec) IsOnlyLogToStdout() bool {
+	return in != nil && in.OnlyLogToStdout != nil && *in.OnlyLogToStdout
+}
+
 // ServiceSpec defines the service configuration for the component.
 type ServiceSpec struct {
 	// Type is the type of the service.

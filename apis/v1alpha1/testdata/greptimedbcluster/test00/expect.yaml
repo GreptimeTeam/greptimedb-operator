@@ -11,6 +11,12 @@ spec:
   rpcPort: 4001
   mysqlPort: 4002
   postgreSQLPort: 4003
+  logging:
+    format: text
+    level: info
+    logsDir: /data/greptimedb/logs
+    onlyLogToStdout: false
+    persistentWithData: false
   base:
     main:
       image: greptime/greptimedb:latest

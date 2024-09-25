@@ -75,6 +75,10 @@ type GreptimeDBStandaloneSpec struct {
 	// The content of the configuration file of the component in TOML format.
 	// +optional
 	Config string `json:"config,omitempty"`
+
+	// Logging defines the logging configuration for the component.
+	// +optional
+	Logging *LoggingSpec `json:"logging,omitempty"`
 }
 
 // GreptimeDBStandaloneStatus defines the observed state of GreptimeDBStandalone
@@ -191,6 +195,13 @@ func (in *GreptimeDBStandalone) GetDataHome() string {
 		return in.Spec.DatanodeStorage.DataHome
 	}
 	return ""
+}
+
+func (in *GreptimeDBStandalone) GetLogging() *LoggingSpec {
+	if in != nil {
+		return in.Spec.Logging
+	}
+	return nil
 }
 
 func (in *GreptimeDBStandaloneStatus) GetCondition(conditionType ConditionType) *Condition {

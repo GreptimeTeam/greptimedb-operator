@@ -457,4 +457,18 @@ func (b *standaloneBuilder) addVolumeMounts(template *corev1.PodTemplateSpec) {
 				},
 			)
 	}
+
+	if logging := b.standalone.GetLogging(); logging != nil && !logging.IsOnlyLogToStdout() && !logging.IsPersistentWithData() {
+		template.Spec.Volumes = append(template.Spec.Volumes, corev1.Volume{
+			Name: "logs",
+			VolumeSource: corev1.VolumeSource{
+				EmptyDir: &corev1.EmptyDirVolumeSource{},
+			},
+		})
+
+		template.Spec.Containers[constant.MainContainerIndex].VolumeMounts = append(template.Spec.Containers[constant.MainContainerIndex].VolumeMounts, corev1.VolumeMount{
+			Name:      "logs",
+			MountPath: logging.GetLogsDir(),
+		})
+	}
 }
