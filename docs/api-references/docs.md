@@ -339,6 +339,7 @@ _Appears in:_
 | `objectStorage` _[ObjectStorageProviderSpec](#objectstorageproviderspec)_ | ObjectStorageProvider is the storage provider for the greptimedb cluster. |  |  |
 | `wal` _[WALProviderSpec](#walproviderspec)_ | WALProvider is the WAL provider for the greptimedb cluster. |  |  |
 | `logging` _[LoggingSpec](#loggingspec)_ | The global logging configuration for all components. It can be overridden by the logging configuration of individual component. |  |  |
+| `monitoring` _[MonitoringSpec](#monitoringspec)_ | Monitoring is the specification for monitor bootstrapping. It will create a standalone greptimedb instance to monitor the cluster. |  |  |
 
 
 
@@ -390,6 +391,7 @@ GreptimeDBStandaloneSpec defines the desired state of GreptimeDBStandalone
 
 _Appears in:_
 - [GreptimeDBStandalone](#greptimedbstandalone)
+- [MonitoringSpec](#monitoringspec)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
@@ -462,6 +464,22 @@ _Appears in:_
 | `text` | LogFormatText is the `text` format of the logging.<br /> |
 
 
+#### LogPipeline
+
+
+
+LogPipeline is the specification for log pipeline.
+
+
+
+_Appears in:_
+- [LogsCollectionSpec](#logscollectionspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `data` _string_ | The content of the pipeline configuration file in YAML format. |  |  |
+
+
 #### LoggingLevel
 
 _Underlying type:_ _string_
@@ -505,6 +523,22 @@ _Appears in:_
 | `persistentWithData` _boolean_ | PersistentWithData indicates whether to persist the log with the datanode data storage. It **ONLY** works for the datanode component.<br />If false, the log will be stored in ephemeral storage. |  |  |
 | `onlyLogToStdout` _boolean_ | OnlyLogToStdout indicates whether to only log to stdout. If true, the log will not be stored in the storage even if the storage is configured. |  |  |
 | `format` _[LogFormat](#logformat)_ | Format is the format of the logging. |  | Enum: [json text] <br /> |
+
+
+#### LogsCollectionSpec
+
+
+
+
+
+
+
+_Appears in:_
+- [MonitoringSpec](#monitoringspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `pipeline` _[LogPipeline](#logpipeline)_ | The specification of the log pipeline. |  |  |
 
 
 #### MainContainerSpec
@@ -575,6 +609,41 @@ _Appears in:_
 | `replicas` _integer_ | Replicas is the number of replicas of the meta. |  |  |
 | `readyReplicas` _integer_ | ReadyReplicas is the number of ready replicas of the meta. |  |  |
 | `etcdEndpoints` _string array_ | EtcdEndpoints is the endpoints of the etcd cluster. |  |  |
+
+
+#### MonitoringSpec
+
+
+
+MonitoringSpec is the specification for monitor bootstrapping. It will create a standalone greptimedb instance to monitor the cluster.
+
+
+
+_Appears in:_
+- [GreptimeDBClusterSpec](#greptimedbclusterspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `enabled` _boolean_ | Enabled indicates whether to enable the monitoring service. |  |  |
+| `standalone` _[GreptimeDBStandaloneSpec](#greptimedbstandalonespec)_ | The specification of the standalone greptimedb instance. |  |  |
+| `logsCollection` _[LogsCollectionSpec](#logscollectionspec)_ | The specification of cluster logs collection. |  |  |
+| `vector` _[VectorSpec](#vectorspec)_ | The specification of the vector instance. |  |  |
+
+
+#### MonitoringStatus
+
+
+
+MonitoringStatus is the status of the monitoring service.
+
+
+
+_Appears in:_
+- [GreptimeDBClusterStatus](#greptimedbclusterstatus)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `internalDNSName` _string_ | InternalDNSName is the internal DNS name of the monitoring service. For example, 'mycluster-standalone-monitor.default.svc.cluster.local'. |  |  |
 
 
 #### OSSStorage
@@ -815,6 +884,23 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `secretName` _string_ | SecretName is the name of the secret that contains the TLS certificates.<br />The secret must be in the same namespace with the greptime resource.<br />The secret must contain keys named `tls.crt` and `tls.key`. |  |  |
+
+
+#### VectorSpec
+
+
+
+VectorSpec is the specification for vector instance.
+
+
+
+_Appears in:_
+- [MonitoringSpec](#monitoringspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `image` _string_ | The image of the vector instance. |  |  |
+| `resource` _[ResourceRequirements](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#resourcerequirements-v1-core)_ | The resources of the vector instance. |  |  |
 
 
 #### WALProviderSpec

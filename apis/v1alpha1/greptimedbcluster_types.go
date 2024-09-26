@@ -15,6 +15,7 @@
 package v1alpha1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -322,6 +323,52 @@ type GreptimeDBClusterSpec struct {
 	// The global logging configuration for all components. It can be overridden by the logging configuration of individual component.
 	// +optional
 	Logging *LoggingSpec `json:"logging,omitempty"`
+
+	// Monitoring is the specification for monitor bootstrapping. It will create a standalone greptimedb instance to monitor the cluster.
+	// +optional
+	Monitoring *MonitoringSpec `json:"monitoring,omitempty"`
+}
+
+// MonitoringSpec is the specification for monitor bootstrapping. It will create a standalone greptimedb instance to monitor the cluster.
+type MonitoringSpec struct {
+	// Enabled indicates whether to enable the monitoring service.
+	// +required
+	Enabled bool `json:"enabled"`
+
+	// The specification of the standalone greptimedb instance.
+	// +optional
+	Standalone *GreptimeDBStandaloneSpec `json:"standalone,omitempty"`
+
+	// The specification of cluster logs collection.
+	LogsCollection *LogsCollectionSpec `json:"logsCollection,omitempty"`
+
+	// The specification of the vector instance.
+	// +optional
+	Vector *VectorSpec `json:"vector,omitempty"`
+}
+
+type LogsCollectionSpec struct {
+	// The specification of the log pipeline.
+	// +optional
+	Pipeline *LogPipeline `json:"pipeline,omitempty"`
+}
+
+// LogPipeline is the specification for log pipeline.
+type LogPipeline struct {
+	// The content of the pipeline configuration file in YAML format.
+	// +optional
+	Data string `json:"data,omitempty"`
+}
+
+// VectorSpec is the specification for vector instance.
+type VectorSpec struct {
+	// The image of the vector instance.
+	// +optional
+	Image string `json:"image,omitempty"`
+
+	// The resources of the vector instance.
+	// +optional
+	Resource corev1.ResourceRequirements `json:"resource,omitempty"`
 }
 
 func (in *GreptimeDBCluster) GetBaseMainContainer() *MainContainerSpec {
@@ -427,6 +474,10 @@ type GreptimeDBClusterStatus struct {
 	// +optional
 	Flownode FlownodeStatus `json:"flownode,omitempty"`
 
+	// The status of the monitoring service.
+	// +optional
+	Monitoring MonitoringStatus `json:"monitoring,omitempty"`
+
 	// Version is the version of greptimedb.
 	// +optional
 	Version string `json:"version,omitempty"`
@@ -482,6 +533,13 @@ type FlownodeStatus struct {
 
 	// ReadyReplicas is the number of ready replicas of the flownode.
 	ReadyReplicas int32 `json:"readyReplicas"`
+}
+
+// MonitoringStatus is the status of the monitoring service.
+type MonitoringStatus struct {
+	// InternalDNSName is the internal DNS name of the monitoring service. For example, 'mycluster-standalone-monitor.default.svc.cluster.local'.
+	// +optional
+	InternalDNSName string `json:"internalDNSName,omitempty"`
 }
 
 func (in *GreptimeDBClusterStatus) GetCondition(conditionType ConditionType) *Condition {
