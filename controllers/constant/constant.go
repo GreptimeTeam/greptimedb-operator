@@ -28,4 +28,13 @@ const (
 	InitConfigVolumeName     = "init-config"
 	TLSVolumeName            = "tls"
 	DefaultTLSMode           = "prefer"
+
+	// LogsTableName is the table name of storing greptimedb logs.
+	LogsTableName = "gtlogs"
+
+	// DefaultVectorConfigName is the default name of vector config.
+	DefaultVectorConfigName = "vector-config"
+
+	// DefaultLogsVolumeName is the default name of logs volume.
+	DefaultLogsVolumeName = "logs"
 )

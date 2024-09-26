@@ -463,6 +463,9 @@ func (b *datanodeBuilder) generatePodTemplateSpec() corev1.PodTemplateSpec {
 		podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Args = b.generateMainContainerArgs()
 	}
 
+	podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Ports = b.containerPorts()
+	podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Env = append(podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Env, b.env(v1alpha1.DatanodeComponentKind)...)
+
 	b.mountConfigDir(podTemplateSpec)
 	b.addVolumeMounts(podTemplateSpec)
 	b.addInitConfigDirVolume(podTemplateSpec)
@@ -472,7 +475,11 @@ func (b *datanodeBuilder) generatePodTemplateSpec() corev1.PodTemplateSpec {
 		b.AddLogsVolume(podTemplateSpec, logging.GetLogsDir())
 	}
 
-	podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Ports = b.containerPorts()
+	if b.Cluster.GetMonitoring() != nil && b.Cluster.GetMonitoring().GetVector() != nil {
+		b.AddVectorConfigVolume(podTemplateSpec)
+		b.AddVectorSidecar(podTemplateSpec, v1alpha1.DatanodeComponentKind)
+	}
+
 	podTemplateSpec.Spec.InitContainers = append(podTemplateSpec.Spec.InitContainers, *b.generateInitializer())
 	podTemplateSpec.ObjectMeta.Labels = util.MergeStringMap(podTemplateSpec.ObjectMeta.Labels, map[string]string{
 		constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.ComponentKind),
@@ -529,24 +536,7 @@ func (b *datanodeBuilder) generateInitializer() *corev1.Container {
 		},
 
 		// TODO(zyy17): the datanode don't support to accept hostname.
-		Env: []corev1.EnvVar{
-			{
-				Name: deployer.EnvPodIP,
-				ValueFrom: &corev1.EnvVarSource{
-					FieldRef: &corev1.ObjectFieldSelector{
-						FieldPath: "status.podIP",
-					},
-				},
-			},
-			{
-				Name: deployer.EnvPodName,
-				ValueFrom: &corev1.EnvVarSource{
-					FieldRef: &corev1.ObjectFieldSelector{
-						FieldPath: "metadata.name",
-					},
-				},
-			},
-		},
+		Env: b.env(v1alpha1.DatanodeComponentKind),
 	}
 
 	return initializer

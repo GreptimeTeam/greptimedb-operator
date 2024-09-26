@@ -525,7 +525,7 @@ _Appears in:_
 
 
 
-
+LogsCollectionSpec is the specification for cluster logs collection.
 
 
 

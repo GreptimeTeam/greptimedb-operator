@@ -188,3 +188,11 @@ func FileStorageToPVC(fs v1alpha1.FileStorageAccessor, labels map[string]string)
 		},
 	}
 }
+
+func MonitoringServiceName(name string) string {
+	return name + "-monitor"
+}
+
+func LogsPipelineName(namespace, name string) string {
+	return namespace + "-" + name + "-logs"
+}
