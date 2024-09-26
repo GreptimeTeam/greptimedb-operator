@@ -16,6 +16,7 @@ The following examples suppose that you have installed the etcd cluster in the `
 - [AWS NLB](./cluster/aws-nlb/cluster.yaml): Create a GreptimeDB cluster with the AWS NLB service. Please ensure you have already configured it.
 - [Standalone WAL](./cluster/standalone-wal/cluster.yaml): Create a GreptimeDB cluster with standalone storage for WAL.
 - [Configure Logging](./cluster/configure-logging/cluster.yaml): Create a GreptimeDB cluster with custom logging configuration.
+- [Enable Monitoring Bootstrap](./cluster/enable-monitoring/cluster.yaml): Create a GreptimeDB cluster with monitoring enabled.
 
 ## Standalone
 
