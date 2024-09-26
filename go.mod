@@ -4,6 +4,7 @@ go 1.21
 
 require (
 	dario.cat/mergo v1.0.1
+	github.com/avast/retry-go v3.0.0+incompatible
 	github.com/gin-gonic/gin v1.10.0
 	github.com/google/go-cmp v0.6.0
 	github.com/jackc/pgx/v5 v5.6.0

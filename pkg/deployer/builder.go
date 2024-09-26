@@ -25,6 +25,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
 
+	greptimev1alpha1 "github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/util"
 )
 
@@ -49,6 +50,9 @@ type Builder interface {
 
 	// BuildPodMonitor builds a Prometheus podmonitor.
 	BuildPodMonitor() Builder
+
+	// BuildGreptimeDBStandalone builds a GreptimeDBStandalone.
+	BuildGreptimeDBStandalone() Builder
 
 	// SetControllerAndAnnotation sets the controller reference and annotation for the object.
 	SetControllerAndAnnotation() Builder
@@ -89,6 +93,10 @@ func (b *DefaultBuilder) BuildPodMonitor() Builder {
 	return b
 }
 
+func (b *DefaultBuilder) BuildGreptimeDBStandalone() Builder {
+	return b
+}
+
 func (b *DefaultBuilder) SetControllerAndAnnotation() Builder {
 	var (
 		spec       interface{}
@@ -110,6 +118,9 @@ func (b *DefaultBuilder) SetControllerAndAnnotation() Builder {
 			spec = v.Spec
 			controlled = v
 		case *monitoringv1.PodMonitor:
+			spec = v.Spec
+			controlled = v
+		case *greptimev1alpha1.GreptimeDBStandalone:
 			spec = v.Spec
 			controlled = v
 		default:

@@ -321,12 +321,17 @@ func (b *metaBuilder) generatePodTemplateSpec() *corev1.PodTemplateSpec {
 	}
 
 	podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Ports = b.containerPorts()
-	podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Env = append(podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Env, b.env()...)
+	podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Env = append(podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Env, b.env(v1alpha1.MetaComponentKind)...)
 
 	b.MountConfigDir(podTemplateSpec)
 
 	if logging := b.Cluster.GetMeta().GetLogging(); logging != nil && !logging.IsOnlyLogToStdout() {
 		b.AddLogsVolume(podTemplateSpec, logging.GetLogsDir())
+	}
+
+	if b.Cluster.GetMonitoring() != nil && b.Cluster.GetMonitoring().GetVector() != nil {
+		b.AddVectorConfigVolume(podTemplateSpec)
+		b.AddVectorSidecar(podTemplateSpec, v1alpha1.MetaComponentKind)
 	}
 
 	podTemplateSpec.ObjectMeta.Labels = util.MergeStringMap(podTemplateSpec.ObjectMeta.Labels, map[string]string{
@@ -373,19 +378,6 @@ func (b *metaBuilder) containerPorts() []corev1.ContainerPort {
 			Name:          "http",
 			Protocol:      corev1.ProtocolTCP,
 			ContainerPort: b.Cluster.Spec.Meta.HTTPPort,
-		},
-	}
-}
-
-func (b *metaBuilder) env() []corev1.EnvVar {
-	return []corev1.EnvVar{
-		{
-			Name: deployer.EnvPodIP,
-			ValueFrom: &corev1.EnvVarSource{
-				FieldRef: &corev1.ObjectFieldSelector{
-					FieldPath: "status.podIP",
-				},
-			},
 		},
 	}
 }

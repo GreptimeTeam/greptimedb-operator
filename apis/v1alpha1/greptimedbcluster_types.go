@@ -347,10 +347,18 @@ type MonitoringSpec struct {
 	Vector *VectorSpec `json:"vector,omitempty"`
 }
 
+// LogsCollectionSpec is the specification for cluster logs collection.
 type LogsCollectionSpec struct {
 	// The specification of the log pipeline.
 	// +optional
 	Pipeline *LogPipeline `json:"pipeline,omitempty"`
+}
+
+func (in *LogsCollectionSpec) GetPipeline() *LogPipeline {
+	if in != nil {
+		return in.Pipeline
+	}
+	return nil
 }
 
 // LogPipeline is the specification for log pipeline.
@@ -358,6 +366,13 @@ type LogPipeline struct {
 	// The content of the pipeline configuration file in YAML format.
 	// +optional
 	Data string `json:"data,omitempty"`
+}
+
+func (in *LogPipeline) GetData() string {
+	if in != nil {
+		return in.Data
+	}
+	return ""
 }
 
 // VectorSpec is the specification for vector instance.
@@ -369,6 +384,31 @@ type VectorSpec struct {
 	// The resources of the vector instance.
 	// +optional
 	Resource corev1.ResourceRequirements `json:"resource,omitempty"`
+}
+
+func (in *MonitoringSpec) IsEnabled() bool {
+	return in != nil && in.Enabled
+}
+
+func (in *MonitoringSpec) GetStandalone() *GreptimeDBStandaloneSpec {
+	if in != nil {
+		return in.Standalone
+	}
+	return nil
+}
+
+func (in *MonitoringSpec) GetLogsCollection() *LogsCollectionSpec {
+	if in != nil {
+		return in.LogsCollection
+	}
+	return nil
+}
+
+func (in *MonitoringSpec) GetVector() *VectorSpec {
+	if in != nil {
+		return in.Vector
+	}
+	return nil
 }
 
 func (in *GreptimeDBCluster) GetBaseMainContainer() *MainContainerSpec {
@@ -452,6 +492,13 @@ func (in *GreptimeDBCluster) GetObjectStorageProvider() *ObjectStorageProviderSp
 func (in *GreptimeDBCluster) GetPrometheusMonitor() *PrometheusMonitorSpec {
 	if in != nil {
 		return in.Spec.PrometheusMonitor
+	}
+	return nil
+}
+
+func (in *GreptimeDBCluster) GetMonitoring() *MonitoringSpec {
+	if in != nil {
+		return in.Spec.Monitoring
 	}
 	return nil
 }

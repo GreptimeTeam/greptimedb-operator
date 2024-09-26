@@ -15,11 +15,15 @@
 package deployers
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io/fs"
+	"text/template"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/util/retry"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -28,6 +32,7 @@ import (
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 	"github.com/GreptimeTeam/greptimedb-operator/controllers/common"
 	"github.com/GreptimeTeam/greptimedb-operator/controllers/constant"
+	"github.com/GreptimeTeam/greptimedb-operator/controllers/greptimedbcluster/deployers/config"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/dbconfig"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/deployer"
 )
@@ -110,16 +115,134 @@ func (c *CommonBuilder) MountConfigDir(template *corev1.PodTemplateSpec) {
 // AddLogsVolume will create a shared volume for logs and mount it to the main container and sidecar container.
 func (c *CommonBuilder) AddLogsVolume(template *corev1.PodTemplateSpec, mountPath string) {
 	template.Spec.Volumes = append(template.Spec.Volumes, corev1.Volume{
-		Name: "logs",
+		Name: constant.DefaultLogsVolumeName,
 		VolumeSource: corev1.VolumeSource{
 			EmptyDir: &corev1.EmptyDirVolumeSource{},
 		},
 	})
 
 	template.Spec.Containers[constant.MainContainerIndex].VolumeMounts = append(template.Spec.Containers[constant.MainContainerIndex].VolumeMounts, corev1.VolumeMount{
-		Name:      "logs",
+		Name:      constant.DefaultLogsVolumeName,
 		MountPath: mountPath,
 	})
+}
+
+func (c *CommonBuilder) AddVectorConfigVolume(template *corev1.PodTemplateSpec) {
+	template.Spec.Volumes = append(template.Spec.Volumes, corev1.Volume{
+		Name: constant.DefaultVectorConfigName,
+		VolumeSource: corev1.VolumeSource{
+			ConfigMap: &corev1.ConfigMapVolumeSource{
+				LocalObjectReference: corev1.LocalObjectReference{
+					Name: constant.DefaultVectorConfigName,
+				},
+			},
+		},
+	})
+}
+
+func (c *CommonBuilder) AddVectorSidecar(template *corev1.PodTemplateSpec, kind v1alpha1.ComponentKind) {
+	template.Spec.Containers = append(template.Spec.Containers, corev1.Container{
+		Name:  "vector",
+		Image: c.Cluster.Spec.Monitoring.Vector.Image,
+		Args: []string{
+			"--config", "/etc/vector/vector.yaml",
+		},
+		Env: c.env(kind),
+		VolumeMounts: []corev1.VolumeMount{
+			{
+				Name:      constant.DefaultLogsVolumeName,
+				MountPath: "/logs",
+			},
+			{
+				Name:      constant.DefaultVectorConfigName,
+				MountPath: "/etc/vector",
+			},
+		},
+	})
+}
+
+func (c *CommonBuilder) GenerateVectorConfigMap() (*corev1.ConfigMap, error) {
+	standaloneName := common.ResourceName(c.Cluster.Name+"-monitor", v1alpha1.StandaloneKind)
+	svc := fmt.Sprintf("%s.%s.svc.cluster.local", standaloneName, c.Cluster.Namespace)
+	vars := map[string]string{
+		"ClusterName":    c.Cluster.Name,
+		"LogsTableName":  constant.LogsTableName,
+		"PipelineName":   common.LogsPipelineName(c.Cluster.Namespace, c.Cluster.Name),
+		"LoggingService": fmt.Sprintf("http://%s:4000", svc),
+		"MetricService":  fmt.Sprintf("http://%s:4000/v1/prometheus/write?db=public", svc),
+	}
+
+	vectorConfigTemplate, err := c.vectorConfigTemplate()
+	if err != nil {
+		return nil, err
+	}
+
+	var buf bytes.Buffer
+	tmpl, err := template.New("vector-config").Parse(vectorConfigTemplate)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := tmpl.Execute(&buf, vars); err != nil {
+		return nil, err
+	}
+
+	configmap := &corev1.ConfigMap{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "ConfigMap",
+			APIVersion: "v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      constant.DefaultVectorConfigName,
+			Namespace: c.Cluster.Namespace,
+		},
+		Data: map[string]string{
+			"vector.yaml": buf.String(),
+		},
+	}
+
+	return configmap, nil
+}
+
+func (c *CommonBuilder) vectorConfigTemplate() (string, error) {
+	data, err := fs.ReadFile(config.VectorConfigTemplate, "vector-config-template.yaml")
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
+}
+
+func (c *CommonBuilder) env(kind v1alpha1.ComponentKind) []corev1.EnvVar {
+	return []corev1.EnvVar{
+		{
+			Name: deployer.EnvPodIP,
+			ValueFrom: &corev1.EnvVarSource{
+				FieldRef: &corev1.ObjectFieldSelector{
+					FieldPath: "status.podIP",
+				},
+			},
+		},
+		{
+			Name: deployer.EnvPodName,
+			ValueFrom: &corev1.EnvVarSource{
+				FieldRef: &corev1.ObjectFieldSelector{
+					FieldPath: "metadata.name",
+				},
+			},
+		},
+		{
+			Name: deployer.EnvPodNamespace,
+			ValueFrom: &corev1.EnvVarSource{
+				FieldRef: &corev1.ObjectFieldSelector{
+					FieldPath: "metadata.namespace",
+				},
+			},
+		},
+		{
+			Name:  deployer.EnvRole,
+			Value: string(kind),
+		},
+	}
 }
 
 func UpdateStatus(ctx context.Context, input *v1alpha1.GreptimeDBCluster, kc client.Client, opts ...client.SubResourceUpdateOption) error {

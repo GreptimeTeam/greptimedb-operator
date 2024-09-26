@@ -271,11 +271,17 @@ func (b *frontendBuilder) generatePodTemplateSpec() *corev1.PodTemplateSpec {
 	})
 
 	podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Ports = b.containerPorts()
+	podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Env = append(podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Env, b.env(v1alpha1.FrontendComponentKind)...)
 
 	b.MountConfigDir(podTemplateSpec)
 
 	if logging := b.Cluster.GetFrontend().GetLogging(); logging != nil && !logging.IsOnlyLogToStdout() {
 		b.AddLogsVolume(podTemplateSpec, logging.GetLogsDir())
+	}
+
+	if b.Cluster.GetMonitoring() != nil && b.Cluster.GetMonitoring().GetVector() != nil {
+		b.AddVectorConfigVolume(podTemplateSpec)
+		b.AddVectorSidecar(podTemplateSpec, v1alpha1.FrontendComponentKind)
 	}
 
 	if b.Cluster.Spec.Frontend.TLS != nil {
