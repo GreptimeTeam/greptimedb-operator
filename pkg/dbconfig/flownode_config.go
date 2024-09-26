@@ -41,7 +41,7 @@ func (c *FlownodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster)
 		}
 	}
 
-	c.ConfigureLogging(cluster.GetLogging(), cluster.GetFlownode().GetLogging())
+	c.ConfigureLogging(cluster.GetFlownode().GetLogging())
 
 	return nil
 }

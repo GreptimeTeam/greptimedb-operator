@@ -39,6 +39,12 @@ spec:
     rpcPort: 4001
     service:
       type: ClusterIP
+    logging:
+      format: text
+      level: info
+      logsDir: /data/greptimedb/logs
+      onlyLogToStdout: false
+      persistentWithData: false
     template:
       main:
         image: greptime/greptimedb:latest
@@ -60,6 +66,12 @@ spec:
     enableRegionFailover: false
     etcdEndpoints:
       - etcd.etcd-cluster.svc.cluster.local:2379
+    logging:
+      format: text
+      level: info
+      logsDir: /data/greptimedb/logs
+      onlyLogToStdout: false
+      persistentWithData: false
     httpPort: 4000
     rpcPort: 3002
     replicas: 1
@@ -84,6 +96,12 @@ spec:
     httpPort: 4000
     rpcPort: 4001
     replicas: 1
+    logging:
+      format: text
+      level: info
+      logsDir: /data/greptimedb/logs
+      onlyLogToStdout: false
+      persistentWithData: false
     storage:
       dataHome: /data/greptimedb
       fs:

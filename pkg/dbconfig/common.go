@@ -154,17 +154,9 @@ type LoggingConfig struct {
 }
 
 // ConfigureLogging configures the logging config with the given logging spec.
-func (c *LoggingConfig) ConfigureLogging(global *v1alpha1.LoggingSpec, component *v1alpha1.LoggingSpec) {
-	if global == nil && component == nil {
+func (c *LoggingConfig) ConfigureLogging(spec *v1alpha1.LoggingSpec) {
+	if spec == nil {
 		return
-	}
-
-	// Use the component logging config if it's not nil.
-	var spec *v1alpha1.LoggingSpec
-	if component != nil {
-		spec = component
-	} else {
-		spec = global
 	}
 
 	if spec.IsOnlyLogToStdout() {

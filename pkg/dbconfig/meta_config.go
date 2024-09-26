@@ -62,7 +62,7 @@ func (c *MetaConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster) err
 		c.WalBrokerEndpoints = kafka.GetBrokerEndpoints()
 	}
 
-	c.ConfigureLogging(cluster.GetLogging(), cluster.GetMeta().GetLogging())
+	c.ConfigureLogging(cluster.GetMeta().GetLogging())
 
 	return nil
 }

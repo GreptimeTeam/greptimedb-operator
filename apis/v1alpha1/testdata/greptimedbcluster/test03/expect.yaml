@@ -35,6 +35,12 @@ spec:
     replicas: 1
     service:
       type: ClusterIP
+    logging:
+      format: json
+      level: info
+      logsDir: /data/greptimedb/logs
+      onlyLogToStdout: false
+      persistentWithData: false
     template:
       main:
         image: greptime/greptimedb:latest
@@ -47,6 +53,12 @@ spec:
       - etcd.etcd-cluster.svc.cluster.local:2379
     # Should be true if wal.kafka is set.
     enableRegionFailover: false
+    logging:
+      format: json
+      level: info
+      logsDir: /data/greptimedb/logs
+      onlyLogToStdout: false
+      persistentWithData: false
     httpPort: 4000
     rpcPort: 3002
     replicas: 1
@@ -68,6 +80,12 @@ spec:
         mountPath: /data/greptimedb
         storageRetainPolicy: Retain
         storageSize: 10Gi
+    logging:
+      format: json
+      level: info
+      logsDir: /data/greptimedb/logs
+      onlyLogToStdout: false
+      persistentWithData: false
     template:
       main:
         image: greptime/greptimedb:latest

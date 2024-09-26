@@ -45,6 +45,11 @@ func (in *GreptimeDBCluster) SetDefaults() error {
 		return err
 	}
 
+	// Merge the logging settings into the GreptimeDBClusterSpec.
+	if err := in.mergeLogging(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -111,6 +116,7 @@ func (in *GreptimeDBCluster) defaultFrontend() *FrontendSpec {
 		ComponentSpec: ComponentSpec{
 			Template: &PodTemplateSpec{},
 			Replicas: pointer.Int32(DefaultReplicas),
+			Logging:  &LoggingSpec{},
 		},
 		RPCPort:        DefaultRPCPort,
 		HTTPPort:       DefaultHTTPPort,
@@ -131,6 +137,7 @@ func (in *GreptimeDBCluster) defaultMeta() *MetaSpec {
 		ComponentSpec: ComponentSpec{
 			Template: &PodTemplateSpec{},
 			Replicas: pointer.Int32(DefaultReplicas),
+			Logging:  &LoggingSpec{},
 		},
 		RPCPort:              DefaultMetaRPCPort,
 		HTTPPort:             DefaultHTTPPort,
@@ -143,6 +150,7 @@ func (in *GreptimeDBCluster) defaultDatanode() *DatanodeSpec {
 		ComponentSpec: ComponentSpec{
 			Template: &PodTemplateSpec{},
 			Replicas: pointer.Int32(DefaultReplicas),
+			Logging:  &LoggingSpec{},
 		},
 		RPCPort:  DefaultRPCPort,
 		HTTPPort: DefaultHTTPPort,
@@ -155,6 +163,7 @@ func (in *GreptimeDBCluster) defaultFlownodeSpec() *FlownodeSpec {
 		ComponentSpec: ComponentSpec{
 			Template: &PodTemplateSpec{},
 			Replicas: pointer.Int32(DefaultReplicas),
+			Logging:  &LoggingSpec{},
 		},
 		RPCPort: DefaultRPCPort,
 	}
@@ -262,6 +271,50 @@ func (in *GreptimeDBCluster) mergeFlownodeTemplate() error {
 
 		// TODO(zyy17): The flownode does not need liveness probe and will be added in the future.
 		in.Spec.Flownode.Template.MainContainer.LivenessProbe = nil
+	}
+
+	return nil
+}
+
+func (in *GreptimeDBCluster) mergeLogging() error {
+	if logging := in.GetMeta().GetLogging(); logging != nil {
+		if err := mergo.Merge(logging, in.GetLogging().DeepCopy()); err != nil {
+			return err
+		}
+		if in.GetMonitoring().IsEnabled() {
+			// Set the default logging format to JSON if monitoring is enabled.
+			logging.Format = LogFormatJSON
+		}
+	}
+
+	if logging := in.GetDatanode().GetLogging(); logging != nil {
+		if err := mergo.Merge(logging, in.GetLogging().DeepCopy()); err != nil {
+			return err
+		}
+		if in.GetMonitoring().IsEnabled() {
+			// Set the default logging format to JSON if monitoring is enabled.
+			logging.Format = LogFormatJSON
+		}
+	}
+
+	if logging := in.GetFrontend().GetLogging(); logging != nil {
+		if err := mergo.Merge(logging, in.GetLogging().DeepCopy()); err != nil {
+			return err
+		}
+		if in.GetMonitoring().IsEnabled() {
+			// Set the default logging format to JSON if monitoring is enabled.
+			logging.Format = LogFormatJSON
+		}
+	}
+
+	if logging := in.GetFlownode().GetLogging(); logging != nil {
+		if err := mergo.Merge(logging, in.GetLogging().DeepCopy()); err != nil {
+			return err
+		}
+		if in.GetMonitoring().IsEnabled() {
+			// Set the default logging format to JSON if monitoring is enabled.
+			logging.Format = LogFormatJSON
+		}
 	}
 
 	return nil

@@ -80,6 +80,7 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Owns(&corev1.Service{}).
 		Owns(&appsv1.StatefulSet{}).
 		Owns(&appsv1.Deployment{}).
+		Owns(&v1alpha1.GreptimeDBStandalone{}).
 		Complete(r)
 }
 
