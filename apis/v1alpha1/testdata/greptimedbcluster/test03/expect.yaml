@@ -132,7 +132,7 @@ spec:
         type: ClusterIP
       version: latest
     vector:
-      image: timberio/vector:latest
+      image: timberio/vector:nightly-alpine
       resource:
         limits:
           cpu: 50m

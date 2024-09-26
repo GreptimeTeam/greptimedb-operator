@@ -65,7 +65,7 @@ const (
 	DefaultLoggingLevel = LoggingLevelInfo
 
 	// DefaultVectorImage is the default image for the vector.
-	DefaultVectorImage = "timberio/vector:latest"
+	DefaultVectorImage = "timberio/vector:nightly-alpine"
 
 	// DefaultVectorCPURequest is the default CPU request for the vector.
 	DefaultVectorCPURequest = "50m"
