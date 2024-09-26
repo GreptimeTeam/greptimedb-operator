@@ -82,19 +82,19 @@ func (d *DatanodeDeployer) CleanUp(ctx context.Context, crdObject client.Object)
 	}
 
 	if cluster.GetDatanode().GetFileStorage().GetPolicy() == v1alpha1.StorageRetainPolicyTypeDelete {
-		if err := d.deleteStorage(ctx, cluster.Namespace, cluster.Name, common.DatanodeFileStorageLabels); err != nil {
+		if err := d.deleteStorage(ctx, cluster.Namespace, cluster.Name, common.FileStorageTypeDatanode); err != nil {
 			return err
 		}
 	}
 
 	if cluster.GetWALProvider().GetRaftEngineWAL().GetFileStorage().GetPolicy() == v1alpha1.StorageRetainPolicyTypeDelete {
-		if err := d.deleteStorage(ctx, cluster.Namespace, cluster.Name, common.WALFileStorageLabels); err != nil {
+		if err := d.deleteStorage(ctx, cluster.Namespace, cluster.Name, common.FileStorageTypeWAL); err != nil {
 			return err
 		}
 	}
 
 	if cluster.GetObjectStorageProvider().GetCacheFileStorage().GetPolicy() == v1alpha1.StorageRetainPolicyTypeDelete {
-		if err := d.deleteStorage(ctx, cluster.Namespace, cluster.Name, common.CacheFileStorageLabels); err != nil {
+		if err := d.deleteStorage(ctx, cluster.Namespace, cluster.Name, common.FileStorageTypeCache); err != nil {
 			return err
 		}
 	}
@@ -234,31 +234,15 @@ func (d *DatanodeDeployer) requestMetasrvForMaintenance(cluster *v1alpha1.Grepti
 	return nil
 }
 
-func (d *DatanodeDeployer) deleteStorage(ctx context.Context, namespace, name string, additionalLabels map[string]string) error {
+func (d *DatanodeDeployer) deleteStorage(ctx context.Context, namespace, name string, fsType common.FileStorageType) error {
 	klog.Infof("Deleting datanode storage...")
 
-	matchedLabels := map[string]string{
-		constant.GreptimeDBComponentName: common.ResourceName(name, v1alpha1.DatanodeComponentKind),
-	}
-
-	selector, err := metav1.LabelSelectorAsSelector(&metav1.LabelSelector{
-		MatchLabels: util.MergeStringMap(matchedLabels, additionalLabels),
-	})
+	claims, err := common.GetPVCs(ctx, d.Client, namespace, name, v1alpha1.DatanodeComponentKind, fsType)
 	if err != nil {
 		return err
 	}
 
-	claims := new(corev1.PersistentVolumeClaimList)
-
-	err = d.List(ctx, claims, client.InNamespace(namespace), client.MatchingLabelsSelector{Selector: selector})
-	if errors.IsNotFound(err) {
-		return nil
-	}
-	if err != nil {
-		return err
-	}
-
-	for _, pvc := range claims.Items {
+	for _, pvc := range claims {
 		klog.Infof("Deleting datanode PVC: %s", pvc.Name)
 		if err := d.Delete(ctx, &pvc); err != nil {
 			return err
@@ -486,17 +470,17 @@ func (b *datanodeBuilder) generatePVCs() []corev1.PersistentVolumeClaim {
 
 	// It's always not nil because it's the default value.
 	if fs := b.Cluster.GetDatanode().GetFileStorage(); fs != nil {
-		claims = append(claims, *common.FileStorageToPVC(fs, common.DatanodeFileStorageLabels))
+		claims = append(claims, *common.FileStorageToPVC(fs, common.FileStorageTypeDatanode))
 	}
 
 	// Allocate the standalone WAL storage for the raft-engine.
 	if fs := b.Cluster.GetWALProvider().GetRaftEngineWAL().GetFileStorage(); fs != nil {
-		claims = append(claims, *common.FileStorageToPVC(fs, common.WALFileStorageLabels))
+		claims = append(claims, *common.FileStorageToPVC(fs, common.FileStorageTypeWAL))
 	}
 
 	// Allocate the standalone cache file storage for the datanode.
 	if fs := b.Cluster.GetObjectStorageProvider().GetCacheFileStorage(); fs != nil {
-		claims = append(claims, *common.FileStorageToPVC(fs, common.CacheFileStorageLabels))
+		claims = append(claims, *common.FileStorageToPVC(fs, common.FileStorageTypeCache))
 	}
 
 	return claims
