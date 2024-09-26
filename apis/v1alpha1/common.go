@@ -650,6 +650,13 @@ func (in *S3Storage) GetSecretName() string {
 	return ""
 }
 
+func (in *S3Storage) GetRoot() string {
+	if in != nil {
+		return in.Root
+	}
+	return ""
+}
+
 // OSSStorage defines the Aliyun OSS storage specification.
 type OSSStorage struct {
 	// The data will be stored in the bucket.
@@ -682,6 +689,13 @@ func (in *OSSStorage) GetSecretName() string {
 	return ""
 }
 
+func (in *OSSStorage) GetRoot() string {
+	if in != nil {
+		return in.Root
+	}
+	return ""
+}
+
 // GCSStorage defines the Google GCS storage specification.
 type GCSStorage struct {
 	// The data will be stored in the bucket.
@@ -710,6 +724,13 @@ type GCSStorage struct {
 func (in *GCSStorage) GetSecretName() string {
 	if in != nil {
 		return in.SecretName
+	}
+	return ""
+}
+
+func (in *GCSStorage) GetRoot() string {
+	if in != nil {
+		return in.Root
 	}
 	return ""
 }

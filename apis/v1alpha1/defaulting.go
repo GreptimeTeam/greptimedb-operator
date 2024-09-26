@@ -15,10 +15,12 @@
 package v1alpha1
 
 import (
+	"fmt"
 	"strings"
 
 	"dario.cat/mergo"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/pointer"
 )
@@ -78,6 +80,29 @@ func (in *GreptimeDBCluster) defaultSpec() *GreptimeDBClusterSpec {
 
 	defaultSpec.Logging = defaultLogging()
 
+	if in.GetMonitoring().IsEnabled() {
+		defaultSpec.Monitoring = &MonitoringSpec{
+			Standalone:     in.defaultMonitoringStandaloneSpec(),
+			LogsCollection: &LogsCollectionSpec{},
+			Vector: &VectorSpec{
+				Image: DefaultVectorImage,
+				Resource: corev1.ResourceRequirements{
+					Requests: corev1.ResourceList{
+						corev1.ResourceCPU:    resource.MustParse(DefaultVectorCPURequest),
+						corev1.ResourceMemory: resource.MustParse(DefaultVectorMemoryRequest),
+					},
+					Limits: corev1.ResourceList{
+						corev1.ResourceCPU:    resource.MustParse(DefaultVectorCPURequest),
+						corev1.ResourceMemory: resource.MustParse(DefaultVectorMemoryRequest),
+					},
+				},
+			},
+		}
+
+		// Set the default logging format to JSON if monitoring is enabled.
+		defaultSpec.Logging.Format = LogFormatJSON
+	}
+
 	return defaultSpec
 }
 
@@ -133,6 +158,37 @@ func (in *GreptimeDBCluster) defaultFlownodeSpec() *FlownodeSpec {
 		},
 		RPCPort: DefaultRPCPort,
 	}
+}
+
+func (in *GreptimeDBCluster) defaultMonitoringStandaloneSpec() *GreptimeDBStandaloneSpec {
+	standalone := new(GreptimeDBStandalone)
+	standalone.Spec = *standalone.defaultSpec()
+
+	if image := in.GetBaseMainContainer().GetImage(); image != "" {
+		standalone.Spec.Base.MainContainer.Image = image
+	} else {
+		standalone.Spec.Base.MainContainer.Image = DefaultGreptimeDBImage
+	}
+
+	standalone.Spec.Version = getVersionFromImage(standalone.Spec.Base.MainContainer.Image)
+
+	if osp := in.GetObjectStorageProvider(); osp != nil {
+		standalone.Spec.ObjectStorageProvider = osp.DeepCopy()
+
+		if root := osp.GetS3Storage().GetRoot(); root != "" {
+			standalone.Spec.ObjectStorageProvider.S3.Root = fmt.Sprintf("%s/monitoring", root)
+		}
+
+		if root := osp.GetOSSStorage().GetRoot(); root != "" {
+			standalone.Spec.ObjectStorageProvider.GCS.Root = fmt.Sprintf("%s/monitoring", root)
+		}
+
+		if root := osp.GetGCSStorage().GetRoot(); root != "" {
+			standalone.Spec.ObjectStorageProvider.OSS.Root = fmt.Sprintf("%s/monitoring", root)
+		}
+	}
+
+	return &standalone.Spec
 }
 
 func (in *GreptimeDBCluster) mergeTemplate() error {
