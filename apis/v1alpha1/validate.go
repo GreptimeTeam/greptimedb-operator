@@ -56,7 +56,7 @@ func (in *GreptimeDBCluster) Validate() error {
 	}
 
 	if osp := in.GetObjectStorageProvider(); osp != nil {
-		if err := valiateStorageProvider(osp); err != nil {
+		if err := validateObjectStorageProvider(osp); err != nil {
 			return err
 		}
 	}
@@ -143,7 +143,7 @@ func (in *GreptimeDBStandalone) Validate() error {
 	}
 
 	if err := validateTomlConfig(in.GetConfig()); err != nil {
-		return fmt.Errorf("invalid toml config: '%v'", err)
+		return fmt.Errorf("invalid standalone toml config: '%v'", err)
 	}
 
 	if wal := in.GetWALProvider(); wal != nil {
@@ -153,7 +153,7 @@ func (in *GreptimeDBStandalone) Validate() error {
 	}
 
 	if osp := in.GetObjectStorageProvider(); osp != nil {
-		if err := valiateStorageProvider(osp); err != nil {
+		if err := validateObjectStorageProvider(osp); err != nil {
 			return err
 		}
 	}
@@ -227,7 +227,7 @@ func validateWALProvider(input *WALProviderSpec) error {
 	return nil
 }
 
-func valiateStorageProvider(input *ObjectStorageProviderSpec) error {
+func validateObjectStorageProvider(input *ObjectStorageProviderSpec) error {
 	if input == nil {
 		return nil
 	}

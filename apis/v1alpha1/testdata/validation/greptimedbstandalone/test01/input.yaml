@@ -1,0 +1,12 @@
+apiVersion: greptime.io/v1alpha1
+kind: GreptimeDBStandalone
+metadata:
+  name: test00-error
+  namespace: default
+spec:
+  base:
+    main:
+      image: greptime/greptimedb:latest
+  # This is an error because the config is not a valid toml config.
+  config: |
+    It's not a valid toml config----

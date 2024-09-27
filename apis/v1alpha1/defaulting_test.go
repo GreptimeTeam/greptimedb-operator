@@ -26,7 +26,7 @@ import (
 
 func TestClusterSetDefaults(t *testing.T) {
 	const (
-		testDir        = "testdata/greptimedbcluster"
+		testDir        = "testdata/defaulting/greptimedbcluster"
 		inputFileName  = "input.yaml"
 		expectFileName = "expect.yaml"
 	)
@@ -86,7 +86,7 @@ func TestClusterSetDefaults(t *testing.T) {
 
 func TestStandaloneSetDefaults(t *testing.T) {
 	const (
-		testDir        = "testdata/greptimedbstandalone"
+		testDir        = "testdata/defaulting/greptimedbstandalone"
 		inputFileName  = "input.yaml"
 		expectFileName = "expect.yaml"
 	)
