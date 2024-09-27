@@ -1,0 +1,28 @@
+apiVersion: greptime.io/v1alpha1
+kind: GreptimeDBCluster
+metadata:
+  name: test03-error
+  namespace: default
+spec:
+  base:
+    main:
+      image: greptime/greptimedb:latest
+  frontend:
+    replicas: 1
+  meta:
+    etcdEndpoints:
+      - etcd.etcd-cluster.svc.cluster.local:2379
+    replicas: 1
+  datanode:
+    replicas: 3
+  wal:
+    # This is an error because multiple wal configs are not allowed.
+    raftEngine:
+      fs:
+        storageClassName: io2 # Use io2 storage class for WAL for better performance.
+        name: wal
+        storageSize: 5Gi
+        mountPath: /wal
+    kafka:
+      brokerEndpoints:
+        - "kafka-bootstrap.kafka.svc.cluster.local:9092"

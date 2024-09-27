@@ -18,18 +18,13 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/google/go-cmp/cmp"
-	"github.com/pelletier/go-toml"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/client-go/tools/record"
 	"k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -134,7 +129,12 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, err
 	}
 
-	if err = r.validate(ctx, cluster); err != nil {
+	if err = cluster.Validate(); err != nil {
+		r.Recorder.Event(cluster, corev1.EventTypeWarning, "InvalidCluster", fmt.Sprintf("Invalid cluster: %v", err))
+		return ctrl.Result{}, err
+	}
+
+	if err = cluster.Check(ctx, r.Client); err != nil {
 		r.Recorder.Event(cluster, corev1.EventTypeWarning, "InvalidCluster", fmt.Sprintf("Invalid cluster: %v", err))
 		return ctrl.Result{}, err
 	}
@@ -265,120 +265,6 @@ func (r *Reconciler) updateClusterStatus(ctx context.Context, cluster *v1alpha1.
 	r.recordNormalEventByPhase(cluster)
 
 	return deployers.UpdateStatus(ctx, cluster, r.Client)
-}
-
-func (r *Reconciler) validate(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster) error {
-	if cluster.Spec.Meta == nil && cluster.Spec.Datanode == nil && cluster.Spec.Frontend == nil && cluster.Spec.Flownode == nil {
-		return fmt.Errorf("no components spec in cluster")
-	}
-
-	if cluster.Spec.Frontend != nil && cluster.Spec.Frontend.TLS != nil {
-		if len(cluster.Spec.Frontend.TLS.SecretName) > 0 {
-			tlsSecret := &corev1.Secret{}
-			err := r.Get(ctx, types.NamespacedName{Namespace: cluster.Namespace, Name: cluster.Spec.Frontend.TLS.SecretName}, tlsSecret)
-			if err != nil {
-				return fmt.Errorf("get tls secret '%s' failed, error: '%v'", cluster.Spec.Frontend.TLS.SecretName, err)
-			}
-
-			if _, ok := tlsSecret.Data[v1alpha1.TLSCrtSecretKey]; !ok {
-				return fmt.Errorf("tls secret '%s' does not contain key '%s'", cluster.Spec.Frontend.TLS.SecretName, v1alpha1.TLSCrtSecretKey)
-			}
-
-			if _, ok := tlsSecret.Data[v1alpha1.TLSKeySecretKey]; !ok {
-				return fmt.Errorf("tls secret '%s' does not contain key '%s'", cluster.Spec.Frontend.TLS.SecretName, v1alpha1.TLSKeySecretKey)
-			}
-		}
-	}
-
-	// To detect if the CRD of podmonitor is installed.
-	if cluster.Spec.PrometheusMonitor != nil {
-		if cluster.Spec.PrometheusMonitor.Enabled {
-			// CheckPodMonitorCRDInstall is used to check if the CRD of podmonitor is installed, it is not used to create the podmonitor.
-			err := r.checkPodMonitorCRDInstall(ctx, metav1.GroupKind{
-				Group: "monitoring.coreos.com",
-				Kind:  "PodMonitor",
-			})
-			if err != nil {
-				if k8serrors.IsNotFound(err) {
-					return fmt.Errorf("the crd podmonitors.monitoring.coreos.com is not installed")
-				} else {
-					return fmt.Errorf("check crd of podmonitors.monitoring.coreos.com is installed error: %v", err)
-				}
-			}
-		}
-	}
-
-	if cluster.Spec.Meta != nil {
-		if err := r.validateTomlConfig(cluster.Spec.Meta.Config); err != nil {
-			return fmt.Errorf("invalid meta toml config: %v", err)
-		}
-		if cluster.GetMeta().IsEnableRegionFailover() {
-			if cluster.GetWALProvider().GetKafkaWAL() == nil {
-				return fmt.Errorf("meta enable region failover requires kafka WAL")
-			}
-		}
-	}
-
-	if cluster.Spec.Datanode != nil {
-		if err := r.validateTomlConfig(cluster.Spec.Datanode.Config); err != nil {
-			return fmt.Errorf("invalid datanode toml config: %v", err)
-		}
-	}
-
-	if cluster.Spec.Frontend != nil {
-		if err := r.validateTomlConfig(cluster.Spec.Frontend.Config); err != nil {
-			return fmt.Errorf("invalid frontend toml config: %v", err)
-		}
-	}
-
-	if cluster.Spec.Flownode != nil {
-		if err := r.validateTomlConfig(cluster.Spec.Flownode.Config); err != nil {
-			return fmt.Errorf("invalid flownode toml config: %v", err)
-		}
-	}
-
-	if cluster.Spec.ObjectStorageProvider != nil {
-		checkProviders := func() bool {
-			providers := []bool{
-				cluster.Spec.ObjectStorageProvider.S3 != nil,
-				cluster.Spec.ObjectStorageProvider.OSS != nil,
-				cluster.Spec.ObjectStorageProvider.GCS != nil,
-			}
-			providerCount := 0
-			for _, p := range providers {
-				if p {
-					providerCount++
-				}
-			}
-			return providerCount > 1
-		}()
-		if checkProviders {
-			return fmt.Errorf("only one object storage provider can be specified")
-		}
-	}
-
-	return nil
-}
-
-func (r *Reconciler) validateTomlConfig(input string) error {
-	if len(input) > 0 {
-		data := make(map[string]interface{})
-		err := toml.Unmarshal([]byte(input), &data)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (r *Reconciler) checkPodMonitorCRDInstall(ctx context.Context, groupKind metav1.GroupKind) error {
-	var crd apiextensionsv1.CustomResourceDefinition
-	nameNamespace := types.NamespacedName{Name: fmt.Sprintf("%ss.%s", strings.ToLower(groupKind.Kind), groupKind.Group)}
-	err := r.Get(ctx, nameNamespace, &crd)
-	if err != nil {
-		return err
-	}
-	return nil
 }
 
 func (r *Reconciler) recordNormalEventByPhase(cluster *v1alpha1.GreptimeDBCluster) {
