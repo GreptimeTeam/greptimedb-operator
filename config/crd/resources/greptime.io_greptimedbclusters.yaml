@@ -2818,6 +2818,8 @@ spec:
                     type: string
                   httpPort:
                     format: int32
+                    maximum: 65535
+                    minimum: 0
                     type: integer
                   logging:
                     properties:
@@ -2846,6 +2848,8 @@ spec:
                     type: integer
                   rpcPort:
                     format: int32
+                    maximum: 65535
+                    minimum: 0
                     type: integer
                   storage:
                     properties:
@@ -5663,6 +5667,8 @@ spec:
                     type: integer
                   rpcPort:
                     format: int32
+                    maximum: 65535
+                    minimum: 0
                     type: integer
                   template:
                     properties:
@@ -8431,6 +8437,11 @@ spec:
                 properties:
                   config:
                     type: string
+                  httpPort:
+                    format: int32
+                    maximum: 65535
+                    minimum: 0
+                    type: integer
                   logging:
                     properties:
                       format:
@@ -8452,8 +8463,23 @@ spec:
                       persistentWithData:
                         type: boolean
                     type: object
+                  mysqlPort:
+                    format: int32
+                    maximum: 65535
+                    minimum: 0
+                    type: integer
+                  postgreSQLPort:
+                    format: int32
+                    maximum: 65535
+                    minimum: 0
+                    type: integer
                   replicas:
                     format: int32
+                    minimum: 0
+                    type: integer
+                  rpcPort:
+                    format: int32
+                    maximum: 65535
                     minimum: 0
                     type: integer
                   service:
@@ -11243,6 +11269,8 @@ spec:
                 type: object
               httpPort:
                 format: int32
+                maximum: 65535
+                minimum: 0
                 type: integer
               initializer:
                 properties:
@@ -11284,6 +11312,8 @@ spec:
                     type: array
                   httpPort:
                     format: int32
+                    maximum: 65535
+                    minimum: 0
                     type: integer
                   logging:
                     properties:
@@ -11312,6 +11342,8 @@ spec:
                     type: integer
                   rpcPort:
                     format: int32
+                    maximum: 65535
+                    minimum: 0
                     type: integer
                   storeKeyPrefix:
                     type: string
@@ -14082,6 +14114,8 @@ spec:
                 type: object
               mysqlPort:
                 format: int32
+                maximum: 65535
+                minimum: 0
                 type: integer
               objectStorage:
                 properties:
@@ -14160,6 +14194,8 @@ spec:
                 type: object
               postgreSQLPort:
                 format: int32
+                maximum: 65535
+                minimum: 0
                 type: integer
               prometheusMonitor:
                 properties:
@@ -14176,6 +14212,8 @@ spec:
                 type: object
               rpcPort:
                 format: int32
+                maximum: 65535
+                minimum: 0
                 type: integer
               version:
                 type: string

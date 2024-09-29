@@ -33,6 +33,10 @@ spec:
           memory: "1Gi"
   frontend:
     replicas: 1
+    httpPort: 4000
+    mysqlPort: 4002
+    postgreSQLPort: 4003
+    rpcPort: 4001
     service:
       type: ClusterIP
     template:

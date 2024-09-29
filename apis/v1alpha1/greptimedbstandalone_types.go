@@ -33,18 +33,26 @@ type GreptimeDBStandaloneSpec struct {
 	TLS *TLSSpec `json:"tls,omitempty"`
 
 	// HTTPPort is the port of the greptimedb http service.
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=65535
 	// +optional
 	HTTPPort int32 `json:"httpPort,omitempty"`
 
 	// RPCPort is the port of the greptimedb rpc service.
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=65535
 	// +optional
 	RPCPort int32 `json:"rpcPort,omitempty"`
 
 	// MySQLPort is the port of the greptimedb mysql service.
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=65535
 	// +optional
 	MySQLPort int32 `json:"mysqlPort,omitempty"`
 
 	// PostgreSQLPort is the port of the greptimedb postgresql service.
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=65535
 	// +optional
 	PostgreSQLPort int32 `json:"postgreSQLPort,omitempty"`
 

@@ -43,10 +43,14 @@ type MetaSpec struct {
 	ComponentSpec `json:",inline"`
 
 	// RPCPort is the gRPC port of the meta.
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=65535
 	// +optional
 	RPCPort int32 `json:"rpcPort,omitempty"`
 
 	// HTTPPort is the HTTP port of the meta.
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=65535
 	// +optional
 	HTTPPort int32 `json:"httpPort,omitempty"`
 
@@ -107,6 +111,30 @@ func (in *MetaSpec) IsEnableCheckEtcdService() bool {
 type FrontendSpec struct {
 	ComponentSpec `json:",inline"`
 
+	// RPCPort is the gRPC port of the frontend.
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=65535
+	// +optional
+	RPCPort int32 `json:"rpcPort,omitempty"`
+
+	// HTTPPort is the HTTP port of the frontend.
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=65535
+	// +optional
+	HTTPPort int32 `json:"httpPort,omitempty"`
+
+	// MySQLPort is the MySQL port of the frontend.
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=65535
+	// +optional
+	MySQLPort int32 `json:"mysqlPort,omitempty"`
+
+	// PostgreSQLPort is the PostgreSQL port of the frontend.
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=65535
+	// +optional
+	PostgreSQLPort int32 `json:"postgreSQLPort,omitempty"`
+
 	// Service is the service configuration of the frontend.
 	// +optional
 	Service *ServiceSpec `json:"service,omitempty"`
@@ -149,10 +177,14 @@ type DatanodeSpec struct {
 	ComponentSpec `json:",inline"`
 
 	// RPCPort is the gRPC port of the datanode.
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=65535
 	// +optional
 	RPCPort int32 `json:"rpcPort,omitempty"`
 
 	// HTTPPort is the HTTP port of the datanode.
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=65535
 	// +optional
 	HTTPPort int32 `json:"httpPort,omitempty"`
 
@@ -194,6 +226,8 @@ type FlownodeSpec struct {
 	ComponentSpec `json:",inline"`
 
 	// The gRPC port of the flownode.
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=65535
 	// +optional
 	RPCPort int32 `json:"rpcPort,omitempty"`
 }
@@ -242,18 +276,26 @@ type GreptimeDBClusterSpec struct {
 	Flownode *FlownodeSpec `json:"flownode,omitempty"`
 
 	// HTTPPort is the HTTP port of the greptimedb cluster.
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=65535
 	// +optional
 	HTTPPort int32 `json:"httpPort,omitempty"`
 
 	// RPCPort is the RPC port of the greptimedb cluster.
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=65535
 	// +optional
 	RPCPort int32 `json:"rpcPort,omitempty"`
 
 	// MySQLPort is the MySQL port of the greptimedb cluster.
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=65535
 	// +optional
 	MySQLPort int32 `json:"mysqlPort,omitempty"`
 
 	// PostgreSQLPort is the PostgreSQL port of the greptimedb cluster.
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=65535
 	// +optional
 	PostgreSQLPort int32 `json:"postgreSQLPort,omitempty"`
 

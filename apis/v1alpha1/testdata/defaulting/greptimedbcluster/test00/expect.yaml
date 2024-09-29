@@ -26,6 +26,10 @@ spec:
           port: 4000
   frontend:
     replicas: 1
+    httpPort: 4000
+    mysqlPort: 4002
+    postgreSQLPort: 4003
+    rpcPort: 4001
     service:
       type: ClusterIP
     template:
@@ -34,7 +38,7 @@ spec:
         livenessProbe:
           httpGet:
             path: /health
-            port: 5000
+            port: 4000
   meta:
     etcdEndpoints:
       - etcd.etcd-cluster.svc.cluster.local:2379
