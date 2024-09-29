@@ -45,7 +45,7 @@ type Server struct {
 
 // Options represents the options for the Server.
 type Options struct {
-	// Port is the port that the HTTP service will listen on.
+	// Port is the port that the API service will listen on.
 	Port int
 }
 
@@ -297,33 +297,37 @@ func (s *Server) getPods(ctx context.Context, namespace, name string, kind grept
 	switch kind {
 	case greptimev1alpha1.MetaComponentKind:
 		for _, pod := range pods.Items {
-			topology.Meta = append(topology.Meta, s.covertToPod(&pod))
+			topology.Meta = append(topology.Meta, s.convertToPod(&pod))
 		}
 	case greptimev1alpha1.DatanodeComponentKind:
 		for _, pod := range pods.Items {
-			topology.Datanode = append(topology.Datanode, s.covertToPod(&pod))
+			topology.Datanode = append(topology.Datanode, s.convertToPod(&pod))
 		}
 	case greptimev1alpha1.FrontendComponentKind:
 		for _, pod := range pods.Items {
-			topology.Frontend = append(topology.Frontend, s.covertToPod(&pod))
+			topology.Frontend = append(topology.Frontend, s.convertToPod(&pod))
 		}
 	case greptimev1alpha1.FlownodeComponentKind:
 		for _, pod := range pods.Items {
-			topology.Flownode = append(topology.Flownode, s.covertToPod(&pod))
+			topology.Flownode = append(topology.Flownode, s.convertToPod(&pod))
 		}
 	}
 
 	return nil
 }
 
-func (s *Server) covertToPod(pod *corev1.Pod) *Pod {
+func (s *Server) convertToPod(pod *corev1.Pod) *Pod {
+	var resources corev1.ResourceRequirements
+	if len(pod.Spec.Containers) > constant.MainContainerIndex {
+		resources = pod.Spec.Containers[constant.MainContainerIndex].Resources
+	}
 	return &Pod{
 		Name:      pod.Name,
 		Namespace: pod.Namespace,
 		IP:        pod.Status.PodIP,
 		Status:    string(pod.Status.Phase),
 		Node:      pod.Spec.NodeName,
-		Resource:  pod.Spec.Containers[constant.MainContainerIndex].Resources,
+		Resource:  resources,
 		StartTime: pod.Status.StartTime,
 	}
 }

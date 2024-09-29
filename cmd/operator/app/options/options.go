@@ -21,6 +21,7 @@ import (
 const (
 	defaultMetricsAddr     = ":8080"
 	defaultHealthProbeAddr = ":9494"
+	defaultAPIServerPort   = 8081
 )
 
 type Options struct {
@@ -35,8 +36,8 @@ func NewDefaultOptions() *Options {
 	return &Options{
 		MetricsAddr:     defaultMetricsAddr,
 		HealthProbeAddr: defaultHealthProbeAddr,
+		APIServerPort:   defaultAPIServerPort,
 		EnableAPIServer: false,
-		APIServerPort:   8081,
 	}
 }
 

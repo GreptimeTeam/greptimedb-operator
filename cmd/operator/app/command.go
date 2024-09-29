@@ -107,7 +107,7 @@ func NewOperatorCommand() *cobra.Command {
 
 				go func() {
 					if err := server.Run(); err != nil {
-						setupLog.Error(err, "unable to run HTTP service")
+						setupLog.Error(err, "unable to run API service")
 						os.Exit(1)
 					}
 				}()
