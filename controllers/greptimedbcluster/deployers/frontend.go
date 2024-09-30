@@ -23,6 +23,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -237,12 +238,12 @@ func (b *frontendBuilder) Generate() ([]client.Object, error) {
 func (b *frontendBuilder) generateMainContainerArgs() []string {
 	var args = []string{
 		"frontend", "start",
-		"--rpc-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.RPCPort),
+		"--rpc-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.Frontend.RPCPort),
 		"--metasrv-addrs", fmt.Sprintf("%s.%s:%d", common.ResourceName(b.Cluster.Name, v1alpha1.MetaComponentKind),
 			b.Cluster.Namespace, b.Cluster.Spec.Meta.RPCPort),
-		"--http-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.HTTPPort),
-		"--mysql-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.MySQLPort),
-		"--postgres-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.PostgreSQLPort),
+		"--http-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.Frontend.HTTPPort),
+		"--mysql-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.Frontend.MySQLPort),
+		"--postgres-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.Frontend.PostgreSQLPort),
 		"--config-file", path.Join(constant.GreptimeDBConfigDir, constant.GreptimeDBConfigFileName),
 	}
 
@@ -307,24 +308,28 @@ func (b *frontendBuilder) mountTLSSecret(template *corev1.PodTemplateSpec) {
 func (b *frontendBuilder) servicePorts() []corev1.ServicePort {
 	return []corev1.ServicePort{
 		{
-			Name:     "rpc",
-			Protocol: corev1.ProtocolTCP,
-			Port:     b.Cluster.Spec.RPCPort,
+			Name:       "rpc",
+			Protocol:   corev1.ProtocolTCP,
+			Port:       b.Cluster.Spec.RPCPort,
+			TargetPort: intstr.FromInt32(b.Cluster.Spec.Frontend.RPCPort),
 		},
 		{
-			Name:     "http",
-			Protocol: corev1.ProtocolTCP,
-			Port:     b.Cluster.Spec.HTTPPort,
+			Name:       "http",
+			Protocol:   corev1.ProtocolTCP,
+			Port:       b.Cluster.Spec.HTTPPort,
+			TargetPort: intstr.FromInt32(b.Cluster.Spec.Frontend.HTTPPort),
 		},
 		{
-			Name:     "mysql",
-			Protocol: corev1.ProtocolTCP,
-			Port:     b.Cluster.Spec.MySQLPort,
+			Name:       "mysql",
+			Protocol:   corev1.ProtocolTCP,
+			Port:       b.Cluster.Spec.MySQLPort,
+			TargetPort: intstr.FromInt32(b.Cluster.Spec.Frontend.MySQLPort),
 		},
 		{
-			Name:     "pg",
-			Protocol: corev1.ProtocolTCP,
-			Port:     b.Cluster.Spec.PostgreSQLPort,
+			Name:       "pg",
+			Protocol:   corev1.ProtocolTCP,
+			Port:       b.Cluster.Spec.PostgreSQLPort,
+			TargetPort: intstr.FromInt32(b.Cluster.Spec.Frontend.PostgreSQLPort),
 		},
 	}
 }
@@ -334,22 +339,22 @@ func (b *frontendBuilder) containerPorts() []corev1.ContainerPort {
 		{
 			Name:          "rpc",
 			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: b.Cluster.Spec.RPCPort,
+			ContainerPort: b.Cluster.Spec.Frontend.RPCPort,
 		},
 		{
 			Name:          "http",
 			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: b.Cluster.Spec.HTTPPort,
+			ContainerPort: b.Cluster.Spec.Frontend.HTTPPort,
 		},
 		{
 			Name:          "mysql",
 			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: b.Cluster.Spec.MySQLPort,
+			ContainerPort: b.Cluster.Spec.Frontend.MySQLPort,
 		},
 		{
 			Name:          "pg",
 			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: b.Cluster.Spec.PostgreSQLPort,
+			ContainerPort: b.Cluster.Spec.Frontend.PostgreSQLPort,
 		},
 	}
 }

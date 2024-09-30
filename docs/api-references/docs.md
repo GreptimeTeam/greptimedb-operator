@@ -111,8 +111,8 @@ _Appears in:_
 | `config` _string_ | The content of the configuration file of the component in TOML format. |  |  |
 | `template` _[PodTemplateSpec](#podtemplatespec)_ | Template defines the pod template for the component, if not specified, the pod template will use the default value. |  |  |
 | `logging` _[LoggingSpec](#loggingspec)_ | Logging defines the logging configuration for the component. |  |  |
-| `rpcPort` _integer_ | RPCPort is the gRPC port of the datanode. |  |  |
-| `httpPort` _integer_ | HTTPPort is the HTTP port of the datanode. |  |  |
+| `rpcPort` _integer_ | RPCPort is the gRPC port of the datanode. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
+| `httpPort` _integer_ | HTTPPort is the HTTP port of the datanode. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
 | `storage` _[DatanodeStorageSpec](#datanodestoragespec)_ | Storage is the default file storage of the datanode. For example, WAL, cache, index etc. |  |  |
 
 
@@ -192,7 +192,7 @@ _Appears in:_
 | `config` _string_ | The content of the configuration file of the component in TOML format. |  |  |
 | `template` _[PodTemplateSpec](#podtemplatespec)_ | Template defines the pod template for the component, if not specified, the pod template will use the default value. |  |  |
 | `logging` _[LoggingSpec](#loggingspec)_ | Logging defines the logging configuration for the component. |  |  |
-| `rpcPort` _integer_ | The gRPC port of the flownode. |  |  |
+| `rpcPort` _integer_ | The gRPC port of the flownode. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
 
 
 #### FlownodeStatus
@@ -229,6 +229,10 @@ _Appears in:_
 | `config` _string_ | The content of the configuration file of the component in TOML format. |  |  |
 | `template` _[PodTemplateSpec](#podtemplatespec)_ | Template defines the pod template for the component, if not specified, the pod template will use the default value. |  |  |
 | `logging` _[LoggingSpec](#loggingspec)_ | Logging defines the logging configuration for the component. |  |  |
+| `rpcPort` _integer_ | RPCPort is the gRPC port of the frontend. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
+| `httpPort` _integer_ | HTTPPort is the HTTP port of the frontend. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
+| `mysqlPort` _integer_ | MySQLPort is the MySQL port of the frontend. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
+| `postgreSQLPort` _integer_ | PostgreSQLPort is the PostgreSQL port of the frontend. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
 | `service` _[ServiceSpec](#servicespec)_ | Service is the service configuration of the frontend. |  |  |
 | `tls` _[TLSSpec](#tlsspec)_ | TLS is the TLS configuration of the frontend. |  |  |
 
@@ -325,10 +329,10 @@ _Appears in:_
 | `meta` _[MetaSpec](#metaspec)_ | Meta is the specification of meta node. |  |  |
 | `datanode` _[DatanodeSpec](#datanodespec)_ | Datanode is the specification of datanode node. |  |  |
 | `flownode` _[FlownodeSpec](#flownodespec)_ | Flownode is the specification of flownode node. |  |  |
-| `httpPort` _integer_ | HTTPPort is the HTTP port of the greptimedb cluster. |  |  |
-| `rpcPort` _integer_ | RPCPort is the RPC port of the greptimedb cluster. |  |  |
-| `mysqlPort` _integer_ | MySQLPort is the MySQL port of the greptimedb cluster. |  |  |
-| `postgreSQLPort` _integer_ | PostgreSQLPort is the PostgreSQL port of the greptimedb cluster. |  |  |
+| `httpPort` _integer_ | HTTPPort is the HTTP port of the greptimedb cluster. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
+| `rpcPort` _integer_ | RPCPort is the RPC port of the greptimedb cluster. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
+| `mysqlPort` _integer_ | MySQLPort is the MySQL port of the greptimedb cluster. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
+| `postgreSQLPort` _integer_ | PostgreSQLPort is the PostgreSQL port of the greptimedb cluster. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
 | `prometheusMonitor` _[PrometheusMonitorSpec](#prometheusmonitorspec)_ | PrometheusMonitor is the specification for creating PodMonitor or ServiceMonitor. |  |  |
 | `version` _string_ | Version is the version of greptimedb. |  |  |
 | `initializer` _[InitializerSpec](#initializerspec)_ | Initializer is the init container to set up components configurations before running the container. |  |  |
@@ -392,10 +396,10 @@ _Appears in:_
 | `base` _[PodTemplateSpec](#podtemplatespec)_ | Base is the base pod template for all components and can be overridden by template of individual component. |  |  |
 | `service` _[ServiceSpec](#servicespec)_ | Service is the service configuration of greptimedb. |  |  |
 | `tls` _[TLSSpec](#tlsspec)_ | The TLS configurations of the greptimedb. |  |  |
-| `httpPort` _integer_ | HTTPPort is the port of the greptimedb http service. |  |  |
-| `rpcPort` _integer_ | RPCPort is the port of the greptimedb rpc service. |  |  |
-| `mysqlPort` _integer_ | MySQLPort is the port of the greptimedb mysql service. |  |  |
-| `postgreSQLPort` _integer_ | PostgreSQLPort is the port of the greptimedb postgresql service. |  |  |
+| `httpPort` _integer_ | HTTPPort is the port of the greptimedb http service. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
+| `rpcPort` _integer_ | RPCPort is the port of the greptimedb rpc service. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
+| `mysqlPort` _integer_ | MySQLPort is the port of the greptimedb mysql service. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
+| `postgreSQLPort` _integer_ | PostgreSQLPort is the port of the greptimedb postgresql service. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
 | `prometheusMonitor` _[PrometheusMonitorSpec](#prometheusmonitorspec)_ | PrometheusMonitor is the specification for creating PodMonitor or ServiceMonitor. |  |  |
 | `version` _string_ | Version is the version of the greptimedb. |  |  |
 | `initializer` _[InitializerSpec](#initializerspec)_ | Initializer is the init container to set up components configurations before running the container. |  |  |
@@ -547,8 +551,8 @@ _Appears in:_
 | `config` _string_ | The content of the configuration file of the component in TOML format. |  |  |
 | `template` _[PodTemplateSpec](#podtemplatespec)_ | Template defines the pod template for the component, if not specified, the pod template will use the default value. |  |  |
 | `logging` _[LoggingSpec](#loggingspec)_ | Logging defines the logging configuration for the component. |  |  |
-| `rpcPort` _integer_ | RPCPort is the gRPC port of the meta. |  |  |
-| `httpPort` _integer_ | HTTPPort is the HTTP port of the meta. |  |  |
+| `rpcPort` _integer_ | RPCPort is the gRPC port of the meta. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
+| `httpPort` _integer_ | HTTPPort is the HTTP port of the meta. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
 | `etcdEndpoints` _string array_ | EtcdEndpoints is the endpoints of the etcd cluster. |  |  |
 | `enableCheckEtcdService` _boolean_ | EnableCheckEtcdService indicates whether to check etcd cluster health when starting meta. |  |  |
 | `enableRegionFailover` _boolean_ | EnableRegionFailover indicates whether to enable region failover. |  |  |

@@ -87,6 +87,10 @@ func (in *GreptimeDBCluster) defaultFrontend() *FrontendSpec {
 			Template: &PodTemplateSpec{},
 			Replicas: pointer.Int32(DefaultReplicas),
 		},
+		RPCPort:        DefaultRPCPort,
+		HTTPPort:       DefaultHTTPPort,
+		MySQLPort:      DefaultMySQLPort,
+		PostgreSQLPort: DefaultPostgreSQLPort,
 		Service: &ServiceSpec{
 			Type: corev1.ServiceTypeClusterIP,
 		},
@@ -159,7 +163,7 @@ func (in *GreptimeDBCluster) mergeFrontendTemplate() error {
 		}
 
 		// Reconfigure the probe settings based on the HTTP port.
-		in.Spec.Frontend.Template.MainContainer.LivenessProbe.HTTPGet.Port = intstr.FromInt32(in.Spec.HTTPPort)
+		in.Spec.Frontend.Template.MainContainer.LivenessProbe.HTTPGet.Port = intstr.FromInt32(in.Spec.Frontend.HTTPPort)
 	}
 
 	return nil
