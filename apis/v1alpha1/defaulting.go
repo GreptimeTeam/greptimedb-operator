@@ -61,7 +61,7 @@ func (in *GreptimeDBCluster) defaultSpec() *GreptimeDBClusterSpec {
 				LivenessProbe: &corev1.Probe{
 					ProbeHandler: corev1.ProbeHandler{
 						HTTPGet: &corev1.HTTPGetAction{
-							Path: DefautlHealthEndpoint,
+							Path: DefaultHealthEndpoint,
 							Port: intstr.FromInt32(DefaultHTTPPort),
 						},
 					},
@@ -344,7 +344,7 @@ func (in *GreptimeDBStandalone) defaultSpec() *GreptimeDBStandaloneSpec {
 				LivenessProbe: &corev1.Probe{
 					ProbeHandler: corev1.ProbeHandler{
 						HTTPGet: &corev1.HTTPGetAction{
-							Path: DefautlHealthEndpoint,
+							Path: DefaultHealthEndpoint,
 							Port: intstr.FromInt32(DefaultHTTPPort),
 						},
 					},

@@ -46,9 +46,6 @@ func TestBasicStandalone(ctx context.Context, h *helper.Helper) {
 	err = h.Create(ctx, testStandalone)
 	Expect(err).NotTo(HaveOccurred(), "failed to create greptimedbstandalone")
 
-	err = h.Get(ctx, client.ObjectKey{Name: testStandalone.Name, Namespace: testStandalone.Namespace}, testStandalone)
-	Expect(err).NotTo(HaveOccurred(), "failed to get standalone")
-
 	By("Check the status of testStandalone")
 	Eventually(func() error {
 		phase, err := h.GetPhase(ctx, testStandalone.Namespace, testStandalone.Name, new(greptimev1alpha1.GreptimeDBStandalone))
@@ -62,6 +59,9 @@ func TestBasicStandalone(ctx context.Context, h *helper.Helper) {
 
 		return nil
 	}, helper.DefaultTimeout, time.Second).ShouldNot(HaveOccurred())
+
+	err = h.Get(ctx, client.ObjectKey{Name: testStandalone.Name, Namespace: testStandalone.Namespace}, testStandalone)
+	Expect(err).NotTo(HaveOccurred(), "failed to get standalone")
 
 	By("Run SQL test")
 	frontendAddr, err := h.PortForward(ctx, testStandalone.Namespace, common.ResourceName(testStandalone.Name, greptimev1alpha1.StandaloneKind), int(testStandalone.Spec.PostgreSQLPort))

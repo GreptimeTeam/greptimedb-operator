@@ -19,8 +19,8 @@ const (
 	// DefaultVersion is the default version of the GreptimeDB.
 	DefaultVersion = "Unknown"
 
-	// DefautlHealthEndpoint is the default health endpoint for the liveness probe.
-	DefautlHealthEndpoint = "/health"
+	// DefaultHealthEndpoint is the default health endpoint for the liveness probe.
+	DefaultHealthEndpoint = "/health"
 
 	// DefaultHTTPPort is the default HTTP port for the GreptimeDB.
 	DefaultHTTPPort int32 = 4000

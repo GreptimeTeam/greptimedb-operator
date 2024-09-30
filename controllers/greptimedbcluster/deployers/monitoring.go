@@ -136,7 +136,7 @@ func (d *MonitoringDeployer) createPipeline(cluster *v1alpha1.GreptimeDBCluster)
 	standaloneName := common.ResourceName(common.MonitoringServiceName(cluster.Name), v1alpha1.StandaloneKind)
 
 	// FIXME(zyy17): Make the port configurable.
-	svc := fmt.Sprintf("%s.%s.svc.cluster.local:4000", standaloneName, cluster.Namespace)
+	svc := fmt.Sprintf("%s.%s.svc.cluster.local:%d", standaloneName, cluster.Namespace, v1alpha1.DefaultHTTPPort)
 	req, err := http.NewRequest("POST", fmt.Sprintf("http://%s/v1/events/pipelines/%s", svc, common.LogsPipelineName(cluster.Namespace, cluster.Name)), &b)
 	if err != nil {
 		return err

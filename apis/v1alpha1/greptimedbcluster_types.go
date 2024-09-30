@@ -340,6 +340,7 @@ type MonitoringSpec struct {
 	Standalone *GreptimeDBStandaloneSpec `json:"standalone,omitempty"`
 
 	// The specification of cluster logs collection.
+	// +optional
 	LogsCollection *LogsCollectionSpec `json:"logsCollection,omitempty"`
 
 	// The specification of the vector instance.
