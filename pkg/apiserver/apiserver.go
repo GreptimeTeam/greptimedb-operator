@@ -40,13 +40,13 @@ const (
 type Server struct {
 	client.Client
 
-	port int
+	port int32
 }
 
 // Options represents the options for the Server.
 type Options struct {
 	// Port is the port that the API service will listen on.
-	Port int
+	Port int32
 }
 
 // GreptimeDBCluster represents a GreptimeDBCluster resource that is returned by the API.

@@ -29,7 +29,7 @@ type Options struct {
 	HealthProbeAddr      string
 	EnableLeaderElection bool
 	EnableAPIServer      bool
-	APIServerPort        int
+	APIServerPort        int32
 }
 
 func NewDefaultOptions() *Options {
@@ -46,5 +46,5 @@ func (o *Options) AddFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&o.HealthProbeAddr, "health-probe-bind-address", o.HealthProbeAddr, "The address the probe endpoint binds to.")
 	fs.BoolVar(&o.EnableLeaderElection, "enable-leader-election", o.EnableLeaderElection, "Enable leader election for controller manager. Enabling this will ensure there is only one active controller manager.")
 	fs.BoolVar(&o.EnableAPIServer, "enable-apiserver", o.EnableAPIServer, "Enable API server for GreptimeDB operator.")
-	fs.IntVar(&o.APIServerPort, "apiserver-port", o.APIServerPort, "The port the API server binds to.")
+	fs.Int32Var(&o.APIServerPort, "apiserver-port", o.APIServerPort, "The port the API server binds to.")
 }
