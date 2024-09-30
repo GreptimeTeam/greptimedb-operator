@@ -60,6 +60,9 @@ func TestClusterStandaloneWAL(ctx context.Context, h *helper.Helper) {
 		return nil
 	}, helper.DefaultTimeout, time.Second).ShouldNot(HaveOccurred())
 
+	err = h.Get(ctx, client.ObjectKey{Name: testCluster.Name, Namespace: testCluster.Namespace}, testCluster)
+	Expect(err).NotTo(HaveOccurred(), "failed to get cluster")
+
 	By("Execute distributed SQL test")
 	frontendAddr, err := h.PortForward(ctx, testCluster.Namespace, common.ResourceName(testCluster.Name, greptimev1alpha1.FrontendComponentKind), int(testCluster.Spec.PostgreSQLPort))
 	Expect(err).NotTo(HaveOccurred(), "failed to port forward frontend service")

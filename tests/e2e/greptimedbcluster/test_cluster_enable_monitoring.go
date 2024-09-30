@@ -30,10 +30,10 @@ import (
 	"github.com/GreptimeTeam/greptimedb-operator/tests/e2e/helper"
 )
 
-// TestClusterEnableRemoteWal tests a cluster that enables kafka remote wal.
-func TestClusterEnableRemoteWal(ctx context.Context, h *helper.Helper) {
+// TestClusterEnableMonitoring tests a cluster that enables monitoring.
+func TestClusterEnableMonitoring(ctx context.Context, h *helper.Helper) {
 	const (
-		testCRFile  = "./testdata/resources/cluster/enable-remote-wal/cluster.yaml"
+		testCRFile  = "./testdata/resources/cluster/enable-monitoring/cluster.yaml"
 		testSQLFile = "./testdata/sql/cluster/partition.sql"
 	)
 
@@ -62,7 +62,6 @@ func TestClusterEnableRemoteWal(ctx context.Context, h *helper.Helper) {
 
 	err = h.Get(ctx, client.ObjectKey{Name: testCluster.Name, Namespace: testCluster.Namespace}, testCluster)
 	Expect(err).NotTo(HaveOccurred(), "failed to get cluster")
-
 	By("Execute distributed SQL test")
 	frontendAddr, err := h.PortForward(ctx, testCluster.Namespace, common.ResourceName(testCluster.Name, greptimev1alpha1.FrontendComponentKind), int(testCluster.Spec.PostgreSQLPort))
 	Expect(err).NotTo(HaveOccurred(), "failed to port forward frontend service")
