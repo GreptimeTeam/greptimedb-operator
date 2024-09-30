@@ -189,11 +189,11 @@ func (in *GreptimeDBCluster) defaultMonitoringStandaloneSpec() *GreptimeDBStanda
 		}
 
 		if root := osp.GetOSSStorage().GetRoot(); root != "" {
-			standalone.Spec.ObjectStorageProvider.GCS.Root = fmt.Sprintf("%s/monitoring", root)
+			standalone.Spec.ObjectStorageProvider.OSS.Root = fmt.Sprintf("%s/monitoring", root)
 		}
 
 		if root := osp.GetGCSStorage().GetRoot(); root != "" {
-			standalone.Spec.ObjectStorageProvider.OSS.Root = fmt.Sprintf("%s/monitoring", root)
+			standalone.Spec.ObjectStorageProvider.GCS.Root = fmt.Sprintf("%s/monitoring", root)
 		}
 	}
 

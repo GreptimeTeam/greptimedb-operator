@@ -137,17 +137,17 @@ func (d *MonitoringDeployer) createPipeline(cluster *v1alpha1.GreptimeDBCluster)
 
 	// FIXME(zyy17): Make the port configurable.
 	svc := fmt.Sprintf("%s.%s.svc.cluster.local:%d", standaloneName, cluster.Namespace, v1alpha1.DefaultHTTPPort)
-	req, err := http.NewRequest("POST", fmt.Sprintf("http://%s/v1/events/pipelines/%s", svc, common.LogsPipelineName(cluster.Namespace, cluster.Name)), &b)
-	if err != nil {
-		return err
-	}
-	req.Header.Set("Content-Type", w.FormDataContentType())
-
 	hc := &http.Client{
 		Timeout: 5 * time.Second,
 	}
 
 	operation := func() error {
+		req, err := http.NewRequest("POST", fmt.Sprintf("http://%s/v1/events/pipelines/%s", svc, common.LogsPipelineName(cluster.Namespace, cluster.Name)), &b)
+		if err != nil {
+			return err
+		}
+		req.Header.Set("Content-Type", w.FormDataContentType())
+
 		resp, err := hc.Do(req)
 		if err != nil {
 			klog.Warningf("failed to create pipeline: %v", err)
