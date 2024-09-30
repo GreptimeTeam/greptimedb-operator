@@ -35,6 +35,7 @@ import (
 	"github.com/GreptimeTeam/greptimedb-operator/cmd/operator/app/version"
 	"github.com/GreptimeTeam/greptimedb-operator/controllers/greptimedbcluster"
 	"github.com/GreptimeTeam/greptimedb-operator/controllers/greptimedbstandalone"
+	"github.com/GreptimeTeam/greptimedb-operator/pkg/apiserver"
 )
 
 const (
@@ -97,6 +98,19 @@ func NewOperatorCommand() *cobra.Command {
 			if err := greptimedbstandalone.Setup(mgr, o); err != nil {
 				setupLog.Error(err, "unable to setup controller", "controller", "greptimedbstandalone")
 				os.Exit(1)
+			}
+
+			if o.EnableAPIServer {
+				server := apiserver.NewServer(mgr.GetClient(), &apiserver.Options{
+					Port: o.APIServerPort,
+				})
+
+				go func() {
+					if err := server.Run(); err != nil {
+						setupLog.Error(err, "unable to run API service")
+						os.Exit(1)
+					}
+				}()
 			}
 
 			// +kubebuilder:scaffold:builder
