@@ -15,6 +15,7 @@
 package v1alpha1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -322,6 +323,93 @@ type GreptimeDBClusterSpec struct {
 	// The global logging configuration for all components. It can be overridden by the logging configuration of individual component.
 	// +optional
 	Logging *LoggingSpec `json:"logging,omitempty"`
+
+	// Monitoring is the specification for monitor bootstrapping. It will create a standalone greptimedb instance to monitor the cluster.
+	// +optional
+	Monitoring *MonitoringSpec `json:"monitoring,omitempty"`
+}
+
+// MonitoringSpec is the specification for monitor bootstrapping. It will create a standalone greptimedb instance to monitor the cluster.
+type MonitoringSpec struct {
+	// Enabled indicates whether to enable the monitoring service.
+	// +required
+	Enabled bool `json:"enabled"`
+
+	// The specification of the standalone greptimedb instance.
+	// +optional
+	Standalone *GreptimeDBStandaloneSpec `json:"standalone,omitempty"`
+
+	// The specification of cluster logs collection.
+	// +optional
+	LogsCollection *LogsCollectionSpec `json:"logsCollection,omitempty"`
+
+	// The specification of the vector instance.
+	// +optional
+	Vector *VectorSpec `json:"vector,omitempty"`
+}
+
+// LogsCollectionSpec is the specification for cluster logs collection.
+type LogsCollectionSpec struct {
+	// The specification of the log pipeline.
+	// +optional
+	Pipeline *LogPipeline `json:"pipeline,omitempty"`
+}
+
+func (in *LogsCollectionSpec) GetPipeline() *LogPipeline {
+	if in != nil {
+		return in.Pipeline
+	}
+	return nil
+}
+
+// LogPipeline is the specification for log pipeline.
+type LogPipeline struct {
+	// The content of the pipeline configuration file in YAML format.
+	// +optional
+	Data string `json:"data,omitempty"`
+}
+
+func (in *LogPipeline) GetData() string {
+	if in != nil {
+		return in.Data
+	}
+	return ""
+}
+
+// VectorSpec is the specification for vector instance.
+type VectorSpec struct {
+	// The image of the vector instance.
+	// +optional
+	Image string `json:"image,omitempty"`
+
+	// The resources of the vector instance.
+	// +optional
+	Resource corev1.ResourceRequirements `json:"resource,omitempty"`
+}
+
+func (in *MonitoringSpec) IsEnabled() bool {
+	return in != nil && in.Enabled
+}
+
+func (in *MonitoringSpec) GetStandalone() *GreptimeDBStandaloneSpec {
+	if in != nil {
+		return in.Standalone
+	}
+	return nil
+}
+
+func (in *MonitoringSpec) GetLogsCollection() *LogsCollectionSpec {
+	if in != nil {
+		return in.LogsCollection
+	}
+	return nil
+}
+
+func (in *MonitoringSpec) GetVector() *VectorSpec {
+	if in != nil {
+		return in.Vector
+	}
+	return nil
 }
 
 func (in *GreptimeDBCluster) GetBaseMainContainer() *MainContainerSpec {
@@ -409,6 +497,13 @@ func (in *GreptimeDBCluster) GetPrometheusMonitor() *PrometheusMonitorSpec {
 	return nil
 }
 
+func (in *GreptimeDBCluster) GetMonitoring() *MonitoringSpec {
+	if in != nil {
+		return in.Spec.Monitoring
+	}
+	return nil
+}
+
 // GreptimeDBClusterStatus defines the observed state of GreptimeDBCluster
 type GreptimeDBClusterStatus struct {
 	// Frontend is the status of frontend node.
@@ -426,6 +521,10 @@ type GreptimeDBClusterStatus struct {
 	// Flownode is the status of flownode node.
 	// +optional
 	Flownode FlownodeStatus `json:"flownode,omitempty"`
+
+	// The status of the monitoring service.
+	// +optional
+	Monitoring MonitoringStatus `json:"monitoring,omitempty"`
 
 	// Version is the version of greptimedb.
 	// +optional
@@ -482,6 +581,13 @@ type FlownodeStatus struct {
 
 	// ReadyReplicas is the number of ready replicas of the flownode.
 	ReadyReplicas int32 `json:"readyReplicas"`
+}
+
+// MonitoringStatus is the status of the monitoring service.
+type MonitoringStatus struct {
+	// InternalDNSName is the internal DNS name of the monitoring service. For example, 'mycluster-standalone-monitor.default.svc.cluster.local'.
+	// +optional
+	InternalDNSName string `json:"internalDNSName,omitempty"`
 }
 
 func (in *GreptimeDBClusterStatus) GetCondition(conditionType ConditionType) *Condition {

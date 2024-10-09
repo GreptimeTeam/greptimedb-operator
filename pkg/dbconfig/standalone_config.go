@@ -70,7 +70,7 @@ func (c *StandaloneConfig) ConfigureByStandalone(standalone *v1alpha1.GreptimeDB
 		c.WalBrokerEndpoints = kafka.GetBrokerEndpoints()
 	}
 
-	c.ConfigureLogging(standalone.GetLogging(), nil)
+	c.ConfigureLogging(standalone.GetLogging())
 
 	return nil
 }

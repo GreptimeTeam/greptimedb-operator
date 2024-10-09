@@ -1,4 +1,4 @@
-// Copyright 2023 Greptime Team
+// Copyright 2024 Greptime Team
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,11 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package deployer
+package config
 
-const (
-	EnvPodIP        = "POD_IP"
-	EnvPodName      = "POD_NAME"
-	EnvPodNamespace = "POD_NAMESPACE"
-	EnvRole         = "ROLE"
+import (
+	"embed"
 )
+
+//go:embed vector-config-template.yaml
+var VectorConfigTemplate embed.FS
+
+//go:embed pipeline.yaml
+var DefaultPipeline embed.FS

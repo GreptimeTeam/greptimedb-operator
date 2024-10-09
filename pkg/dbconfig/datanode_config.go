@@ -69,7 +69,7 @@ func (c *DatanodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster)
 		c.WalBrokerEndpoints = kafka.GetBrokerEndpoints()
 	}
 
-	c.ConfigureLogging(cluster.GetLogging(), cluster.GetDatanode().GetLogging())
+	c.ConfigureLogging(cluster.GetDatanode().GetLogging())
 
 	return nil
 }

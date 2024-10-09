@@ -15,10 +15,12 @@
 package v1alpha1
 
 import (
+	"fmt"
 	"strings"
 
 	"dario.cat/mergo"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/pointer"
 )
@@ -43,6 +45,11 @@ func (in *GreptimeDBCluster) SetDefaults() error {
 		return err
 	}
 
+	// Merge the logging settings into the GreptimeDBClusterSpec.
+	if err := in.mergeLogging(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -54,7 +61,7 @@ func (in *GreptimeDBCluster) defaultSpec() *GreptimeDBClusterSpec {
 				LivenessProbe: &corev1.Probe{
 					ProbeHandler: corev1.ProbeHandler{
 						HTTPGet: &corev1.HTTPGetAction{
-							Path: DefautlHealthEndpoint,
+							Path: DefaultHealthEndpoint,
 							Port: intstr.FromInt32(DefaultHTTPPort),
 						},
 					},
@@ -78,6 +85,29 @@ func (in *GreptimeDBCluster) defaultSpec() *GreptimeDBClusterSpec {
 
 	defaultSpec.Logging = defaultLogging()
 
+	if in.GetMonitoring().IsEnabled() {
+		defaultSpec.Monitoring = &MonitoringSpec{
+			Standalone:     in.defaultMonitoringStandaloneSpec(),
+			LogsCollection: &LogsCollectionSpec{},
+			Vector: &VectorSpec{
+				Image: DefaultVectorImage,
+				Resource: corev1.ResourceRequirements{
+					Requests: corev1.ResourceList{
+						corev1.ResourceCPU:    resource.MustParse(DefaultVectorCPURequest),
+						corev1.ResourceMemory: resource.MustParse(DefaultVectorMemoryRequest),
+					},
+					Limits: corev1.ResourceList{
+						corev1.ResourceCPU:    resource.MustParse(DefaultVectorCPURequest),
+						corev1.ResourceMemory: resource.MustParse(DefaultVectorMemoryRequest),
+					},
+				},
+			},
+		}
+
+		// Set the default logging format to JSON if monitoring is enabled.
+		defaultSpec.Logging.Format = LogFormatJSON
+	}
+
 	return defaultSpec
 }
 
@@ -86,6 +116,7 @@ func (in *GreptimeDBCluster) defaultFrontend() *FrontendSpec {
 		ComponentSpec: ComponentSpec{
 			Template: &PodTemplateSpec{},
 			Replicas: pointer.Int32(DefaultReplicas),
+			Logging:  &LoggingSpec{},
 		},
 		RPCPort:        DefaultRPCPort,
 		HTTPPort:       DefaultHTTPPort,
@@ -106,6 +137,7 @@ func (in *GreptimeDBCluster) defaultMeta() *MetaSpec {
 		ComponentSpec: ComponentSpec{
 			Template: &PodTemplateSpec{},
 			Replicas: pointer.Int32(DefaultReplicas),
+			Logging:  &LoggingSpec{},
 		},
 		RPCPort:              DefaultMetaRPCPort,
 		HTTPPort:             DefaultHTTPPort,
@@ -118,6 +150,7 @@ func (in *GreptimeDBCluster) defaultDatanode() *DatanodeSpec {
 		ComponentSpec: ComponentSpec{
 			Template: &PodTemplateSpec{},
 			Replicas: pointer.Int32(DefaultReplicas),
+			Logging:  &LoggingSpec{},
 		},
 		RPCPort:  DefaultRPCPort,
 		HTTPPort: DefaultHTTPPort,
@@ -130,9 +163,41 @@ func (in *GreptimeDBCluster) defaultFlownodeSpec() *FlownodeSpec {
 		ComponentSpec: ComponentSpec{
 			Template: &PodTemplateSpec{},
 			Replicas: pointer.Int32(DefaultReplicas),
+			Logging:  &LoggingSpec{},
 		},
 		RPCPort: DefaultRPCPort,
 	}
+}
+
+func (in *GreptimeDBCluster) defaultMonitoringStandaloneSpec() *GreptimeDBStandaloneSpec {
+	standalone := new(GreptimeDBStandalone)
+	standalone.Spec = *standalone.defaultSpec()
+
+	if image := in.GetBaseMainContainer().GetImage(); image != "" {
+		standalone.Spec.Base.MainContainer.Image = image
+	} else {
+		standalone.Spec.Base.MainContainer.Image = DefaultGreptimeDBImage
+	}
+
+	standalone.Spec.Version = getVersionFromImage(standalone.Spec.Base.MainContainer.Image)
+
+	if osp := in.GetObjectStorageProvider(); osp != nil {
+		standalone.Spec.ObjectStorageProvider = osp.DeepCopy()
+
+		if root := osp.GetS3Storage().GetRoot(); root != "" {
+			standalone.Spec.ObjectStorageProvider.S3.Root = fmt.Sprintf("%s/monitoring", root)
+		}
+
+		if root := osp.GetOSSStorage().GetRoot(); root != "" {
+			standalone.Spec.ObjectStorageProvider.OSS.Root = fmt.Sprintf("%s/monitoring", root)
+		}
+
+		if root := osp.GetGCSStorage().GetRoot(); root != "" {
+			standalone.Spec.ObjectStorageProvider.GCS.Root = fmt.Sprintf("%s/monitoring", root)
+		}
+	}
+
+	return &standalone.Spec
 }
 
 func (in *GreptimeDBCluster) mergeTemplate() error {
@@ -211,6 +276,50 @@ func (in *GreptimeDBCluster) mergeFlownodeTemplate() error {
 	return nil
 }
 
+func (in *GreptimeDBCluster) mergeLogging() error {
+	if logging := in.GetMeta().GetLogging(); logging != nil {
+		if err := mergo.Merge(logging, in.GetLogging().DeepCopy()); err != nil {
+			return err
+		}
+		if in.GetMonitoring().IsEnabled() {
+			// Set the default logging format to JSON if monitoring is enabled.
+			logging.Format = LogFormatJSON
+		}
+	}
+
+	if logging := in.GetDatanode().GetLogging(); logging != nil {
+		if err := mergo.Merge(logging, in.GetLogging().DeepCopy()); err != nil {
+			return err
+		}
+		if in.GetMonitoring().IsEnabled() {
+			// Set the default logging format to JSON if monitoring is enabled.
+			logging.Format = LogFormatJSON
+		}
+	}
+
+	if logging := in.GetFrontend().GetLogging(); logging != nil {
+		if err := mergo.Merge(logging, in.GetLogging().DeepCopy()); err != nil {
+			return err
+		}
+		if in.GetMonitoring().IsEnabled() {
+			// Set the default logging format to JSON if monitoring is enabled.
+			logging.Format = LogFormatJSON
+		}
+	}
+
+	if logging := in.GetFlownode().GetLogging(); logging != nil {
+		if err := mergo.Merge(logging, in.GetLogging().DeepCopy()); err != nil {
+			return err
+		}
+		if in.GetMonitoring().IsEnabled() {
+			// Set the default logging format to JSON if monitoring is enabled.
+			logging.Format = LogFormatJSON
+		}
+	}
+
+	return nil
+}
+
 func (in *GreptimeDBStandalone) SetDefaults() error {
 	if in == nil {
 		return nil
@@ -235,7 +344,7 @@ func (in *GreptimeDBStandalone) defaultSpec() *GreptimeDBStandaloneSpec {
 				LivenessProbe: &corev1.Probe{
 					ProbeHandler: corev1.ProbeHandler{
 						HTTPGet: &corev1.HTTPGetAction{
-							Path: DefautlHealthEndpoint,
+							Path: DefaultHealthEndpoint,
 							Port: intstr.FromInt32(DefaultHTTPPort),
 						},
 					},

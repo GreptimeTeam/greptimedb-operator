@@ -60,6 +60,9 @@ func TestBasicStandalone(ctx context.Context, h *helper.Helper) {
 		return nil
 	}, helper.DefaultTimeout, time.Second).ShouldNot(HaveOccurred())
 
+	err = h.Get(ctx, client.ObjectKey{Name: testStandalone.Name, Namespace: testStandalone.Namespace}, testStandalone)
+	Expect(err).NotTo(HaveOccurred(), "failed to get standalone")
+
 	By("Run SQL test")
 	frontendAddr, err := h.PortForward(ctx, testStandalone.Namespace, common.ResourceName(testStandalone.Name, greptimev1alpha1.StandaloneKind), int(testStandalone.Spec.PostgreSQLPort))
 	Expect(err).NotTo(HaveOccurred(), "failed to port forward frontend service")

@@ -1,0 +1,66 @@
+sources:
+  logs:
+    type: file
+    data_dir: /logs
+    include:
+      - /logs/*.*
+    max_read_bytes: 536870912
+
+  metrics:
+    type: prometheus_scrape
+    endpoints:
+      - http://${POD_IP}:4000/metrics
+    instance_tag: instance
+    endpoint_tag: endpoint
+    honor_labels: true
+
+transforms:
+  transform_logs:
+    type: remap
+    inputs:
+      - logs
+    source: |
+      . = parse_json!(.message)
+      .message = .fields.message
+      .pod = "${POD_NAME}"
+      .pod_ip = "${POD_IP}"
+      .namespace = "${POD_NAMESPACE}"
+      .cluster = "{{ .ClusterName }}"
+      .role = "${ROLE}"
+      if exists(.fields."log.target") {
+        .target = .fields."log.target"
+      }
+      if exists(.fields."log.module_path") {
+        .module_path = .fields."log.module_path"
+      }
+      if exists(.fields."log.file") {
+        .file = .fields."log.file"
+      }
+      if exists(.fields."err") {
+        .err = .fields.err
+      }
+
+  add_metrics_labels:
+    type: remap
+    inputs:
+      - metrics
+    source: |
+      .tags.namespace = "${POD_NAMESPACE}"
+      .tags.cluster = "{{ .ClusterName }}"
+      .tags.pod = "${POD_NAME}"
+
+sinks:
+  sink_greptimedb_logs:
+    type: greptimedb_logs
+    table: {{ .LogsTableName }}
+    pipeline_name: {{ .PipelineName }}
+    compression: gzip
+    inputs:
+      - transform_logs
+    endpoint: {{ .LoggingService }}
+
+  sink_greptimedb_metrics:
+    type: prometheus_remote_write
+    inputs:
+      - add_metrics_labels
+    endpoint: {{ .MetricService }}

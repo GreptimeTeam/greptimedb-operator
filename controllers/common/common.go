@@ -257,3 +257,10 @@ func GetPVCs(ctx context.Context, k8sClient client.Client, namespace, name strin
 
 	return claims.Items, nil
 }
+func MonitoringServiceName(name string) string {
+	return name + "-monitor"
+}
+
+func LogsPipelineName(namespace, name string) string {
+	return namespace + "-" + name + "-logs"
+}

@@ -63,6 +63,7 @@ func Setup(mgr ctrl.Manager, _ *options.Options) error {
 
 	// sync will execute the sync logic of multiple deployers in order.
 	reconciler.Deployers = []deployer.Deployer{
+		deployers.NewMonitoringDeployer(mgr),
 		deployers.NewMetaDeployer(mgr),
 		deployers.NewDatanodeDeployer(mgr),
 		deployers.NewFrontendDeployer(mgr),
@@ -79,6 +80,7 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Owns(&corev1.Service{}).
 		Owns(&appsv1.StatefulSet{}).
 		Owns(&appsv1.Deployment{}).
+		Owns(&v1alpha1.GreptimeDBStandalone{}).
 		Complete(r)
 }
 

@@ -37,7 +37,7 @@ func (c *FrontendConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster)
 		}
 	}
 
-	c.ConfigureLogging(cluster.GetLogging(), cluster.GetFrontend().GetLogging())
+	c.ConfigureLogging(cluster.GetFrontend().GetLogging())
 
 	return nil
 }

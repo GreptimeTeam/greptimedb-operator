@@ -4,6 +4,13 @@ metadata:
   name: test02
   namespace: default
 spec:
+  base:
+    main:
+      image: greptime/greptimedb:latest
+      livenessProbe:
+        httpGet:
+          path: /health
+          port: 4000
   version: latest
   initializer:
     image: greptime/greptimedb-initializer:latest
@@ -11,10 +18,6 @@ spec:
   rpcPort: 4001
   mysqlPort: 4002
   postgreSQLPort: 4003
-  wal:
-    kafka:
-      brokerEndpoints:
-        - kafka.default:9092
   objectStorage:
     s3:
       bucket: greptimedb
@@ -23,28 +26,17 @@ spec:
       root: /greptimedb
       secretName: s3-credentials
   logging:
-    format: text
+    format: json
     level: info
     logsDir: /data/greptimedb/logs
     onlyLogToStdout: false
     persistentWithData: false
-  base:
-    main:
-      image: greptime/greptimedb:latest
-      livenessProbe:
-        httpGet:
-          path: /health
-          port: 4000
   frontend:
     replicas: 1
-    httpPort: 4000
-    mysqlPort: 4002
-    postgreSQLPort: 4003
-    rpcPort: 4001
     service:
       type: ClusterIP
     logging:
-      format: text
+      format: json
       level: info
       logsDir: /data/greptimedb/logs
       onlyLogToStdout: false
@@ -60,9 +52,9 @@ spec:
     etcdEndpoints:
       - etcd.etcd-cluster.svc.cluster.local:2379
     # Should be true if wal.kafka is set.
-    enableRegionFailover: true
+    enableRegionFailover: false
     logging:
-      format: text
+      format: json
       level: info
       logsDir: /data/greptimedb/logs
       onlyLogToStdout: false
@@ -81,12 +73,6 @@ spec:
     httpPort: 4000
     rpcPort: 4001
     replicas: 1
-    logging:
-      format: text
-      level: info
-      logsDir: /data/greptimedb/logs
-      onlyLogToStdout: false
-      persistentWithData: false
     storage:
       dataHome: /data/greptimedb
       fs:
@@ -94,6 +80,12 @@ spec:
         mountPath: /data/greptimedb
         storageRetainPolicy: Retain
         storageSize: 10Gi
+    logging:
+      format: json
+      level: info
+      logsDir: /data/greptimedb/logs
+      onlyLogToStdout: false
+      persistentWithData: false
     template:
       main:
         image: greptime/greptimedb:latest
@@ -101,3 +93,50 @@ spec:
           httpGet:
             path: /health
             port: 4000
+  monitoring:
+    enabled: true
+    logsCollection: {}
+    standalone:
+      base:
+        main:
+          image: greptime/greptimedb:latest
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 4000
+      datanodeStorage:
+        dataHome: /data/greptimedb
+        fs:
+          mountPath: /data/greptimedb
+          name: datanode
+          storageRetainPolicy: Retain
+          storageSize: 10Gi
+      httpPort: 4000
+      logging:
+        format: text
+        level: info
+        logsDir: /data/greptimedb/logs
+        onlyLogToStdout: false
+        persistentWithData: false
+      mysqlPort: 4002
+      objectStorage:
+        s3:
+          bucket: greptimedb
+          endpoint: s3.amazonaws.com
+          region: us-west-2
+          root: /greptimedb/monitoring
+          secretName: s3-credentials
+      postgreSQLPort: 4003
+      rpcPort: 4001
+      service:
+        type: ClusterIP
+      version: latest
+    vector:
+      image: timberio/vector:nightly-alpine
+      resource:
+        limits:
+          cpu: 50m
+          memory: 128Mi
+        requests:
+          cpu: 50m
+          memory: 128Mi

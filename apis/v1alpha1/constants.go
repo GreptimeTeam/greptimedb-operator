@@ -19,8 +19,8 @@ const (
 	// DefaultVersion is the default version of the GreptimeDB.
 	DefaultVersion = "Unknown"
 
-	// DefautlHealthEndpoint is the default health endpoint for the liveness probe.
-	DefautlHealthEndpoint = "/health"
+	// DefaultHealthEndpoint is the default health endpoint for the liveness probe.
+	DefaultHealthEndpoint = "/health"
 
 	// DefaultHTTPPort is the default HTTP port for the GreptimeDB.
 	DefaultHTTPPort int32 = 4000
@@ -58,8 +58,20 @@ const (
 	// DefaultInitializerImage is the default image for the GreptimeDB initializer.
 	DefaultInitializerImage = "greptime/greptimedb-initializer:latest"
 
+	// DefaultGreptimeDBImage is the default image for the GreptimeDB.
+	DefaultGreptimeDBImage = "greptime/greptimedb:latest"
+
 	// DefaultLoggingLevel is the default logging level for the GreptimeDB.
 	DefaultLoggingLevel = LoggingLevelInfo
+
+	// DefaultVectorImage is the default image for the vector.
+	DefaultVectorImage = "timberio/vector:nightly-alpine"
+
+	// DefaultVectorCPURequest is the default CPU request for the vector.
+	DefaultVectorCPURequest = "50m"
+
+	// DefaultVectorMemoryRequest is the default memory request for the vector.
+	DefaultVectorMemoryRequest = "128Mi"
 )
 
 // The following constants are the constant configuration for the GreptimeDBCluster and GreptimeDBStandalone.
