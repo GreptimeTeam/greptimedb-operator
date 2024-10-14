@@ -26,7 +26,7 @@ import (
 
 func TestClusterSetDefaults(t *testing.T) {
 	const (
-		testDir        = "testdata/defaulting/greptimedbcluster"
+		testDir        = "testdata/defaulting/greptimedbcluster/setdefaults"
 		inputFileName  = "input.yaml"
 		expectFileName = "expect.yaml"
 	)
@@ -63,6 +63,74 @@ func TestClusterSetDefaults(t *testing.T) {
 
 			if err := input.SetDefaults(); err != nil {
 				t.Fatalf("failed to set defaults: %v", err)
+			}
+
+			if !reflect.DeepEqual(input, expect) {
+				rawInputData, err := yaml.Marshal(input)
+				if err != nil {
+					t.Fatalf("failed to marshal: %v", err)
+				}
+
+				rawExpectData, err := yaml.Marshal(expect)
+				if err != nil {
+					t.Fatalf("failed to marshal: %v", err)
+				}
+
+				// Use diffmatchpatch to get a human-readable diff.
+				dmp := diffmatchpatch.New()
+				t.Errorf("unexpected result for %s:\n%s", entry.Name(), dmp.DiffPrettyText(dmp.DiffMain(string(rawExpectData), string(rawInputData), false)))
+			}
+		}
+	}
+}
+
+func TestClusterMerge(t *testing.T) {
+	const (
+		testDir        = "testdata/defaulting/greptimedbcluster/merge"
+		inputFileName  = "input.yaml"
+		expectFileName = "expect.yaml"
+	)
+
+	entries, err := os.ReadDir(testDir)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, entry := range entries {
+		if entry.IsDir() {
+			inputFile := filepath.Join(testDir, entry.Name(), inputFileName)
+			inputData, err := os.ReadFile(inputFile)
+			if err != nil {
+				t.Errorf("failed to read %s: %v", inputFile, err)
+			}
+
+			expectFile := filepath.Join(testDir, entry.Name(), expectFileName)
+			expectData, err := os.ReadFile(expectFile)
+			if err != nil {
+				t.Fatalf("failed to read %s: %v", expectFile, err)
+			}
+
+			var (
+				input  GreptimeDBCluster
+				expect GreptimeDBCluster
+			)
+			if err := yaml.Unmarshal(inputData, &input); err != nil {
+				t.Fatalf("failed to unmarshal %s: %v", inputFile, err)
+			}
+			if err := yaml.Unmarshal(expectData, &expect); err != nil {
+				t.Fatalf("failed to unmarshal %s: %v", expectFile, err)
+			}
+
+			if err := input.SetDefaults(); err != nil {
+				t.Fatalf("failed to set defaults: %v", err)
+			}
+
+			if err := input.MergeTemplate(); err != nil {
+				t.Fatalf("failed to merge template: %v", err)
+			}
+
+			if err := input.MergeLogging(); err != nil {
+				t.Fatalf("failed to merge logging: %v", err)
 			}
 
 			if !reflect.DeepEqual(input, expect) {
