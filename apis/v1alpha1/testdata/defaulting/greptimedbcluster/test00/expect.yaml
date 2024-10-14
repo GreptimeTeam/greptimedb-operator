@@ -32,48 +32,20 @@ spec:
     rpcPort: 4001
     service:
       type: ClusterIP
-    logging:
-      format: text
-      level: info
-      logsDir: /data/greptimedb/logs
-      onlyLogToStdout: false
-      persistentWithData: false
-    template:
-      main:
-        image: greptime/greptimedb:latest
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 4000
+    logging: {}
+    template: {}
   meta:
     etcdEndpoints:
       - etcd.etcd-cluster.svc.cluster.local:2379
     enableRegionFailover: false
-    logging:
-      format: text
-      level: info
-      logsDir: /data/greptimedb/logs
-      onlyLogToStdout: false
-      persistentWithData: false
     httpPort: 4000
     rpcPort: 3002
     replicas: 1
-    template:
-      main:
-        image: greptime/greptimedb:latest
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 4000
+    logging: {}
+    template: {}
   datanode:
     httpPort: 4000
     rpcPort: 4001
-    logging:
-      format: text
-      level: info
-      logsDir: /data/greptimedb/logs
-      onlyLogToStdout: false
-      persistentWithData: false
     replicas: 3
     storage:
       dataHome: /data/greptimedb
@@ -82,10 +54,5 @@ spec:
         mountPath: /data/greptimedb
         storageRetainPolicy: Retain
         storageSize: 10Gi
-    template:
-      main:
-        image: greptime/greptimedb:latest
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 4000
+    logging: {}
+    template: {}

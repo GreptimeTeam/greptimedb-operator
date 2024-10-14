@@ -43,50 +43,23 @@ spec:
     rpcPort: 4001
     service:
       type: ClusterIP
-    logging:
-      format: text
-      level: info
-      logsDir: /data/greptimedb/logs
-      onlyLogToStdout: false
-      persistentWithData: false
-    template:
-      main:
-        image: greptime/greptimedb:latest
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 4000
+    logging: {}
+    template: {}
   meta:
     etcdEndpoints:
       - etcd.etcd-cluster.svc.cluster.local:2379
     # Should be true if wal.kafka is set.
     enableRegionFailover: true
-    logging:
-      format: text
-      level: info
-      logsDir: /data/greptimedb/logs
-      onlyLogToStdout: false
-      persistentWithData: false
+    logging: {}
     httpPort: 4000
     rpcPort: 3002
     replicas: 1
-    template:
-      main:
-        image: greptime/greptimedb:latest
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 4000
+    template: {}
   datanode:
     httpPort: 4000
     rpcPort: 4001
     replicas: 1
-    logging:
-      format: text
-      level: info
-      logsDir: /data/greptimedb/logs
-      onlyLogToStdout: false
-      persistentWithData: false
+    logging: {}
     storage:
       dataHome: /data/greptimedb
       fs:
@@ -94,10 +67,4 @@ spec:
         mountPath: /data/greptimedb
         storageRetainPolicy: Retain
         storageSize: 10Gi
-    template:
-      main:
-        image: greptime/greptimedb:latest
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 4000
+    template: {}

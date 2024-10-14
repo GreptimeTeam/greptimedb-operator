@@ -40,14 +40,61 @@ func (in *GreptimeDBCluster) SetDefaults() error {
 		return err
 	}
 
-	// Merge the Base field into the frontend/meta/datanode/flownode template.
-	if err := in.mergeTemplate(); err != nil {
+	return nil
+}
+
+// MergeTemplate merges the base template with the component's template.
+func (in *GreptimeDBCluster) MergeTemplate() error {
+	mergeFuncs := []func() error{
+		in.mergeFrontendTemplate,
+		in.mergeMetaTemplate,
+		in.mergeDatanodeTemplate,
+		in.mergeFlownodeTemplate,
+	}
+
+	for _, mergeFunc := range mergeFuncs {
+		if err := mergeFunc(); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+// MergeLogging merges the logging settings into the component's logging settings.
+func (in *GreptimeDBCluster) MergeLogging() error {
+	loggingSpecs := []*LoggingSpec{
+		in.GetMeta().GetLogging(),
+		in.GetDatanode().GetLogging(),
+		in.GetFrontend().GetLogging(),
+		in.GetFlownode().GetLogging(),
+	}
+
+	for _, logging := range loggingSpecs {
+		if logging == nil {
+			continue
+		}
+
+		if err := in.doMergeLogging(logging, in.GetLogging(), in.GetMonitoring().IsEnabled()); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (in *GreptimeDBCluster) doMergeLogging(input, global *LoggingSpec, isEnableMonitoring bool) error {
+	if input == nil || global == nil {
+		return nil
+	}
+
+	if err := mergo.Merge(input, global.DeepCopy()); err != nil {
 		return err
 	}
 
-	// Merge the logging settings into the GreptimeDBClusterSpec.
-	if err := in.mergeLogging(); err != nil {
-		return err
+	if isEnableMonitoring {
+		// Set the default logging format to JSON if monitoring is enabled.
+		input.Format = LogFormatJSON
 	}
 
 	return nil
@@ -200,26 +247,6 @@ func (in *GreptimeDBCluster) defaultMonitoringStandaloneSpec() *GreptimeDBStanda
 	return &standalone.Spec
 }
 
-func (in *GreptimeDBCluster) mergeTemplate() error {
-	if err := in.mergeFrontendTemplate(); err != nil {
-		return err
-	}
-
-	if err := in.mergeMetaTemplate(); err != nil {
-		return err
-	}
-
-	if err := in.mergeDatanodeTemplate(); err != nil {
-		return err
-	}
-
-	if err := in.mergeFlownodeTemplate(); err != nil {
-		return err
-	}
-
-	return nil
-}
-
 func (in *GreptimeDBCluster) mergeFrontendTemplate() error {
 	if in.Spec.Frontend != nil {
 		// Use DeepCopy to avoid the same pointer.
@@ -271,50 +298,6 @@ func (in *GreptimeDBCluster) mergeFlownodeTemplate() error {
 
 		// TODO(zyy17): The flownode does not need liveness probe and will be added in the future.
 		in.Spec.Flownode.Template.MainContainer.LivenessProbe = nil
-	}
-
-	return nil
-}
-
-func (in *GreptimeDBCluster) mergeLogging() error {
-	if logging := in.GetMeta().GetLogging(); logging != nil {
-		if err := mergo.Merge(logging, in.GetLogging().DeepCopy()); err != nil {
-			return err
-		}
-		if in.GetMonitoring().IsEnabled() {
-			// Set the default logging format to JSON if monitoring is enabled.
-			logging.Format = LogFormatJSON
-		}
-	}
-
-	if logging := in.GetDatanode().GetLogging(); logging != nil {
-		if err := mergo.Merge(logging, in.GetLogging().DeepCopy()); err != nil {
-			return err
-		}
-		if in.GetMonitoring().IsEnabled() {
-			// Set the default logging format to JSON if monitoring is enabled.
-			logging.Format = LogFormatJSON
-		}
-	}
-
-	if logging := in.GetFrontend().GetLogging(); logging != nil {
-		if err := mergo.Merge(logging, in.GetLogging().DeepCopy()); err != nil {
-			return err
-		}
-		if in.GetMonitoring().IsEnabled() {
-			// Set the default logging format to JSON if monitoring is enabled.
-			logging.Format = LogFormatJSON
-		}
-	}
-
-	if logging := in.GetFlownode().GetLogging(); logging != nil {
-		if err := mergo.Merge(logging, in.GetLogging().DeepCopy()); err != nil {
-			return err
-		}
-		if in.GetMonitoring().IsEnabled() {
-			// Set the default logging format to JSON if monitoring is enabled.
-			logging.Format = LogFormatJSON
-		}
 	}
 
 	return nil

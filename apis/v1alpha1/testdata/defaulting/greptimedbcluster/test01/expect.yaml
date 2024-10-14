@@ -39,39 +39,18 @@ spec:
     rpcPort: 4001
     service:
       type: ClusterIP
-    logging:
-      format: text
-      level: info
-      logsDir: /data/greptimedb/logs
-      onlyLogToStdout: false
-      persistentWithData: false
+    logging: {}
     template:
       main:
         image: greptime/greptimedb:latest
         args:
           - --metasrv-addrs
           - meta.default:3002
-        resources:
-          requests:
-            cpu: "500m"
-            memory: "256Mi"
-          limits:
-            cpu: "1"
-            memory: "1Gi"
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 4000
   meta:
     enableRegionFailover: false
     etcdEndpoints:
       - etcd.etcd-cluster.svc.cluster.local:2379
-    logging:
-      format: text
-      level: info
-      logsDir: /data/greptimedb/logs
-      onlyLogToStdout: false
-      persistentWithData: false
+    logging: {}
     httpPort: 4000
     rpcPort: 3002
     replicas: 1
@@ -81,27 +60,11 @@ spec:
         args:
           - --store-addr
           - etcd.default:2379
-        resources:
-          requests:
-            cpu: "500m"
-            memory: "256Mi"
-          limits:
-            cpu: "1"
-            memory: "1Gi"
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 4000
   datanode:
     httpPort: 4000
     rpcPort: 4001
     replicas: 1
-    logging:
-      format: text
-      level: info
-      logsDir: /data/greptimedb/logs
-      onlyLogToStdout: false
-      persistentWithData: false
+    logging: {}
     storage:
       dataHome: /data/greptimedb
       fs:
@@ -112,14 +75,3 @@ spec:
     template:
       main:
         image: greptime/greptimedb:latest
-        resources:
-          requests:
-            cpu: "500m"
-            memory: "256Mi"
-          limits:
-            cpu: "1"
-            memory: "1Gi"
-        livenessProbe:
-          httpGet:
-            path: /health
-            port: 4000
