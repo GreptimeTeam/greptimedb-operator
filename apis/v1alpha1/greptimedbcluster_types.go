@@ -261,16 +261,16 @@ type GreptimeDBClusterSpec struct {
 	Base *PodTemplateSpec `json:"base,omitempty"`
 
 	// Frontend is the specification of frontend node.
-	// +required
-	Frontend *FrontendSpec `json:"frontend"`
+	// +optional
+	Frontend *FrontendSpec `json:"frontend,omitempty"`
 
 	// Meta is the specification of meta node.
-	// +required
-	Meta *MetaSpec `json:"meta"`
+	// +optional
+	Meta *MetaSpec `json:"meta,omitempty"`
 
 	// Datanode is the specification of datanode node.
-	// +required
-	Datanode *DatanodeSpec `json:"datanode"`
+	// +optional
+	Datanode *DatanodeSpec `json:"datanode,omitempty"`
 
 	// Flownode is the specification of flownode node.
 	// +optional

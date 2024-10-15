@@ -163,6 +163,14 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		}
 	}
 
+	if err := cluster.MergeTemplate(); err != nil {
+		return ctrl.Result{}, err
+	}
+
+	if err := cluster.MergeLogging(); err != nil {
+		return ctrl.Result{}, err
+	}
+
 	return r.sync(ctx, cluster)
 }
 

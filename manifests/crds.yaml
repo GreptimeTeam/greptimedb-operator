@@ -17278,10 +17278,6 @@ spec:
                         type: object
                     type: object
                 type: object
-            required:
-            - datanode
-            - frontend
-            - meta
             type: object
           status:
             properties:
