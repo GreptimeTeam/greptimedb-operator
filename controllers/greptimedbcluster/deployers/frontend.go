@@ -279,7 +279,7 @@ func (b *frontendBuilder) generatePodTemplateSpec() *corev1.PodTemplateSpec {
 		b.AddLogsVolume(podTemplateSpec, logging.GetLogsDir())
 	}
 
-	if b.Cluster.GetMonitoring() != nil && b.Cluster.GetMonitoring().GetVector() != nil {
+	if b.Cluster.GetMonitoring().IsEnabled() && b.Cluster.GetMonitoring().GetVector() != nil {
 		b.AddVectorConfigVolume(podTemplateSpec)
 		b.AddVectorSidecar(podTemplateSpec, v1alpha1.FrontendComponentKind)
 	}

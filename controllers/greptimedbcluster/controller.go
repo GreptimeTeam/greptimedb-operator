@@ -33,6 +33,8 @@ import (
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 	"github.com/GreptimeTeam/greptimedb-operator/cmd/operator/app/options"
+	"github.com/GreptimeTeam/greptimedb-operator/controllers/common"
+	"github.com/GreptimeTeam/greptimedb-operator/controllers/constant"
 	"github.com/GreptimeTeam/greptimedb-operator/controllers/greptimedbcluster/deployers"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/deployer"
 )
@@ -171,6 +173,13 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, err
 	}
 
+	// FIXME(zyy17): The following code should be elegant to move to the deployers.
+	if !cluster.Spec.Monitoring.IsEnabled() {
+		if err := r.removeMonitoringDB(ctx, cluster); err != nil {
+			return ctrl.Result{}, err
+		}
+	}
+
 	return r.sync(ctx, cluster)
 }
 
@@ -297,4 +306,26 @@ func (r *Reconciler) setObservedGeneration(cluster *v1alpha1.GreptimeDBCluster) 
 	} else if *cluster.Status.ObservedGeneration != generation {
 		cluster.Status.ObservedGeneration = &generation
 	}
+}
+
+func (r *Reconciler) removeMonitoringDB(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster) error {
+	objects := map[string]client.Object{
+		common.MonitoringServiceName(cluster.Name): new(v1alpha1.GreptimeDBStandalone),
+		constant.DefaultVectorConfigName:           new(corev1.ConfigMap),
+	}
+
+	for name, obj := range objects {
+		if err := r.Get(ctx, client.ObjectKey{Namespace: cluster.Namespace, Name: name}, obj); err != nil {
+			if k8serrors.IsNotFound(err) {
+				continue
+			}
+			return err
+		}
+
+		if err := r.Delete(ctx, obj); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }

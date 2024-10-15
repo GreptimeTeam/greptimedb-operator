@@ -74,7 +74,7 @@ func (d *MonitoringDeployer) CheckAndUpdateStatus(ctx context.Context, crdObject
 		return false, err
 	}
 
-	if cluster.GetMonitoring() == nil || cluster.GetMonitoring().GetStandalone() == nil {
+	if !cluster.GetMonitoring().IsEnabled() || cluster.GetMonitoring().GetStandalone() == nil {
 		return true, nil
 	}
 
@@ -92,7 +92,7 @@ func (d *MonitoringDeployer) CheckAndUpdateStatus(ctx context.Context, crdObject
 		return false, nil
 	}
 
-	if standalone.Status.StandalonePhase == v1alpha1.PhaseRunning {
+	if cluster.GetMonitoring().IsEnabled() && standalone.Status.StandalonePhase == v1alpha1.PhaseRunning {
 		if err := d.createPipeline(cluster); err != nil {
 			klog.Errorf("failed to create pipeline for standalone, err: '%v'", err)
 			return false, err
@@ -196,7 +196,7 @@ type monitoringBuilder struct {
 }
 
 func (b *monitoringBuilder) BuildGreptimeDBStandalone() deployer.Builder {
-	if b.Cluster.GetMonitoring() == nil || b.Cluster.GetMonitoring().GetStandalone() == nil {
+	if !b.Cluster.GetMonitoring().IsEnabled() || b.Cluster.GetMonitoring().GetStandalone() == nil {
 		return b
 	}
 
@@ -222,7 +222,7 @@ func (b *monitoringBuilder) BuildGreptimeDBStandalone() deployer.Builder {
 }
 
 func (b *monitoringBuilder) BuildConfigMap() deployer.Builder {
-	if b.Cluster.GetMonitoring() == nil || b.Cluster.GetMonitoring().GetVector() == nil {
+	if !b.Cluster.GetMonitoring().IsEnabled() || b.Cluster.GetMonitoring().GetVector() == nil {
 		return b
 	}
 
