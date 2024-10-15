@@ -25,15 +25,14 @@ import (
 	"k8s.io/utils/pointer"
 )
 
+// SetDefaults sets the default values for the GreptimeDBCluster.
 func (in *GreptimeDBCluster) SetDefaults() error {
 	if in == nil {
 		return nil
 	}
 
 	// Set the version of the GreptimeDBClusterSpec if it is not set.
-	if in.GetVersion() == "" && in.GetBaseMainContainer().GetImage() != "" {
-		in.Spec.Version = getVersionFromImage(in.GetBaseMainContainer().GetImage())
-	}
+	in.Spec.Version = getVersionFromImage(in.GetBaseMainContainer().GetImage())
 
 	// Merge the default settings into the GreptimeDBClusterSpec.
 	if err := mergo.Merge(&in.Spec, in.defaultSpec()); err != nil {
@@ -308,9 +307,7 @@ func (in *GreptimeDBStandalone) SetDefaults() error {
 		return nil
 	}
 
-	if in.GetVersion() == "" && in.GetBaseMainContainer().GetImage() != "" {
-		in.Spec.Version = getVersionFromImage(in.GetBaseMainContainer().GetImage())
-	}
+	in.Spec.Version = getVersionFromImage(in.GetBaseMainContainer().GetImage())
 
 	if err := mergo.Merge(&in.Spec, in.defaultSpec()); err != nil {
 		return err
