@@ -94,6 +94,25 @@ func TestClusterEnableMonitoring(ctx context.Context, h *helper.Helper) {
 	err = testMonitoringStandalone(ctx, monitoringAddr)
 	Expect(err).NotTo(HaveOccurred(), "failed to test monitoring")
 
+	// Disable monitoring.
+	By("Disable monitoring")
+	testCluster.Spec.Monitoring.Enabled = false
+	err = h.Update(ctx, testCluster)
+	Expect(err).NotTo(HaveOccurred(), "failed to update cluster")
+	By("Check the status of testCluster")
+	Eventually(func() error {
+		clusterPhase, err := h.GetPhase(ctx, testCluster.Namespace, testCluster.Name, new(greptimev1alpha1.GreptimeDBCluster))
+		if err != nil {
+			return err
+		}
+
+		if clusterPhase != greptimev1alpha1.PhaseRunning {
+			return fmt.Errorf("cluster is not running")
+		}
+
+		return nil
+	}, helper.DefaultTimeout, time.Second).ShouldNot(HaveOccurred())
+
 	By("Kill the port forwarding process")
 	h.KillPortForwardProcess()
 
