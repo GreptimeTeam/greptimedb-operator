@@ -71,7 +71,7 @@ const (
 	DefaultVectorCPURequest = "50m"
 
 	// DefaultVectorMemoryRequest is the default memory request for the vector.
-	DefaultVectorMemoryRequest = "128Mi"
+	DefaultVectorMemoryRequest = "64Mi"
 )
 
 // The following constants are the constant configuration for the GreptimeDBCluster and GreptimeDBStandalone.

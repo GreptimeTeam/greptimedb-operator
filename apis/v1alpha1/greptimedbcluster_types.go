@@ -384,7 +384,7 @@ type VectorSpec struct {
 
 	// The resources of the vector instance.
 	// +optional
-	Resource corev1.ResourceRequirements `json:"resource,omitempty"`
+	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
 }
 
 func (in *MonitoringSpec) IsEnabled() bool {

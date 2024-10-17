@@ -137,7 +137,7 @@ func (in *GreptimeDBCluster) defaultSpec() *GreptimeDBClusterSpec {
 			LogsCollection: &LogsCollectionSpec{},
 			Vector: &VectorSpec{
 				Image: DefaultVectorImage,
-				Resource: corev1.ResourceRequirements{
+				Resources: corev1.ResourceRequirements{
 					Requests: corev1.ResourceList{
 						corev1.ResourceCPU:    resource.MustParse(DefaultVectorCPURequest),
 						corev1.ResourceMemory: resource.MustParse(DefaultVectorMemoryRequest),

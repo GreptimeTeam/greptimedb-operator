@@ -147,7 +147,8 @@ func (c *CommonBuilder) AddVectorSidecar(template *corev1.PodTemplateSpec, kind 
 		Args: []string{
 			"--config", "/etc/vector/vector.yaml",
 		},
-		Env: c.env(kind),
+		Env:       c.env(kind),
+		Resources: c.Cluster.Spec.Monitoring.Vector.Resources,
 		VolumeMounts: []corev1.VolumeMount{
 			{
 				Name:      constant.DefaultLogsVolumeName,

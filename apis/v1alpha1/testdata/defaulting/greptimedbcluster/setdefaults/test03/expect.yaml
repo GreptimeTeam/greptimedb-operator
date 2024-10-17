@@ -104,10 +104,10 @@ spec:
       version: latest
     vector:
       image: timberio/vector:nightly-alpine
-      resource:
+      resources:
         limits:
           cpu: 50m
-          memory: 128Mi
+          memory: 64Mi
         requests:
           cpu: 50m
-          memory: 128Mi
+          memory: 64Mi
