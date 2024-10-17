@@ -1,158 +1,98 @@
 # GreptimeDB Operator
 
+[![license](https://img.shields.io/github/license/GreptimeTeam/greptimedb-operator)](https://github.com/GreptimeTeam/greptimedb-operator/blob/main/LICENSE)
+[![report](https://goreportcard.com/badge/github.com/GreptimeTeam/greptimedb-operator)](https://goreportcard.com/report/github.com/GreptimeTeam/greptimedb-operator)
+[![GitHub release](https://img.shields.io/github/tag/GreptimeTeam/greptimedb-operator.svg?label=release)](https://github.com/GreptimeTeam/greptimedb-operator/releases)
+[![GoDoc](https://img.shields.io/badge/Godoc-reference-blue.svg)](https://godoc.org/github.com/GreptimeTeam/greptimedb-operator)
+
 ## Overview
 
 The GreptimeDB Operator manages the [GreptimeDB](https://github.com/GrepTimeTeam/greptimedb) resources on [Kubernetes](https://kubernetes.io/) using the [Operator pattern](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/). It is like an autopilot that automates the deployment, provisioning, and orchestration of the GreptimeDB cluster and standalone.
 
-You can create a minimum GreptimeDB cluster by following YAML:
+## Features
+
+The GreptimeDB Operator includes, but is not limited to, the following features:
+
+- **Automated Provisioning**
+
+  Automates the deployment of the GreptimeDB cluster and standalone on Kubernetes by providing CRD `GreptimeDBCluster` and `GreptimeDBStandalone`.
+
+- **Multi-Cloud Support**
+
+  Users can deploy the GreptimeDB on any Kubernetes cluster, including on-premises and cloud environments(like AWS, GCP, Aliyun etc.).
+
+- **Scaling**
+
+  Scale the GreptimeDB cluster as easily as changing the `replicas` field in the `GreptimeDBCluster` CR.
+
+- **Monitoring Bootstrap**
+
+  Bootstrap the GreptimeDB monitoring stack for the GreptimeDB cluster by providing the `monitoring` field in the `GreptimeDBCluster` CR.
+
+## Quick Start
+
+The fastest way to install the GreptimeDB Operator is to use `bundle.yaml`:
+
+```console
+kubectl apply -f \
+  https://github.com/GreptimeTeam/greptimedb-operator/releases/latest/download/bundle.yaml \
+  --server-side 
+```
+
+The `greptimedb-operator` will be installed in the `greptimedb-admin` namespace. When the `greptimedb-operator` is running, you can see the following output:
+
+```console
+$ kubectl get pods -n greptimedb-admin
+NAME                                   READY   STATUS    RESTARTS   AGE
+greptimedb-operator-7947d785b5-b668p   1/1     Running   0          2m18s
+```
+
+Once the operator is running, you can experience the GreptimeDB by creating a basic standalone instance:
 
 ```console
 cat <<EOF | kubectl apply -f -
 apiVersion: greptime.io/v1alpha1
-kind: GreptimeDBCluster
+kind: GreptimeDBStandalone
 metadata:
   name: basic
 spec:
   base:
     main:
       image: greptime/greptimedb:latest
-  meta:
-    etcdEndpoints:
-      - "etcd.etcd-cluster.svc.cluster.local:2379"
 EOF
 ```
 
-## Getting Started
-
-### Prerequisites
-
-- **Kubernetes 1.18 or higher version is required**
-
-  You can use [kind](https://kind.sigs.k8s.io/) to create your own Kubernetes cluster:
-
-  ```console
-  kind create cluster
-  ```
-
-  If you want to deploy Kubernetes with local registry, you can use the following commands:
-
-  ```console
-  make kind-up
-  ```
-
-  It will create the cluster with 3 nodes and local registry.
-
-- **kubectl**
-
-  You can download the `kubectl` tool from the [page](https://kubernetes.io/docs/tasks/tools/).
-  
-- **Helm**
-
-  You can follow the [guide](https://helm.sh/docs/intro/install/) to  install Helm.
-
-### Quick start
-
-You can use Helm chart of greptimedb-operator in [helm-charts](https://github.com/GreptimeTeam/helm-charts/blob/main/charts/greptimedb-operator/README.md) to start your operator quickly.
-
-## Development
-
-### About `make` targets
-
-We can use `make` to handle most development, you can use the targets that list by the following command:
+When the standalone is running, you can see the following output:
 
 ```console
-make help
+$ kubectl get greptimedbstandalones basic
+NAME    PHASE     VERSION   AGE
+basic   Running   latest    75s
 ```
 
-### Run operator on host
-
-1. Install the CRDs:
-
-   ```console
-   make install
-   ```
-
-2. Run the operator on your host(make sure your Kubernetes is ready):
-
-   ```console
-   make run
-   ```
-
-### Deploy operator on self-managed Kubernetes
-
-1. Build the image of operator
-
-   ```console
-   make docker-build-operator
-   ```
-
-   the default image URL is:
-
-   ```console
-   localhost:5001/greptime/greptimedb-operator:latest
-   ```
-
-   You can prefer your registry and tag:
-
-   ```console
-   make docker-build-operator IMAGE_REPO=<your-image-repo> IMAGE_TAG=<your-image-tag>
-   ```
-
-   **Note**: If you use the `IMAGE_REPO` or `IMAGE_TAG` in `make docker-build-operator`, you also have to use them again in the following command.
-
-2. Push the image
-
-   ```console
-   make docker-push-operator
-   ```
-
-3. Deploy the operator in your self-managed Kubernetes
-
-   ```console
-   make deploy
-   ```
-
-   The operator will deploy in `greptimedb-admin` namespace:
-   
-   ```console
-   kubectl get pod -n greptimedb-admin
-   NAME                                   READY   STATUS    RESTARTS   AGE
-   greptimedb-operator-7b4496c84d-bpwbm   1/1     Running   0          76s
-   ```
-
-   If you want to delete the deployment, you can:
-
-   ```console
-   make undeploy
-   ```
-   
-
-If you want to build `greptimedb-initializer` which it's the init-container to process the initialization(for example: allocating node id for datanode), you can use the following commands that similar to above:
+You can use `kubectl port-forward` to access the GreptimeDB:
 
 ```console
-# Building initializer.
-make initializer
-
-# Building initializer image, also can use IMAGE_REPO and IMAGE_NAME.
-make docker-build-initializer
-
-# Pushing initializer image, also can use IMAGE_REPO and IMAGE_NAME.
-make docker-push-initializer
+kubectl port-forward svc/basic-standalone 4001:4001 4002:4002 4003:4003 4000:4000
 ```
 
-### Testing
+Please refer to the [quick-start](https://docs.greptime.com/getting-started/quick-start) to try more examples.
 
-1. Run unit test
+## Examples
 
-   ```console
-   make test
-   ```
+The GreptimeDB Operator provides a set of examples to help you understand how to use the GreptimeDB Operator. You can find the examples in the [examples](./examples/README.md) directory.
 
-2. Run e2e test
+## Deployment
 
-   ```console
-   make e2e
-   ```
+For production use, we recommend deploying the GreptimeDB Operator with the GreptimeDB official Helm [chart](https://github.com/GreptimeTeam/helm-charts). 
+
+## Documentation
+
+For more information, please refer to the following documentation:
+
+- [User Guide](https://docs.greptime.com/user-guide/deployments/deploy-on-kubernetes/overview)
+
+- [API References](./docs/api-references/docs.md)
 
 ## License
 
