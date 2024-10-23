@@ -102,15 +102,9 @@ func (in *GreptimeDBCluster) defaultSpec() *GreptimeDBClusterSpec {
 	var defaultSpec = &GreptimeDBClusterSpec{
 		Base: &PodTemplateSpec{
 			MainContainer: &MainContainerSpec{
-				// The default liveness probe for the main container of GreptimeDBCluster.
-				LivenessProbe: &corev1.Probe{
-					ProbeHandler: corev1.ProbeHandler{
-						HTTPGet: &corev1.HTTPGetAction{
-							Path: DefaultHealthEndpoint,
-							Port: intstr.FromInt32(DefaultHTTPPort),
-						},
-					},
-				},
+				StartupProbe:   defaultStartupProbe(),
+				LivenessProbe:  defaultLivenessProbe(),
+				ReadinessProbe: defaultReadinessProbe(),
 			},
 		},
 		Initializer:    &InitializerSpec{Image: DefaultInitializerImage},
@@ -248,7 +242,9 @@ func (in *GreptimeDBCluster) mergeFrontendTemplate() error {
 		}
 
 		// Reconfigure the probe settings based on the HTTP port.
+		in.Spec.Frontend.Template.MainContainer.StartupProbe.HTTPGet.Port = intstr.FromInt32(in.Spec.Frontend.HTTPPort)
 		in.Spec.Frontend.Template.MainContainer.LivenessProbe.HTTPGet.Port = intstr.FromInt32(in.Spec.Frontend.HTTPPort)
+		in.Spec.Frontend.Template.MainContainer.ReadinessProbe.HTTPGet.Port = intstr.FromInt32(in.Spec.Frontend.HTTPPort)
 	}
 
 	return nil
@@ -262,7 +258,9 @@ func (in *GreptimeDBCluster) mergeMetaTemplate() error {
 		}
 
 		// Reconfigure the probe settings based on the HTTP port.
+		in.Spec.Meta.Template.MainContainer.StartupProbe.HTTPGet.Port = intstr.FromInt32(in.Spec.Meta.HTTPPort)
 		in.Spec.Meta.Template.MainContainer.LivenessProbe.HTTPGet.Port = intstr.FromInt32(in.Spec.Meta.HTTPPort)
+		in.Spec.Meta.Template.MainContainer.ReadinessProbe.HTTPGet.Port = intstr.FromInt32(in.Spec.Meta.HTTPPort)
 	}
 
 	return nil
@@ -276,7 +274,9 @@ func (in *GreptimeDBCluster) mergeDatanodeTemplate() error {
 		}
 
 		// Reconfigure the probe settings based on the HTTP port.
+		in.Spec.Datanode.Template.MainContainer.StartupProbe.HTTPGet.Port = intstr.FromInt32(in.Spec.Datanode.HTTPPort)
 		in.Spec.Datanode.Template.MainContainer.LivenessProbe.HTTPGet.Port = intstr.FromInt32(in.Spec.Datanode.HTTPPort)
+		in.Spec.Datanode.Template.MainContainer.ReadinessProbe.HTTPGet.Port = intstr.FromInt32(in.Spec.Datanode.HTTPPort)
 	}
 
 	return nil
@@ -290,7 +290,9 @@ func (in *GreptimeDBCluster) mergeFlownodeTemplate() error {
 		}
 
 		// TODO(zyy17): The flownode does not need liveness probe and will be added in the future.
+		in.Spec.Flownode.Template.MainContainer.StartupProbe = nil
 		in.Spec.Flownode.Template.MainContainer.LivenessProbe = nil
+		in.Spec.Flownode.Template.MainContainer.ReadinessProbe = nil
 	}
 
 	return nil
@@ -314,15 +316,9 @@ func (in *GreptimeDBStandalone) defaultSpec() *GreptimeDBStandaloneSpec {
 	var defaultSpec = &GreptimeDBStandaloneSpec{
 		Base: &PodTemplateSpec{
 			MainContainer: &MainContainerSpec{
-				// The default liveness probe for the main container of GreptimeDBStandalone.
-				LivenessProbe: &corev1.Probe{
-					ProbeHandler: corev1.ProbeHandler{
-						HTTPGet: &corev1.HTTPGetAction{
-							Path: DefaultHealthEndpoint,
-							Port: intstr.FromInt32(DefaultHTTPPort),
-						},
-					},
-				},
+				StartupProbe:   defaultStartupProbe(),
+				LivenessProbe:  defaultLivenessProbe(),
+				ReadinessProbe: defaultReadinessProbe(),
 			},
 		},
 		HTTPPort:       DefaultHTTPPort,
@@ -378,4 +374,49 @@ func getVersionFromImage(imageURL string) string {
 		}
 	}
 	return DefaultVersion
+}
+
+func defaultStartupProbe() *corev1.Probe {
+	// When StartupProbe is successful, the liveness probe and readiness probe will be enabled.
+	return &corev1.Probe{
+		ProbeHandler: corev1.ProbeHandler{
+			HTTPGet: &corev1.HTTPGetAction{
+				Path: DefaultHealthEndpoint,
+				Port: intstr.FromInt32(DefaultHTTPPort),
+			},
+		},
+		PeriodSeconds: 10,
+
+		// The StartupProbe can try up to 30 * 10 = 300 seconds to start the container.
+		// For some scenarios, the database may take a long time to start, so we set the failure threshold to 30.
+		FailureThreshold: 30,
+	}
+}
+
+func defaultLivenessProbe() *corev1.Probe {
+	// If the liveness probe fails, the container will be restarted.
+	return &corev1.Probe{
+		ProbeHandler: corev1.ProbeHandler{
+			HTTPGet: &corev1.HTTPGetAction{
+				Path: DefaultHealthEndpoint,
+				Port: intstr.FromInt32(DefaultHTTPPort),
+			},
+		},
+		PeriodSeconds:    5,
+		FailureThreshold: 10,
+	}
+}
+
+func defaultReadinessProbe() *corev1.Probe {
+	// If the readiness probe fails, the container will be removed from the service endpoints.
+	return &corev1.Probe{
+		ProbeHandler: corev1.ProbeHandler{
+			HTTPGet: &corev1.HTTPGetAction{
+				Path: DefaultHealthEndpoint,
+				Port: intstr.FromInt32(DefaultHTTPPort),
+			},
+		},
+		PeriodSeconds:    5,
+		FailureThreshold: 10,
+	}
 }

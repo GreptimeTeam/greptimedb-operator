@@ -24,6 +24,20 @@ spec:
         httpGet:
           path: /health
           port: 4000
+        periodSeconds: 5
+        failureThreshold: 10
+      readinessProbe:
+        httpGet:
+          path: /health
+          port: 4000
+        periodSeconds: 5
+        failureThreshold: 10
+      startupProbe:
+        httpGet:
+          path: /health
+          port: 4000
+        periodSeconds: 10
+        failureThreshold: 30
       resources:
         requests:
           cpu: "500m"
