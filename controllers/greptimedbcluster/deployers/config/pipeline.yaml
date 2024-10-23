@@ -16,10 +16,13 @@ transform:
       - namespace
       - cluster
       - role
+      - cost
+      - threshold
     type: string
     index: tag
   - fields:
       - message
+      - query
       - err
     type: string
     index: fulltext

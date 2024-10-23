@@ -3,7 +3,15 @@ sources:
     type: file
     data_dir: /logs
     include:
-      - /logs/*.*
+      - /logs/greptimedb-err.*
+      - /logs/greptimedb.*
+    max_read_bytes: 536870912
+
+  slow_queries:
+    type: file
+    data_dir: /logs
+    include:
+      - /logs/greptimedb-slow-queries.*
     max_read_bytes: 536870912
 
   metrics:
@@ -40,6 +48,31 @@ transforms:
         .err = .fields.err
       }
 
+  transform_slow_queries:
+    type: remap
+    inputs:
+      - slow_queries
+    source: |
+      . = parse_json!(.message)
+      .message = .fields.message
+      .pod = "${POD_NAME}"
+      .pod_ip = "${POD_IP}"
+      .namespace = "${POD_NAMESPACE}"
+      .cluster = "{{ .ClusterName }}"
+      .role = "${ROLE}"
+      if exists(.fields.cost) {
+        .cost = .fields.cost
+      }
+      if exists(.fields.threshold) {
+        .threshold = .fields.threshold
+      }
+      if exists(.fields.promql) {
+        .query = .fields.promql
+      }
+      if exists(.fields.sql) {
+        .query = .fields.sql
+      }
+
   add_metrics_labels:
     type: remap
     inputs:
@@ -57,6 +90,15 @@ sinks:
     compression: gzip
     inputs:
       - transform_logs
+    endpoint: {{ .LoggingService }}
+
+  sink_greptimedb_slow_queries:
+    type: greptimedb_logs
+    table: {{ .SlowQueriesTableName }}
+    pipeline_name: {{ .PipelineName }}
+    compression: gzip
+    inputs:
+      - transform_slow_queries
     endpoint: {{ .LoggingService }}
 
   sink_greptimedb_metrics:

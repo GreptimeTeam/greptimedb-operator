@@ -45,6 +45,10 @@ spec:
     logsDir: /data/greptimedb/logs
     onlyLogToStdout: false
     persistentWithData: false
+    slowQuery:
+      enabled: true
+      sampleRatio: "1.0"
+      threshold: 10s
   frontend:
     replicas: 1
     httpPort: 4000
