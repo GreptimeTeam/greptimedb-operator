@@ -43,6 +43,9 @@ const (
 	// DefaultDataSize is the default size of the data when using the file storage.
 	DefaultDataSize = "10Gi"
 
+	// DefaultDataSizeForMonitoring is the default size of the data for monitoring.
+	DefaultDataSizeForMonitoring = "30Gi"
+
 	// DefaultDataHome is the default directory for the data.
 	DefaultDataHome = "/data/greptimedb"
 

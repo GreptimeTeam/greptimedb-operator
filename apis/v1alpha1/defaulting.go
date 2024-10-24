@@ -15,7 +15,6 @@
 package v1alpha1
 
 import (
-	"fmt"
 	"strings"
 
 	"dario.cat/mergo"
@@ -227,20 +226,15 @@ func (in *GreptimeDBCluster) defaultMonitoringStandaloneSpec() *GreptimeDBStanda
 
 	standalone.Spec.Version = getVersionFromImage(standalone.Spec.Base.MainContainer.Image)
 
-	if osp := in.GetObjectStorageProvider(); osp != nil {
-		standalone.Spec.ObjectStorageProvider = osp.DeepCopy()
-
-		if root := osp.GetS3Storage().GetRoot(); root != "" {
-			standalone.Spec.ObjectStorageProvider.S3.Root = fmt.Sprintf("%s/monitoring", root)
-		}
-
-		if root := osp.GetOSSStorage().GetRoot(); root != "" {
-			standalone.Spec.ObjectStorageProvider.OSS.Root = fmt.Sprintf("%s/monitoring", root)
-		}
-
-		if root := osp.GetGCSStorage().GetRoot(); root != "" {
-			standalone.Spec.ObjectStorageProvider.GCS.Root = fmt.Sprintf("%s/monitoring", root)
-		}
+	// For better performance and easy management, the monitoring standalone use file storage by default.
+	standalone.Spec.DatanodeStorage = &DatanodeStorageSpec{
+		DataHome: DefaultDataHome,
+		FileStorage: &FileStorage{
+			Name:                DefaultDatanodeFileStorageName,
+			StorageSize:         DefaultDataSizeForMonitoring,
+			MountPath:           DefaultDataHome,
+			StorageRetainPolicy: DefaultStorageRetainPolicyType,
+		},
 	}
 
 	return &standalone.Spec

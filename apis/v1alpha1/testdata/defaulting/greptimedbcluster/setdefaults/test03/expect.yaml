@@ -81,7 +81,7 @@ spec:
           mountPath: /data/greptimedb
           name: datanode
           storageRetainPolicy: Retain
-          storageSize: 10Gi
+          storageSize: 30Gi
       httpPort: 4000
       logging:
         format: text
@@ -90,13 +90,6 @@ spec:
         onlyLogToStdout: false
         persistentWithData: false
       mysqlPort: 4002
-      objectStorage:
-        s3:
-          bucket: greptimedb
-          endpoint: s3.amazonaws.com
-          region: us-west-2
-          root: /greptimedb/monitoring
-          secretName: s3-credentials
       postgreSQLPort: 4003
       rpcPort: 4001
       service:
