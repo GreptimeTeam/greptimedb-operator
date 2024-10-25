@@ -92,8 +92,11 @@ func TestClusterEnableMonitoring(ctx context.Context, h *helper.Helper) {
 		conn.Close()
 		return nil
 	}, helper.DefaultTimeout, time.Second).ShouldNot(HaveOccurred())
-	err = testMonitoringStandalone(ctx, monitoringAddr)
-	Expect(err).NotTo(HaveOccurred(), "failed to test monitoring")
+
+	// The logs collection may take some time to be ready.
+	Eventually(func() error {
+		return testMonitoringStandalone(ctx, monitoringAddr)
+	}, helper.DefaultTimeout, time.Second).ShouldNot(HaveOccurred())
 
 	// Disable monitoring.
 	By("Disable monitoring")
