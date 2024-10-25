@@ -12,6 +12,9 @@ reviews:
     - "!apis/v1alpha1/testdata/**"
     - "!tests/e2e/testdata/**"
     - "!manifests/**"
+    - "!config/**"
+    - "!examples/**"
+    - "!docs/**"
   auto_review:
     enabled: false
     drafts: false
