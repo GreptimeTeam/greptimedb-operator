@@ -4,6 +4,7 @@
 [![report](https://goreportcard.com/badge/github.com/GreptimeTeam/greptimedb-operator)](https://goreportcard.com/report/github.com/GreptimeTeam/greptimedb-operator)
 [![GitHub release](https://img.shields.io/github/tag/GreptimeTeam/greptimedb-operator.svg?label=release)](https://github.com/GreptimeTeam/greptimedb-operator/releases)
 [![GoDoc](https://img.shields.io/badge/Godoc-reference-blue.svg)](https://godoc.org/github.com/GreptimeTeam/greptimedb-operator)
+[![Docker Pulls](https://img.shields.io/docker/pulls/greptime/greptimedb-operator)](https://hub.docker.com/r/greptime/greptimedb-operator)
 
 ## Overview
 
