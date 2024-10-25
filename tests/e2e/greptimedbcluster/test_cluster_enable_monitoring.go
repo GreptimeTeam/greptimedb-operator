@@ -30,6 +30,7 @@ import (
 
 	greptimev1alpha1 "github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 	"github.com/GreptimeTeam/greptimedb-operator/controllers/common"
+	"github.com/GreptimeTeam/greptimedb-operator/controllers/constant"
 	"github.com/GreptimeTeam/greptimedb-operator/tests/e2e/helper"
 )
 
@@ -91,8 +92,11 @@ func TestClusterEnableMonitoring(ctx context.Context, h *helper.Helper) {
 		conn.Close()
 		return nil
 	}, helper.DefaultTimeout, time.Second).ShouldNot(HaveOccurred())
-	err = testMonitoringStandalone(ctx, monitoringAddr)
-	Expect(err).NotTo(HaveOccurred(), "failed to test monitoring")
+
+	// The logs collection may take some time to be ready.
+	Eventually(func() error {
+		return testMonitoringStandalone(ctx, monitoringAddr)
+	}, helper.DefaultTimeout, time.Second).ShouldNot(HaveOccurred())
 
 	// Disable monitoring.
 	By("Disable monitoring")
@@ -153,12 +157,12 @@ func testMonitoringStandalone(ctx context.Context, addr string) error {
 	}
 
 	// Check logs table.
-	if err := checkCollectedRoles(ctx, conn, "SELECT DISTINCT role FROM gtlogs", []string{"datanode", "frontend", "meta"}); err != nil {
+	if err := checkCollectedRoles(ctx, conn, fmt.Sprintf("SELECT DISTINCT role FROM %s", constant.LogsTableName), []string{"datanode", "frontend", "meta"}); err != nil {
 		return err
 	}
 
 	var count int
-	if err = conn.QueryRow(context.Background(), "SELECT COUNT(*) FROM gtlogs").Scan(&count); err != nil {
+	if err = conn.QueryRow(context.Background(), fmt.Sprintf("SELECT COUNT(*) FROM %s", constant.LogsTableName)).Scan(&count); err != nil {
 		return err
 	}
 	// The number of logs should be greater than 0.

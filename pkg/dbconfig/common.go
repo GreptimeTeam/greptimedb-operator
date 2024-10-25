@@ -16,7 +16,9 @@ package dbconfig
 
 import (
 	"encoding/base64"
+	"strconv"
 
+	"k8s.io/klog/v2"
 	"k8s.io/utils/pointer"
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
@@ -151,6 +153,15 @@ type LoggingConfig struct {
 
 	// The log format. Can be `text`/`json`.
 	LogFormat *string `tomlmapping:"logging.log_format"`
+
+	// Enable slow query log.
+	EnableSlowQuery *bool `tomlmapping:"logging.slow_query.enable"`
+
+	// The threshold of slow query. If the query takes longer than this threshold, it will be logged.
+	SlowQueryThreshold *string `tomlmapping:"logging.slow_query.threshold"`
+
+	// The sampling ratio of slow query log. The value should be in the range of (0, 1].
+	SlowQuerySampleRatio *float64 `tomlmapping:"logging.slow_query.sample_ratio"`
 }
 
 // ConfigureLogging configures the logging config with the given logging spec.
@@ -167,4 +178,18 @@ func (c *LoggingConfig) ConfigureLogging(spec *v1alpha1.LoggingSpec) {
 
 	c.Level = pointer.String(string(spec.Level))
 	c.LogFormat = pointer.String(string(spec.Format))
+
+	if spec.SlowQuery != nil {
+		c.EnableSlowQuery = pointer.Bool(spec.SlowQuery.Enabled)
+		c.SlowQueryThreshold = pointer.String(spec.SlowQuery.Threshold)
+
+		// Turn string to float64
+		ration, err := strconv.ParseFloat(spec.SlowQuery.SampleRatio, 64)
+		if err != nil {
+			klog.Warningf("Failed to parse slow query sample ratio '%s', use the default value 1.0", spec.SlowQuery.SampleRatio)
+			ration = 1.0
+		}
+
+		c.SlowQuerySampleRatio = pointer.Float64(ration)
+	}
 }
