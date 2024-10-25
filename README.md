@@ -29,6 +29,10 @@ The GreptimeDB Operator includes, but is not limited to, the following features:
 
   Bootstrap the GreptimeDB monitoring stack for the GreptimeDB cluster by providing the `monitoring` field in the `GreptimeDBCluster` CR.
 
+## Prerequisites
+
+The GreptimeDB Operator requires at least Kubernetes `1.18.0`.
+
 ## Quick Start
 
 The fastest way to install the GreptimeDB Operator is to use `bundle.yaml`:

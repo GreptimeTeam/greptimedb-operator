@@ -11,6 +11,20 @@ spec:
         httpGet:
           path: /health
           port: 4000
+        periodSeconds: 5
+        failureThreshold: 10
+      readinessProbe:
+        httpGet:
+          path: /health
+          port: 4000
+        periodSeconds: 5
+        failureThreshold: 10
+      startupProbe:
+        httpGet:
+          path: /health
+          port: 4000
+        periodSeconds: 5
+        failureThreshold: 60
   version: latest
   initializer:
     image: greptime/greptimedb-initializer:latest
@@ -75,6 +89,20 @@ spec:
             httpGet:
               path: /health
               port: 4000
+            periodSeconds: 5
+            failureThreshold: 10
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 4000
+            periodSeconds: 5
+            failureThreshold: 10
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 4000
+            periodSeconds: 5
+            failureThreshold: 60
       datanodeStorage:
         dataHome: /data/greptimedb
         fs:

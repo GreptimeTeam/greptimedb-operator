@@ -35,6 +35,20 @@ spec:
         httpGet:
           path: /health
           port: 4000
+        periodSeconds: 5
+        failureThreshold: 10
+      readinessProbe:
+        httpGet:
+          path: /health
+          port: 4000
+        periodSeconds: 5
+        failureThreshold: 10
+      startupProbe:
+        httpGet:
+          path: /health
+          port: 4000
+        periodSeconds: 5
+        failureThreshold: 60
   frontend:
     replicas: 1
     httpPort: 4000

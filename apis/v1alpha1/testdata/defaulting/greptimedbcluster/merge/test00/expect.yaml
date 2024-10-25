@@ -31,9 +31,23 @@ spec:
         httpGet:
           path: /health
           port: 4000
+        periodSeconds: 5
+        failureThreshold: 10
+      readinessProbe:
+        httpGet:
+          path: /health
+          port: 4000
+        periodSeconds: 5
+        failureThreshold: 10
+      startupProbe:
+        httpGet:
+          path: /health
+          port: 4000
+        periodSeconds: 5
+        failureThreshold: 60
   frontend:
     replicas: 1
-    httpPort: 4000
+    httpPort: 9000
     mysqlPort: 4002
     postgreSQLPort: 4003
     rpcPort: 4001
@@ -51,7 +65,21 @@ spec:
         livenessProbe:
           httpGet:
             path: /health
-            port: 4000
+            port: 9000
+          periodSeconds: 5
+          failureThreshold: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 9000
+          periodSeconds: 5
+          failureThreshold: 10
+        startupProbe:
+          httpGet:
+            path: /health
+            port: 9000
+          periodSeconds: 5
+          failureThreshold: 60
         resources:
           limits:
             cpu: 100m
@@ -79,6 +107,20 @@ spec:
           httpGet:
             path: /health
             port: 4000
+          periodSeconds: 5
+          failureThreshold: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 4000
+          periodSeconds: 5
+          failureThreshold: 10
+        startupProbe:
+          httpGet:
+            path: /health
+            port: 4000
+          periodSeconds: 5
+          failureThreshold: 60
         resources:
           limits:
             cpu: 50m
@@ -110,6 +152,20 @@ spec:
           httpGet:
             path: /health
             port: 4000
+          periodSeconds: 5
+          failureThreshold: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 4000
+          periodSeconds: 5
+          failureThreshold: 10
+        startupProbe:
+          httpGet:
+            path: /health
+            port: 4000
+          periodSeconds: 5
+          failureThreshold: 60
         resources:
           limits:
             cpu: 100m

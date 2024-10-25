@@ -16,6 +16,7 @@ spec:
           memory: 128Mi
   frontend:
     replicas: 1
+    httpPort: 9000
     template:
       main:
         image: greptime/greptimedb:test
