@@ -43,8 +43,8 @@ spec:
         httpGet:
           path: /health
           port: 4000
-        periodSeconds: 10
-        failureThreshold: 30
+        periodSeconds: 5
+        failureThreshold: 60
   frontend:
     replicas: 1
     httpPort: 9000
@@ -78,8 +78,8 @@ spec:
           httpGet:
             path: /health
             port: 9000
-          periodSeconds: 10
-          failureThreshold: 30
+          periodSeconds: 5
+          failureThreshold: 60
         resources:
           limits:
             cpu: 100m
@@ -119,8 +119,8 @@ spec:
           httpGet:
             path: /health
             port: 4000
-          periodSeconds: 10
-          failureThreshold: 30
+          periodSeconds: 5
+          failureThreshold: 60
         resources:
           limits:
             cpu: 50m
@@ -164,8 +164,8 @@ spec:
           httpGet:
             path: /health
             port: 4000
-          periodSeconds: 10
-          failureThreshold: 30
+          periodSeconds: 5
+          failureThreshold: 60
         resources:
           limits:
             cpu: 100m
