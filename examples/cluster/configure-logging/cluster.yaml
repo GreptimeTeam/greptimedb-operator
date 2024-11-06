@@ -5,7 +5,7 @@ metadata:
 spec:
   logging:
     format: json
-    level: debug
+    level: info
     logsDir: /data/greptimedb/logs
     onlyLogToStdout: false
   base:
@@ -19,3 +19,6 @@ spec:
       - "etcd.etcd-cluster.svc.cluster.local:2379"
   datanode:
     replicas: 1
+    logging:
+      filters:
+        - mito2=debug

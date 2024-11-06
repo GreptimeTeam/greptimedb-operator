@@ -2907,6 +2907,10 @@ spec:
                     type: integer
                   logging:
                     properties:
+                      filters:
+                        items:
+                          type: string
+                        type: array
                       format:
                         enum:
                         - json
@@ -5817,6 +5821,10 @@ spec:
                     type: string
                   logging:
                     properties:
+                      filters:
+                        items:
+                          type: string
+                        type: array
                       format:
                         enum:
                         - json
@@ -8710,6 +8718,10 @@ spec:
                     type: integer
                   logging:
                     properties:
+                      filters:
+                        items:
+                          type: string
+                        type: array
                       format:
                         enum:
                         - json
@@ -11636,6 +11648,10 @@ spec:
                 type: object
               logging:
                 properties:
+                  filters:
+                    items:
+                      type: string
+                    type: array
                   format:
                     enum:
                     - json
@@ -11687,6 +11703,10 @@ spec:
                     type: integer
                   logging:
                     properties:
+                      filters:
+                        items:
+                          type: string
+                        type: array
                       format:
                         enum:
                         - json
@@ -17463,6 +17483,10 @@ spec:
                         type: object
                       logging:
                         properties:
+                          filters:
+                            items:
+                              type: string
+                            type: array
                           format:
                             enum:
                             - json
@@ -20842,6 +20866,10 @@ spec:
                 type: object
               logging:
                 properties:
+                  filters:
+                    items:
+                      type: string
+                    type: array
                   format:
                     enum:
                     - json
