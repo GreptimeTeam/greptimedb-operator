@@ -458,6 +458,13 @@ type LoggingSpec struct {
 	// +kubebuilder:validation:Enum:={"info", "error", "warn", "debug"}
 	Level LoggingLevel `json:"level,omitempty"`
 
+	// Filters is the filters of the logging.
+	// User can use [EnvFilter](https://docs.rs/tracing-subscriber/latest/tracing_subscriber/filter/struct.EnvFilter.html) to filter the logging.
+	// We can use `target[span{field=value}]=level` to filter the logging by target and span field.
+	// For example, "mito2=debug" will filter the logging of target `mito2` to `debug` level.
+	// +optional
+	Filters []string `json:"filters,omitempty"`
+
 	// LogsDir is the directory path of the logs.
 	// +optional
 	LogsDir string `json:"logsDir,omitempty"`

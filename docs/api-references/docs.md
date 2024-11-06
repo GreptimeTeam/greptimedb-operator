@@ -519,6 +519,7 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `level` _[LoggingLevel](#logginglevel)_ | Level is the level of the logging. |  | Enum: [info error warn debug] <br /> |
+| `filters` _string array_ | Filters is the filters of the logging.<br />User can use [EnvFilter](https://docs.rs/tracing-subscriber/latest/tracing_subscriber/filter/struct.EnvFilter.html) to filter the logging.<br />We can use `target[span\{field=value\}]=level` to filter the logging by target and span field.<br />For example, "mito2=debug" will filter the logging of target `mito2` to `debug` level. |  |  |
 | `logsDir` _string_ | LogsDir is the directory path of the logs. |  |  |
 | `persistentWithData` _boolean_ | PersistentWithData indicates whether to persist the log with the datanode data storage. It **ONLY** works for the datanode component.<br />If false, the log will be stored in ephemeral storage. |  |  |
 | `onlyLogToStdout` _boolean_ | OnlyLogToStdout indicates whether to only log to stdout. If true, the log will not be stored in the storage even if the storage is configured. |  |  |

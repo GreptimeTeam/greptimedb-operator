@@ -2914,6 +2914,10 @@ spec:
                 type: object
               logging:
                 properties:
+                  filters:
+                    items:
+                      type: string
+                    type: array
                   format:
                     enum:
                     - json

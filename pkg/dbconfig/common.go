@@ -16,7 +16,9 @@ package dbconfig
 
 import (
 	"encoding/base64"
+	"fmt"
 	"strconv"
+	"strings"
 
 	"k8s.io/klog/v2"
 	"k8s.io/utils/pointer"
@@ -176,7 +178,7 @@ func (c *LoggingConfig) ConfigureLogging(spec *v1alpha1.LoggingSpec) {
 		c.Dir = pointer.String(spec.LogsDir)
 	}
 
-	c.Level = pointer.String(string(spec.Level))
+	c.Level = pointer.String(c.levelWithFilters(string(spec.Level), spec.Filters))
 	c.LogFormat = pointer.String(string(spec.Format))
 
 	if spec.SlowQuery != nil {
@@ -192,4 +194,12 @@ func (c *LoggingConfig) ConfigureLogging(spec *v1alpha1.LoggingSpec) {
 
 		c.SlowQuerySampleRatio = pointer.Float64(ration)
 	}
+}
+
+// levelWithFilters returns the level with filters. For example, it will output "info,mito2=debug" if the level is "info" and the filters are ["mito2=debug"].
+func (c *LoggingConfig) levelWithFilters(level string, filters []string) string {
+	if len(filters) > 0 {
+		return fmt.Sprintf("%s,%s", level, strings.Join(filters, ","))
+	}
+	return level
 }
