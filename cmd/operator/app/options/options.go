@@ -30,14 +30,16 @@ type Options struct {
 	EnableLeaderElection bool
 	EnableAPIServer      bool
 	APIServerPort        int32
+	EnablePodMetrics     bool
 }
 
 func NewDefaultOptions() *Options {
 	return &Options{
-		MetricsAddr:     defaultMetricsAddr,
-		HealthProbeAddr: defaultHealthProbeAddr,
-		APIServerPort:   defaultAPIServerPort,
-		EnableAPIServer: false,
+		MetricsAddr:      defaultMetricsAddr,
+		HealthProbeAddr:  defaultHealthProbeAddr,
+		APIServerPort:    defaultAPIServerPort,
+		EnableAPIServer:  false,
+		EnablePodMetrics: false,
 	}
 }
 
@@ -47,4 +49,5 @@ func (o *Options) AddFlags(fs *pflag.FlagSet) {
 	fs.BoolVar(&o.EnableLeaderElection, "enable-leader-election", o.EnableLeaderElection, "Enable leader election for controller manager. Enabling this will ensure there is only one active controller manager.")
 	fs.BoolVar(&o.EnableAPIServer, "enable-apiserver", o.EnableAPIServer, "Enable API server for GreptimeDB operator.")
 	fs.Int32Var(&o.APIServerPort, "apiserver-port", o.APIServerPort, "The port the API server binds to.")
+	fs.BoolVar(&o.EnablePodMetrics, "enable-pod-metrics", o.EnablePodMetrics, "Enable fetching PodMetrics from metrics-server.")
 }

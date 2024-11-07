@@ -26,6 +26,7 @@ import (
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/klog/v2"
 	"k8s.io/klog/v2/klogr"
+	podmetricsv1beta1 "k8s.io/metrics/pkg/apis/metrics/v1beta1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
@@ -47,10 +48,20 @@ var (
 )
 
 func init() {
+	// Add Kubernetes client-go scheme.
 	utilruntime.Must(clientgoscheme.AddToScheme(scheme))
-	utilruntime.Must(v1alpha1.AddToScheme(scheme))
-	utilruntime.Must(monitoringv1.AddToScheme(scheme))
+
+	// Add Kubernetes API extensions.
 	utilruntime.Must(apiextensionsv1.AddToScheme(scheme))
+
+	// Add GreptimeDB CRD.
+	utilruntime.Must(v1alpha1.AddToScheme(scheme))
+
+	// Add prometheus-operator's CRDs for monitoring(PodMonitor and ServiceMonitor).
+	utilruntime.Must(monitoringv1.AddToScheme(scheme))
+
+	// Add [PodMetrics](https://github.com/kubernetes/metrics/blob/master/pkg/apis/metrics/v1beta1/types.go) for fetching PodMetrics from metrics-server.
+	utilruntime.Must(podmetricsv1beta1.AddToScheme(scheme))
 
 	// +kubebuilder:scaffold:scheme
 }
@@ -102,7 +113,8 @@ func NewOperatorCommand() *cobra.Command {
 
 			if o.EnableAPIServer {
 				server := apiserver.NewServer(mgr.GetClient(), &apiserver.Options{
-					Port: o.APIServerPort,
+					Port:             o.APIServerPort,
+					EnablePodMetrics: o.EnablePodMetrics,
 				})
 
 				go func() {

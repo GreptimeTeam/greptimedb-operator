@@ -24,6 +24,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog/v2"
+	podmetricsv1beta1 "k8s.io/metrics/pkg/apis/metrics/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	greptimev1alpha1 "github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
@@ -40,13 +41,17 @@ const (
 type Server struct {
 	client.Client
 
-	port int32
+	port             int32
+	enablePodMetrics bool
 }
 
 // Options represents the options for the Server.
 type Options struct {
 	// Port is the port that the API service will listen on.
 	Port int32
+
+	// EnablePodMetrics indicates whether to enable fetching PodMetrics from metrics-server.
+	EnablePodMetrics bool
 }
 
 // GreptimeDBCluster represents a GreptimeDBCluster resource that is returned by the API.
@@ -97,14 +102,29 @@ type Pod struct {
 	// Node is the name of the node where the Pod is running.
 	Node string `json:"node"`
 
-	// Resource is the resource requirements of the Pod.
-	Resource corev1.ResourceRequirements `json:"resource,omitempty"`
+	// Resource is the resources of all containers in the Pod.
+	Resources []*Resource `json:"resources,omitempty"`
 
 	// Status is the status of the Pod.
 	Status string `json:"status"`
 
 	// StartTime is the time when the Pod started.
 	StartTime *metav1.Time `json:"startTime,omitempty"`
+}
+
+// Resource represents the resource of a container.
+type Resource struct {
+	// Name is the name of the container.
+	Name string `json:"name"`
+
+	// Request is the resource request of the container.
+	Request corev1.ResourceList `json:"request,omitempty"`
+
+	// Limit is the resource limit of the container.
+	Limit corev1.ResourceList `json:"limit,omitempty"`
+
+	// Usage is the resource usage of the container.
+	Usage corev1.ResourceList `json:"usage,omitempty"`
 }
 
 // Response represents a response returned by the API.
@@ -125,8 +145,9 @@ type Response struct {
 // NewServer creates a new Server with the given client and options.
 func NewServer(client client.Client, opts *Options) *Server {
 	return &Server{
-		Client: client,
-		port:   opts.Port,
+		Client:           client,
+		port:             opts.Port,
+		enablePodMetrics: opts.EnablePodMetrics,
 	}
 }
 
@@ -288,46 +309,89 @@ func (s *Server) getTopology(ctx context.Context, namespace, name string) (*Grep
 }
 
 func (s *Server) getPods(ctx context.Context, namespace, name string, kind greptimev1alpha1.ComponentKind, topology *GreptimeDBClusterTopology) error {
-	var pods corev1.PodList
-	if err := s.List(ctx, &pods, client.InNamespace(namespace),
+	var internalPods corev1.PodList
+	if err := s.List(ctx, &internalPods, client.InNamespace(namespace),
 		client.MatchingLabels{constant.GreptimeDBComponentName: common.ResourceName(name, kind)}); err != nil {
 		return err
 	}
 
+	var metrics []*podmetricsv1beta1.PodMetrics
+	if s.enablePodMetrics {
+		for _, pod := range internalPods.Items {
+			podMetrics, err := s.getPodMetrics(ctx, namespace, pod.Name)
+			if err != nil {
+				return err
+			}
+			metrics = append(metrics, podMetrics)
+		}
+
+		if len(metrics) != len(internalPods.Items) {
+			return fmt.Errorf("the number of metrics is not equal to the number of pods")
+		}
+	}
+
+	var pods []*Pod
+	// zip internalPods and metrics.
+	for i, pod := range internalPods.Items {
+		if s.enablePodMetrics {
+			pods = append(pods, s.buildPod(&pod, metrics[i]))
+		} else {
+			pods = append(pods, s.buildPod(&pod, nil))
+		}
+	}
+
 	switch kind {
 	case greptimev1alpha1.MetaComponentKind:
-		for _, pod := range pods.Items {
-			topology.Meta = append(topology.Meta, s.convertToPod(&pod))
-		}
+		topology.Meta = pods
 	case greptimev1alpha1.DatanodeComponentKind:
-		for _, pod := range pods.Items {
-			topology.Datanode = append(topology.Datanode, s.convertToPod(&pod))
-		}
+		topology.Datanode = pods
 	case greptimev1alpha1.FrontendComponentKind:
-		for _, pod := range pods.Items {
-			topology.Frontend = append(topology.Frontend, s.convertToPod(&pod))
-		}
+		topology.Frontend = pods
 	case greptimev1alpha1.FlownodeComponentKind:
-		for _, pod := range pods.Items {
-			topology.Flownode = append(topology.Flownode, s.convertToPod(&pod))
-		}
+		topology.Flownode = pods
 	}
 
 	return nil
 }
 
-func (s *Server) convertToPod(pod *corev1.Pod) *Pod {
-	var resources corev1.ResourceRequirements
-	if len(pod.Spec.Containers) > constant.MainContainerIndex {
-		resources = pod.Spec.Containers[constant.MainContainerIndex].Resources
+func (s *Server) buildPod(internalPod *corev1.Pod, podMetrics *podmetricsv1beta1.PodMetrics) *Pod {
+	pod := &Pod{
+		Name:      internalPod.Name,
+		Namespace: internalPod.Namespace,
+		IP:        internalPod.Status.PodIP,
+		Status:    string(internalPod.Status.Phase),
+		Node:      internalPod.Spec.NodeName,
 	}
-	return &Pod{
-		Name:      pod.Name,
-		Namespace: pod.Namespace,
-		IP:        pod.Status.PodIP,
-		Status:    string(pod.Status.Phase),
-		Node:      pod.Spec.NodeName,
-		Resource:  resources,
-		StartTime: pod.Status.StartTime,
+
+	var resources []*Resource
+
+	for _, container := range internalPod.Spec.Containers {
+		resources = append(resources, &Resource{
+			Name:    container.Name,
+			Request: container.Resources.Requests,
+			Limit:   container.Resources.Limits,
+		})
 	}
+
+	if s.enablePodMetrics && podMetrics != nil {
+		for _, container := range podMetrics.Containers {
+			for _, resource := range resources {
+				if resource.Name == container.Name {
+					resource.Usage = container.Usage
+				}
+			}
+		}
+	}
+
+	pod.Resources = resources
+
+	return pod
+}
+
+func (s *Server) getPodMetrics(ctx context.Context, namespace, name string) (*podmetricsv1beta1.PodMetrics, error) {
+	var podMetrics podmetricsv1beta1.PodMetrics
+	if err := s.Get(ctx, client.ObjectKey{Namespace: namespace, Name: name}, &podMetrics); err != nil {
+		return nil, err
+	}
+	return &podMetrics, nil
 }
