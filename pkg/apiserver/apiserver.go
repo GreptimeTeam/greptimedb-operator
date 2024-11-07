@@ -26,6 +26,7 @@ import (
 	"k8s.io/klog/v2"
 	podmetricsv1beta1 "k8s.io/metrics/pkg/apis/metrics/v1beta1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/manager"
 
 	greptimev1alpha1 "github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 	"github.com/GreptimeTeam/greptimedb-operator/controllers/common"
@@ -143,12 +144,18 @@ type Response struct {
 }
 
 // NewServer creates a new Server with the given client and options.
-func NewServer(client client.Client, opts *Options) *Server {
+func NewServer(mgr manager.Manager, opts *Options) (*Server, error) {
+	// Create a NoCache client to avoid watching.
+	client, err := client.New(mgr.GetConfig(), client.Options{Scheme: mgr.GetScheme(), Mapper: mgr.GetRESTMapper()})
+	if err != nil {
+		return nil, err
+	}
+
 	return &Server{
 		Client:           client,
 		port:             opts.Port,
 		enablePodMetrics: opts.EnablePodMetrics,
-	}
+	}, nil
 }
 
 // Run starts the HTTP service and listens on the specified port.
