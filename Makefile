@@ -225,7 +225,7 @@ CRD_REF_DOCS ?= $(LOCALBIN)/crd-ref-docs
 KUSTOMIZE_VERSION ?= v5.3.0
 CONTROLLER_TOOLS_VERSION ?= v0.14.0
 CRD_REF_DOCS_VERSION ?= v0.1.0
-GOLANGCI_LINT_VERSION ?= v1.55.2
+GOLANGCI_LINT_VERSION ?= v1.60.0
 
 .PHONY: kustomize
 kustomize: $(KUSTOMIZE) ## Download kustomize locally if necessary.

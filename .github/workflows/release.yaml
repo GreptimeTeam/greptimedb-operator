@@ -23,7 +23,7 @@ on:
       - "v*.*.*"
 
 env:
-  GO_VERSION: "1.21"
+  GO_VERSION: "1.23"
 
 jobs:
   docker:
@@ -111,6 +111,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           name: "Release ${{ github.ref_name }}"
+          generate_release_notes: true
           files: |
             greptimedbclusters.yaml
             greptimedbstandalones.yaml
