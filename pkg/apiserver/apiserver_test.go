@@ -40,7 +40,10 @@ const (
 
 func TestHTTPGetService(t *testing.T) {
 	// Start the HTTP service.
-	svc := NewServer(&FakeClient{}, &Options{Port: TestPort})
+	svc := &Server{
+		Client: &FakeClient{},
+		port:   TestPort,
+	}
 	go func() {
 		if err := svc.Run(); err != nil {
 			t.Errorf("failed to start HTTP service: %v", err)

@@ -112,10 +112,14 @@ func NewOperatorCommand() *cobra.Command {
 			}
 
 			if o.EnableAPIServer {
-				server := apiserver.NewServer(mgr.GetClient(), &apiserver.Options{
+				server, err := apiserver.NewServer(mgr, &apiserver.Options{
 					Port:             o.APIServerPort,
 					EnablePodMetrics: o.EnablePodMetrics,
 				})
+				if err != nil {
+					setupLog.Error(err, "unable to create API server")
+					os.Exit(1)
+				}
 
 				go func() {
 					if err := server.Run(); err != nil {
