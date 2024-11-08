@@ -142,6 +142,7 @@ func GeneratePodTemplateSpec(kind v1alpha1.ComponentKind, template *v1alpha1.Pod
 					Args:            template.MainContainer.Args,
 					WorkingDir:      template.MainContainer.WorkingDir,
 					Env:             template.MainContainer.Env,
+					StartupProbe:    template.MainContainer.StartupProbe,
 					LivenessProbe:   template.MainContainer.LivenessProbe,
 					ReadinessProbe:  template.MainContainer.ReadinessProbe,
 					Lifecycle:       template.MainContainer.Lifecycle,
