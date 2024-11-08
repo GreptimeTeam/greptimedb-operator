@@ -101,8 +101,10 @@ func TestClusterEnableMonitoring(ctx context.Context, h *helper.Helper) {
 	// Disable monitoring.
 	By("Disable monitoring")
 	testCluster.Spec.Monitoring.Enabled = false
-	err = h.Update(ctx, testCluster)
-	Expect(err).NotTo(HaveOccurred(), "failed to update cluster")
+	Eventually(func() error {
+		return h.Update(ctx, testCluster)
+	}, helper.DefaultTimeout, time.Second).ShouldNot(HaveOccurred(), "failed to update cluster")
+
 	By("Check the status of testCluster")
 	Eventually(func() error {
 		clusterPhase, err := h.GetPhase(ctx, testCluster.Namespace, testCluster.Name, new(greptimev1alpha1.GreptimeDBCluster))
