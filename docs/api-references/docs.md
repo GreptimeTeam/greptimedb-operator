@@ -569,6 +569,7 @@ _Appears in:_
 | `lifecycle` _[Lifecycle](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#lifecycle-v1-core)_ | Actions that the management system should take in response to container lifecycle events.<br />Cannot be updated.<br />Lifecycle field is from `corev1.Container.Lifecycle`. |  |  |
 | `imagePullPolicy` _[PullPolicy](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#pullpolicy-v1-core)_ | Image pull policy.<br />One of `Always`, `Never`, `IfNotPresent`.<br />Defaults to `Always` if `:latest` tag is specified, or IfNotPresent otherwise.<br />Cannot be updated.<br />More info: `https://kubernetes.io/docs/concepts/containers/images#updating-images`<br />ImagePullPolicy field is from `corev1.Container.ImagePullPolicy`. |  |  |
 | `volumeMounts` _[VolumeMount](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#volumemount-v1-core) array_ | Pod volumes to mount into the container's filesystem.<br />Cannot be updated. |  |  |
+| `securityContext` _[SecurityContext](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#securitycontext-v1-core)_ | SecurityContext holds container-level security attributes and common settings. |  |  |
 
 
 #### MetaSpec
@@ -748,6 +749,7 @@ _Appears in:_
 | `schedulerName` _string_ | If specified, the pod will be dispatched by specified scheduler.<br />If not specified, the pod will be dispatched by default scheduler.<br />SchedulerName field is from `corev1.PodSpec.SchedulerName`. |  |  |
 | `additionalContainers` _[Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#container-v1-core) array_ | For most time, there is one main container in a pod(`frontend`/`meta`/`datanode`/`flownode`).<br />If specified, additional containers will be added to the pod as sidecar containers. |  |  |
 | `volumes` _[Volume](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#volume-v1-core) array_ | List of volumes that can be mounted by containers belonging to the pod. |  |  |
+| `securityContext` _[PodSecurityContext](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#podsecuritycontext-v1-core)_ | SecurityContext holds pod-level security attributes and common container settings. |  |  |
 
 
 #### PrometheusMonitorSpec
@@ -853,6 +855,7 @@ _Appears in:_
 | `schedulerName` _string_ | If specified, the pod will be dispatched by specified scheduler.<br />If not specified, the pod will be dispatched by default scheduler.<br />SchedulerName field is from `corev1.PodSpec.SchedulerName`. |  |  |
 | `additionalContainers` _[Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#container-v1-core) array_ | For most time, there is one main container in a pod(`frontend`/`meta`/`datanode`/`flownode`).<br />If specified, additional containers will be added to the pod as sidecar containers. |  |  |
 | `volumes` _[Volume](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#volume-v1-core) array_ | List of volumes that can be mounted by containers belonging to the pod. |  |  |
+| `securityContext` _[PodSecurityContext](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#podsecuritycontext-v1-core)_ | SecurityContext holds pod-level security attributes and common container settings. |  |  |
 
 
 #### SlowQuery

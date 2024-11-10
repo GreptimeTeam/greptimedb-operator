@@ -178,6 +178,10 @@ type SlimPodSpec struct {
 	// List of volumes that can be mounted by containers belonging to the pod.
 	// +optional
 	Volumes []corev1.Volume `json:"volumes,omitempty"`
+
+	// SecurityContext holds pod-level security attributes and common container settings.
+	// +optional
+	SecurityContext *corev1.PodSecurityContext `json:"securityContext,omitempty"`
 }
 
 // MainContainerSpec describes the specification of the main container of a pod.
@@ -272,6 +276,10 @@ type MainContainerSpec struct {
 	// Cannot be updated.
 	// +optional
 	VolumeMounts []corev1.VolumeMount `json:"volumeMounts,omitempty"`
+
+	// SecurityContext holds container-level security attributes and common settings.
+	// +optional
+	SecurityContext *corev1.SecurityContext `json:"securityContext,omitempty"`
 }
 
 func (in *MainContainerSpec) GetImage() string {
