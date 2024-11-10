@@ -4,4 +4,7 @@ WORKDIR /greptimedb-operator
 COPY greptimedb-operator /greptimedb-operator/bin/
 ENV PATH=/greptimedb-operator/bin/:$PATH
 
+# Use non-root user and group to run the operator. `65532` will be nobody in the container.
+USER 65532:65532
+
 ENTRYPOINT [ "greptimedb-operator" ]

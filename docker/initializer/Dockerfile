@@ -8,9 +8,12 @@ COPY . .
 RUN make initializer
 
 # Export the binary to the clean image.
-# TODO(zyy17): Maybe should use the more secure container image.
 FROM ubuntu:22.04 as base
 
 WORKDIR /greptimedb-operator
 COPY --from=builder /greptimedb-operator/bin/greptimedb-initializer /greptimedb-operator/bin/
+
+# Use non-root user and group to run the initializer. `65532` will be nobody in the container.
+USER 65532:65532
+
 ENV PATH=/greptimedb-operator/bin/:$PATH
