@@ -148,6 +148,7 @@ func GeneratePodTemplateSpec(kind v1alpha1.ComponentKind, template *v1alpha1.Pod
 					Lifecycle:       template.MainContainer.Lifecycle,
 					ImagePullPolicy: template.MainContainer.ImagePullPolicy,
 					VolumeMounts:    template.MainContainer.VolumeMounts,
+					SecurityContext: template.MainContainer.SecurityContext,
 				},
 			},
 			NodeSelector:                  template.NodeSelector,
@@ -163,6 +164,7 @@ func GeneratePodTemplateSpec(kind v1alpha1.ComponentKind, template *v1alpha1.Pod
 			SchedulerName:                 template.SchedulerName,
 			Volumes:                       template.Volumes,
 			Tolerations:                   template.Tolerations,
+			SecurityContext:               template.SecurityContext,
 		},
 	}
 
