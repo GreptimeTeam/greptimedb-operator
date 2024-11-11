@@ -100,10 +100,9 @@ func TestClusterEnableMonitoring(ctx context.Context, h *helper.Helper) {
 
 	// Disable monitoring.
 	By("Disable monitoring")
+	originalCluster := testCluster.DeepCopy()
 	testCluster.Spec.Monitoring.Enabled = false
-	Eventually(func() error {
-		return h.Update(ctx, testCluster)
-	}, helper.DefaultTimeout, time.Second).ShouldNot(HaveOccurred(), "failed to update cluster")
+	Expect(h.Patch(ctx, testCluster, client.MergeFrom(originalCluster))).NotTo(HaveOccurred(), "failed to patch cluster")
 
 	By("Check the status of testCluster")
 	Eventually(func() error {
