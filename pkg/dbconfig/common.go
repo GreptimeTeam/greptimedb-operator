@@ -172,10 +172,17 @@ func (c *LoggingConfig) ConfigureLogging(spec *v1alpha1.LoggingSpec) {
 		return
 	}
 
-	if spec.IsOnlyLogToStdout() {
-		c.Dir = nil
-	} else if spec.LogsDir != "" {
+	// Default to empty string.
+	c.Dir = pointer.String("")
+
+	// If logsDir is set, use it as the log directory.
+	if len(spec.LogsDir) > 0 {
 		c.Dir = pointer.String(spec.LogsDir)
+	}
+
+	// If only log to stdout, disable log to file even if logsDir is set.
+	if spec.IsOnlyLogToStdout() {
+		c.Dir = pointer.String("")
 	}
 
 	c.Level = pointer.String(c.levelWithFilters(string(spec.Level), spec.Filters))
