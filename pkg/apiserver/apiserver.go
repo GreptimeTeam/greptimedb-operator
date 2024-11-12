@@ -368,6 +368,7 @@ func (s *Server) buildPod(internalPod *corev1.Pod, podMetrics *podmetricsv1beta1
 		IP:        internalPod.Status.PodIP,
 		Status:    string(internalPod.Status.Phase),
 		Node:      internalPod.Spec.NodeName,
+		StartTime: internalPod.Status.StartTime,
 	}
 
 	var resources []*Resource
