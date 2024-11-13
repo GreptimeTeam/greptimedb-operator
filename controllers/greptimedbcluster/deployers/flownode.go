@@ -193,6 +193,10 @@ func (b *flownodeBuilder) BuildStatefulSet() deployer.Builder {
 				},
 			},
 			Template: b.generatePodTemplateSpec(),
+			UpdateStrategy: appsv1.StatefulSetUpdateStrategy{
+				Type:          appsv1.RollingUpdateStatefulSetStrategyType,
+				RollingUpdate: b.Cluster.Spec.Flownode.RollingUpdate,
+			},
 		},
 	}
 

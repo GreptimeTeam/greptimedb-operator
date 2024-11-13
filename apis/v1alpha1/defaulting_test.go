@@ -20,7 +20,9 @@ import (
 	"reflect"
 	"testing"
 
+	"dario.cat/mergo"
 	"github.com/sergi/go-diff/diffmatchpatch"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"sigs.k8s.io/yaml"
 )
 
@@ -208,6 +210,50 @@ func TestStandaloneSetDefaults(t *testing.T) {
 				dmp := diffmatchpatch.New()
 				t.Errorf("unexpected result for %s:\n%s", entry.Name(), dmp.DiffPrettyText(dmp.DiffMain(string(rawExpectData), string(rawInputData), false)))
 			}
+		}
+	}
+}
+
+func TestIntOrStringTransformer(t *testing.T) {
+	type foo struct {
+		Val *intstr.IntOrString
+	}
+	type testStruct struct {
+		Src    foo
+		Dst    foo
+		Expect foo
+	}
+
+	tests := []testStruct{
+		{
+			Src:    foo{Val: &intstr.IntOrString{Type: intstr.String, StrVal: "1"}},
+			Dst:    foo{Val: &intstr.IntOrString{Type: intstr.Int, IntVal: 10}},
+			Expect: foo{Val: &intstr.IntOrString{Type: intstr.Int, IntVal: 10}},
+		},
+		{
+			Src:    foo{Val: &intstr.IntOrString{Type: intstr.String, StrVal: "25%"}},
+			Dst:    foo{Val: &intstr.IntOrString{Type: intstr.String, StrVal: "75%"}},
+			Expect: foo{Val: &intstr.IntOrString{Type: intstr.String, StrVal: "75%"}},
+		},
+		{
+			Src:    foo{Val: &intstr.IntOrString{Type: intstr.String, StrVal: "25%"}},
+			Dst:    foo{},
+			Expect: foo{Val: &intstr.IntOrString{Type: intstr.String, StrVal: "25%"}},
+		},
+		{
+			Src:    foo{Val: &intstr.IntOrString{Type: intstr.Int, IntVal: 10}},
+			Dst:    foo{},
+			Expect: foo{Val: &intstr.IntOrString{Type: intstr.Int, IntVal: 10}},
+		},
+	}
+
+	for i, tt := range tests {
+		if err := mergo.Merge(&tt.Dst, &tt.Src, mergo.WithTransformers(intOrStringTransformer{})); err != nil {
+			t.Errorf("test [%d] failed: %v", i, err)
+		}
+
+		if !reflect.DeepEqual(tt.Dst, tt.Expect) {
+			t.Errorf("test [%d] failed: expected '%v', got '%v'", i, tt.Expect, tt.Dst)
 		}
 	}
 }

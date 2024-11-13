@@ -20,6 +20,9 @@ spec:
     template:
       main:
         image: greptime/greptimedb:test
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 2
   meta:
     etcdEndpoints:
       - etcd.etcd-cluster.svc.cluster.local:2379
@@ -37,4 +40,7 @@ spec:
     replicas: 3
     logging:
       level: debug
+    rollingUpdate:
+      partition: 1
+      maxUnavailable: 25%
   httpPort: 5000

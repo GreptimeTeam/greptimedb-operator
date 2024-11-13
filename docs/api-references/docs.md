@@ -114,6 +114,7 @@ _Appears in:_
 | `rpcPort` _integer_ | RPCPort is the gRPC port of the datanode. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
 | `httpPort` _integer_ | HTTPPort is the HTTP port of the datanode. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
 | `storage` _[DatanodeStorageSpec](#datanodestoragespec)_ | Storage is the default file storage of the datanode. For example, WAL, cache, index etc. |  |  |
+| `rollingUpdate` _[RollingUpdateStatefulSetStrategy](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#rollingupdatestatefulsetstrategy-v1-apps)_ | RollingUpdate is the rolling update configuration. We always use `RollingUpdate` strategy. |  |  |
 
 
 #### DatanodeStatus
@@ -193,6 +194,7 @@ _Appears in:_
 | `template` _[PodTemplateSpec](#podtemplatespec)_ | Template defines the pod template for the component, if not specified, the pod template will use the default value. |  |  |
 | `logging` _[LoggingSpec](#loggingspec)_ | Logging defines the logging configuration for the component. |  |  |
 | `rpcPort` _integer_ | The gRPC port of the flownode. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
+| `rollingUpdate` _[RollingUpdateStatefulSetStrategy](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#rollingupdatestatefulsetstrategy-v1-apps)_ | RollingUpdate is the rolling update configuration. We always use `RollingUpdate` strategy. |  |  |
 
 
 #### FlownodeStatus
@@ -235,6 +237,7 @@ _Appears in:_
 | `postgreSQLPort` _integer_ | PostgreSQLPort is the PostgreSQL port of the frontend. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
 | `service` _[ServiceSpec](#servicespec)_ | Service is the service configuration of the frontend. |  |  |
 | `tls` _[TLSSpec](#tlsspec)_ | TLS is the TLS configuration of the frontend. |  |  |
+| `rollingUpdate` _[RollingUpdateDeployment](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#rollingupdatedeployment-v1-apps)_ | RollingUpdate is the rolling update configuration. We always use `RollingUpdate` strategyt. |  |  |
 
 
 #### FrontendStatus
@@ -410,6 +413,7 @@ _Appears in:_
 | `wal` _[WALProviderSpec](#walproviderspec)_ | WALProvider is the WAL provider for the greptimedb cluster. |  |  |
 | `config` _string_ | The content of the configuration file of the component in TOML format. |  |  |
 | `logging` _[LoggingSpec](#loggingspec)_ | Logging defines the logging configuration for the component. |  |  |
+| `rollingUpdate` _[RollingUpdateStatefulSetStrategy](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#rollingupdatestatefulsetstrategy-v1-apps)_ | RollingUpdate is the rolling update configuration. We always use `RollingUpdate` strategy. |  |  |
 
 
 
@@ -595,6 +599,7 @@ _Appears in:_
 | `enableCheckEtcdService` _boolean_ | EnableCheckEtcdService indicates whether to check etcd cluster health when starting meta. |  |  |
 | `enableRegionFailover` _boolean_ | EnableRegionFailover indicates whether to enable region failover. |  |  |
 | `storeKeyPrefix` _string_ | StoreKeyPrefix is the prefix of the key in the etcd. We can use it to isolate the data of different clusters. |  |  |
+| `rollingUpdate` _[RollingUpdateDeployment](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#rollingupdatedeployment-v1-apps)_ | RollingUpdate is the rolling update configuration. We always use `RollingUpdate` strategyt. |  |  |
 
 
 #### MetaStatus

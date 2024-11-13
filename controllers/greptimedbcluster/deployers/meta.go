@@ -247,6 +247,10 @@ func (b *metaBuilder) BuildDeployment() deployer.Builder {
 				},
 			},
 			Template: *b.generatePodTemplateSpec(),
+			Strategy: appsv1.DeploymentStrategy{
+				Type:          appsv1.RollingUpdateDeploymentStrategyType,
+				RollingUpdate: b.Cluster.Spec.Meta.RollingUpdate,
+			},
 		},
 	}
 

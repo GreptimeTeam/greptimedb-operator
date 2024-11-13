@@ -15,6 +15,7 @@
 package v1alpha1
 
 import (
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -70,6 +71,10 @@ type MetaSpec struct {
 	// StoreKeyPrefix is the prefix of the key in the etcd. We can use it to isolate the data of different clusters.
 	// +optional
 	StoreKeyPrefix string `json:"storeKeyPrefix,omitempty"`
+
+	// RollingUpdate is the rolling update configuration. We always use `RollingUpdate` strategyt.
+	// +optional
+	RollingUpdate *appsv1.RollingUpdateDeployment `json:"rollingUpdate,omitempty"`
 }
 
 func (in *MetaSpec) GetConfig() string {
@@ -143,6 +148,10 @@ type FrontendSpec struct {
 	// TLS is the TLS configuration of the frontend.
 	// +optional
 	TLS *TLSSpec `json:"tls,omitempty"`
+
+	// RollingUpdate is the rolling update configuration. We always use `RollingUpdate` strategyt.
+	// +optional
+	RollingUpdate *appsv1.RollingUpdateDeployment `json:"rollingUpdate,omitempty"`
 }
 
 func (in *FrontendSpec) GetTLS() *TLSSpec {
@@ -192,6 +201,10 @@ type DatanodeSpec struct {
 	// Storage is the default file storage of the datanode. For example, WAL, cache, index etc.
 	// +optional
 	Storage *DatanodeStorageSpec `json:"storage,omitempty"`
+
+	// RollingUpdate is the rolling update configuration. We always use `RollingUpdate` strategy.
+	// +optional
+	RollingUpdate *appsv1.RollingUpdateStatefulSetStrategy `json:"rollingUpdate,omitempty"`
 }
 
 func (in *DatanodeSpec) GetConfig() string {
@@ -231,6 +244,10 @@ type FlownodeSpec struct {
 	// +kubebuilder:validation:Maximum=65535
 	// +optional
 	RPCPort int32 `json:"rpcPort,omitempty"`
+
+	// RollingUpdate is the rolling update configuration. We always use `RollingUpdate` strategy.
+	// +optional
+	RollingUpdate *appsv1.RollingUpdateStatefulSetStrategy `json:"rollingUpdate,omitempty"`
 }
 
 func (in *FlownodeSpec) GetConfig() string {

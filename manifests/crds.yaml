@@ -3065,6 +3065,17 @@ spec:
                     format: int32
                     minimum: 0
                     type: integer
+                  rollingUpdate:
+                    properties:
+                      maxUnavailable:
+                        anyOf:
+                        - type: integer
+                        - type: string
+                        x-kubernetes-int-or-string: true
+                      partition:
+                        format: int32
+                        type: integer
+                    type: object
                   rpcPort:
                     format: int32
                     maximum: 65535
@@ -6104,6 +6115,17 @@ spec:
                     format: int32
                     minimum: 0
                     type: integer
+                  rollingUpdate:
+                    properties:
+                      maxUnavailable:
+                        anyOf:
+                        - type: integer
+                        - type: string
+                        x-kubernetes-int-or-string: true
+                      partition:
+                        format: int32
+                        type: integer
+                    type: object
                   rpcPort:
                     format: int32
                     maximum: 65535
@@ -9136,6 +9158,19 @@ spec:
                     format: int32
                     minimum: 0
                     type: integer
+                  rollingUpdate:
+                    properties:
+                      maxSurge:
+                        anyOf:
+                        - type: integer
+                        - type: string
+                        x-kubernetes-int-or-string: true
+                      maxUnavailable:
+                        anyOf:
+                        - type: integer
+                        - type: string
+                        x-kubernetes-int-or-string: true
+                    type: object
                   rpcPort:
                     format: int32
                     maximum: 65535
@@ -12236,6 +12271,19 @@ spec:
                     format: int32
                     minimum: 0
                     type: integer
+                  rollingUpdate:
+                    properties:
+                      maxSurge:
+                        anyOf:
+                        - type: integer
+                        - type: string
+                        x-kubernetes-int-or-string: true
+                      maxUnavailable:
+                        anyOf:
+                        - type: integer
+                        - type: string
+                        x-kubernetes-int-or-string: true
+                    type: object
                   rpcPort:
                     format: int32
                     maximum: 65535
@@ -18360,6 +18408,17 @@ spec:
                         required:
                         - enabled
                         type: object
+                      rollingUpdate:
+                        properties:
+                          maxUnavailable:
+                            anyOf:
+                            - type: integer
+                            - type: string
+                            x-kubernetes-int-or-string: true
+                          partition:
+                            format: int32
+                            type: integer
+                        type: object
                       rpcPort:
                         format: int32
                         maximum: 65535
@@ -21867,6 +21926,17 @@ spec:
                     type: object
                 required:
                 - enabled
+                type: object
+              rollingUpdate:
+                properties:
+                  maxUnavailable:
+                    anyOf:
+                    - type: integer
+                    - type: string
+                    x-kubernetes-int-or-string: true
+                  partition:
+                    format: int32
+                    type: integer
                 type: object
               rpcPort:
                 format: int32
