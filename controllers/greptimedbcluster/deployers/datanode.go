@@ -25,6 +25,8 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -157,14 +159,34 @@ func (d *DatanodeDeployer) Apply(ctx context.Context, crdObject client.Object, o
 
 			// If the spec is not equal, update the object.
 			if !equal {
-				if sts, ok := newObject.(*appsv1.StatefulSet); ok && d.shouldUserMaintenanceMode(cluster) {
-					if err := d.turnOnMaintenanceMode(ctx, sts, cluster); err != nil {
+				newSts, ok := newObject.(*appsv1.StatefulSet)
+				if ok {
+					if d.shouldUserMaintenanceMode(cluster) {
+						if err := d.turnOnMaintenanceMode(ctx, newSts, cluster); err != nil {
+							return err
+						}
+					}
+
+					oldSts, err := d.covertToStatefulSetFromUnstructured(oldObject)
+					if err != nil {
 						return err
 					}
+
+					// If the replicas are the same, delete the StatefulSet object and let the operator to create a new one.
+					// It will boost the speed of updating the datanode.
+					if *newSts.Spec.Replicas == *oldSts.Spec.Replicas {
+						if err := d.Client.Delete(ctx, oldSts); err != nil {
+							return err
+						}
+						updateObject = true
+						continue
+					}
 				}
+
 				if err := d.Client.Patch(ctx, newObject, client.MergeFrom(oldObject)); err != nil {
 					return err
 				}
+
 				updateObject = true
 			}
 		}
@@ -299,6 +321,19 @@ func (d *DatanodeDeployer) shouldUserMaintenanceMode(cluster *v1alpha1.GreptimeD
 		return true
 	}
 	return false
+}
+
+func (d *DatanodeDeployer) covertToStatefulSetFromUnstructured(object client.Object) (*appsv1.StatefulSet, error) {
+	unstructured, ok := object.(*unstructured.Unstructured)
+	if !ok {
+		return nil, fmt.Errorf("object is not a unstructured data")
+	}
+
+	sts := new(appsv1.StatefulSet)
+	if err := runtime.DefaultUnstructuredConverter.FromUnstructured(unstructured.UnstructuredContent(), sts); err != nil {
+		return nil, err
+	}
+	return sts, nil
 }
 
 var _ deployer.Builder = &datanodeBuilder{}
