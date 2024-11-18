@@ -37,6 +37,7 @@ import (
 	"github.com/GreptimeTeam/greptimedb-operator/controllers/constant"
 	"github.com/GreptimeTeam/greptimedb-operator/controllers/greptimedbcluster/deployers"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/deployer"
+	"github.com/GreptimeTeam/greptimedb-operator/pkg/metrics"
 )
 
 const (
@@ -51,9 +52,10 @@ var (
 type Reconciler struct {
 	client.Client
 
-	Scheme    *runtime.Scheme
-	Deployers []deployer.Deployer
-	Recorder  record.EventRecorder
+	Scheme           *runtime.Scheme
+	Deployers        []deployer.Deployer
+	Recorder         record.EventRecorder
+	MetricsCollector *metrics.MetricsCollector
 }
 
 func Setup(mgr ctrl.Manager, _ *options.Options) error {
@@ -62,6 +64,12 @@ func Setup(mgr ctrl.Manager, _ *options.Options) error {
 		Scheme:   mgr.GetScheme(),
 		Recorder: mgr.GetEventRecorderFor("greptimedbcluster-controller"),
 	}
+
+	metricsCollector, err := metrics.NewMetricsCollector()
+	if err != nil {
+		return err
+	}
+	reconciler.MetricsCollector = metricsCollector
 
 	// sync will execute the sync logic of multiple deployers in order.
 	reconciler.Deployers = []deployer.Deployer{
@@ -219,6 +227,15 @@ func (r *Reconciler) sync(ctx context.Context, cluster *v1alpha1.GreptimeDBClust
 		cluster.Status.SetCondition(*v1alpha1.NewCondition(v1alpha1.ConditionTypeReady, corev1.ConditionTrue, "ClusterReady", "the cluster is ready"))
 		if err := r.updateClusterStatus(ctx, cluster, v1alpha1.PhaseRunning); err != nil {
 			return ctrl.Result{}, err
+		}
+	}
+
+	if cluster.Status.ClusterPhase == v1alpha1.PhaseRunning && r.MetricsCollector != nil {
+		if err := r.MetricsCollector.CollectClusterPodMetrics(ctx, cluster); err != nil {
+			klog.Errorf("Failed to collect cluster pod metrics: '%v'", err)
+
+			// We will not return error here because it is not a critical issue.
+			return ctrl.Result{}, nil
 		}
 	}
 
