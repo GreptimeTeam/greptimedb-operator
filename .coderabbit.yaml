@@ -16,7 +16,7 @@ reviews:
     - "!examples/**"
     - "!docs/**"
   auto_review:
-    enabled: false
-    drafts: false
+    enabled: true
+    drafts: true
 chat:
   auto_reply: true
