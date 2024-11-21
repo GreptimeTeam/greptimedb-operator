@@ -26,6 +26,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/config"
 	"sigs.k8s.io/controller-runtime/pkg/metrics"
@@ -190,31 +191,39 @@ func (c *MetricsCollector) collectPodMetrics(ctx context.Context, clusterName st
 		return fmt.Errorf("get pod ready time: %v", err)
 	}
 
+	// Collect pod scheduling duration.
+	// The calculation is: pod.Status.Conditions[corev1.PodScheduled].LastTransitionTime.Time - pod.GetCreationTimestamp().Time.
+	duration := scheduledTime.Sub(startTime)
+	podSchedulingDuration.WithLabelValues(
+		pod.Namespace, clusterName, pod.Name, pod.Spec.NodeName, string(role),
+	).Observe(duration.Seconds())
+	klog.Infof("pod '%s/%s' scheduling duration: '%v'", pod.Namespace, pod.Name, duration)
+
+	// Collect pod initializing duration.
+	// The calculation is: pod.Status.Conditions[corev1.PodInitialized].LastTransitionTime.Time - pod.Status.Conditions[corev1.PodScheduled].LastTransitionTime.Time.
+	duration = initializedTime.Sub(*scheduledTime)
+	podInitializingDuration.WithLabelValues(
+		pod.Namespace, clusterName, pod.Name, pod.Spec.NodeName, string(role),
+	).Observe(duration.Seconds())
+	klog.Infof("pod '%s/%s' initializing duration: '%v'", pod.Namespace, pod.Name, duration)
+
 	// Collect container startup duration.
 	// The calculation is: pod.Status.ContainerStatuses[*].State.Running.StartedAt - pod.Status.Conditions[corev1.PodInitialized].LastTransitionTime.Time.
 	for _, container := range pod.Status.ContainerStatuses {
+		duration := container.State.Running.StartedAt.Time.Sub(*initializedTime)
 		podContainerStartupDuration.WithLabelValues(
 			pod.Namespace, clusterName, pod.Name, container.Name, pod.Spec.NodeName, string(role),
-		).Observe(container.State.Running.StartedAt.Time.Sub(*initializedTime).Seconds())
+		).Observe(duration.Seconds())
+		klog.Infof("pod '%s/%s' container '%s' startup duration: '%v'", pod.Namespace, pod.Name, container.Name, duration)
 	}
 
 	// Collect pod startup duration.
 	// The calculation is: pod.Status.Conditions[corev1.PodReady].LastTransitionTime.Time - pod.GetCreationTimestamp().Time.
+	duration = readyTime.Sub(startTime)
 	podStartupDuration.WithLabelValues(
 		pod.Namespace, clusterName, pod.Name, pod.Spec.NodeName, string(role),
-	).Observe(readyTime.Sub(startTime).Seconds())
-
-	// Collect pod scheduling duration.
-	// The calculation is: pod.Status.Conditions[corev1.PodScheduled].LastTransitionTime.Time - pod.GetCreationTimestamp().Time.
-	podSchedulingDuration.WithLabelValues(
-		pod.Namespace, clusterName, pod.Name, pod.Spec.NodeName, string(role),
-	).Observe(scheduledTime.Sub(startTime).Seconds())
-
-	// Collect pod initializing duration.
-	// The calculation is: pod.Status.Conditions[corev1.PodInitialized].LastTransitionTime.Time - pod.Status.Conditions[corev1.PodScheduled].LastTransitionTime.Time.
-	podInitializingDuration.WithLabelValues(
-		pod.Namespace, clusterName, pod.Name, pod.Spec.NodeName, string(role),
-	).Observe(initializedTime.Sub(*scheduledTime).Seconds())
+	).Observe(duration.Seconds())
+	klog.Infof("pod '%s/%s' startup duration: '%v'", pod.Namespace, pod.Name, duration)
 
 	if err := c.collectPodImagePullingDuration(ctx, clusterName, pod, role); err != nil {
 		return err
@@ -254,10 +263,15 @@ func (c *MetricsCollector) collectPodImagePullingDuration(ctx context.Context, c
 		return nil
 	}
 
+	if imageName == "" || duration == 0 {
+		return nil
+	}
+
 	if err != nil {
 		return fmt.Errorf("get image pulling duration: %v", err)
 	}
 
+	klog.Infof("pod '%s/%s' image pulling '%s' duration: '%v'", pod.Namespace, pod.Name, imageName, duration)
 	podImagePullingDuration.WithLabelValues(
 		pod.Namespace, clusterName, pod.Name, pod.Spec.NodeName, string(role), imageName,
 	).Observe(float64(duration.Milliseconds()))
