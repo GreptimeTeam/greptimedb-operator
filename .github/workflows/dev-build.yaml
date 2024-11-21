@@ -24,6 +24,16 @@ on:
       commit: # Note: We only pull the source code and use the current workflow to build the artifacts.
         description: The commit to build, default to the latest commit in the current branch.
         required: false
+      build-arm64: # only build amd64 image by default, it will make the build faster.
+        type: boolean
+        description: Whether to build arm64 image
+        required: false
+        default: false
+      build-initializer:
+        type: boolean
+        description: Whether to build initializer image
+        required: false
+        default: false
 
 env:
   GO_VERSION: "1.23"
@@ -85,12 +95,21 @@ jobs:
           VERSION="dev-$(date "+%Y%m%d-%s")-$(echo "${{ env.COMMIT }}" | cut -c1-8)"
           echo "VERSION=${VERSION}" >> $GITHUB_ENV
 
+      - name: Determine the platforms to build
+        shell: bash
+        run: |
+          PLATFORMS="linux/amd64"
+          if ${{ inputs.build-arm64 }}; then
+            PLATFORMS="linux/amd64,linux/arm64"
+          fi
+          echo "PLATFORMS=${PLATFORMS}" >> $GITHUB_ENV
+
       - name: Build and push operator
         uses: docker/build-push-action@v5
         with:
           context: ${{ env.CHECKOUT_SOURCE_PATH }}
           file: ./docker/operator/Dockerfile
-          platforms: linux/amd64,linux/arm64
+          platforms: ${{ env.PLATFORMS }}
           push: true
           tags: |
             greptime/greptimedb-operator-dev:latest
@@ -101,11 +120,12 @@ jobs:
             ${{ vars.ECR_REGISTRY }}/greptime/greptimedb-operator-dev:${{ env.VERSION }}
 
       - name: Build and push initializer
+        if: ${{ inputs.build-initializer }}
         uses: docker/build-push-action@v5
         with:
           context: ${{ env.CHECKOUT_SOURCE_PATH }}
           file: ./docker/initializer/Dockerfile
-          platforms: linux/amd64,linux/arm64
+          platforms: ${{ env.PLATFORMS }}
           push: true
           tags: |
             greptime/greptimedb-initializer-dev:latest
