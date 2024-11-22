@@ -15,9 +15,11 @@
 package v1alpha1
 
 import (
+	"reflect"
 	"strings"
 
 	"dario.cat/mergo"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -34,7 +36,7 @@ func (in *GreptimeDBCluster) SetDefaults() error {
 	in.Spec.Version = getVersionFromImage(in.GetBaseMainContainer().GetImage())
 
 	// Merge the default settings into the GreptimeDBClusterSpec.
-	if err := mergo.Merge(&in.Spec, in.defaultSpec()); err != nil {
+	if err := mergo.Merge(&in.Spec, in.defaultSpec(), mergo.WithTransformers(intOrStringTransformer{})); err != nil {
 		return err
 	}
 
@@ -171,6 +173,7 @@ func (in *GreptimeDBCluster) defaultFrontend() *FrontendSpec {
 		Service: &ServiceSpec{
 			Type: corev1.ServiceTypeClusterIP,
 		},
+		RollingUpdate: defaultRollingUpdateForDeployment(),
 	}
 }
 
@@ -188,6 +191,7 @@ func (in *GreptimeDBCluster) defaultMeta() *MetaSpec {
 		RPCPort:              DefaultMetaRPCPort,
 		HTTPPort:             DefaultHTTPPort,
 		EnableRegionFailover: &enableRegionFailover,
+		RollingUpdate:        defaultRollingUpdateForDeployment(),
 	}
 }
 
@@ -198,9 +202,10 @@ func (in *GreptimeDBCluster) defaultDatanode() *DatanodeSpec {
 			Replicas: pointer.Int32(DefaultReplicas),
 			Logging:  &LoggingSpec{},
 		},
-		RPCPort:  DefaultRPCPort,
-		HTTPPort: DefaultHTTPPort,
-		Storage:  defaultDatanodeStorage(),
+		RPCPort:       DefaultRPCPort,
+		HTTPPort:      DefaultHTTPPort,
+		Storage:       defaultDatanodeStorage(),
+		RollingUpdate: defaultRollingUpdateForStatefulSet(),
 	}
 }
 
@@ -312,7 +317,7 @@ func (in *GreptimeDBStandalone) SetDefaults() error {
 
 	in.Spec.Version = getVersionFromImage(in.GetBaseMainContainer().GetImage())
 
-	if err := mergo.Merge(&in.Spec, in.defaultSpec()); err != nil {
+	if err := mergo.Merge(&in.Spec, in.defaultSpec(), mergo.WithTransformers(intOrStringTransformer{})); err != nil {
 		return err
 	}
 
@@ -344,6 +349,7 @@ func (in *GreptimeDBStandalone) defaultSpec() *GreptimeDBStandaloneSpec {
 			OnlyLogToStdout:    pointer.Bool(false),
 		},
 		DatanodeStorage: defaultDatanodeStorage(),
+		RollingUpdate:   defaultRollingUpdateForStatefulSet(),
 	}
 
 	return defaultSpec
@@ -425,5 +431,60 @@ func defaultReadinessProbe() *corev1.Probe {
 		},
 		PeriodSeconds:    5,
 		FailureThreshold: 10,
+	}
+}
+
+// Same as the default rolling update strategy of Deployment.
+func defaultRollingUpdateForDeployment() *appsv1.RollingUpdateDeployment {
+	return &appsv1.RollingUpdateDeployment{
+		MaxUnavailable: &intstr.IntOrString{Type: intstr.String, StrVal: "25%"},
+		MaxSurge:       &intstr.IntOrString{Type: intstr.String, StrVal: "25%"},
+	}
+}
+
+// Same as the default rolling update strategy of StatefulSet.
+func defaultRollingUpdateForStatefulSet() *appsv1.RollingUpdateStatefulSetStrategy {
+	return &appsv1.RollingUpdateStatefulSetStrategy{
+		Partition: pointer.Int32(0),
+		MaxUnavailable: &intstr.IntOrString{
+			Type:   intstr.Int,
+			IntVal: 1,
+		},
+	}
+}
+
+// This transformer handles merging of intstr.IntOrString values.
+// The `Type` field in IntOrString is an int starting from 0, which means it would be considered "empty" during merging and get overwritten.
+// We want to preserve the original Type of the destination value while only merging the actual int/string content.
+type intOrStringTransformer struct{}
+
+func (t intOrStringTransformer) Transformer(typ reflect.Type) func(dst, src reflect.Value) error {
+	if typ != reflect.TypeOf(&intstr.IntOrString{}) {
+		return nil
+	}
+
+	return func(dst, src reflect.Value) error {
+		if dst.IsNil() || src.IsNil() {
+			return nil
+		}
+
+		dstVal, srcVal := dst.Interface().(*intstr.IntOrString), src.Interface().(*intstr.IntOrString)
+
+		// Don't override the type of dst.
+		if dstVal.Type == intstr.Int {
+			if dstVal.IntVal == 0 {
+				dstVal.IntVal = srcVal.IntVal
+			}
+			dstVal.StrVal = ""
+		}
+
+		if dstVal.Type == intstr.String {
+			if dstVal.StrVal == "" {
+				dstVal.StrVal = srcVal.StrVal
+			}
+			dstVal.IntVal = 0
+		}
+
+		return nil
 	}
 }

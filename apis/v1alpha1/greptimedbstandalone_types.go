@@ -15,6 +15,7 @@
 package v1alpha1
 
 import (
+	appsv1 "k8s.io/api/apps/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -87,6 +88,10 @@ type GreptimeDBStandaloneSpec struct {
 	// Logging defines the logging configuration for the component.
 	// +optional
 	Logging *LoggingSpec `json:"logging,omitempty"`
+
+	// RollingUpdate is the rolling update configuration. We always use `RollingUpdate` strategy.
+	// +optional
+	RollingUpdate *appsv1.RollingUpdateStatefulSetStrategy `json:"rollingUpdate,omitempty"`
 }
 
 // GreptimeDBStandaloneStatus defines the observed state of GreptimeDBStandalone

@@ -60,6 +60,9 @@ spec:
         args:
           - --metasrv-addrs
           - meta.default:3002
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
   meta:
     enableRegionFailover: false
     etcdEndpoints:
@@ -74,6 +77,9 @@ spec:
         args:
           - --store-addr
           - etcd.default:2379
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
   datanode:
     httpPort: 4000
     rpcPort: 4001
@@ -89,3 +95,6 @@ spec:
     template:
       main:
         image: greptime/greptimedb:latest
+    rollingUpdate:
+      maxUnavailable: 1
+      partition: 0

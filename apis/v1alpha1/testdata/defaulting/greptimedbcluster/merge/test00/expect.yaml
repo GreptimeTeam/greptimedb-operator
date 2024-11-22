@@ -59,6 +59,9 @@ spec:
       logsDir: /data/greptimedb/logs
       onlyLogToStdout: false
       persistentWithData: false
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 2
     template:
       main:
         image: greptime/greptimedb:test
@@ -100,6 +103,9 @@ spec:
       logsDir: /data/greptimedb/logs
       onlyLogToStdout: false
       persistentWithData: false
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
     template:
       main:
         image: greptime/greptimedb:latest
@@ -145,6 +151,9 @@ spec:
       logsDir: /data/greptimedb/logs
       onlyLogToStdout: false
       persistentWithData: false
+    rollingUpdate:
+      maxUnavailable: 25%
+      partition: 1
     template:
       main:
         image: greptime/greptimedb:latest

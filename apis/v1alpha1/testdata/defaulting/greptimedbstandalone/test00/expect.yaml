@@ -45,3 +45,6 @@ spec:
       mountPath: /data/greptimedb
       storageRetainPolicy: Retain
       storageSize: 10Gi
+  rollingUpdate:
+    maxUnavailable: 1
+    partition: 0

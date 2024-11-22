@@ -388,6 +388,10 @@ func (b *datanodeBuilder) BuildStatefulSet() deployer.Builder {
 			},
 			Template:             b.generatePodTemplateSpec(),
 			VolumeClaimTemplates: b.generatePVCs(),
+			UpdateStrategy: appsv1.StatefulSetUpdateStrategy{
+				Type:          appsv1.RollingUpdateStatefulSetStrategyType,
+				RollingUpdate: b.Cluster.Spec.Datanode.RollingUpdate,
+			},
 		},
 	}
 

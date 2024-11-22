@@ -253,6 +253,10 @@ func (b *standaloneBuilder) BuildStatefulSet() deployer.Builder {
 			},
 			Template:             b.generatePodTemplateSpec(),
 			VolumeClaimTemplates: b.generatePVCs(),
+			UpdateStrategy: appsv1.StatefulSetUpdateStrategy{
+				Type:          appsv1.RollingUpdateStatefulSetStrategyType,
+				RollingUpdate: b.standalone.Spec.RollingUpdate,
+			},
 		},
 	}
 

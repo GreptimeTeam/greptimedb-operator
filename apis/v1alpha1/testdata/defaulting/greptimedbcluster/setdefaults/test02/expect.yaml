@@ -59,6 +59,9 @@ spec:
       type: ClusterIP
     logging: {}
     template: {}
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
   meta:
     etcdEndpoints:
       - etcd.etcd-cluster.svc.cluster.local:2379
@@ -69,6 +72,9 @@ spec:
     rpcPort: 3002
     replicas: 1
     template: {}
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
   datanode:
     httpPort: 4000
     rpcPort: 4001
@@ -82,3 +88,6 @@ spec:
         storageRetainPolicy: Retain
         storageSize: 10Gi
     template: {}
+    rollingUpdate:
+      maxUnavailable: 1
+      partition: 0

@@ -170,6 +170,10 @@ func (b *frontendBuilder) BuildDeployment() deployer.Builder {
 				},
 			},
 			Template: *b.generatePodTemplateSpec(),
+			Strategy: appsv1.DeploymentStrategy{
+				Type:          appsv1.RollingUpdateDeploymentStrategyType,
+				RollingUpdate: b.Cluster.Spec.Frontend.RollingUpdate,
+			},
 		},
 	}
 

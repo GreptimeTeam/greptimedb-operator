@@ -59,6 +59,9 @@ spec:
       type: ClusterIP
     logging: {}
     template: {}
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
   meta:
     etcdEndpoints:
       - etcd.etcd-cluster.svc.cluster.local:2379
@@ -69,6 +72,9 @@ spec:
     replicas: 1
     logging: {}
     template: {}
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
   datanode:
     httpPort: 4000
     rpcPort: 4001
@@ -82,6 +88,9 @@ spec:
         storageSize: 10Gi
     logging: {}
     template: {}
+    rollingUpdate:
+      maxUnavailable: 1
+      partition: 0
   monitoring:
     enabled: true
     logsCollection: {}
@@ -127,6 +136,9 @@ spec:
       service:
         type: ClusterIP
       version: latest
+      rollingUpdate:
+        maxUnavailable: 1
+        partition: 0
     vector:
       image: timberio/vector:nightly-alpine
       resources:
