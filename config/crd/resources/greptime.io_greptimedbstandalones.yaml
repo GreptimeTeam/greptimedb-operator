@@ -3082,6 +3082,20 @@ spec:
                 type: integer
               objectStorage:
                 properties:
+                  blob:
+                    properties:
+                      container:
+                        type: string
+                      endpoint:
+                        type: string
+                      root:
+                        type: string
+                      secretName:
+                        type: string
+                    required:
+                    - container
+                    - root
+                    type: object
                   cache:
                     properties:
                       cacheCapacity:

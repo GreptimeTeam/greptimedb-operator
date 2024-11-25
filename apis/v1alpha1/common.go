@@ -585,6 +585,10 @@ type ObjectStorageProviderSpec struct {
 	// +optional
 	GCS *GCSStorage `json:"gcs,omitempty"`
 
+	// Blob is the Azure Blob storage configuration.
+	// +optional
+	Blob *BlobStorage `json:"blob,omitempty"`
+
 	// Cache is the cache storage configuration for object storage.
 	// +optional
 	Cache *CacheStorage `json:"cache,omitempty"`
@@ -596,6 +600,7 @@ type ObjectStorageProviderAccessor interface {
 	GetS3Storage() *S3Storage
 	GetGCSStorage() *GCSStorage
 	GetOSSStorage() *OSSStorage
+	GetBlobStorage() *BlobStorage
 	GetCacheFileStorage() *FileStorage
 }
 
@@ -629,6 +634,13 @@ func (in *ObjectStorageProviderSpec) GetOSSStorage() *OSSStorage {
 	return nil
 }
 
+func (in *ObjectStorageProviderSpec) GetBlobStorage() *BlobStorage {
+	if in != nil {
+		return in.Blob
+	}
+	return nil
+}
+
 func (in *ObjectStorageProviderSpec) getSetObjectStorageCount() int {
 	count := 0
 	if in.S3 != nil {
@@ -638,6 +650,9 @@ func (in *ObjectStorageProviderSpec) getSetObjectStorageCount() int {
 		count++
 	}
 	if in.GCS != nil {
+		count++
+	}
+	if in.Blob != nil {
 		count++
 	}
 	return count
@@ -776,6 +791,41 @@ func (in *GCSStorage) GetSecretName() string {
 }
 
 func (in *GCSStorage) GetRoot() string {
+	if in != nil {
+		return in.Root
+	}
+	return ""
+}
+
+// BlobStorage defines the Blob storage specification.
+type BlobStorage struct {
+	// The data will be stored in the container.
+	// +required
+	Container string `json:"container"`
+
+	// The secret of storing the credentials of account name and account key.
+	// The secret should contain keys named `account-name` and `account-key`.
+	// The secret must be the same namespace with the GreptimeDBCluster resource.
+	// +optional
+	SecretName string `json:"secretName,omitempty"`
+
+	// The Blob directory path.
+	// +required
+	Root string `json:"root"`
+
+	// The Blob Storage endpoint.
+	// +optional
+	Endpoint string `json:"endpoint,omitempty"`
+}
+
+func (in *BlobStorage) GetSecretName() string {
+	if in != nil {
+		return in.SecretName
+	}
+	return ""
+}
+
+func (in *BlobStorage) GetRoot() string {
 	if in != nil {
 		return in.Root
 	}

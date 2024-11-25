@@ -15,6 +15,25 @@
 
 
 
+#### BlobStorage
+
+
+
+BlobStorage defines the Blob storage specification.
+
+
+
+_Appears in:_
+- [ObjectStorageProviderSpec](#objectstorageproviderspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `container` _string_ | The data will be stored in the container. |  |  |
+| `secretName` _string_ | The secret of storing the credentials of account name and account key.<br />The secret should contain keys named `account-name` and `account-key`.<br />The secret must be the same namespace with the GreptimeDBCluster resource. |  |  |
+| `root` _string_ | The Blob directory path. |  |  |
+| `endpoint` _string_ | The Blob Storage endpoint. |  |  |
+
+
 #### CacheStorage
 
 
@@ -694,6 +713,7 @@ _Appears in:_
 | `s3` _[S3Storage](#s3storage)_ | S3 is the S3 storage configuration. |  |  |
 | `oss` _[OSSStorage](#ossstorage)_ | OSS is the Aliyun OSS storage configuration. |  |  |
 | `gcs` _[GCSStorage](#gcsstorage)_ | GCS is the Google GCS storage configuration. |  |  |
+| `blob` _[BlobStorage](#blobstorage)_ | Blob is the Azure Blob storage configuration. |  |  |
 | `cache` _[CacheStorage](#cachestorage)_ | Cache is the cache storage configuration for object storage. |  |  |
 
 

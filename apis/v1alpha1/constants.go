@@ -93,4 +93,10 @@ const (
 
 	// ServiceAccountKey is the key for the service account in the secret.
 	ServiceAccountKey = "service-account-key"
+
+	// AccountName is the name for the account in the secret.
+	AccountName = "account-name"
+
+	// AccountKey is the key for the account in the secret.
+	AccountKey = "account-key"
 )
