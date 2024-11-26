@@ -206,6 +206,9 @@ func (b *metaBuilder) BuildService() deployer.Builder {
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: b.Cluster.Namespace,
 			Name:      common.ResourceName(b.Cluster.Name, b.ComponentKind),
+			Labels: map[string]string{
+				constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.ComponentKind),
+			},
 		},
 		Spec: corev1.ServiceSpec{
 			Type: corev1.ServiceTypeClusterIP,
@@ -238,6 +241,9 @@ func (b *metaBuilder) BuildDeployment() deployer.Builder {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      common.ResourceName(b.Cluster.Name, b.ComponentKind),
 			Namespace: b.Cluster.Namespace,
+			Labels: map[string]string{
+				constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.ComponentKind),
+			},
 		},
 		Spec: appsv1.DeploymentSpec{
 			Replicas: b.Cluster.Spec.Meta.Replicas,
