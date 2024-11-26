@@ -53,13 +53,13 @@ func CreateObjectIfNotExist(ctx context.Context, c client.Client, source, newObj
 func IsObjectSpecEqual(oldObject, newObject client.Object, annotationKey string) (bool, error) {
 	oldObjectSpecStr, ok := oldObject.GetAnnotations()[annotationKey]
 	if !ok {
-		return false, fmt.Errorf("the objectA object '%s' does not have annotation '%s'",
+		return false, fmt.Errorf("the old object '%s' does not have annotation '%s'",
 			client.ObjectKeyFromObject(oldObject), annotationKey)
 	}
 
 	newObjectSpecStr, ok := newObject.GetAnnotations()[annotationKey]
 	if !ok {
-		return false, fmt.Errorf("the objectB object '%s' does not have annotation '%s'",
+		return false, fmt.Errorf("the new object '%s' does not have annotation '%s'",
 			client.ObjectKeyFromObject(newObject), annotationKey)
 	}
 
