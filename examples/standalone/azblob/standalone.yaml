@@ -7,8 +7,8 @@ spec:
     main:
       image: greptime/greptimedb:latest
   objectStorage:
-    blob:
+    azblob:
       container: "greptimedb"
-      secretName: "blob-credentials"
+      secretName: "azblob-credentials"
       endpoint: "https://<storage-account>.blob.core.windows.net"
       root: "standalone-with-blob"

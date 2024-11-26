@@ -18324,7 +18324,7 @@ spec:
                         type: integer
                       objectStorage:
                         properties:
-                          blob:
+                          azblob:
                             properties:
                               container:
                                 type: string
@@ -18548,7 +18548,7 @@ spec:
                 type: integer
               objectStorage:
                 properties:
-                  blob:
+                  azblob:
                     properties:
                       container:
                         type: string
@@ -21871,7 +21871,7 @@ spec:
                 type: integer
               objectStorage:
                 properties:
-                  blob:
+                  azblob:
                     properties:
                       container:
                         type: string

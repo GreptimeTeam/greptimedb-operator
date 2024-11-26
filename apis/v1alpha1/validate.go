@@ -98,8 +98,8 @@ func (in *GreptimeDBCluster) Check(ctx context.Context, client client.Client) er
 		}
 	}
 
-	if secretName := in.GetObjectStorageProvider().GetBlobStorage().GetSecretName(); secretName != "" {
-		if err := checkBlobCredentialsSecret(ctx, client, in.GetNamespace(), secretName); err != nil {
+	if secretName := in.GetObjectStorageProvider().GetAZBlobStorage().GetSecretName(); secretName != "" {
+		if err := checkAZBlobCredentialsSecret(ctx, client, in.GetNamespace(), secretName); err != nil {
 			return err
 		}
 	}
@@ -201,8 +201,8 @@ func (in *GreptimeDBStandalone) Check(ctx context.Context, client client.Client)
 		}
 	}
 
-	if secretName := in.GetObjectStorageProvider().GetBlobStorage().GetSecretName(); secretName != "" {
-		if err := checkBlobCredentialsSecret(ctx, client, in.GetNamespace(), secretName); err != nil {
+	if secretName := in.GetObjectStorageProvider().GetAZBlobStorage().GetSecretName(); secretName != "" {
+		if err := checkAZBlobCredentialsSecret(ctx, client, in.GetNamespace(), secretName); err != nil {
 			return err
 		}
 	}
@@ -294,7 +294,7 @@ func checkS3CredentialsSecret(ctx context.Context, client client.Client, namespa
 	return checkSecretData(ctx, client, namespace, name, []string{AccessKeyIDSecretKey, SecretAccessKeySecretKey})
 }
 
-func checkBlobCredentialsSecret(ctx context.Context, client client.Client, namespace, name string) error {
+func checkAZBlobCredentialsSecret(ctx context.Context, client client.Client, namespace, name string) error {
 	return checkSecretData(ctx, client, namespace, name, []string{AccountName, AccountKey})
 }
 

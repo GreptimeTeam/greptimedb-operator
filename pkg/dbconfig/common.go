@@ -59,8 +59,8 @@ func (c *StorageConfig) ConfigureObjectStorage(namespace string, accessor v1alph
 		if err := c.configureGCS(namespace, gcs); err != nil {
 			return err
 		}
-	} else if blob := accessor.GetBlobStorage(); blob != nil {
-		if err := c.configureBlob(namespace, blob); err != nil {
+	} else if blob := accessor.GetAZBlobStorage(); blob != nil {
+		if err := c.configureAZBlob(namespace, blob); err != nil {
 			return err
 		}
 	}
@@ -140,18 +140,18 @@ func (c *StorageConfig) configureGCS(namespace string, gcs *v1alpha1.GCSStorage)
 	return nil
 }
 
-func (c *StorageConfig) configureBlob(namespace string, blob *v1alpha1.BlobStorage) error {
-	if blob == nil {
+func (c *StorageConfig) configureAZBlob(namespace string, azblob *v1alpha1.AZBlobStorage) error {
+	if azblob == nil {
 		return nil
 	}
 
 	c.StorageType = pointer.String("Azblob")
-	c.Container = pointer.String(blob.Container)
-	c.StorageRoot = pointer.String(blob.Root)
-	c.StorageEndpoint = pointer.String(blob.Endpoint)
+	c.Container = pointer.String(azblob.Container)
+	c.StorageRoot = pointer.String(azblob.Root)
+	c.StorageEndpoint = pointer.String(azblob.Endpoint)
 
-	if blob.SecretName != "" {
-		data, err := k8sutil.GetSecretsData(namespace, blob.SecretName, []string{v1alpha1.AccountName, v1alpha1.AccountKey})
+	if azblob.SecretName != "" {
+		data, err := k8sutil.GetSecretsData(namespace, azblob.SecretName, []string{v1alpha1.AccountName, v1alpha1.AccountKey})
 		if err != nil {
 			return err
 		}

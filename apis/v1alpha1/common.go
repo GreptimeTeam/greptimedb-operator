@@ -573,7 +573,7 @@ func (in *TLSSpec) GetSecretName() string {
 
 // ObjectStorageProviderSpec defines the object storage provider for the cluster. The data will be stored in the storage.
 type ObjectStorageProviderSpec struct {
-	// S3 is the S3 storage configuration.
+	// S3 is the AWS S3 storage configuration.
 	// +optional
 	S3 *S3Storage `json:"s3,omitempty"`
 
@@ -581,13 +581,13 @@ type ObjectStorageProviderSpec struct {
 	// +optional
 	OSS *OSSStorage `json:"oss,omitempty"`
 
-	// GCS is the Google GCS storage configuration.
+	// GCS is the Google cloud storage configuration.
 	// +optional
 	GCS *GCSStorage `json:"gcs,omitempty"`
 
-	// Blob is the Azure Blob storage configuration.
+	// AZBlob is the Azure Blob storage configuration.
 	// +optional
-	Blob *BlobStorage `json:"blob,omitempty"`
+	AZBlob *AZBlobStorage `json:"azblob,omitempty"`
 
 	// Cache is the cache storage configuration for object storage.
 	// +optional
@@ -600,7 +600,7 @@ type ObjectStorageProviderAccessor interface {
 	GetS3Storage() *S3Storage
 	GetGCSStorage() *GCSStorage
 	GetOSSStorage() *OSSStorage
-	GetBlobStorage() *BlobStorage
+	GetAZBlobStorage() *AZBlobStorage
 	GetCacheFileStorage() *FileStorage
 }
 
@@ -634,9 +634,9 @@ func (in *ObjectStorageProviderSpec) GetOSSStorage() *OSSStorage {
 	return nil
 }
 
-func (in *ObjectStorageProviderSpec) GetBlobStorage() *BlobStorage {
+func (in *ObjectStorageProviderSpec) GetAZBlobStorage() *AZBlobStorage {
 	if in != nil {
-		return in.Blob
+		return in.AZBlob
 	}
 	return nil
 }
@@ -652,7 +652,7 @@ func (in *ObjectStorageProviderSpec) getSetObjectStorageCount() int {
 	if in.GCS != nil {
 		count++
 	}
-	if in.Blob != nil {
+	if in.AZBlob != nil {
 		count++
 	}
 	return count
@@ -797,8 +797,8 @@ func (in *GCSStorage) GetRoot() string {
 	return ""
 }
 
-// BlobStorage defines the Blob storage specification.
-type BlobStorage struct {
+// AZBlobStorage defines the Azure Blob storage specification.
+type AZBlobStorage struct {
 	// The data will be stored in the container.
 	// +required
 	Container string `json:"container"`
@@ -818,14 +818,14 @@ type BlobStorage struct {
 	Endpoint string `json:"endpoint,omitempty"`
 }
 
-func (in *BlobStorage) GetSecretName() string {
+func (in *AZBlobStorage) GetSecretName() string {
 	if in != nil {
 		return in.SecretName
 	}
 	return ""
 }
 
-func (in *BlobStorage) GetRoot() string {
+func (in *AZBlobStorage) GetRoot() string {
 	if in != nil {
 		return in.Root
 	}

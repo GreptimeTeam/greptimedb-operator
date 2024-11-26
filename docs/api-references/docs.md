@@ -15,11 +15,11 @@
 
 
 
-#### BlobStorage
+#### AZBlobStorage
 
 
 
-BlobStorage defines the Blob storage specification.
+AZBlobStorage defines the Azure Blob storage specification.
 
 
 
@@ -710,10 +710,10 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `s3` _[S3Storage](#s3storage)_ | S3 is the S3 storage configuration. |  |  |
+| `s3` _[S3Storage](#s3storage)_ | S3 is the AWS S3 storage configuration. |  |  |
 | `oss` _[OSSStorage](#ossstorage)_ | OSS is the Aliyun OSS storage configuration. |  |  |
-| `gcs` _[GCSStorage](#gcsstorage)_ | GCS is the Google GCS storage configuration. |  |  |
-| `blob` _[BlobStorage](#blobstorage)_ | Blob is the Azure Blob storage configuration. |  |  |
+| `gcs` _[GCSStorage](#gcsstorage)_ | GCS is the Google cloud storage configuration. |  |  |
+| `azblob` _[AZBlobStorage](#azblobstorage)_ | AZBlob is the Azure Blob storage configuration. |  |  |
 | `cache` _[CacheStorage](#cachestorage)_ | Cache is the cache storage configuration for object storage. |  |  |
 
 

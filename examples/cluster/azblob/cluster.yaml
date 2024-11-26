@@ -15,8 +15,8 @@ spec:
   datanode:
     replicas: 1
   objectStorage:
-    blob:
+    azblob:
       container: "greptimedb"
-      secretName: "blob-credentials"
+      secretName: "azblob-credentials"
       endpoint: "https://<storage-account>.blob.core.windows.net"
       root: "cluster-with-blob-data"
