@@ -190,7 +190,9 @@ func (b *standaloneBuilder) BuildService() deployer.Builder {
 			Namespace:   b.standalone.Namespace,
 			Name:        common.ResourceName(b.standalone.Name, v1alpha1.StandaloneKind),
 			Annotations: b.standalone.Spec.Service.Annotations,
-			Labels:      b.standalone.Spec.Service.Labels,
+			Labels: util.MergeStringMap(b.standalone.Spec.Service.Labels, map[string]string{
+				constant.GreptimeDBComponentName: common.ResourceName(b.standalone.Name, v1alpha1.StandaloneKind),
+			}),
 		},
 		Spec: corev1.ServiceSpec{
 			Type: b.standalone.Spec.Service.Type,
@@ -242,6 +244,9 @@ func (b *standaloneBuilder) BuildStatefulSet() deployer.Builder {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      common.ResourceName(b.standalone.Name, v1alpha1.StandaloneKind),
 			Namespace: b.standalone.Namespace,
+			Labels: map[string]string{
+				constant.GreptimeDBComponentName: common.ResourceName(b.standalone.Name, v1alpha1.StandaloneKind),
+			},
 		},
 		Spec: appsv1.StatefulSetSpec{
 			// Always set replicas to 1 for standalone mode.

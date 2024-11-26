@@ -324,6 +324,9 @@ func (b *datanodeBuilder) BuildService() deployer.Builder {
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: b.Cluster.Namespace,
 			Name:      common.ResourceName(b.Cluster.Name, b.ComponentKind),
+			Labels: map[string]string{
+				constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.ComponentKind),
+			},
 		},
 		Spec: corev1.ServiceSpec{
 			ClusterIP: corev1.ClusterIPNone,
@@ -376,6 +379,9 @@ func (b *datanodeBuilder) BuildStatefulSet() deployer.Builder {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      common.ResourceName(b.Cluster.Name, b.ComponentKind),
 			Namespace: b.Cluster.Namespace,
+			Labels: map[string]string{
+				constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.ComponentKind),
+			},
 		},
 		Spec: appsv1.StatefulSetSpec{
 			PodManagementPolicy: appsv1.ParallelPodManagement,

@@ -127,7 +127,9 @@ func (b *frontendBuilder) BuildService() deployer.Builder {
 			Namespace:   b.Cluster.Namespace,
 			Name:        common.ResourceName(b.Cluster.Name, b.ComponentKind),
 			Annotations: b.Cluster.Spec.Frontend.Service.Annotations,
-			Labels:      b.Cluster.Spec.Frontend.Service.Labels,
+			Labels: util.MergeStringMap(b.Cluster.Spec.Frontend.Service.Labels, map[string]string{
+				constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.ComponentKind),
+			}),
 		},
 		Spec: corev1.ServiceSpec{
 			Type: b.Cluster.Spec.Frontend.Service.Type,
@@ -161,6 +163,9 @@ func (b *frontendBuilder) BuildDeployment() deployer.Builder {
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      common.ResourceName(b.Cluster.Name, b.ComponentKind),
 			Namespace: b.Cluster.Namespace,
+			Labels: map[string]string{
+				constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.ComponentKind),
+			},
 		},
 		Spec: appsv1.DeploymentSpec{
 			Replicas: b.Cluster.Spec.Frontend.Replicas,
