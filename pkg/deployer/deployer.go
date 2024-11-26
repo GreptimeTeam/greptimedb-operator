@@ -118,13 +118,15 @@ func (d *DefaultDeployer) Apply(ctx context.Context, _ client.Object, objects []
 		}
 
 		if oldObject != nil {
-			equal, err := k8sutils.IsObjectSpecEqual(oldObject, newObject, LastAppliedResourceSpec)
+			specEqual, err := k8sutils.IsObjectSpecEqual(oldObject, newObject, LastAppliedResourceSpec)
 			if err != nil {
 				return err
 			}
 
-			// If the spec is not equal, update the object.
-			if !equal {
+			labelsEqual := k8sutils.IsObjectLabelsEqual(oldObject.GetLabels(), newObject.GetLabels())
+
+			// If the spec or labels is not equal, update the object.
+			if !specEqual || !labelsEqual {
 				newObject.SetResourceVersion(oldObject.GetResourceVersion())
 				if err := d.Client.Patch(ctx, newObject, client.MergeFrom(oldObject)); err != nil {
 					return err
