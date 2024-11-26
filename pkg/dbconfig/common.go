@@ -40,6 +40,9 @@ type StorageConfig struct {
 	StorageEndpoint        *string `tomlmapping:"storage.endpoint"`
 	StorageScope           *string `tomlmapping:"storage.scope"`
 	StorageCredential      *string `tomlmapping:"storage.credential"`
+	Container              *string `tomlmapping:"storage.container"`
+	AccountName            *string `tomlmapping:"storage.account_name"`
+	AccountKey             *string `tomlmapping:"storage.account_key"`
 }
 
 // ConfigureObjectStorage configures the storage config by the given object storage provider accessor.
@@ -54,6 +57,10 @@ func (c *StorageConfig) ConfigureObjectStorage(namespace string, accessor v1alph
 		}
 	} else if gcs := accessor.GetGCSStorage(); gcs != nil {
 		if err := c.configureGCS(namespace, gcs); err != nil {
+			return err
+		}
+	} else if blob := accessor.GetAZBlobStorage(); blob != nil {
+		if err := c.configureAZBlob(namespace, blob); err != nil {
 			return err
 		}
 	}
@@ -128,6 +135,28 @@ func (c *StorageConfig) configureGCS(namespace string, gcs *v1alpha1.GCSStorage)
 		if len(serviceAccountKey) != 0 {
 			c.StorageCredential = pointer.String(base64.StdEncoding.EncodeToString(serviceAccountKey))
 		}
+	}
+
+	return nil
+}
+
+func (c *StorageConfig) configureAZBlob(namespace string, azblob *v1alpha1.AZBlobStorage) error {
+	if azblob == nil {
+		return nil
+	}
+
+	c.StorageType = pointer.String("Azblob")
+	c.Container = pointer.String(azblob.Container)
+	c.StorageRoot = pointer.String(azblob.Root)
+	c.StorageEndpoint = pointer.String(azblob.Endpoint)
+
+	if azblob.SecretName != "" {
+		data, err := k8sutil.GetSecretsData(namespace, azblob.SecretName, []string{v1alpha1.AccountName, v1alpha1.AccountKey})
+		if err != nil {
+			return err
+		}
+		c.AccountName = pointer.String(string(data[0]))
+		c.AccountKey = pointer.String(string(data[1]))
 	}
 
 	return nil

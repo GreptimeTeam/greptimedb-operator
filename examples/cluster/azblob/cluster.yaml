@@ -1,0 +1,22 @@
+apiVersion: greptime.io/v1alpha1
+kind: GreptimeDBCluster
+metadata:
+  name: cluster-with-blob
+spec:
+  base:
+    main:
+      image: greptime/greptimedb:latest
+  frontend:
+    replicas: 1
+  meta:
+    replicas: 1
+    etcdEndpoints:
+      - "etcd.etcd-cluster.svc.cluster.local:2379"
+  datanode:
+    replicas: 1
+  objectStorage:
+    azblob:
+      container: "greptimedb"
+      secretName: "azblob-credentials"
+      endpoint: "https://<storage-account>.blob.core.windows.net"
+      root: "cluster-with-blob-data"

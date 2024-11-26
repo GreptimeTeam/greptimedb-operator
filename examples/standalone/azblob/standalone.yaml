@@ -1,0 +1,14 @@
+apiVersion: greptime.io/v1alpha1
+kind: GreptimeDBStandalone
+metadata:
+  name: standalone-with-blob
+spec:
+  base:
+    main:
+      image: greptime/greptimedb:latest
+  objectStorage:
+    azblob:
+      container: "greptimedb"
+      secretName: "azblob-credentials"
+      endpoint: "https://<storage-account>.blob.core.windows.net"
+      root: "standalone-with-blob"

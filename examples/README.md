@@ -8,6 +8,7 @@ The following examples suppose that you have installed the etcd cluster in the `
 - [S3](./cluster/s3/cluster.yaml): Create a GreptimeDB cluster with S3 storage.
 - [GCS](./cluster/gcs/cluster.yaml): Create a GreptimeDB cluster with Google GCS storage.
 - [OSS](./cluster/oss/cluster.yaml): Create a GreptimeDB cluster with Aliyun OSS storage.
+- [AZBlob](./cluster/azblob/cluster.yaml): Create a GreptimeDB cluster with Azure Blob storage.
 - [Flownode](./cluster/flownode/cluster.yaml): Create a GreptimeDB cluster with `flownode` enabled. By adding the `flownode` configuration, you can use [continuous aggregation](https://docs.greptime.com/user-guide/continuous-aggregation/overview) in the GreptimeDB cluster.
 - [TLS Service](./cluster/tls-service/cluster.yaml): Create a GreptimeDB cluster with TLS service.
 - [Prometheus Monitoring](./cluster/prometheus-monitor/cluster.yaml): Create a GreptimeDB cluster with Prometheus monitoring. Please ensure you have already installed prometheus-operator and created a Prometheus instance with the label `release=prometheus`.
@@ -24,3 +25,4 @@ The following examples suppose that you have installed the etcd cluster in the `
 - [S3](./standalone/s3/standalone.yaml): Create a GreptimeDB standalone with S3 storage.
 - [GCS](./standalone/gcs/standalone.yaml): Create a GreptimeDB standalone with Google GCS storage.
 - [OSS](./standalone/oss/standalone.yaml): Create a GreptimeDB standalone with Aliyun OSS storage.
+- [AZBlob](./standalone/azblob/standalone.yaml): Create a GreptimeDB standalone with Azure Blob storage.

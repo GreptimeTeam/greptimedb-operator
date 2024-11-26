@@ -18317,6 +18317,20 @@ spec:
                         type: integer
                       objectStorage:
                         properties:
+                          azblob:
+                            properties:
+                              container:
+                                type: string
+                              endpoint:
+                                type: string
+                              root:
+                                type: string
+                              secretName:
+                                type: string
+                            required:
+                            - container
+                            - root
+                            type: object
                           cache:
                             properties:
                               cacheCapacity:
@@ -18527,6 +18541,20 @@ spec:
                 type: integer
               objectStorage:
                 properties:
+                  azblob:
+                    properties:
+                      container:
+                        type: string
+                      endpoint:
+                        type: string
+                      root:
+                        type: string
+                      secretName:
+                        type: string
+                    required:
+                    - container
+                    - root
+                    type: object
                   cache:
                     properties:
                       cacheCapacity:
@@ -21836,6 +21864,20 @@ spec:
                 type: integer
               objectStorage:
                 properties:
+                  azblob:
+                    properties:
+                      container:
+                        type: string
+                      endpoint:
+                        type: string
+                      root:
+                        type: string
+                      secretName:
+                        type: string
+                    required:
+                    - container
+                    - root
+                    type: object
                   cache:
                     properties:
                       cacheCapacity:
