@@ -50,30 +50,35 @@ func CreateObjectIfNotExist(ctx context.Context, c client.Client, source, newObj
 }
 
 // IsObjectSpecEqual checks if the spec of the object is equal to other one.
-func IsObjectSpecEqual(objectA, objectB client.Object, annotationKey string) (bool, error) {
-	objectASpecStr, ok := objectA.GetAnnotations()[annotationKey]
+func IsObjectSpecEqual(oldObject, newObject client.Object, annotationKey string) (bool, error) {
+	oldObjectSpecStr, ok := oldObject.GetAnnotations()[annotationKey]
 	if !ok {
-		return false, fmt.Errorf("the objectA object '%s' does not have annotation '%s'",
-			client.ObjectKeyFromObject(objectA), annotationKey)
+		return false, fmt.Errorf("the old object '%s' does not have annotation '%s'",
+			client.ObjectKeyFromObject(oldObject), annotationKey)
 	}
 
-	objectBSpecStr, ok := objectB.GetAnnotations()[annotationKey]
+	newObjectSpecStr, ok := newObject.GetAnnotations()[annotationKey]
 	if !ok {
-		return false, fmt.Errorf("the objectB object '%s' does not have annotation '%s'",
-			client.ObjectKeyFromObject(objectB), annotationKey)
+		return false, fmt.Errorf("the new object '%s' does not have annotation '%s'",
+			client.ObjectKeyFromObject(newObject), annotationKey)
 	}
 
-	var objectASpec, objectBSpec interface{}
+	var oldObjectSpec, newObjectSpec interface{}
 
-	if err := json.Unmarshal([]byte(objectASpecStr), &objectASpec); err != nil {
+	if err := json.Unmarshal([]byte(oldObjectSpecStr), &oldObjectSpec); err != nil {
 		return false, err
 	}
 
-	if err := json.Unmarshal([]byte(objectBSpecStr), &objectBSpec); err != nil {
+	if err := json.Unmarshal([]byte(newObjectSpecStr), &newObjectSpec); err != nil {
 		return false, err
 	}
 
-	return reflect.DeepEqual(objectASpec, objectBSpec), nil
+	return reflect.DeepEqual(oldObjectSpec, newObjectSpec), nil
+}
+
+// IsObjectLabelsEqual checks if the labels of the object is equal to other one.
+func IsObjectLabelsEqual(oldObjectLabels, newObjectLabels map[string]string) bool {
+	return reflect.DeepEqual(oldObjectLabels, newObjectLabels)
 }
 
 // IsDeploymentReady checks if the deployment is ready.
