@@ -17,6 +17,7 @@ package deployers
 import (
 	"bytes"
 	"context"
+	"database/sql"
 	"fmt"
 	"io"
 	"io/fs"
@@ -26,6 +27,7 @@ import (
 	"time"
 
 	"github.com/avast/retry-go"
+	"github.com/go-sql-driver/mysql"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog/v2"
@@ -93,9 +95,18 @@ func (d *MonitoringDeployer) CheckAndUpdateStatus(ctx context.Context, crdObject
 	}
 
 	if cluster.GetMonitoring().IsEnabled() && standalone.Status.StandalonePhase == v1alpha1.PhaseRunning {
-		if err := d.createPipeline(cluster); err != nil {
-			klog.Errorf("failed to create pipeline for standalone, err: '%v'", err)
+		pipeline, err := d.getPipeline(ctx, cluster)
+		if err != nil {
+			klog.Errorf("failed to get pipeline for standalone, err: '%v'", err)
 			return false, err
+		}
+
+		if pipeline == "" {
+			klog.Infof("create pipeline '%s' for standalone monitoring", common.LogsPipelineName(cluster.Namespace, cluster.Name))
+			if err := d.createPipeline(cluster); err != nil {
+				klog.Errorf("failed to create pipeline for standalone, err: '%v'", err)
+				return false, err
+			}
 		}
 
 		cluster.Status.Monitoring.InternalDNSName = fmt.Sprintf("%s.%s.svc.cluster.local", common.ResourceName(common.MonitoringServiceName(cluster.Name), v1alpha1.StandaloneKind), cluster.Namespace)
@@ -187,6 +198,52 @@ func (d *MonitoringDeployer) defaultPipeline() (string, error) {
 		return "", err
 	}
 	return string(data), nil
+}
+
+func (d *MonitoringDeployer) getPipeline(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster) (string, error) {
+	cfg := mysql.Config{
+		Net:                  "tcp",
+		Addr:                 fmt.Sprintf("%s.%s.svc.cluster.local:%d", common.ResourceName(common.MonitoringServiceName(cluster.Name), v1alpha1.StandaloneKind), cluster.Namespace, v1alpha1.DefaultMySQLPort),
+		DBName:               "greptime_private",
+		AllowNativePasswords: true,
+	}
+	db, err := sql.Open("mysql", cfg.FormatDSN())
+	if err != nil {
+		return "", err
+	}
+	defer db.Close()
+
+	// check if the table exists
+	rows, err := db.QueryContext(ctx, "SELECT 1 FROM pipelines LIMIT 1")
+	if err != nil {
+		if strings.Contains(err.Error(), "TableNotFound") {
+			return "", nil
+		}
+		return "", err
+	}
+	if rows != nil {
+		rows.Close()
+	}
+
+	pipelineName := common.LogsPipelineName(cluster.Namespace, cluster.Name)
+	rows, err = db.QueryContext(ctx, "SELECT pipeline FROM pipelines WHERE name = ? LIMIT 1", pipelineName)
+	if err != nil {
+		return "", err
+	}
+
+	if rows.Next() {
+		var pipeline string
+		if err := rows.Scan(&pipeline); err != nil {
+			return "", err
+		}
+		return pipeline, nil
+	}
+
+	if rows != nil {
+		rows.Close()
+	}
+
+	return "", nil
 }
 
 var _ deployer.Builder = &monitoringBuilder{}
