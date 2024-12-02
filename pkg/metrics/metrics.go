@@ -250,7 +250,11 @@ func (c *MetricsCollector) getPods(ctx context.Context, cluster *greptimev1alpha
 	}
 
 	pods := &corev1.PodList{}
-	if err := c.client.List(ctx, pods, client.InNamespace(cluster.Namespace), client.MatchingLabels(selector.MatchLabels)); err != nil {
+	if err := c.client.List(ctx, pods,
+		client.InNamespace(cluster.Namespace),
+		client.MatchingLabels(selector.MatchLabels),
+		client.MatchingFields{"status.phase": string(corev1.PodRunning)},
+	); err != nil {
 		return nil, err
 	}
 
