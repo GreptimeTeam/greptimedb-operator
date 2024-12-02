@@ -38,6 +38,9 @@ DEFAULT_TIMEOUT=300s
 # We always use the latest released greptimedb image for testing.
 GREPTIMEDB_IMAGE=greptime/greptimedb:latest
 
+# We always use the latest released vector image for testing.
+VECTOR_IMAGE=timberio/vector:nightly-alpine
+
 # Define the color for the output.
 RED='\033[1;31m'
 GREEN='\033[1;32m'
@@ -105,6 +108,14 @@ function pull_greptimedb_image() {
   docker tag "$GREPTIMEDB_IMAGE" localhost:${REGISTRY_PORT}/greptime/greptimedb:latest
   docker push localhost:${REGISTRY_PORT}/greptime/greptimedb:latest
   echo -e "${GREEN}<= Greptimedb image is pulled and pushed.${RESET}"
+}
+
+function pull_vector_image() {
+  echo -e "${GREEN}=> Pull and push vector image...${RESET}"
+  docker pull "$VECTOR_IMAGE"
+  docker tag "$VECTOR_IMAGE" localhost:${REGISTRY_PORT}/timberio/vector:nightly-alpine
+  docker push localhost:${REGISTRY_PORT}/timberio/vector:nightly-alpine
+  echo -e "${GREEN}<= Vector image is pulled and pushed.${RESET}"
 }
 
 function create_kind_cluster() {
