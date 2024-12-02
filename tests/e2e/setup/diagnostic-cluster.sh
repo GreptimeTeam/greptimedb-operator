@@ -26,6 +26,11 @@ function dump_events() {
   kubectl get events --sort-by=.metadata.creationTimestamp -A
 }
 
+function dump_greptime_resources() {
+  kubectl get greptimedbclusters.greptime.io -A
+  kubectl get greptimedbstandalones.greptime.io -A
+}
+
 function dump_e2e_pods_details() {
   kubectl get pods -A | grep -E 'e2e|greptimedb-operator' | awk '{print $2 " " $1}' | while read -r line; do
     namespace=$(echo "$line" | awk '{print $2}')
@@ -40,6 +45,7 @@ function dump_e2e_pods_details() {
 
 function main() {
   dump_basic_info
+  dump_greptime_resources
   dump_events
   dump_e2e_pods_details
 }
