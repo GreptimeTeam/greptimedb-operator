@@ -293,6 +293,7 @@ function main() {
   build_operator_image
   build_initializer_image
   pull_greptimedb_image
+  pull_vector_image
   create_kind_cluster
   deploy_cloud_provider_kind
   deploy_greptimedb_operator

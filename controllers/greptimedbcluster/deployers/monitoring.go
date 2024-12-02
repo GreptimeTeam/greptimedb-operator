@@ -97,14 +97,14 @@ func (d *MonitoringDeployer) CheckAndUpdateStatus(ctx context.Context, crdObject
 	if cluster.GetMonitoring().IsEnabled() && standalone.Status.StandalonePhase == v1alpha1.PhaseRunning {
 		pipeline, err := d.getPipeline(ctx, cluster)
 		if err != nil {
-			klog.Errorf("failed to get pipeline for standalone, err: '%v'", err)
+			klog.Errorf("Failed to get pipeline for standalone, err: '%v'", err)
 			return false, err
 		}
 
 		if pipeline == "" {
-			klog.Infof("create pipeline '%s' for standalone monitoring", common.LogsPipelineName(cluster.Namespace, cluster.Name))
+			klog.Infof("Create pipeline '%s' for standalone monitoring", common.LogsPipelineName(cluster.Namespace, cluster.Name))
 			if err := d.createPipeline(cluster); err != nil {
-				klog.Errorf("failed to create pipeline for standalone, err: '%v'", err)
+				klog.Errorf("Failed to create pipeline for standalone, err: '%v'", err)
 				return false, err
 			}
 		}
@@ -206,6 +206,7 @@ func (d *MonitoringDeployer) getPipeline(ctx context.Context, cluster *v1alpha1.
 		Addr:                 fmt.Sprintf("%s.%s.svc.cluster.local:%d", common.ResourceName(common.MonitoringServiceName(cluster.Name), v1alpha1.StandaloneKind), cluster.Namespace, v1alpha1.DefaultMySQLPort),
 		DBName:               "greptime_private",
 		AllowNativePasswords: true,
+		Timeout:              5 * time.Second,
 	}
 	db, err := sql.Open("mysql", cfg.FormatDSN())
 	if err != nil {
@@ -213,7 +214,7 @@ func (d *MonitoringDeployer) getPipeline(ctx context.Context, cluster *v1alpha1.
 	}
 	defer db.Close()
 
-	// check if the table exists
+	// Check if the `greptime_private.pipelines` table exists.
 	rows, err := db.QueryContext(ctx, "SELECT 1 FROM pipelines LIMIT 1")
 	if err != nil {
 		if strings.Contains(err.Error(), "TableNotFound") {
@@ -221,9 +222,7 @@ func (d *MonitoringDeployer) getPipeline(ctx context.Context, cluster *v1alpha1.
 		}
 		return "", err
 	}
-	if rows != nil {
-		rows.Close()
-	}
+	defer rows.Close()
 
 	pipelineName := common.LogsPipelineName(cluster.Namespace, cluster.Name)
 	rows, err = db.QueryContext(ctx, "SELECT pipeline FROM pipelines WHERE name = ? LIMIT 1", pipelineName)
@@ -238,10 +237,7 @@ func (d *MonitoringDeployer) getPipeline(ctx context.Context, cluster *v1alpha1.
 		}
 		return pipeline, nil
 	}
-
-	if rows != nil {
-		rows.Close()
-	}
+	defer rows.Close()
 
 	return "", nil
 }
