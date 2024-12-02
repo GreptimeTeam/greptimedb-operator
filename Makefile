@@ -85,6 +85,10 @@ generate: kustomize controller-gen ## Generate code containing DeepCopy, DeepCop
 fmt: ## Run go fmt against code.
 	go fmt ./...
 
+.PHONY: generate-client
+generate-client: ## Generate the client code.
+	./hack/client/generate-client.sh
+
 .PHONY: check-code-generation
 check-code-generation: ## Check code generation.
 	echo "Checking code generation"
