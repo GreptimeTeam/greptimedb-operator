@@ -28,8 +28,8 @@ spec:
         httpGet:
           path: /health
           port: 4000
-        periodSeconds: 5
-        failureThreshold: 60
+        periodSeconds: 1
+        failureThreshold: 300
   service:
     type: ClusterIP
   logging:

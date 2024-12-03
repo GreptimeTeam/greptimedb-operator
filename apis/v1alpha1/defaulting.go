@@ -398,11 +398,13 @@ func defaultStartupProbe() *corev1.Probe {
 				Port: intstr.FromInt32(DefaultHTTPPort),
 			},
 		},
-		PeriodSeconds: 5,
 
-		// The StartupProbe can try up to 60 * 5 = 300 seconds to start the container.
-		// For some scenarios, the datanode may take a long time to start, so we set the failure threshold to 60.
-		FailureThreshold: 60,
+		// Check for the health endpoint every second to speed up the startup.
+		PeriodSeconds: 1,
+
+		// The StartupProbe can try up to 300 * 1 = 300 seconds(5 minutes) to start the container.
+		// For some scenarios, the datanode may take a long time to start, so we set the failure threshold to 300.
+		FailureThreshold: 300,
 	}
 }
 
