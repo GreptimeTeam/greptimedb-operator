@@ -22,6 +22,7 @@ import (
 	"github.com/gin-gonic/gin"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog/v2"
 	podmetricsv1beta1 "k8s.io/metrics/pkg/apis/metrics/v1beta1"
@@ -327,13 +328,10 @@ func (s *Server) getPods(ctx context.Context, namespace, name string, kind grept
 		for _, pod := range internalPods.Items {
 			podMetrics, err := s.getPodMetrics(ctx, namespace, pod.Name)
 			if err != nil {
-				return err
+				// Logs the error and continue to get the next pod metrics. We don't want the error of getting podmetrics to block the whole API.
+				klog.Errorf("failed to get pod metrics for pod %s/%s: %v", namespace, pod.Name, err)
 			}
 			metrics = append(metrics, podMetrics)
-		}
-
-		if len(metrics) != len(internalPods.Items) {
-			return fmt.Errorf("the number of metrics is not equal to the number of pods")
 		}
 	}
 
@@ -398,7 +396,14 @@ func (s *Server) buildPod(internalPod *corev1.Pod, podMetrics *podmetricsv1beta1
 
 func (s *Server) getPodMetrics(ctx context.Context, namespace, name string) (*podmetricsv1beta1.PodMetrics, error) {
 	var podMetrics podmetricsv1beta1.PodMetrics
-	if err := s.Get(ctx, client.ObjectKey{Namespace: namespace, Name: name}, &podMetrics); err != nil {
+	err := s.Get(ctx, client.ObjectKey{Namespace: namespace, Name: name}, &podMetrics)
+
+	// It's possible when the pod just started, the metrics-server hasn't collected the metrics yet.
+	if apierrors.IsNotFound(err) {
+		return nil, nil
+	}
+
+	if err != nil {
 		return nil, err
 	}
 	return &podMetrics, nil
