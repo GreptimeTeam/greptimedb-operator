@@ -23,7 +23,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	greptimev1alpha1 "github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
@@ -82,8 +82,8 @@ func TestScaleCluster(ctx context.Context, h *helper.Helper) {
 	By("Scale up the cluster")
 	err = h.Get(ctx, client.ObjectKey{Name: testCluster.Name, Namespace: testCluster.Namespace}, testCluster)
 	Expect(err).NotTo(HaveOccurred(), "failed to get cluster")
-	testCluster.Spec.Datanode.Replicas = pointer.Int32(3)
-	testCluster.Spec.Frontend.Replicas = pointer.Int32(2)
+	testCluster.Spec.Datanode.Replicas = ptr.To(int32(3))
+	testCluster.Spec.Frontend.Replicas = ptr.To(int32(2))
 	err = h.Update(ctx, testCluster)
 	Expect(err).NotTo(HaveOccurred(), "failed to update cluster")
 
@@ -116,8 +116,8 @@ func TestScaleCluster(ctx context.Context, h *helper.Helper) {
 	By("Scale down the cluster")
 	err = h.Get(ctx, client.ObjectKey{Name: testCluster.Name, Namespace: testCluster.Namespace}, testCluster)
 	Expect(err).NotTo(HaveOccurred(), "failed to get cluster")
-	testCluster.Spec.Datanode.Replicas = pointer.Int32(1)
-	testCluster.Spec.Frontend.Replicas = pointer.Int32(1)
+	testCluster.Spec.Datanode.Replicas = ptr.To(int32(1))
+	testCluster.Spec.Frontend.Replicas = ptr.To(int32(1))
 
 	err = h.Update(ctx, testCluster)
 	Expect(err).NotTo(HaveOccurred(), "failed to update cluster")

@@ -23,7 +23,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 )
 
 // SetDefaults sets the default values for the GreptimeDBCluster.
@@ -163,7 +163,7 @@ func (in *GreptimeDBCluster) defaultFrontend() *FrontendSpec {
 	return &FrontendSpec{
 		ComponentSpec: ComponentSpec{
 			Template: &PodTemplateSpec{},
-			Replicas: pointer.Int32(DefaultReplicas),
+			Replicas: ptr.To(int32(DefaultReplicas)),
 			Logging:  &LoggingSpec{},
 		},
 		RPCPort:        DefaultRPCPort,
@@ -185,7 +185,7 @@ func (in *GreptimeDBCluster) defaultMeta() *MetaSpec {
 	return &MetaSpec{
 		ComponentSpec: ComponentSpec{
 			Template: &PodTemplateSpec{},
-			Replicas: pointer.Int32(DefaultReplicas),
+			Replicas: ptr.To(int32(DefaultReplicas)),
 			Logging:  &LoggingSpec{},
 		},
 		RPCPort:              DefaultMetaRPCPort,
@@ -199,7 +199,7 @@ func (in *GreptimeDBCluster) defaultDatanode() *DatanodeSpec {
 	return &DatanodeSpec{
 		ComponentSpec: ComponentSpec{
 			Template: &PodTemplateSpec{},
-			Replicas: pointer.Int32(DefaultReplicas),
+			Replicas: ptr.To(int32(DefaultReplicas)),
 			Logging:  &LoggingSpec{},
 		},
 		RPCPort:       DefaultRPCPort,
@@ -213,7 +213,7 @@ func (in *GreptimeDBCluster) defaultFlownodeSpec() *FlownodeSpec {
 	return &FlownodeSpec{
 		ComponentSpec: ComponentSpec{
 			Template: &PodTemplateSpec{},
-			Replicas: pointer.Int32(DefaultReplicas),
+			Replicas: ptr.To(int32(DefaultReplicas)),
 			Logging:  &LoggingSpec{},
 		},
 		RPCPort: DefaultRPCPort,
@@ -345,8 +345,8 @@ func (in *GreptimeDBStandalone) defaultSpec() *GreptimeDBStandaloneSpec {
 			Level:              DefaultLoggingLevel,
 			LogsDir:            DefaultLogsDir,
 			Format:             LogFormatText,
-			PersistentWithData: pointer.Bool(false),
-			OnlyLogToStdout:    pointer.Bool(false),
+			PersistentWithData: ptr.To(false),
+			OnlyLogToStdout:    ptr.To(false),
 		},
 		DatanodeStorage: defaultDatanodeStorage(),
 		RollingUpdate:   defaultRollingUpdateForStatefulSet(),
@@ -372,8 +372,8 @@ func defaultLogging() *LoggingSpec {
 		Level:              DefaultLoggingLevel,
 		LogsDir:            DefaultLogsDir,
 		Format:             LogFormatText,
-		PersistentWithData: pointer.Bool(false),
-		OnlyLogToStdout:    pointer.Bool(false),
+		PersistentWithData: ptr.To(false),
+		OnlyLogToStdout:    ptr.To(false),
 	}
 }
 
@@ -445,7 +445,7 @@ func defaultRollingUpdateForDeployment() *appsv1.RollingUpdateDeployment {
 // Same as the default rolling update strategy of StatefulSet.
 func defaultRollingUpdateForStatefulSet() *appsv1.RollingUpdateStatefulSetStrategy {
 	return &appsv1.RollingUpdateStatefulSetStrategy{
-		Partition: pointer.Int32(0),
+		Partition: ptr.To(int32(0)),
 		MaxUnavailable: &intstr.IntOrString{
 			Type:   intstr.Int,
 			IntVal: 1,

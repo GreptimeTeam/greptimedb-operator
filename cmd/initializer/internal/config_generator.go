@@ -21,7 +21,7 @@ import (
 	"strings"
 
 	"k8s.io/klog/v2"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/dbconfig"
@@ -114,14 +114,14 @@ func (c *ConfigGenerator) generateDatanodeConfig(initConfig []byte) ([]byte, err
 	if len(podIP) == 0 {
 		return nil, fmt.Errorf("empty pod ip")
 	}
-	datanodeCfg.RPCAddr = pointer.String(fmt.Sprintf("%s:%d", podIP, c.DatanodeRPCPort))
+	datanodeCfg.RPCAddr = ptr.To(fmt.Sprintf("%s:%d", podIP, c.DatanodeRPCPort))
 
 	podName := os.Getenv(deployer.EnvPodName)
 	if len(podName) == 0 {
 		return nil, fmt.Errorf("empty pod name")
 	}
 
-	datanodeCfg.RPCHostName = pointer.String(fmt.Sprintf("%s.%s.%s:%d", podName,
+	datanodeCfg.RPCHostName = ptr.To(fmt.Sprintf("%s.%s.%s:%d", podName,
 		c.DatanodeServiceName, c.Namespace, c.DatanodeRPCPort))
 
 	configData, err := dbconfig.Marshal(cfg)
@@ -157,14 +157,14 @@ func (c *ConfigGenerator) generateFlownodeConfig(initConfig []byte) ([]byte, err
 	if len(podIP) == 0 {
 		return nil, fmt.Errorf("empty pod ip")
 	}
-	flownodeCfg.Addr = pointer.String(fmt.Sprintf("%s:%d", podIP, c.RPCPort))
+	flownodeCfg.Addr = ptr.To(fmt.Sprintf("%s:%d", podIP, c.RPCPort))
 
 	podName := os.Getenv(deployer.EnvPodName)
 	if len(podName) == 0 {
 		return nil, fmt.Errorf("empty pod name")
 	}
 
-	flownodeCfg.Hostname = pointer.String(fmt.Sprintf("%s.%s.%s:%d", podName,
+	flownodeCfg.Hostname = ptr.To(fmt.Sprintf("%s.%s.%s:%d", podName,
 		c.ServiceName, c.Namespace, c.RPCPort))
 
 	configData, err := dbconfig.Marshal(cfg)

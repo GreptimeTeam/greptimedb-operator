@@ -15,7 +15,7 @@
 package dbconfig
 
 import (
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 )
@@ -45,10 +45,10 @@ type MetaConfig struct {
 
 // ConfigureByCluster configures the meta config by the given cluster.
 func (c *MetaConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster) error {
-	c.EnableRegionFailover = pointer.Bool(cluster.GetMeta().IsEnableRegionFailover())
+	c.EnableRegionFailover = ptr.To(cluster.GetMeta().IsEnableRegionFailover())
 
 	if prefix := cluster.GetMeta().GetStoreKeyPrefix(); prefix != "" {
-		c.StoreKeyPrefix = pointer.String(prefix)
+		c.StoreKeyPrefix = ptr.To(prefix)
 	}
 
 	if cfg := cluster.GetMeta().GetConfig(); cfg != "" {
@@ -58,7 +58,7 @@ func (c *MetaConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster) err
 	}
 
 	if kafka := cluster.GetWALProvider().GetKafkaWAL(); kafka != nil {
-		c.WalProvider = pointer.String("kafka")
+		c.WalProvider = ptr.To("kafka")
 		c.WalBrokerEndpoints = kafka.GetBrokerEndpoints()
 	}
 
