@@ -82,6 +82,16 @@ var (
 		[]string{"namespace", "resource", "pod", "container", "node", "role"},
 	)
 
+	podContainerReadyDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
+		Name: metricName("pod_container_ready_duration_seconds"),
+		Help: "The duration from pod started to container ready.",
+
+		// Exponential buckets from 1s to 10min.
+		Buckets: prometheus.ExponentialBucketsRange(1, 600, 12),
+	},
+		[]string{"namespace", "resource", "pod", "container", "node", "role"},
+	)
+
 	podImagePullingDuration = prometheus.NewHistogramVec(prometheus.HistogramOpts{
 		Name: metricName("pod_image_pulling_duration_milliseconds"),
 		Help: "The duration for pod image pulling.",
@@ -205,16 +215,23 @@ func (c *MetricsCollector) collectPodMetrics(ctx context.Context, clusterName st
 	podInitializingDuration.WithLabelValues(
 		pod.Namespace, clusterName, pod.Name, pod.Spec.NodeName, string(role),
 	).Observe(duration.Seconds())
-	klog.Infof("pod '%s/%s' initializing duration: '%v'", pod.Namespace, pod.Name, duration)
+	klog.Infof("pod '%s/%s' from scheduled to initialized duration: '%v'", pod.Namespace, pod.Name, duration)
 
-	// Collect container startup duration.
-	// The calculation is: pod.Status.ContainerStatuses[*].State.Running.StartedAt - pod.Status.Conditions[corev1.PodInitialized].LastTransitionTime.Time.
+	// Collect container startup and ready duration.
 	for _, container := range pod.Status.ContainerStatuses {
-		duration := container.State.Running.StartedAt.Time.Sub(*initializedTime)
+		// The calculation is: pod.Status.ContainerStatuses[*].State.Running.StartedAt - pod.Status.Conditions[corev1.PodInitialized].LastTransitionTime.Time.
+		startupDuration := container.State.Running.StartedAt.Time.Sub(*initializedTime)
 		podContainerStartupDuration.WithLabelValues(
 			pod.Namespace, clusterName, pod.Name, container.Name, pod.Spec.NodeName, string(role),
-		).Observe(duration.Seconds())
-		klog.Infof("pod '%s/%s' container '%s' startup duration: '%v'", pod.Namespace, pod.Name, container.Name, duration)
+		).Observe(startupDuration.Seconds())
+
+		// The calculation is: pod.Status.Conditions[corev1.PodReady].LastTransitionTime.Time - pod.Status.ContainerStatuses[*].State.Running.StartedAt.
+		readyDuration := readyTime.Sub(container.State.Running.StartedAt.Time)
+		podContainerReadyDuration.WithLabelValues(
+			pod.Namespace, clusterName, pod.Name, container.Name, pod.Spec.NodeName, string(role),
+		).Observe(readyDuration.Seconds())
+
+		klog.Infof("pod '%s/%s' container '%s' from initialized to running duration: '%v', from running to ready duration: '%v'", pod.Namespace, pod.Name, container.Name, startupDuration, readyDuration)
 	}
 
 	// Collect pod startup duration.
@@ -223,7 +240,7 @@ func (c *MetricsCollector) collectPodMetrics(ctx context.Context, clusterName st
 	podStartupDuration.WithLabelValues(
 		pod.Namespace, clusterName, pod.Name, pod.Spec.NodeName, string(role),
 	).Observe(duration.Seconds())
-	klog.Infof("pod '%s/%s' startup duration: '%v'", pod.Namespace, pod.Name, duration)
+	klog.Infof("pod '%s/%s' from created to ready duration: '%v'", pod.Namespace, pod.Name, duration)
 
 	if err := c.collectPodImagePullingDuration(ctx, clusterName, pod, role); err != nil {
 		return err
