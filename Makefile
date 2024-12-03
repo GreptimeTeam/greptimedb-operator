@@ -125,6 +125,12 @@ check-api-docs: api-docs ## Check docs
     (echo "Need to update documentation, please run 'make api-docs'"; \
 	exit 1)
 
+.PHONY: check-client-generation
+check-client-generation: generate-client ## Check client generation.
+	@git diff --quiet || \
+    (echo "Need to update client code, please run 'make generate-client'"; \
+	exit 1)
+
 .PHONY: kind-up
 kind-up: ## Create the kind cluster for developing.
 	./hack/kind/3-nodes-with-local-registry.sh

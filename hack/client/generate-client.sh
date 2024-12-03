@@ -17,7 +17,7 @@ source hack/client/kube_codegen.sh
 
 BACKUP_DIR=$(mktemp -d)
 
-echo "Backup the original client directory to ${BACKUP_DIR}."
+echo "Backup the original client directory to ${BACKUP_DIR}"
 
 # Backup the original client directory.
 mv $(pwd)/${OUTPUT_DIR} ${BACKUP_DIR}
