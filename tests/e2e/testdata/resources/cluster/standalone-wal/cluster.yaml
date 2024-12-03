@@ -4,9 +4,11 @@ metadata:
   name: e2e-cluster-with-standalone-wal
   namespace: default
 spec:
+  initializer:
+    image: localhost:5001/greptime/greptimedb-initializer:latest
   base:
     main:
-      image: greptime/greptimedb:latest
+      image: localhost:5001/greptime/greptimedb:latest
   frontend:
     replicas: 1
   meta:

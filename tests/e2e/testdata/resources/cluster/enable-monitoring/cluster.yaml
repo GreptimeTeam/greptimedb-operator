@@ -19,3 +19,5 @@ spec:
     replicas: 1
   monitoring:
     enabled: true
+    vector:
+      image: localhost:5001/timberio/vector:nightly-alpine
