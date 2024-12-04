@@ -12,8 +12,15 @@ BOILERPLATE_FILE=hack/boilerplate.go.txt
 # The Go bin directory which to download the *-gen binaries.
 GOBIN=$(pwd)/bin
 
-# The kube_codegen.sh is from 'https://raw.githubusercontent.com/kubernetes/code-generator/refs/tags/v0.30.0/kube_codegen.sh'.
-source hack/client/kube_codegen.sh
+CODE_GENERATOR_VERSION=v0.30.0
+
+# If the kube_codegen.sh is already in ${GOBIN}, skip the download.
+if [ ! -f ${GOBIN}/kube_codegen.sh ]; then
+  # Download kube_codegen.sh to ${GOBIN}
+  curl -sSL https://raw.githubusercontent.com/kubernetes/code-generator/refs/tags/${CODE_GENERATOR_VERSION}/kube_codegen.sh -o ${GOBIN}/kube_codegen.sh
+fi
+
+source ${GOBIN}/kube_codegen.sh
 
 BACKUP_DIR=$(mktemp -d)
 

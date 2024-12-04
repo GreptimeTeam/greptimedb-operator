@@ -86,7 +86,7 @@ fmt: ## Run go fmt against code.
 	go fmt ./...
 
 .PHONY: generate-client
-generate-client: ## Generate the client code.
+generate-client: ## Generate the pkg/client/{clientset,informers,listers} code.
 	./hack/client/generate-client.sh
 
 .PHONY: check-code-generation
