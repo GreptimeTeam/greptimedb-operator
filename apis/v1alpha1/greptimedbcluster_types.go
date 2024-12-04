@@ -615,6 +615,7 @@ func (in *GreptimeDBClusterStatus) SetCondition(condition Condition) {
 	in.Conditions = SetCondition(in.Conditions, condition)
 }
 
+// +genclient
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:shortName=gtc

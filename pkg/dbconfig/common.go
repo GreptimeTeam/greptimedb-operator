@@ -21,7 +21,7 @@ import (
 	"strings"
 
 	"k8s.io/klog/v2"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 	k8sutil "github.com/GreptimeTeam/greptimedb-operator/pkg/util/k8s"
@@ -73,19 +73,19 @@ func (c *StorageConfig) configureS3(namespace string, s3 *v1alpha1.S3Storage) er
 		return nil
 	}
 
-	c.StorageType = pointer.String("S3")
-	c.StorageBucket = pointer.String(s3.Bucket)
-	c.StorageRoot = pointer.String(s3.Root)
-	c.StorageEndpoint = pointer.String(s3.Endpoint)
-	c.StorageRegion = pointer.String(s3.Region)
+	c.StorageType = ptr.To("S3")
+	c.StorageBucket = ptr.To(s3.Bucket)
+	c.StorageRoot = ptr.To(s3.Root)
+	c.StorageEndpoint = ptr.To(s3.Endpoint)
+	c.StorageRegion = ptr.To(s3.Region)
 
 	if s3.SecretName != "" {
 		data, err := k8sutil.GetSecretsData(namespace, s3.SecretName, []string{v1alpha1.AccessKeyIDSecretKey, v1alpha1.SecretAccessKeySecretKey})
 		if err != nil {
 			return err
 		}
-		c.StorageAccessKeyID = pointer.String(string(data[0]))
-		c.StorageSecretAccessKey = pointer.String(string(data[1]))
+		c.StorageAccessKeyID = ptr.To(string(data[0]))
+		c.StorageSecretAccessKey = ptr.To(string(data[1]))
 	}
 
 	return nil
@@ -96,19 +96,19 @@ func (c *StorageConfig) configureOSS(namespace string, oss *v1alpha1.OSSStorage)
 		return nil
 	}
 
-	c.StorageType = pointer.String("Oss")
-	c.StorageBucket = pointer.String(oss.Bucket)
-	c.StorageRoot = pointer.String(oss.Root)
-	c.StorageEndpoint = pointer.String(oss.Endpoint)
-	c.StorageRegion = pointer.String(oss.Region)
+	c.StorageType = ptr.To("Oss")
+	c.StorageBucket = ptr.To(oss.Bucket)
+	c.StorageRoot = ptr.To(oss.Root)
+	c.StorageEndpoint = ptr.To(oss.Endpoint)
+	c.StorageRegion = ptr.To(oss.Region)
 
 	if oss.SecretName != "" {
 		data, err := k8sutil.GetSecretsData(namespace, oss.SecretName, []string{v1alpha1.AccessKeyIDSecretKey, v1alpha1.SecretAccessKeySecretKey})
 		if err != nil {
 			return err
 		}
-		c.StorageAccessKeyID = pointer.String(string(data[0]))
-		c.StorageAccessKeySecret = pointer.String(string(data[1]))
+		c.StorageAccessKeyID = ptr.To(string(data[0]))
+		c.StorageAccessKeySecret = ptr.To(string(data[1]))
 	}
 
 	return nil
@@ -119,11 +119,11 @@ func (c *StorageConfig) configureGCS(namespace string, gcs *v1alpha1.GCSStorage)
 		return nil
 	}
 
-	c.StorageType = pointer.String("Gcs")
-	c.StorageBucket = pointer.String(gcs.Bucket)
-	c.StorageRoot = pointer.String(gcs.Root)
-	c.StorageEndpoint = pointer.String(gcs.Endpoint)
-	c.StorageScope = pointer.String(gcs.Scope)
+	c.StorageType = ptr.To("Gcs")
+	c.StorageBucket = ptr.To(gcs.Bucket)
+	c.StorageRoot = ptr.To(gcs.Root)
+	c.StorageEndpoint = ptr.To(gcs.Endpoint)
+	c.StorageScope = ptr.To(gcs.Scope)
 
 	if gcs.SecretName != "" {
 		data, err := k8sutil.GetSecretsData(namespace, gcs.SecretName, []string{v1alpha1.ServiceAccountKey})
@@ -133,7 +133,7 @@ func (c *StorageConfig) configureGCS(namespace string, gcs *v1alpha1.GCSStorage)
 
 		serviceAccountKey := data[0]
 		if len(serviceAccountKey) != 0 {
-			c.StorageCredential = pointer.String(base64.StdEncoding.EncodeToString(serviceAccountKey))
+			c.StorageCredential = ptr.To(base64.StdEncoding.EncodeToString(serviceAccountKey))
 		}
 	}
 
@@ -145,18 +145,18 @@ func (c *StorageConfig) configureAZBlob(namespace string, azblob *v1alpha1.AZBlo
 		return nil
 	}
 
-	c.StorageType = pointer.String("Azblob")
-	c.Container = pointer.String(azblob.Container)
-	c.StorageRoot = pointer.String(azblob.Root)
-	c.StorageEndpoint = pointer.String(azblob.Endpoint)
+	c.StorageType = ptr.To("Azblob")
+	c.Container = ptr.To(azblob.Container)
+	c.StorageRoot = ptr.To(azblob.Root)
+	c.StorageEndpoint = ptr.To(azblob.Endpoint)
 
 	if azblob.SecretName != "" {
 		data, err := k8sutil.GetSecretsData(namespace, azblob.SecretName, []string{v1alpha1.AccountName, v1alpha1.AccountKey})
 		if err != nil {
 			return err
 		}
-		c.AccountName = pointer.String(string(data[0]))
-		c.AccountKey = pointer.String(string(data[1]))
+		c.AccountName = ptr.To(string(data[0]))
+		c.AccountKey = ptr.To(string(data[1]))
 	}
 
 	return nil
@@ -202,24 +202,24 @@ func (c *LoggingConfig) ConfigureLogging(spec *v1alpha1.LoggingSpec) {
 	}
 
 	// Default to empty string.
-	c.Dir = pointer.String("")
+	c.Dir = ptr.To("")
 
 	// If logsDir is set, use it as the log directory.
 	if len(spec.LogsDir) > 0 {
-		c.Dir = pointer.String(spec.LogsDir)
+		c.Dir = ptr.To(spec.LogsDir)
 	}
 
 	// If only log to stdout, disable log to file even if logsDir is set.
 	if spec.IsOnlyLogToStdout() {
-		c.Dir = pointer.String("")
+		c.Dir = ptr.To("")
 	}
 
-	c.Level = pointer.String(c.levelWithFilters(string(spec.Level), spec.Filters))
-	c.LogFormat = pointer.String(string(spec.Format))
+	c.Level = ptr.To(c.levelWithFilters(string(spec.Level), spec.Filters))
+	c.LogFormat = ptr.To(string(spec.Format))
 
 	if spec.SlowQuery != nil {
-		c.EnableSlowQuery = pointer.Bool(spec.SlowQuery.Enabled)
-		c.SlowQueryThreshold = pointer.String(spec.SlowQuery.Threshold)
+		c.EnableSlowQuery = ptr.To(spec.SlowQuery.Enabled)
+		c.SlowQueryThreshold = ptr.To(spec.SlowQuery.Threshold)
 
 		// Turn string to float64
 		ration, err := strconv.ParseFloat(spec.SlowQuery.SampleRatio, 64)
@@ -228,7 +228,7 @@ func (c *LoggingConfig) ConfigureLogging(spec *v1alpha1.LoggingSpec) {
 			ration = 1.0
 		}
 
-		c.SlowQuerySampleRatio = pointer.Float64(ration)
+		c.SlowQuerySampleRatio = ptr.To(ration)
 	}
 }
 

@@ -25,7 +25,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/klog/v2"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -250,7 +250,7 @@ func (b *standaloneBuilder) BuildStatefulSet() deployer.Builder {
 		},
 		Spec: appsv1.StatefulSetSpec{
 			// Always set replicas to 1 for standalone mode.
-			Replicas: pointer.Int32(1),
+			Replicas: ptr.To(int32(1)),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					constant.GreptimeDBComponentName: common.ResourceName(b.standalone.Name, v1alpha1.StandaloneKind),

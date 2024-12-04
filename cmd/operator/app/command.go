@@ -25,7 +25,7 @@ import (
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/klog/v2"
-	"k8s.io/klog/v2/klogr"
+	"k8s.io/klog/v2/textlogger"
 	podmetricsv1beta1 "k8s.io/metrics/pkg/apis/metrics/v1beta1"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
@@ -73,7 +73,7 @@ func NewOperatorCommand() *cobra.Command {
 		Use:   "greptimedb-operator",
 		Short: "greptimedb-operator manages GreptimeDB clusters atop Kubernetes.",
 		Run: func(cmd *cobra.Command, args []string) {
-			ctrl.SetLogger(klogr.New())
+			ctrl.SetLogger(textlogger.NewLogger(textlogger.NewConfig()))
 			setupLog := ctrl.Log.WithName("setup")
 			cfg := ctrl.GetConfigOrDie()
 

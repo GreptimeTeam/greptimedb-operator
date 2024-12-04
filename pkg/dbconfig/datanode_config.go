@@ -15,7 +15,7 @@
 package dbconfig
 
 import (
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 )
@@ -51,11 +51,11 @@ func (c *DatanodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster)
 
 	// Set the wal dir if the kafka wal is not enabled.
 	if cluster.GetWALProvider().GetKafkaWAL() == nil && cluster.GetWALDir() != "" {
-		c.WalDir = pointer.String(cluster.GetWALDir())
+		c.WalDir = ptr.To(cluster.GetWALDir())
 	}
 
 	if dataHome := cluster.GetDatanode().GetDataHome(); dataHome != "" {
-		c.StorageDataHome = pointer.String(dataHome)
+		c.StorageDataHome = ptr.To(dataHome)
 	}
 
 	if cfg := cluster.GetDatanode().GetConfig(); cfg != "" {
@@ -65,7 +65,7 @@ func (c *DatanodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster)
 	}
 
 	if kafka := cluster.GetWALProvider().GetKafkaWAL(); kafka != nil {
-		c.WalProvider = pointer.String("kafka")
+		c.WalProvider = ptr.To("kafka")
 		c.WalBrokerEndpoints = kafka.GetBrokerEndpoints()
 	}
 

@@ -85,6 +85,10 @@ generate: kustomize controller-gen ## Generate code containing DeepCopy, DeepCop
 fmt: ## Run go fmt against code.
 	go fmt ./...
 
+.PHONY: generate-client
+generate-client: ## Generate the pkg/client/{clientset,informers,listers} code.
+	./hack/client/generate-client.sh
+
 .PHONY: check-code-generation
 check-code-generation: ## Check code generation.
 	echo "Checking code generation"
@@ -119,6 +123,12 @@ test: manifests generate fmt vet envtest ## Run tests.
 check-api-docs: api-docs ## Check docs
 	@git diff --quiet || \
     (echo "Need to update documentation, please run 'make api-docs'"; \
+	exit 1)
+
+.PHONY: check-client-generation
+check-client-generation: generate-client ## Check client generation.
+	@git diff --quiet || \
+    (echo "Need to update client code, please run 'make generate-client'"; \
 	exit 1)
 
 .PHONY: kind-up
