@@ -15,6 +15,7 @@ reviews:
     - "!config/**"
     - "!examples/**"
     - "!docs/**"
+    - "!pkg/client/**"
   auto_review:
     enabled: true
     drafts: true
