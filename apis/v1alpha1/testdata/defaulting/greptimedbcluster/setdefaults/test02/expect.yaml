@@ -65,6 +65,7 @@ spec:
   meta:
     etcdEndpoints:
       - etcd.etcd-cluster.svc.cluster.local:2379
+    enableRegionFailover: false
     logging: {}
     httpPort: 4000
     rpcPort: 3002

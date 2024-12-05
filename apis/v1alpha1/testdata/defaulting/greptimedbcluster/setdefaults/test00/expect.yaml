@@ -54,6 +54,7 @@ spec:
   meta:
     etcdEndpoints:
       - etcd.etcd-cluster.svc.cluster.local:2379
+    enableRegionFailover: false
     httpPort: 4000
     rpcPort: 3002
     replicas: 1

@@ -184,9 +184,10 @@ func (in *GreptimeDBCluster) defaultMeta() *MetaSpec {
 			Replicas: ptr.To(int32(DefaultReplicas)),
 			Logging:  &LoggingSpec{},
 		},
-		RPCPort:       DefaultMetaRPCPort,
-		HTTPPort:      DefaultHTTPPort,
-		RollingUpdate: defaultRollingUpdateForDeployment(),
+		RPCPort:              DefaultMetaRPCPort,
+		HTTPPort:             DefaultHTTPPort,
+		EnableRegionFailover: ptr.To(false),
+		RollingUpdate:        defaultRollingUpdateForDeployment(),
 	}
 }
 
