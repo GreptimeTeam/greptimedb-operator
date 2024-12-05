@@ -150,13 +150,15 @@ func (d *DatanodeDeployer) Apply(ctx context.Context, crdObject client.Object, o
 		}
 
 		if oldObject != nil {
-			equal, err := k8sutils.IsObjectSpecEqual(oldObject, newObject, deployer.LastAppliedResourceSpec)
+			specEqual, err := k8sutils.IsObjectSpecEqual(oldObject, newObject, deployer.LastAppliedResourceSpec)
 			if err != nil {
 				return err
 			}
 
-			// If the spec is not equal, update the object.
-			if !equal {
+			labelsEqual := k8sutils.IsObjectLabelsEqual(oldObject.GetLabels(), newObject.GetLabels())
+
+			// If the spec or labels is not equal, update the object.
+			if !specEqual || !labelsEqual {
 				if sts, ok := newObject.(*appsv1.StatefulSet); ok && d.shouldUserMaintenanceMode(cluster) {
 					if err := d.turnOnMaintenanceMode(ctx, sts, cluster); err != nil {
 						return err
