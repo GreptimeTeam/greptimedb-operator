@@ -64,7 +64,6 @@ spec:
       maxUnavailable: 25%
       maxSurge: 25%
   meta:
-    enableRegionFailover: false
     etcdEndpoints:
       - etcd.etcd-cluster.svc.cluster.local:2379
     logging: {}
