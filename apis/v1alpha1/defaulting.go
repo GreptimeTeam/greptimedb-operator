@@ -178,10 +178,6 @@ func (in *GreptimeDBCluster) defaultFrontend() *FrontendSpec {
 }
 
 func (in *GreptimeDBCluster) defaultMeta() *MetaSpec {
-	enableRegionFailover := false
-	if in.GetWALProvider().GetKafkaWAL() != nil { // If remote wal provider is enabled, enable region failover by default.
-		enableRegionFailover = true
-	}
 	return &MetaSpec{
 		ComponentSpec: ComponentSpec{
 			Template: &PodTemplateSpec{},
@@ -190,7 +186,7 @@ func (in *GreptimeDBCluster) defaultMeta() *MetaSpec {
 		},
 		RPCPort:              DefaultMetaRPCPort,
 		HTTPPort:             DefaultHTTPPort,
-		EnableRegionFailover: &enableRegionFailover,
+		EnableRegionFailover: ptr.To(false),
 		RollingUpdate:        defaultRollingUpdateForDeployment(),
 	}
 }

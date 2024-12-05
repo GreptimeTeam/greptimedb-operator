@@ -120,8 +120,8 @@ func (in *GreptimeDBCluster) validateMeta() error {
 	}
 
 	if in.GetMeta().IsEnableRegionFailover() {
-		if in.GetWALProvider().GetKafkaWAL() == nil {
-			return fmt.Errorf("meta enable region failover requires kafka WAL")
+		if in.GetWALProvider().GetKafkaWAL() == nil || in.GetObjectStorageProvider() == nil {
+			return fmt.Errorf("enabling region failover in meta requires kafka wal and object storage")
 		}
 	}
 
