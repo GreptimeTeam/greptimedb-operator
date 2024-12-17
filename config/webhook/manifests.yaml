@@ -1,0 +1,46 @@
+---
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: validating-webhook-configuration
+webhooks:
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-greptime-io-v1alpha1-greptimedbcluster
+  failurePolicy: Fail
+  name: vgreptimedbcluster.kb.io
+  rules:
+  - apiGroups:
+    - greptime.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - greptimedbclusters
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-greptime-io-v1alpha1-greptimedbstandalone
+  failurePolicy: Fail
+  name: vgreptimedbstandalone.kb.io
+  rules:
+  - apiGroups:
+    - greptime.io
+    apiVersions:
+    - v1alpha1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - greptimedbstandalones
+  sideEffects: None
