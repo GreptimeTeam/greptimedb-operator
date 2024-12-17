@@ -14,7 +14,7 @@ resources:
   controller: true
   domain: greptime.io
   kind: GreptimeDBCluster
-  path: github.com/GreptimeTeam/greptimedb-operator/api/v1alpha1
+  path: github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1
   version: v1alpha1
   webhooks:
     validation: true
@@ -25,7 +25,7 @@ resources:
   controller: true
   domain: greptime.io
   kind: GreptimeDBStandalone
-  path: github.com/GreptimeTeam/greptimedb-operator/api/v1alpha1
+  path: github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1
   version: v1alpha1
   webhooks:
     validation: true
