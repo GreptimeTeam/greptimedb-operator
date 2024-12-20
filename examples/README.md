@@ -9,7 +9,7 @@ The following examples suppose that you have installed the etcd cluster in the `
 - [GCS](./cluster/gcs/cluster.yaml): Create a GreptimeDB cluster with Google GCS storage.
 - [OSS](./cluster/oss/cluster.yaml): Create a GreptimeDB cluster with Aliyun OSS storage.
 - [AZBlob](./cluster/azblob/cluster.yaml): Create a GreptimeDB cluster with Azure Blob storage.
-- [Flownode](./cluster/flownode/cluster.yaml): Create a GreptimeDB cluster with `flownode` enabled. By adding the `flownode` configuration, you can use [continuous aggregation](https://docs.greptime.com/user-guide/continuous-aggregation/overview) in the GreptimeDB cluster.
+- [Flownode](./cluster/flownode/cluster.yaml): Create a GreptimeDB cluster with `flownode` enabled. By adding the `flownode` configuration, you can use [continuous aggregation](https://docs.greptime.com/user-guide/flow-computation/overview) in the GreptimeDB cluster.
 - [TLS Service](./cluster/tls-service/cluster.yaml): Create a GreptimeDB cluster with TLS service.
 - [Prometheus Monitoring](./cluster/prometheus-monitor/cluster.yaml): Create a GreptimeDB cluster with Prometheus monitoring. Please ensure you have already installed prometheus-operator and created a Prometheus instance with the label `release=prometheus`.
 - [Kafka Remote WAL](./cluster/kafka-remote-wal/cluster.yaml): Create a GreptimeDB cluster with Kafka remote WAL. Please ensure you have installed the Kafka cluster in the `kafka` namespace with the service endpoint `kafka-bootstrap.kafka.svc.cluster.local:9092`.
