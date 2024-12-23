@@ -20,7 +20,7 @@ import (
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/spf13/cobra"
-	admissionv1beta1 "k8s.io/api/admission/v1beta1"
+	admissionv1 "k8s.io/api/admission/v1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -66,7 +66,7 @@ func init() {
 	utilruntime.Must(podmetricsv1beta1.AddToScheme(scheme))
 
 	// Add admission webhook scheme.
-	utilruntime.Must(admissionv1beta1.AddToScheme(scheme))
+	utilruntime.Must(admissionv1.AddToScheme(scheme))
 
 	// +kubebuilder:scaffold:scheme
 }
