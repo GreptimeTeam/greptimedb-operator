@@ -20,6 +20,7 @@ import (
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	"github.com/spf13/cobra"
+	admissionv1beta1 "k8s.io/api/admission/v1beta1"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	utilruntime "k8s.io/apimachinery/pkg/util/runtime"
@@ -30,6 +31,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/healthz"
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
+	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 	"github.com/GreptimeTeam/greptimedb-operator/cmd/operator/app/options"
@@ -63,6 +65,9 @@ func init() {
 	// Add [PodMetrics](https://github.com/kubernetes/metrics/blob/master/pkg/apis/metrics/v1beta1/types.go) for fetching PodMetrics from metrics-server.
 	utilruntime.Must(podmetricsv1beta1.AddToScheme(scheme))
 
+	// Add admission webhook scheme.
+	utilruntime.Must(admissionv1beta1.AddToScheme(scheme))
+
 	// +kubebuilder:scaffold:scheme
 }
 
@@ -77,6 +82,14 @@ func NewOperatorCommand() *cobra.Command {
 			setupLog := ctrl.Log.WithName("setup")
 			cfg := ctrl.GetConfigOrDie()
 
+			webhookServer := webhook.NewServer(webhook.Options{})
+			if o.EnableAdmissionWebhook {
+				webhookServerOptions := webhook.Options{
+					Port:    o.AdmissionWebhookPort,
+					CertDir: o.AdmissionWebhookCertDir,
+				}
+				webhookServer = webhook.NewServer(webhookServerOptions)
+			}
 			mgr, err := ctrl.NewManager(cfg, ctrl.Options{
 				Scheme:                 scheme,
 				HealthProbeBindAddress: o.HealthProbeAddr,
@@ -85,6 +98,7 @@ func NewOperatorCommand() *cobra.Command {
 				Metrics: metricsserver.Options{
 					BindAddress: o.MetricsAddr,
 				},
+				WebhookServer: webhookServer,
 			})
 			if err != nil {
 				setupLog.Error(err, "unable to start manager")
@@ -109,6 +123,17 @@ func NewOperatorCommand() *cobra.Command {
 			if err := greptimedbstandalone.Setup(mgr, o); err != nil {
 				setupLog.Error(err, "unable to setup controller", "controller", "greptimedbstandalone")
 				os.Exit(1)
+			}
+
+			if o.EnableAdmissionWebhook {
+				if err := (&v1alpha1.GreptimeDBCluster{}).SetupWebhookWithManager(mgr); err != nil {
+					setupLog.Error(err, "unable to setup admission webhook", "controller", "greptimedbcluster")
+					os.Exit(1)
+				}
+				if err := (&v1alpha1.GreptimeDBStandalone{}).SetupWebhookWithManager(mgr); err != nil {
+					setupLog.Error(err, "unable to setup admission webhook", "controller", "greptimedbstandalone")
+					os.Exit(1)
+				}
 			}
 
 			if o.EnableAPIServer {
