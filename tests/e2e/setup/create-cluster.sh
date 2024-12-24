@@ -263,15 +263,19 @@ function wait_for() {
 function wait_all_service_ready() {
   echo -e "${GREEN}=> Wait for all services to be ready...${RESET}"
 
+  echo -e "${GREEN}<= Wait for etcd services to be ready.${RESET}"
   # Wait for etcd to be ready.
   kubectl wait \
     --for=condition=Ready \
     pod -l app.kubernetes.io/instance=etcd \
     -n "$ETCD_NAMESPACE" \
     --timeout="$DEFAULT_TIMEOUT"
+  echo -e "${GREEN}<= The etcd services is ready.${RESET}"
 
+  echo -e "${GREEN}<= Wait for kafka services to be ready.${RESET}"
   # Wait for kafka to be ready.
   check_kafka_cluster_status
+  echo -e "${GREEN}<= The kafka services is ready.${RESET}"
 
   kubectl get pods -A | grep -E 'e2e|greptimedb-operator' | awk '{print $2 " " $1}' | while read -r line; do
     namespace=$(echo "$line" | awk '{print $2}')
@@ -283,11 +287,13 @@ function wait_all_service_ready() {
     echo "<=== Finish dumping logs for pod $pod in namespace $namespace"
   done
 
+  echo -e "${GREEN}<= Wait for greptimedb-operator services to be ready.${RESET}"
   # Wait for greptimedb-operator to be ready.
   kubectl rollout \
     status deployment/greptimedb-operator \
     -n greptimedb-admin \
     --timeout="$DEFAULT_TIMEOUT"
+  echo -e "${GREEN}<= The greptimedb-operator services is ready.${RESET}"
 
   echo -e "${GREEN}<= All services are ready.${RESET}"
 }
