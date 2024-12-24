@@ -23,7 +23,7 @@ const (
 	defaultHealthProbeAddr         = ":9494"
 	defaultAPIServerPort           = 8081
 	defaultAdmissionWebhookPort    = 8082
-	defaultAdmissionWebhookCertDir = "/etc/webhook-server-cert"
+	defaultAdmissionWebhookCertDir = "/etc/greptimedb/admission-webhook-tls"
 )
 
 type Options struct {
