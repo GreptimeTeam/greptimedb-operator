@@ -273,6 +273,16 @@ function wait_all_service_ready() {
   # Wait for kafka to be ready.
   check_kafka_cluster_status
 
+  kubectl get pods -A | grep -E 'e2e|greptimedb-operator' | awk '{print $2 " " $1}' | while read -r line; do
+    namespace=$(echo "$line" | awk '{print $2}')
+    pod=$(echo "$line" | awk '{print $1}')
+    echo "===> Describing pod $pod in namespace $namespace"
+    kubectl describe pod "$pod" -n "$namespace"
+    echo "===> Start dumping logs for pod $pod in namespace $namespace"
+    kubectl logs "$pod" -n "$namespace"
+    echo "<=== Finish dumping logs for pod $pod in namespace $namespace"
+  done
+
   # Wait for greptimedb-operator to be ready.
   kubectl rollout \
     status deployment/greptimedb-operator \
