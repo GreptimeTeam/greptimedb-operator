@@ -19,27 +19,35 @@ import (
 )
 
 const (
-	defaultMetricsAddr     = ":8080"
-	defaultHealthProbeAddr = ":9494"
-	defaultAPIServerPort   = 8081
+	defaultMetricsAddr             = ":8080"
+	defaultHealthProbeAddr         = ":9494"
+	defaultAPIServerPort           = 8081
+	defaultAdmissionWebhookPort    = 8082
+	defaultAdmissionWebhookCertDir = "/etc/greptimedb/admission-webhook-tls"
 )
 
 type Options struct {
-	MetricsAddr          string
-	HealthProbeAddr      string
-	EnableLeaderElection bool
-	EnableAPIServer      bool
-	APIServerPort        int32
-	EnablePodMetrics     bool
+	MetricsAddr             string
+	HealthProbeAddr         string
+	EnableLeaderElection    bool
+	EnableAPIServer         bool
+	APIServerPort           int32
+	EnablePodMetrics        bool
+	EnableAdmissionWebhook  bool
+	AdmissionWebhookPort    int
+	AdmissionWebhookCertDir string
 }
 
 func NewDefaultOptions() *Options {
 	return &Options{
-		MetricsAddr:      defaultMetricsAddr,
-		HealthProbeAddr:  defaultHealthProbeAddr,
-		APIServerPort:    defaultAPIServerPort,
-		EnableAPIServer:  false,
-		EnablePodMetrics: false,
+		MetricsAddr:             defaultMetricsAddr,
+		HealthProbeAddr:         defaultHealthProbeAddr,
+		APIServerPort:           defaultAPIServerPort,
+		EnableAPIServer:         false,
+		EnablePodMetrics:        false,
+		EnableAdmissionWebhook:  false,
+		AdmissionWebhookPort:    defaultAdmissionWebhookPort,
+		AdmissionWebhookCertDir: defaultAdmissionWebhookCertDir,
 	}
 }
 
@@ -50,4 +58,7 @@ func (o *Options) AddFlags(fs *pflag.FlagSet) {
 	fs.BoolVar(&o.EnableAPIServer, "enable-apiserver", o.EnableAPIServer, "Enable API server for GreptimeDB operator.")
 	fs.Int32Var(&o.APIServerPort, "apiserver-port", o.APIServerPort, "The port the API server binds to.")
 	fs.BoolVar(&o.EnablePodMetrics, "enable-pod-metrics", o.EnablePodMetrics, "Enable fetching PodMetrics from metrics-server.")
+	fs.BoolVar(&o.EnableAdmissionWebhook, "enable-admission-webhook", o.EnableAdmissionWebhook, "Enable admission webhook for GreptimeDB operator.")
+	fs.IntVar(&o.AdmissionWebhookPort, "admission-webhook-port", o.AdmissionWebhookPort, "The port the admission webhook binds to.")
+	fs.StringVar(&o.AdmissionWebhookCertDir, "admission-webhook-cert-dir", o.AdmissionWebhookCertDir, "The directory that contains the server key and certificate.")
 }

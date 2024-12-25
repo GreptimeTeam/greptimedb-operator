@@ -22475,6 +22475,7 @@ spec:
         command:
         - greptimedb-operator
         image: greptime/greptimedb-operator:latest
+        imagePullPolicy: IfNotPresent
         livenessProbe:
           httpGet:
             path: /healthz
