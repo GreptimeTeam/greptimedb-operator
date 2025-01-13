@@ -191,6 +191,8 @@ _Appears in:_
 | `storageSize` _string_ | StorageSize is the size of the storage. |  | Pattern: `(^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$)` <br /> |
 | `mountPath` _string_ | MountPath is the path where the storage will be mounted in the container. |  |  |
 | `storageRetainPolicy` _[StorageRetainPolicyType](#storageretainpolicytype)_ | StorageRetainPolicy is the policy of the storage. It can be `Retain` or `Delete`. |  | Enum: [Retain Delete] <br /> |
+| `labels` _object (keys:string, values:string)_ | Labels is the labels for the PVC. |  |  |
+| `annotations` _object (keys:string, values:string)_ | Annotations is the annotations for the PVC. |  |  |
 
 
 

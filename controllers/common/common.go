@@ -26,6 +26,7 @@ import (
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 	"github.com/GreptimeTeam/greptimedb-operator/controllers/constant"
+	"github.com/GreptimeTeam/greptimedb-operator/pkg/util"
 )
 
 const (
@@ -176,7 +177,11 @@ func GeneratePodTemplateSpec(kind v1alpha1.ComponentKind, template *v1alpha1.Pod
 }
 
 func FileStorageToPVC(fs v1alpha1.FileStorageAccessor, fsType FileStorageType) *corev1.PersistentVolumeClaim {
-	var labels map[string]string
+	var (
+		labels      map[string]string
+		annotations map[string]string
+	)
+
 	switch fsType {
 	case FileStorageTypeWAL:
 		labels = map[string]string{
@@ -190,10 +195,20 @@ func FileStorageToPVC(fs v1alpha1.FileStorageAccessor, fsType FileStorageType) *
 		// For legacy datanode PVCs, we don't need to set the file storage type label because statefulset doesn't support to modify the PVC labels.
 		labels = nil
 	}
+
+	if fs.GetLabels() != nil {
+		labels = util.MergeStringMap(labels, fs.GetLabels())
+	}
+
+	if fs.GetAnnotations() != nil {
+		annotations = util.MergeStringMap(annotations, fs.GetAnnotations())
+	}
+
 	return &corev1.PersistentVolumeClaim{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   fs.GetName(),
-			Labels: labels,
+			Name:        fs.GetName(),
+			Labels:      labels,
+			Annotations: annotations,
 		},
 		Spec: corev1.PersistentVolumeClaimSpec{
 			StorageClassName: fs.GetStorageClassName(),

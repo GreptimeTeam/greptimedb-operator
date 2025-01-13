@@ -331,6 +331,14 @@ type FileStorage struct {
 	// +optional
 	// +kubebuilder:validation:Enum:={"Retain", "Delete"}
 	StorageRetainPolicy StorageRetainPolicyType `json:"storageRetainPolicy,omitempty"`
+
+	// Labels is the labels for the PVC.
+	// +optional
+	Labels map[string]string `json:"labels,omitempty"`
+
+	// Annotations is the annotations for the PVC.
+	// +optional
+	Annotations map[string]string `json:"annotations,omitempty"`
 }
 
 // FileStorageAccessor is the interface that wraps the basic methods for the FileStorage.
@@ -341,6 +349,8 @@ type FileStorageAccessor interface {
 	GetSize() string
 	GetMountPath() string
 	GetPolicy() StorageRetainPolicyType
+	GetLabels() map[string]string
+	GetAnnotations() map[string]string
 }
 
 func (in *FileStorage) GetName() string {
@@ -376,6 +386,20 @@ func (in *FileStorage) GetPolicy() StorageRetainPolicyType {
 		return in.StorageRetainPolicy
 	}
 	return ""
+}
+
+func (in *FileStorage) GetLabels() map[string]string {
+	if in != nil {
+		return in.Labels
+	}
+	return nil
+}
+
+func (in *FileStorage) GetAnnotations() map[string]string {
+	if in != nil {
+		return in.Annotations
+	}
+	return nil
 }
 
 // WALProviderSpec defines the WAL provider for the cluster.
