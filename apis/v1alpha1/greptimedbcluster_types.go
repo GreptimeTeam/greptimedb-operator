@@ -245,6 +245,12 @@ type FlownodeSpec struct {
 	// +optional
 	RPCPort int32 `json:"rpcPort,omitempty"`
 
+	// The HTTP port of the flownode.
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=65535
+	// +optional
+	HTTPPort int32 `json:"httpPort,omitempty"`
+
 	// RollingUpdate is the rolling update configuration. We always use `RollingUpdate` strategy.
 	// +optional
 	RollingUpdate *appsv1.RollingUpdateStatefulSetStrategy `json:"rollingUpdate,omitempty"`

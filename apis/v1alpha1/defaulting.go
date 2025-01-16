@@ -298,6 +298,11 @@ func (in *GreptimeDBCluster) mergeFlownodeTemplate() error {
 		}
 	}
 
+	// Reconfigure the probe settings based on the HTTP port.
+	in.Spec.Flownode.Template.MainContainer.StartupProbe.HTTPGet.Port = intstr.FromInt32(in.Spec.Flownode.RPCPort)
+	in.Spec.Flownode.Template.MainContainer.LivenessProbe.HTTPGet.Port = intstr.FromInt32(in.Spec.Flownode.RPCPort)
+	in.Spec.Flownode.Template.MainContainer.ReadinessProbe.HTTPGet.Port = intstr.FromInt32(in.Spec.Flownode.HTTPPort)
+
 	return nil
 }
 
