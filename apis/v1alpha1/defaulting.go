@@ -212,7 +212,8 @@ func (in *GreptimeDBCluster) defaultFlownodeSpec() *FlownodeSpec {
 			Replicas: ptr.To(int32(DefaultReplicas)),
 			Logging:  &LoggingSpec{},
 		},
-		RPCPort: DefaultRPCPort,
+		RPCPort:  DefaultRPCPort,
+		HTTPPort: DefaultHTTPPort,
 	}
 }
 
@@ -296,6 +297,11 @@ func (in *GreptimeDBCluster) mergeFlownodeTemplate() error {
 		if err := mergo.Merge(in.Spec.Flownode.Template, in.DeepCopy().Spec.Base); err != nil {
 			return err
 		}
+
+		// Reconfigure the probe settings based on the HTTP port.
+		in.Spec.Flownode.Template.MainContainer.StartupProbe.HTTPGet.Port = intstr.FromInt32(in.Spec.Flownode.HTTPPort)
+		in.Spec.Flownode.Template.MainContainer.LivenessProbe.HTTPGet.Port = intstr.FromInt32(in.Spec.Flownode.HTTPPort)
+		in.Spec.Flownode.Template.MainContainer.ReadinessProbe.HTTPGet.Port = intstr.FromInt32(in.Spec.Flownode.HTTPPort)
 	}
 
 	return nil
