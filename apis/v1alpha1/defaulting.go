@@ -296,11 +296,6 @@ func (in *GreptimeDBCluster) mergeFlownodeTemplate() error {
 		if err := mergo.Merge(in.Spec.Flownode.Template, in.DeepCopy().Spec.Base); err != nil {
 			return err
 		}
-
-		// TODO(zyy17): The flownode does not need liveness probe and will be added in the future.
-		in.Spec.Flownode.Template.MainContainer.StartupProbe = nil
-		in.Spec.Flownode.Template.MainContainer.LivenessProbe = nil
-		in.Spec.Flownode.Template.MainContainer.ReadinessProbe = nil
 	}
 
 	return nil
