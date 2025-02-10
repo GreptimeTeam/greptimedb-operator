@@ -2,8 +2,8 @@ mode = "distributed"
 node_id = 14
 
 [grpc]
-addr = "127.0.0.1:6800"
-hostname = "127.0.0.1"
+bind_addr = "127.0.0.1:6800"
+server_addr = "127.0.0.1"
 runtime_size = 2
 max_recv_message_size = "512MB"
 max_send_message_size = "512MB"

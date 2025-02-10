@@ -114,14 +114,14 @@ func (c *ConfigGenerator) generateDatanodeConfig(initConfig []byte) ([]byte, err
 	if len(podIP) == 0 {
 		return nil, fmt.Errorf("empty pod ip")
 	}
-	datanodeCfg.RPCAddr = ptr.To(fmt.Sprintf("%s:%d", podIP, c.DatanodeRPCPort))
+	datanodeCfg.RPCBindAddr = ptr.To(fmt.Sprintf("%s:%d", podIP, c.DatanodeRPCPort))
 
 	podName := os.Getenv(deployer.EnvPodName)
 	if len(podName) == 0 {
 		return nil, fmt.Errorf("empty pod name")
 	}
 
-	datanodeCfg.RPCHostName = ptr.To(fmt.Sprintf("%s.%s.%s:%d", podName,
+	datanodeCfg.RPCServerAddr = ptr.To(fmt.Sprintf("%s.%s.%s:%d", podName,
 		c.DatanodeServiceName, c.Namespace, c.DatanodeRPCPort))
 
 	configData, err := dbconfig.Marshal(cfg)
@@ -157,14 +157,14 @@ func (c *ConfigGenerator) generateFlownodeConfig(initConfig []byte) ([]byte, err
 	if len(podIP) == 0 {
 		return nil, fmt.Errorf("empty pod ip")
 	}
-	flownodeCfg.Addr = ptr.To(fmt.Sprintf("%s:%d", podIP, c.RPCPort))
+	flownodeCfg.RPCBindAddr = ptr.To(fmt.Sprintf("%s:%d", podIP, c.RPCPort))
 
 	podName := os.Getenv(deployer.EnvPodName)
 	if len(podName) == 0 {
 		return nil, fmt.Errorf("empty pod name")
 	}
 
-	flownodeCfg.Hostname = ptr.To(fmt.Sprintf("%s.%s.%s:%d", podName,
+	flownodeCfg.RPCServerAddr = ptr.To(fmt.Sprintf("%s.%s.%s:%d", podName,
 		c.ServiceName, c.Namespace, c.RPCPort))
 
 	configData, err := dbconfig.Marshal(cfg)

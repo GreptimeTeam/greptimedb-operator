@@ -80,22 +80,22 @@ func TestDatanodeConfigGenerator(t *testing.T) {
 		t.Fatalf("nodeID is not equal, want: '%d', got: '%d'", testPodIndex, nodeID)
 	}
 
-	rpcAddr, ok := tree.Get("rpc_addr").(string)
+	rpcBindAddr, ok := tree.Get("rpc_bind_addr").(string)
 	if !ok {
-		t.Fatalf("rpc_addr is not string")
+		t.Fatalf("rpc_bind_addr is not string")
 	}
 	wantRPCAddr := fmt.Sprintf("%s:%d", testPodIP, testRPCPort)
-	if !reflect.DeepEqual(wantRPCAddr, rpcAddr) {
-		t.Fatalf("RPCAddr is not equal, want: '%s', got: '%s'", wantRPCAddr, rpcAddr)
+	if !reflect.DeepEqual(wantRPCAddr, rpcBindAddr) {
+		t.Fatalf("RPCBindAddr is not equal, want: '%s', got: '%s'", wantRPCAddr, rpcBindAddr)
 	}
 
-	rpcHostName, ok := tree.Get("rpc_hostname").(string)
+	rpcServerAddr, ok := tree.Get("rpc_server_addr").(string)
 	if !ok {
-		t.Fatalf("rpc_hostname is not string")
+		t.Fatalf("rpc_server_addr is not string")
 	}
-	wantRPCHostname := fmt.Sprintf("%s.%s.%s:%d", testDatanodePodName, testClusterService, testClusterNamespace, testRPCPort)
-	if !reflect.DeepEqual(wantRPCHostname, rpcHostName) {
-		t.Fatalf("RPCHostName is not equal, want: '%s', got: '%s'", wantRPCHostname, rpcHostName)
+	wantRPCServerAddr := fmt.Sprintf("%s.%s.%s:%d", testDatanodePodName, testClusterService, testClusterNamespace, testRPCPort)
+	if !reflect.DeepEqual(wantRPCServerAddr, rpcServerAddr) {
+		t.Fatalf("RPCServerAddr is not equal, want: '%s', got: '%s'", wantRPCServerAddr, rpcServerAddr)
 	}
 }
 
@@ -141,22 +141,22 @@ func TestFlownodeConfigGenerator(t *testing.T) {
 		t.Fatalf("nodeID is not equal, want: '%d', got: '%d'", testPodIndex, nodeID)
 	}
 
-	rpcAddr, ok := tree.Get("grpc.addr").(string)
+	rpcBindAddr, ok := tree.Get("grpc.bind_addr").(string)
 	if !ok {
-		t.Fatalf("rpc_addr is not string")
+		t.Fatalf("rpc_bind_addr is not string")
 	}
 	wantRPCAddr := fmt.Sprintf("%s:%d", testPodIP, testRPCPort)
-	if !reflect.DeepEqual(wantRPCAddr, rpcAddr) {
-		t.Fatalf("RPCAddr is not equal, want: '%s', got: '%s'", wantRPCAddr, rpcAddr)
+	if !reflect.DeepEqual(wantRPCAddr, rpcBindAddr) {
+		t.Fatalf("RPCBindAddr is not equal, want: '%s', got: '%s'", wantRPCAddr, rpcBindAddr)
 	}
 
-	rpcHostName, ok := tree.Get("grpc.hostname").(string)
+	rpcServerAddr, ok := tree.Get("grpc.server_addr").(string)
 	if !ok {
-		t.Fatalf("rpc_hostname is not string")
+		t.Fatalf("rpc_server_addr is not string")
 	}
-	wantRPCHostname := fmt.Sprintf("%s.%s.%s:%d", testFlownodePodName, testClusterService, testClusterNamespace, testRPCPort)
-	if !reflect.DeepEqual(wantRPCHostname, rpcHostName) {
-		t.Fatalf("RPCHostName is not equal, want: '%s', got: '%s'", wantRPCHostname, rpcHostName)
+	wantRPCServerAddr := fmt.Sprintf("%s.%s.%s:%d", testFlownodePodName, testClusterService, testClusterNamespace, testRPCPort)
+	if !reflect.DeepEqual(wantRPCServerAddr, rpcServerAddr) {
+		t.Fatalf("RPCServerAddr is not equal, want: '%s', got: '%s'", wantRPCServerAddr, rpcServerAddr)
 	}
 }
 
