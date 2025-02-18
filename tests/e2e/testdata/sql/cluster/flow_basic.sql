@@ -1,5 +1,5 @@
 -- FIXME(liyang): The test cases from: https://github.com/GreptimeTeam/greptimedb/blob/main/tests/cases/standalone/common/flow/flow_user_guide.sql.
-CREATE TABLE `ngx_access_log` (
+CREATE TABLE ngx_access_log (
     `client` STRING NULL,
     `ua_platform` STRING NULL,
     `referer` STRING NULL,
@@ -14,7 +14,7 @@ CREATE TABLE `ngx_access_log` (
     TIME INDEX (`access_time`)
 ) WITH(append_mode = 'true');
 
-CREATE TABLE `ngx_statistics` (
+CREATE TABLE ngx_statistics (
     `status` SMALLINT UNSIGNED NULL,
     `total_logs` BIGINT NULL,
     `min_size` DOUBLE NULL,
