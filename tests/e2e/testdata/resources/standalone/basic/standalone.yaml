@@ -4,6 +4,8 @@ metadata:
   name: e2e-standalone-basic
   namespace: default
 spec:
+  initializer:
+    image: localhost:5001/greptime/greptimedb-initializer:latest
   base:
     main:
       image: localhost:5001/greptime/greptimedb:latest

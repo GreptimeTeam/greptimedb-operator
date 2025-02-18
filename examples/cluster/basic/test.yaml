@@ -1,0 +1,18 @@
+apiVersion: greptime.io/v1alpha1
+kind: GreptimeDBCluster
+metadata:
+  name: basic
+spec:
+  initializer:
+    image: greptime-registry.cn-hangzhou.cr.aliyuncs.com/greptime/greptimedb-initializer-dev:dev-20250218-1739867874-8ace65d1
+  base:
+    main:
+      image: greptime-registry.cn-hangzhou.cr.aliyuncs.com/greptime/greptimedb:latest
+  frontend:
+    replicas: 1
+  meta:
+    replicas: 1
+    etcdEndpoints:
+      - "etcd.etcd-cluster.svc.cluster.local:2379"
+  datanode:
+    replicas: 1

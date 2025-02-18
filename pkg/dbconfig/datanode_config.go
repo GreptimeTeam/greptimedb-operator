@@ -25,8 +25,8 @@ var _ Config = &DatanodeConfig{}
 // DatanodeConfig is the configuration for the datanode.
 type DatanodeConfig struct {
 	NodeID        *uint64 `tomlmapping:"node_id"`
-	RPCBindAddr   *string `tomlmapping:"rpc_bind_addr"`
-	RPCServerAddr *string `tomlmapping:"rpc_server_addr"`
+	RPCBindAddr   *string `tomlmapping:"grpc.bind_addr"`
+	RPCServerAddr *string `tomlmapping:"grpc.server_addr"`
 
 	// StorageConfig is the configuration for the storage.
 	StorageConfig `tomlmapping:",inline"`
