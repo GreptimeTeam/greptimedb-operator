@@ -3,7 +3,7 @@ CREATE TABLE ngx_access_log (
     client STRING NULL,
     ua_platform STRING NULL,
     referer STRING NULL,
-    method STRING NULL,
+    "method" STRING NULL,
     endpoint STRING NULL,
     trace_id STRING NULL FULLTEXT INDEX,
     protocol STRING NULL,
