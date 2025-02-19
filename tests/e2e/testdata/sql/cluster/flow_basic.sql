@@ -1,4 +1,5 @@
 -- FIXME(liyang): The test cases from: https://github.com/GreptimeTeam/greptimedb/blob/main/tests/cases/standalone/common/flow/flow_user_guide.sql.
+
 CREATE TABLE ngx_access_log (
     "client" STRING NULL,
     "ua_platform" STRING NULL,
@@ -35,7 +36,7 @@ SELECT
     min(size) as min_size,
     max(size) as max_size,
     avg(size) as avg_size,
-    sum(case when size > 550::double then 1::double else 0::double end) as high_size_count,
+    sum(case when size > 550 then 1 else 0 end) as high_size_count,
     date_bin(INTERVAL '1' MINUTE, access_time) as time_window,
 FROM ngx_access_log
 GROUP BY
