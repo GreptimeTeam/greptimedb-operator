@@ -397,7 +397,7 @@ func (b *standaloneBuilder) containerPorts() []corev1.ContainerPort {
 func (b *standaloneBuilder) generateMainContainerArgs() []string {
 	var args = []string{
 		"standalone", "start",
-		"--rpc-addr", fmt.Sprintf("0.0.0.0:%d", b.standalone.Spec.RPCPort),
+		"--rpc-bind-addr", fmt.Sprintf("0.0.0.0:%d", b.standalone.Spec.RPCPort),
 		"--mysql-addr", fmt.Sprintf("0.0.0.0:%d", b.standalone.Spec.MySQLPort),
 		"--http-addr", fmt.Sprintf("0.0.0.0:%d", b.standalone.Spec.HTTPPort),
 		"--postgres-addr", fmt.Sprintf("0.0.0.0:%d", b.standalone.Spec.PostgreSQLPort),
