@@ -145,9 +145,13 @@ build: generate fmt vet ## Build greptimedb-operator binary.
 fast-build: ## Build greptimedb-operator binary only.
 	GO111MODULE=on CGO_ENABLED=0 go build -ldflags '${LDFLAGS}' -o bin/greptimedb-operator ./cmd/operator/main.go
 
-.PHONY: build-for-linux
-build-for-linux: ## Build greptimedb-operator binary for linux.
+.PHONY: build-operator-for-linux
+build-operator-for-linux: ## Build greptimedb-operator binary for linux.
 	GO111MODULE=on CGO_ENABLED=0 GOARCH=$(ARCH) GOOS=linux go build -ldflags '${LDFLAGS}' -o bin/greptimedb-operator ./cmd/operator/main.go
+
+.PHONY: build-initializer-for-linux
+build-initializer-for-linux: ## Build greptimedb-initializer binary for linux.
+	GO111MODULE=on CGO_ENABLED=0 GOARCH=$(ARCH) GOOS=linux go build -ldflags '${LDFLAGS}' -o bin/greptimedb-initializer ./cmd/initializer/main.go
 
 .PHONY: initializer
 initializer: ## Build greptimedb-initializer binary.
@@ -174,14 +178,24 @@ docker-push-initializer: ## Push docker image with the greptimedb-initializer.
 	docker push ${IMAGE_REPO}/greptimedb-initializer:${IMAGE_TAG}
 
 .PHONY: build-operator-local-test-image
-build-operator-local-test-image: build-for-linux ## Build the docker image for the greptimedb-operator locally for testing.
+build-operator-local-test-image: build-operator-for-linux ## Build the docker image for the greptimedb-operator locally for testing.
 	@cp bin/greptimedb-operator greptimedb-operator # Copy the binary to the root directory because the bin directory is ignored in the .dockerignore file.
 	docker build -t ${IMAGE_REPO}/greptimedb-operator:${IMAGE_TAG} . -f docker/operator/Dockerfile.local
 	@rm greptimedb-operator
 
+.PHONY: build-initializer-local-test-image
+build-initializer-local-test-image: build-initializer-for-linux ## Build the docker image for the greptimedb-initializer locally for testing.
+	@cp bin/greptimedb-initializer greptimedb-initializer # Copy the binary to the root directory because the bin directory is ignored in the .dockerignore file.
+	docker build -t ${IMAGE_REPO}/greptimedb-initializer:${IMAGE_TAG} . -f docker/initializer/Dockerfile.local
+	@rm greptimedb-initializer
+
 .PHONY: push-operator-local-test-image
 push-operator-local-test-image: ## Push the docker image for the greptimedb-operator locally for testing.
 	docker push ${IMAGE_REPO}/greptimedb-operator:${IMAGE_TAG}
+
+.PHONY: push-initializer-local-test-image
+push-initializer-local-test-image: ## Push the docker image for the greptimedb-initializer locally for testing.
+	docker push ${IMAGE_REPO}/greptimedb-initializer:${IMAGE_TAG}
 
 ##@ Deployment
 
