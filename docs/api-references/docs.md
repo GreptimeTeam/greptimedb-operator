@@ -215,6 +215,7 @@ _Appears in:_
 | `template` _[PodTemplateSpec](#podtemplatespec)_ | Template defines the pod template for the component, if not specified, the pod template will use the default value. |  |  |
 | `logging` _[LoggingSpec](#loggingspec)_ | Logging defines the logging configuration for the component. |  |  |
 | `rpcPort` _integer_ | The gRPC port of the flownode. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
+| `httpPort` _integer_ | The HTTP port of the flownode. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
 | `rollingUpdate` _[RollingUpdateStatefulSetStrategy](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#rollingupdatestatefulsetstrategy-v1-apps)_ | RollingUpdate is the rolling update configuration. We always use `RollingUpdate` strategy. |  |  |
 
 
