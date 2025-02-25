@@ -162,13 +162,31 @@ func (c *MetricsCollector) CollectClusterPodMetrics(ctx context.Context, cluster
 		}
 	}
 
+	if cluster.GetFrontendGroup() != nil {
+		if err := c.collectPodMetricsByRole(ctx, cluster, greptimev1alpha1.FrontendComponentKind); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
 func (c *MetricsCollector) collectPodMetricsByRole(ctx context.Context, cluster *greptimev1alpha1.GreptimeDBCluster, role greptimev1alpha1.ComponentKind) error {
-	pods, err := c.getPods(ctx, cluster, role)
-	if err != nil {
-		return err
+	var pods []corev1.Pod
+	if cluster.GetFrontendGroup() == nil {
+		var err error
+		pods, err = c.getPods(ctx, cluster, role)
+		if err != nil {
+			return err
+		}
+	} else {
+		for _, frontend := range cluster.GetFrontendGroup() {
+			frontendPods, err := c.getFrontendGroupPods(ctx, cluster, role, frontend.Name)
+			if err != nil {
+				return err
+			}
+			pods = append(pods, frontendPods...)
+		}
 	}
 
 	for _, pod := range pods {
@@ -263,6 +281,25 @@ func (c *MetricsCollector) getPods(ctx context.Context, cluster *greptimev1alpha
 	selector := metav1.LabelSelector{
 		MatchLabels: map[string]string{
 			constant.GreptimeDBComponentName: common.ResourceName(cluster.Name, componentKind),
+		},
+	}
+
+	pods := &corev1.PodList{}
+	if err := c.client.List(ctx, pods,
+		client.InNamespace(cluster.Namespace),
+		client.MatchingLabels(selector.MatchLabels),
+		client.MatchingFields{"status.phase": string(corev1.PodRunning)},
+	); err != nil {
+		return nil, err
+	}
+
+	return pods.Items, nil
+}
+
+func (c *MetricsCollector) getFrontendGroupPods(ctx context.Context, cluster *greptimev1alpha1.GreptimeDBCluster, componentKind greptimev1alpha1.ComponentKind, specificName string) ([]corev1.Pod, error) {
+	selector := metav1.LabelSelector{
+		MatchLabels: map[string]string{
+			constant.GreptimeDBComponentName: common.FrontendGroupResourceName(cluster.Name, componentKind, specificName),
 		},
 	}
 

@@ -99,12 +99,25 @@ func (c *CommonBuilder) GenerateConfigMap() (*corev1.ConfigMap, error) {
 	return common.GenerateConfigMap(c.Cluster.Namespace, c.Cluster.Name, c.ComponentKind, configData)
 }
 
+func (c *CommonBuilder) GenerateFrontendGroupConfigMap(frontend *v1alpha1.FrontendSpec) (*corev1.ConfigMap, error) {
+	configData, err := dbconfig.FromFrontendGroup(frontend, c.ComponentKind)
+	if err != nil {
+		return nil, err
+	}
+
+	return common.GenerateFrontendGroupConfigMap(c.Cluster.Namespace, c.Cluster.Name, c.ComponentKind, configData, frontend.Name)
+}
+
 func (c *CommonBuilder) GeneratePodTemplateSpec(template *v1alpha1.PodTemplateSpec) *corev1.PodTemplateSpec {
 	return common.GeneratePodTemplateSpec(c.ComponentKind, template)
 }
 
 func (c *CommonBuilder) GeneratePodMonitor() (*monitoringv1.PodMonitor, error) {
 	return common.GeneratePodMonitor(c.Cluster.Namespace, c.Cluster.Name, c.ComponentKind, c.Cluster.Spec.PrometheusMonitor)
+}
+
+func (c *CommonBuilder) GenerateFrontendGroupPodMonitor(frontend *v1alpha1.FrontendSpec) (*monitoringv1.PodMonitor, error) {
+	return common.GenerateFrontendGroupPodMonitor(c.Cluster.Namespace, c.Cluster.Name, c.ComponentKind, c.Cluster.Spec.PrometheusMonitor, frontend.Name)
 }
 
 // MountConfigDir mounts the configmap to the main container as '/etc/greptimedb/config.toml'.

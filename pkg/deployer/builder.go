@@ -59,6 +59,18 @@ type Builder interface {
 
 	// Generate returns the generated K8s resources.
 	Generate() ([]client.Object, error)
+
+	// BuildFrontendGroupService builds a Frontend service.
+	BuildFrontendGroupService() Builder
+
+	// BuildFrontendGroupDeployment builds a Frontend deployment.
+	BuildFrontendGroupDeployment() Builder
+
+	// BuildFrontendGroupConfigMap builds a Frontend configmap.
+	BuildFrontendGroupConfigMap() Builder
+
+	// BuildFrontendGroupPodMonitor builds a Frontend Prometheus podmonitor.
+	BuildFrontendGroupPodMonitor() Builder
 }
 
 var _ Builder = &DefaultBuilder{}
@@ -94,6 +106,22 @@ func (b *DefaultBuilder) BuildPodMonitor() Builder {
 }
 
 func (b *DefaultBuilder) BuildGreptimeDBStandalone() Builder {
+	return b
+}
+
+func (b *DefaultBuilder) BuildFrontendGroupService() Builder {
+	return b
+}
+
+func (b *DefaultBuilder) BuildFrontendGroupDeployment() Builder {
+	return b
+}
+
+func (b *DefaultBuilder) BuildFrontendGroupConfigMap() Builder {
+	return b
+}
+
+func (b *DefaultBuilder) BuildFrontendGroupPodMonitor() Builder {
 	return b
 }
 

@@ -42,6 +42,19 @@ func (c *FrontendConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster)
 	return nil
 }
 
+// ConfigureByFrontendGroup configures the frontend configuration by the given frontendGroup.
+func (c *FrontendConfig) ConfigureByFrontendGroup(frontend *v1alpha1.FrontendSpec) error {
+	if cfg := frontend.GetConfig(); cfg != "" {
+		if err := c.SetInputConfig(cfg); err != nil {
+			return err
+		}
+	}
+
+	c.ConfigureLogging(frontend.GetLogging())
+
+	return nil
+}
+
 // ConfigureByStandalone is not need to implement in cluster mode.
 func (c *FrontendConfig) ConfigureByStandalone(_ *v1alpha1.GreptimeDBStandalone) error {
 	return nil
