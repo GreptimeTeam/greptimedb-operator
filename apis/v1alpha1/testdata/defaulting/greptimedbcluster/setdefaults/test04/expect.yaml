@@ -1,0 +1,95 @@
+apiVersion: greptime.io/v1alpha1
+kind: GreptimeDBCluster
+metadata:
+  name: test04
+  namespace: default
+spec:
+  version: latest
+  initializer:
+    image: greptime/greptimedb-initializer:latest
+  httpPort: 5000
+  rpcPort: 4001
+  mysqlPort: 4002
+  postgreSQLPort: 4003
+  logging:
+    format: text
+    level: info
+    logsDir: /data/greptimedb/logs
+    onlyLogToStdout: false
+    persistentWithData: false
+  base:
+    main:
+      image: greptime/greptimedb:latest
+      livenessProbe:
+        httpGet:
+          path: /health
+          port: 4000
+        periodSeconds: 5
+        failureThreshold: 10
+      readinessProbe:
+        httpGet:
+          path: /health
+          port: 4000
+        periodSeconds: 5
+        failureThreshold: 10
+      startupProbe:
+        httpGet:
+          path: /health
+          port: 4000
+        periodSeconds: 5
+        failureThreshold: 60
+  frontendGroup:
+  - name: read
+    replicas: 1
+    httpPort: 4000
+    mysqlPort: 4002
+    postgreSQLPort: 4003
+    rpcPort: 4001
+    service:
+      type: ClusterIP
+    logging: {}
+    template: {}
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+  - name: write
+    replicas: 2
+    httpPort: 4000
+    mysqlPort: 4002
+    postgreSQLPort: 4003
+    rpcPort: 4001
+    service:
+      type: ClusterIP
+    logging: { }
+    template: { }
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+  meta:
+    etcdEndpoints:
+      - etcd.etcd-cluster.svc.cluster.local:2379
+    enableRegionFailover: false
+    httpPort: 4000
+    rpcPort: 3002
+    replicas: 1
+    logging: {}
+    template: {}
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+  datanode:
+    httpPort: 4000
+    rpcPort: 4001
+    replicas: 3
+    storage:
+      dataHome: /data/greptimedb
+      fs:
+        name: datanode
+        mountPath: /data/greptimedb
+        storageRetainPolicy: Retain
+        storageSize: 10Gi
+    logging: {}
+    template: {}
+    rollingUpdate:
+      maxUnavailable: 1
+      partition: 0

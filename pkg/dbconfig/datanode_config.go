@@ -79,6 +79,11 @@ func (c *DatanodeConfig) ConfigureByStandalone(_ *v1alpha1.GreptimeDBStandalone)
 	return nil
 }
 
+// ConfigureByFrontendGroup is not need to implement in frontend.
+func (c *DatanodeConfig) ConfigureByFrontendGroup(frontend *v1alpha1.FrontendSpec) error {
+	return nil
+}
+
 // Kind returns the component kind of the datanode.
 func (c *DatanodeConfig) Kind() v1alpha1.ComponentKind {
 	return v1alpha1.DatanodeComponentKind

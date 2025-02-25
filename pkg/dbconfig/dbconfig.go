@@ -48,6 +48,9 @@ type Config interface {
 
 	// SetInputConfig sets the input config.
 	SetInputConfig(input string) error
+
+	// ConfigureByFrontendGroup configures the config by the given frontend.
+	ConfigureByFrontendGroup(frontend *v1alpha1.FrontendSpec) error
 }
 
 // NewFromComponentKind creates config from the component kind.
@@ -91,6 +94,20 @@ func FromCluster(cluster *v1alpha1.GreptimeDBCluster, componentKind v1alpha1.Com
 	}
 
 	if err := cfg.ConfigureByCluster(cluster); err != nil {
+		return nil, err
+	}
+
+	return Marshal(cfg)
+}
+
+// FromFrontendGroup creates config data from the frontendGroup CRD.
+func FromFrontendGroup(frontend *v1alpha1.FrontendSpec, componentKind v1alpha1.ComponentKind) ([]byte, error) {
+	cfg, err := NewFromComponentKind(componentKind)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := cfg.ConfigureByFrontendGroup(frontend); err != nil {
 		return nil, err
 	}
 

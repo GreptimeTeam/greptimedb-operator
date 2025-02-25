@@ -46,10 +46,15 @@ func (in *GreptimeDBCluster) SetDefaults() error {
 // MergeTemplate merges the base template with the component's template.
 func (in *GreptimeDBCluster) MergeTemplate() error {
 	mergeFuncs := []func() error{
-		in.mergeFrontendTemplate,
 		in.mergeMetaTemplate,
 		in.mergeDatanodeTemplate,
 		in.mergeFlownodeTemplate,
+	}
+
+	if in.GetFrontendGroup() != nil {
+		mergeFuncs = append(mergeFuncs, in.mergeFrontendGroupTemplate)
+	} else {
+		mergeFuncs = append(mergeFuncs, in.mergeFrontendTemplate)
 	}
 
 	for _, mergeFunc := range mergeFuncs {
@@ -66,15 +71,21 @@ func (in *GreptimeDBCluster) MergeLogging() error {
 	loggingSpecs := []*LoggingSpec{
 		in.GetMeta().GetLogging(),
 		in.GetDatanode().GetLogging(),
-		in.GetFrontend().GetLogging(),
 		in.GetFlownode().GetLogging(),
+	}
+
+	if in.GetFrontendGroup() != nil {
+		for _, frontend := range in.GetFrontendGroup() {
+			loggingSpecs = append(loggingSpecs, frontend.GetLogging())
+		}
+	} else {
+		loggingSpecs = append(loggingSpecs, in.GetFrontend().GetLogging())
 	}
 
 	for _, logging := range loggingSpecs {
 		if logging == nil {
 			continue
 		}
-
 		if err := in.doMergeLogging(logging, in.GetLogging(), in.GetMonitoring().IsEnabled()); err != nil {
 			return err
 		}
@@ -115,9 +126,14 @@ func (in *GreptimeDBCluster) defaultSpec() *GreptimeDBClusterSpec {
 		MySQLPort:      DefaultMySQLPort,
 		PostgreSQLPort: DefaultPostgreSQLPort,
 		Version:        DefaultVersion,
-		Frontend:       in.defaultFrontend(),
 		Meta:           in.defaultMeta(),
 		Datanode:       in.defaultDatanode(),
+	}
+
+	if in.GetFrontendGroup() != nil {
+		defaultSpec.FrontendGroup = in.defaultFrontendGroup()
+	} else {
+		defaultSpec.Frontend = in.defaultFrontend()
 	}
 
 	if in.GetFlownode() != nil {
@@ -175,6 +191,30 @@ func (in *GreptimeDBCluster) defaultFrontend() *FrontendSpec {
 		},
 		RollingUpdate: defaultRollingUpdateForDeployment(),
 	}
+}
+
+func (in *GreptimeDBCluster) defaultFrontendGroup() []*FrontendSpec {
+	var frontendGroup []*FrontendSpec
+	for range in.GetFrontendGroup() {
+		frontendSpec := &FrontendSpec{
+			ComponentSpec: ComponentSpec{
+				Template: &PodTemplateSpec{},
+				Replicas: ptr.To(int32(DefaultReplicas)),
+				Logging:  &LoggingSpec{},
+			},
+			RPCPort:        DefaultRPCPort,
+			HTTPPort:       DefaultHTTPPort,
+			MySQLPort:      DefaultMySQLPort,
+			PostgreSQLPort: DefaultPostgreSQLPort,
+			Service: &ServiceSpec{
+				Type: corev1.ServiceTypeClusterIP,
+			},
+			RollingUpdate: defaultRollingUpdateForDeployment(),
+		}
+		frontendGroup = append(frontendGroup, frontendSpec)
+	}
+
+	return frontendGroup
 }
 
 func (in *GreptimeDBCluster) defaultMeta() *MetaSpec {
@@ -253,6 +293,23 @@ func (in *GreptimeDBCluster) mergeFrontendTemplate() error {
 		in.Spec.Frontend.Template.MainContainer.StartupProbe.HTTPGet.Port = intstr.FromInt32(in.Spec.Frontend.HTTPPort)
 		in.Spec.Frontend.Template.MainContainer.LivenessProbe.HTTPGet.Port = intstr.FromInt32(in.Spec.Frontend.HTTPPort)
 		in.Spec.Frontend.Template.MainContainer.ReadinessProbe.HTTPGet.Port = intstr.FromInt32(in.Spec.Frontend.HTTPPort)
+	}
+
+	return nil
+}
+
+func (in *GreptimeDBCluster) mergeFrontendGroupTemplate() error {
+	for _, frontend := range in.Spec.FrontendGroup {
+		if frontend.Template == nil {
+			frontend.Template = &PodTemplateSpec{}
+		}
+		if err := mergo.Merge(frontend.Template, in.DeepCopy().Spec.Base); err != nil {
+			return err
+		}
+
+		frontend.Template.MainContainer.StartupProbe.HTTPGet.Port = intstr.FromInt32(frontend.HTTPPort)
+		frontend.Template.MainContainer.LivenessProbe.HTTPGet.Port = intstr.FromInt32(frontend.HTTPPort)
+		frontend.Template.MainContainer.ReadinessProbe.HTTPGet.Port = intstr.FromInt32(frontend.HTTPPort)
 	}
 
 	return nil

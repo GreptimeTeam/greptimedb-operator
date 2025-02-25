@@ -46,6 +46,10 @@ func ResourceName(name string, componentKind v1alpha1.ComponentKind) string {
 	return name + "-" + string(componentKind)
 }
 
+func FrontendGroupResourceName(name string, componentKind v1alpha1.ComponentKind, specificName string) string {
+	return name + "-" + string(componentKind) + "-" + specificName
+}
+
 func MountConfigDir(name string, kind v1alpha1.ComponentKind, template *corev1.PodTemplateSpec) {
 	template.Spec.Volumes = append(template.Spec.Volumes, corev1.Volume{
 		Name: constant.ConfigVolumeName,
@@ -85,6 +89,24 @@ func GenerateConfigMap(namespace, name string, kind v1alpha1.ComponentKind, conf
 	return configmap, nil
 }
 
+func GenerateFrontendGroupConfigMap(namespace, name string, kind v1alpha1.ComponentKind, configData []byte, specificName string) (*corev1.ConfigMap, error) {
+	configmap := &corev1.ConfigMap{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "ConfigMap",
+			APIVersion: "v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      FrontendGroupResourceName(name, kind, specificName),
+			Namespace: namespace,
+		},
+		Data: map[string]string{
+			constant.GreptimeDBConfigFileName: string(configData),
+		},
+	}
+
+	return configmap, nil
+}
+
 func GeneratePodMonitor(namespace, name string, kind v1alpha1.ComponentKind, promSpec *v1alpha1.PrometheusMonitorSpec) (*monitoringv1.PodMonitor, error) {
 	pm := &monitoringv1.PodMonitor{
 		TypeMeta: metav1.TypeMeta{
@@ -108,6 +130,42 @@ func GeneratePodMonitor(namespace, name string, kind v1alpha1.ComponentKind, pro
 			Selector: metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					constant.GreptimeDBComponentName: ResourceName(name, kind),
+				},
+			},
+			NamespaceSelector: monitoringv1.NamespaceSelector{
+				MatchNames: []string{
+					namespace,
+				},
+			},
+		},
+	}
+
+	return pm, nil
+}
+
+func GenerateFrontendGroupPodMonitor(namespace, name string, kind v1alpha1.ComponentKind, promSpec *v1alpha1.PrometheusMonitorSpec, specificName string) (*monitoringv1.PodMonitor, error) {
+	pm := &monitoringv1.PodMonitor{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       monitoringv1.PodMonitorsKind,
+			APIVersion: monitoringv1.SchemeGroupVersion.String(),
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      FrontendGroupResourceName(name, kind, specificName),
+			Namespace: namespace,
+			Labels:    promSpec.Labels,
+		},
+		Spec: monitoringv1.PodMonitorSpec{
+			PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
+				{
+					Path:        "/metrics",
+					Port:        "http",
+					Interval:    promSpec.Interval,
+					HonorLabels: true,
+				},
+			},
+			Selector: metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					constant.GreptimeDBComponentName: FrontendGroupResourceName(name, kind, specificName),
 				},
 			},
 			NamespaceSelector: monitoringv1.NamespaceSelector{

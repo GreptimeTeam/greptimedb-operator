@@ -72,6 +72,11 @@ func (c *MetaConfig) ConfigureByStandalone(_ *v1alpha1.GreptimeDBStandalone) err
 	return nil
 }
 
+// ConfigureByFrontendGroup is not need to implement in frontend.
+func (c *MetaConfig) ConfigureByFrontendGroup(frontend *v1alpha1.FrontendSpec) error {
+	return nil
+}
+
 // Kind returns the component kind of the meta.
 func (c *MetaConfig) Kind() v1alpha1.ComponentKind {
 	return v1alpha1.MetaComponentKind
