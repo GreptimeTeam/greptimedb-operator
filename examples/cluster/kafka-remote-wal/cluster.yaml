@@ -12,8 +12,17 @@ spec:
     replicas: 1
     etcdEndpoints:
       - "etcd.etcd-cluster.svc.cluster.local:2379"
+    config: |
+      [wal]
+      provider = "kafka"
+      broker_endpoints = ["kafka.kafka-cluster.svc.cluster.local:9092"]
   datanode:
     replicas: 1
+    config: |
+      [wal]
+      provider = "kafka"
+      broker_endpoints = ["kafka.kafka-cluster.svc.cluster.local:9092"]
+      overwrite_entry_start_id = true
   wal:
     kafka:
       brokerEndpoints:
