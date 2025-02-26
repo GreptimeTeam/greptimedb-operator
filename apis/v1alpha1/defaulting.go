@@ -37,7 +37,7 @@ func (in *GreptimeDBCluster) SetDefaults() error {
 	in.Spec.Version = getVersionFromImage(in.GetBaseMainContainer().GetImage())
 
 	// Merge the default settings into the GreptimeDBClusterSpec.
-	if err := mergo.Merge(&in.Spec, in.defaultSpec(), mergo.WithTransformers(intOrStringTransformer{}), mergo.WithOverride); err != nil {
+	if err := mergo.Merge(&in.Spec, in.defaultSpec(), mergo.WithTransformers(intOrStringTransformer{})); err != nil {
 		return err
 	}
 
