@@ -560,7 +560,7 @@ func (b *frontendBuilder) generateFrontendGroupMainContainerArgs(frontend *v1alp
 		"--config-file", path.Join(constant.GreptimeDBConfigDir, constant.GreptimeDBConfigFileName),
 	}
 
-	if frontend != nil && frontend.TLS != nil {
+	if frontend.TLS != nil {
 		args = append(args, []string{
 			"--tls-mode", constant.DefaultTLSMode,
 			"--tls-cert-path", path.Join(constant.GreptimeDBTLSDir, v1alpha1.TLSCrtSecretKey),

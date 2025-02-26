@@ -16,6 +16,7 @@ package greptimedbcluster
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net"
 	"time"
@@ -65,9 +66,16 @@ func TestClusterFrontendGroup(ctx context.Context, h *helper.Helper) {
 	Expect(err).NotTo(HaveOccurred(), "failed to get cluster")
 	By("Execute distributed SQL test")
 
+	frontends := testCluster.GetFrontendGroup()
+	if len(frontends) < 2 {
+		err = errors.New("expected at least 2 frontends in the group")
+	}
+	if err != nil {
+		Expect(err).NotTo(HaveOccurred(), "Incorrect number of frontends")
+	}
 	var (
-		readFrontendName  = testCluster.GetFrontendGroup()[0].Name
-		writeFrontendName = testCluster.GetFrontendGroup()[1].Name
+		readFrontendName  = frontends[0].Name
+		writeFrontendName = frontends[1].Name
 	)
 
 	frontendAddr, err := h.PortForward(ctx, testCluster.Namespace, common.FrontendGroupResourceName(testCluster.Name, greptimev1alpha1.FrontendComponentKind, writeFrontendName), int(testCluster.Spec.PostgreSQLPort))
