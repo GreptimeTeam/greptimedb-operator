@@ -61,8 +61,8 @@ spec:
       onlyLogToStdout: false
       persistentWithData: false
     rollingUpdate:
-      maxUnavailable: 1
-      maxSurge: 2
+      maxUnavailable: 25%
+      maxSurge: 25%
     template:
       main:
         image: greptime/greptimedb:test
@@ -85,12 +85,12 @@ spec:
           periodSeconds: 5
           failureThreshold: 60
         resources:
-          limits:
-            cpu: 100m
-            memory: 128Mi
           requests:
-            cpu: 100m
-            memory: 128Mi
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 50m
+            memory: 64Mi
   meta:
     etcdEndpoints:
       - etcd.etcd-cluster.svc.cluster.local:2379

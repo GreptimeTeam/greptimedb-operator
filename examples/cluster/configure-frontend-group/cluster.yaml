@@ -11,20 +11,8 @@ spec:
   frontendGroup:
   - name: read
     replicas: 1
-    mysqlPort: 4002
-    postgreSQLPort: 4003
-    rpcPort: 4001
-    httpPort: 4000
-    service:
-      type: ClusterIP
   - name: write
     replicas: 2
-    mysqlPort: 4002
-    postgreSQLPort: 4003
-    rpcPort: 4001
-    httpPort: 4000
-    service:
-      type: ClusterIP
   meta:
     replicas: 1
     etcdEndpoints:

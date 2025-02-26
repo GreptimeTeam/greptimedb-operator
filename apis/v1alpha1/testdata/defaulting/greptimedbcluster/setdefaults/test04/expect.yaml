@@ -50,6 +50,8 @@ spec:
     rollingUpdate:
       maxSurge: 25%
       maxUnavailable: 25%
+    logging: {}
+    template: {}
   - name: write
     replicas: 2
     httpPort: 7000
@@ -58,6 +60,8 @@ spec:
     rpcPort: 7001
     service:
       type: ClusterIP
+    logging: {}
+    template: {}
     rollingUpdate:
       maxSurge: 50%
       maxUnavailable: 50%

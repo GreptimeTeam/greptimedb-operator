@@ -132,6 +132,8 @@ func (in *GreptimeDBCluster) defaultSpec() *GreptimeDBClusterSpec {
 
 	if in.GetFrontendGroup() == nil {
 		defaultSpec.Frontend = in.defaultFrontend()
+	} else {
+		defaultSpec.FrontendGroup = in.defaultFrontendGroup()
 	}
 
 	if in.GetFlownode() != nil {
@@ -191,34 +193,61 @@ func (in *GreptimeDBCluster) defaultFrontend() *FrontendSpec {
 	}
 }
 
-//func (in *GreptimeDBCluster) defaultFrontendGroup() []*FrontendSpec {
-//	var frontendGroup []*FrontendSpec
-//	for _, frontend := range in.GetFrontendGroup() {
-//		frontendSpec := &FrontendSpec{
-//			Name: frontend.Name,
-//			ComponentSpec: ComponentSpec{
-//				Template: &PodTemplateSpec{},
-//				Replicas: ptr.To(int32(DefaultReplicas)),
-//				Logging:  &LoggingSpec{},
-//			},
-//			RPCPort:        DefaultRPCPort,
-//			HTTPPort:       DefaultHTTPPort,
-//			MySQLPort:      DefaultMySQLPort,
-//			PostgreSQLPort: DefaultPostgreSQLPort,
-//			Service: &ServiceSpec{
-//				Type: corev1.ServiceTypeClusterIP,
-//			},
-//			RollingUpdate: defaultRollingUpdateForDeployment(),
-//		}
-//		frontendGroup = append(frontendGroup, frontendSpec)
-//	}
-//
-//	if err := mergo.Merge(&in.Spec.FrontendGroup, frontendGroup, mergo.WithSliceDeepCopy); err != nil {
-//		return nil
-//	}
-//
-//	return frontendGroup
-//}
+func (in *GreptimeDBCluster) defaultFrontendGroup() []*FrontendSpec {
+	var frontendGroup []*FrontendSpec
+	var (
+		replicas       *int32
+		rpcPort        = DefaultRPCPort
+		httpPort       = DefaultHTTPPort
+		mysqlPort      = DefaultMySQLPort
+		postgresqlPort = DefaultPostgreSQLPort
+		rollingUpdate  = defaultRollingUpdateForDeployment()
+	)
+
+	for _, frontend := range in.GetFrontendGroup() {
+		if frontend.Replicas != nil {
+			replicas = frontend.Replicas
+		}
+		if frontend.RPCPort != 0 {
+			rpcPort = frontend.RPCPort
+		}
+		if frontend.HTTPPort != 0 {
+			httpPort = frontend.HTTPPort
+		}
+		if frontend.MySQLPort != 0 {
+			mysqlPort = frontend.MySQLPort
+		}
+		if frontend.PostgreSQLPort != 0 {
+			postgresqlPort = frontend.PostgreSQLPort
+		}
+		if frontend.RollingUpdate != nil {
+			rollingUpdate = frontend.RollingUpdate
+		}
+		frontendSpec := &FrontendSpec{
+			Name: frontend.Name,
+			ComponentSpec: ComponentSpec{
+				Template: &PodTemplateSpec{},
+				Replicas: replicas,
+				Logging:  &LoggingSpec{},
+			},
+			RPCPort:        rpcPort,
+			HTTPPort:       httpPort,
+			MySQLPort:      mysqlPort,
+			PostgreSQLPort: postgresqlPort,
+			Service: &ServiceSpec{
+				Type: corev1.ServiceTypeClusterIP,
+			},
+			RollingUpdate: rollingUpdate,
+		}
+		frontendGroup = append(frontendGroup, frontendSpec)
+	}
+
+	if err := mergo.Merge(&in.Spec.FrontendGroup, frontendGroup, mergo.WithSliceDeepCopy); err != nil {
+		return nil
+	}
+
+	return frontendGroup
+}
 
 func (in *GreptimeDBCluster) defaultMeta() *MetaSpec {
 	return &MetaSpec{
