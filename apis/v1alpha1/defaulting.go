@@ -243,7 +243,7 @@ func (in *GreptimeDBCluster) defaultFrontendGroup() []*FrontendSpec {
 	}
 
 	if err := mergo.Merge(&in.Spec.FrontendGroup, frontendGroup, mergo.WithSliceDeepCopy); err != nil {
-		return nil
+		return frontendGroup
 	}
 
 	return frontendGroup
