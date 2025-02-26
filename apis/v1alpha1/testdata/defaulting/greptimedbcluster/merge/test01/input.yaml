@@ -16,14 +16,25 @@ spec:
           memory: 128Mi
   frontendGroup:
   - name: read
-    replicas: 1
+    replicas: 2
     httpPort: 6000
+    mysqlPort: 4002
+    postgreSQLPort: 4003
+    rpcPort: 4001
     template:
       main:
         image: greptime/greptimedb:test
     rollingUpdate:
       maxUnavailable: 1
       maxSurge: 2
+    service:
+      type: ClusterIP
+    logging:
+      format: text
+      level: info
+      logsDir: /data/greptimedb/logs
+      onlyLogToStdout: false
+      persistentWithData: false
   meta:
     etcdEndpoints:
       - etcd.etcd-cluster.svc.cluster.local:2379

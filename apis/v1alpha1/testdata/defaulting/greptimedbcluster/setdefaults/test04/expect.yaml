@@ -41,30 +41,26 @@ spec:
   frontendGroup:
   - name: read
     replicas: 1
-    httpPort: 4000
-    mysqlPort: 4002
-    postgreSQLPort: 4003
-    rpcPort: 4001
+    httpPort: 6000
+    mysqlPort: 6002
+    postgreSQLPort: 6003
+    rpcPort: 6001
     service:
       type: ClusterIP
-    logging: {}
-    template: {}
     rollingUpdate:
       maxSurge: 25%
       maxUnavailable: 25%
   - name: write
     replicas: 2
-    httpPort: 4000
-    mysqlPort: 4002
-    postgreSQLPort: 4003
-    rpcPort: 4001
+    httpPort: 7000
+    mysqlPort: 7002
+    postgreSQLPort: 7003
+    rpcPort: 7001
     service:
       type: ClusterIP
-    logging: { }
-    template: { }
     rollingUpdate:
-      maxSurge: 25%
-      maxUnavailable: 25%
+      maxSurge: 50%
+      maxUnavailable: 50%
   meta:
     etcdEndpoints:
       - etcd.etcd-cluster.svc.cluster.local:2379

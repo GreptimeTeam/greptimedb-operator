@@ -15,7 +15,6 @@
 package v1alpha1
 
 import (
-	"fmt"
 	"reflect"
 	"strings"
 
@@ -41,9 +40,6 @@ func (in *GreptimeDBCluster) SetDefaults() error {
 		return err
 	}
 
-	for _, fn := range in.Spec.FrontendGroup {
-		fmt.Printf("in.Spec====: %+v, %+v, %+v, %+v\n", fn.Name, fn.RollingUpdate, fn.Logging, fn.Service)
-	}
 	return nil
 }
 
@@ -134,9 +130,7 @@ func (in *GreptimeDBCluster) defaultSpec() *GreptimeDBClusterSpec {
 		Datanode:       in.defaultDatanode(),
 	}
 
-	if in.GetFrontendGroup() != nil {
-		defaultSpec.FrontendGroup = in.defaultFrontendGroup()
-	} else {
+	if in.GetFrontendGroup() == nil {
 		defaultSpec.Frontend = in.defaultFrontend()
 	}
 
@@ -176,9 +170,6 @@ func (in *GreptimeDBCluster) defaultSpec() *GreptimeDBClusterSpec {
 		}
 	}
 
-	for _, fn := range defaultSpec.FrontendGroup {
-		fmt.Printf("FrontendGroup====: %+v, %+v, %+v, %+v\n", fn.Name, fn.RollingUpdate, fn.Logging, fn.Service)
-	}
 	return defaultSpec
 }
 
@@ -200,30 +191,34 @@ func (in *GreptimeDBCluster) defaultFrontend() *FrontendSpec {
 	}
 }
 
-func (in *GreptimeDBCluster) defaultFrontendGroup() []*FrontendSpec {
-	var frontendGroup []*FrontendSpec
-	for _, frontend := range in.GetFrontendGroup() {
-		frontendSpec := &FrontendSpec{
-			Name: frontend.Name,
-			ComponentSpec: ComponentSpec{
-				Template: &PodTemplateSpec{},
-				Replicas: ptr.To(int32(DefaultReplicas)),
-				Logging:  &LoggingSpec{},
-			},
-			RPCPort:        DefaultRPCPort,
-			HTTPPort:       DefaultHTTPPort,
-			MySQLPort:      DefaultMySQLPort,
-			PostgreSQLPort: DefaultPostgreSQLPort,
-			Service: &ServiceSpec{
-				Type: corev1.ServiceTypeClusterIP,
-			},
-			RollingUpdate: defaultRollingUpdateForDeployment(),
-		}
-		frontendGroup = append(frontendGroup, frontendSpec)
-	}
-
-	return frontendGroup
-}
+//func (in *GreptimeDBCluster) defaultFrontendGroup() []*FrontendSpec {
+//	var frontendGroup []*FrontendSpec
+//	for _, frontend := range in.GetFrontendGroup() {
+//		frontendSpec := &FrontendSpec{
+//			Name: frontend.Name,
+//			ComponentSpec: ComponentSpec{
+//				Template: &PodTemplateSpec{},
+//				Replicas: ptr.To(int32(DefaultReplicas)),
+//				Logging:  &LoggingSpec{},
+//			},
+//			RPCPort:        DefaultRPCPort,
+//			HTTPPort:       DefaultHTTPPort,
+//			MySQLPort:      DefaultMySQLPort,
+//			PostgreSQLPort: DefaultPostgreSQLPort,
+//			Service: &ServiceSpec{
+//				Type: corev1.ServiceTypeClusterIP,
+//			},
+//			RollingUpdate: defaultRollingUpdateForDeployment(),
+//		}
+//		frontendGroup = append(frontendGroup, frontendSpec)
+//	}
+//
+//	if err := mergo.Merge(&in.Spec.FrontendGroup, frontendGroup, mergo.WithSliceDeepCopy); err != nil {
+//		return nil
+//	}
+//
+//	return frontendGroup
+//}
 
 func (in *GreptimeDBCluster) defaultMeta() *MetaSpec {
 	return &MetaSpec{

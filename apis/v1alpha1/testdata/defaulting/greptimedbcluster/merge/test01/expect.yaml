@@ -47,7 +47,7 @@ spec:
         failureThreshold: 60
   frontendGroup:
   - name: read
-    replicas: 1
+    replicas: 2
     httpPort: 6000
     mysqlPort: 4002
     postgreSQLPort: 4003

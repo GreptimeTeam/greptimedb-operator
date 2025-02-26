@@ -1,0 +1,16 @@
+-- SQLNESS SORT_RESULT 3 1
+SELECT * FROM my_table;
+
+-- SQLNESS SORT_RESULT 3 1
+SELECT * FROM my_table;
+
+DELETE FROM my_table WHERE a < 2200 AND a > 1500;
+
+-- SQLNESS SORT_RESULT 3 1
+SELECT * FROM my_table;
+
+DELETE FROM my_table WHERE a < 2500;
+
+SELECT * FROM my_table;
+
+DROP TABLE my_table;

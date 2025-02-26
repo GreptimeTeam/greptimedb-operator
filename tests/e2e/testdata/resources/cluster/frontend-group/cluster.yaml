@@ -1,34 +1,34 @@
 apiVersion: greptime.io/v1alpha1
 kind: GreptimeDBCluster
 metadata:
-  name: cluster-with-frontend-group
+  name: e2e-cluster-basic
+  namespace: default
 spec:
   initializer:
-    image: greptime-registry.cn-hangzhou.cr.aliyuncs.com/greptime/greptimedb-initializer:latest
+    image: localhost:5001/greptime/greptimedb-initializer:latest
   base:
     main:
-      image: greptime-registry.cn-hangzhou.cr.aliyuncs.com/greptime/greptimedb:latest
+      image: localhost:5001/greptime/greptimedb:latest
   frontendGroup:
   - name: read
-    replicas: 1
+    replicas: 2
+    httpPort: 4000
     mysqlPort: 4002
     postgreSQLPort: 4003
     rpcPort: 4001
-    httpPort: 4000
     service:
       type: ClusterIP
   - name: write
     replicas: 2
+    httpPort: 4000
     mysqlPort: 4002
     postgreSQLPort: 4003
     rpcPort: 4001
-    httpPort: 4000
     service:
       type: ClusterIP
   meta:
     replicas: 1
     etcdEndpoints:
-      - "etcd.etcd-cluster.svc.cluster.local:2379"
+      - etcd.etcd-cluster:2379
   datanode:
-    replicas: 1
-
+    replicas: 3
