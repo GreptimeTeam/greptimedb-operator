@@ -71,6 +71,27 @@ func MountConfigDir(name string, kind v1alpha1.ComponentKind, template *corev1.P
 		)
 }
 
+func MountFrontendGroupConfigDir(name string, kind v1alpha1.ComponentKind, template *corev1.PodTemplateSpec, specificName string) {
+	template.Spec.Volumes = append(template.Spec.Volumes, corev1.Volume{
+		Name: constant.ConfigVolumeName,
+		VolumeSource: corev1.VolumeSource{
+			ConfigMap: &corev1.ConfigMapVolumeSource{
+				LocalObjectReference: corev1.LocalObjectReference{
+					Name: FrontendGroupResourceName(name, kind, specificName),
+				},
+			},
+		},
+	})
+
+	template.Spec.Containers[constant.MainContainerIndex].VolumeMounts =
+		append(template.Spec.Containers[constant.MainContainerIndex].VolumeMounts,
+			corev1.VolumeMount{
+				Name:      constant.ConfigVolumeName,
+				MountPath: constant.GreptimeDBConfigDir,
+			},
+		)
+}
+
 func GenerateConfigMap(namespace, name string, kind v1alpha1.ComponentKind, configData []byte) (*corev1.ConfigMap, error) {
 	configmap := &corev1.ConfigMap{
 		TypeMeta: metav1.TypeMeta{

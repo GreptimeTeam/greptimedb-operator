@@ -585,7 +585,7 @@ func (b *frontendBuilder) generateFrontendGroupPodTemplateSpec(frontend *v1alpha
 	podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Ports = b.frontendGroupContainerPorts(frontend)
 	podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Env = append(podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Env, b.env(v1alpha1.FrontendComponentKind)...)
 
-	b.MountConfigDir(podTemplateSpec)
+	b.MountFrontendGroupConfigDir(podTemplateSpec, frontend.Name)
 
 	if logging := frontend.GetLogging(); logging != nil && !logging.IsOnlyLogToStdout() {
 		b.AddLogsVolume(podTemplateSpec, logging.GetLogsDir())

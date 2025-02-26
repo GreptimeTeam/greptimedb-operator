@@ -15,6 +15,7 @@
 package v1alpha1
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 
@@ -36,10 +37,13 @@ func (in *GreptimeDBCluster) SetDefaults() error {
 	in.Spec.Version = getVersionFromImage(in.GetBaseMainContainer().GetImage())
 
 	// Merge the default settings into the GreptimeDBClusterSpec.
-	if err := mergo.Merge(&in.Spec, in.defaultSpec(), mergo.WithTransformers(intOrStringTransformer{})); err != nil {
+	if err := mergo.Merge(&in.Spec, in.defaultSpec(), mergo.WithTransformers(intOrStringTransformer{}), mergo.WithOverride); err != nil {
 		return err
 	}
 
+	for _, fn := range in.Spec.FrontendGroup {
+		fmt.Printf("in.Spec====: %+v, %+v, %+v, %+v\n", fn.Name, fn.RollingUpdate, fn.Logging, fn.Service)
+	}
 	return nil
 }
 
@@ -172,6 +176,9 @@ func (in *GreptimeDBCluster) defaultSpec() *GreptimeDBClusterSpec {
 		}
 	}
 
+	for _, fn := range defaultSpec.FrontendGroup {
+		fmt.Printf("FrontendGroup====: %+v, %+v, %+v, %+v\n", fn.Name, fn.RollingUpdate, fn.Logging, fn.Service)
+	}
 	return defaultSpec
 }
 
@@ -195,8 +202,9 @@ func (in *GreptimeDBCluster) defaultFrontend() *FrontendSpec {
 
 func (in *GreptimeDBCluster) defaultFrontendGroup() []*FrontendSpec {
 	var frontendGroup []*FrontendSpec
-	for range in.GetFrontendGroup() {
+	for _, frontend := range in.GetFrontendGroup() {
 		frontendSpec := &FrontendSpec{
+			Name: frontend.Name,
 			ComponentSpec: ComponentSpec{
 				Template: &PodTemplateSpec{},
 				Replicas: ptr.To(int32(DefaultReplicas)),

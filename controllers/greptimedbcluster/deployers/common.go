@@ -125,6 +125,10 @@ func (c *CommonBuilder) MountConfigDir(template *corev1.PodTemplateSpec) {
 	common.MountConfigDir(c.Cluster.Name, c.ComponentKind, template)
 }
 
+func (c *CommonBuilder) MountFrontendGroupConfigDir(template *corev1.PodTemplateSpec, specificName string) {
+	common.MountFrontendGroupConfigDir(c.Cluster.Name, c.ComponentKind, template, specificName)
+}
+
 // AddLogsVolume will create a shared volume for logs and mount it to the main container and sidecar container.
 func (c *CommonBuilder) AddLogsVolume(template *corev1.PodTemplateSpec, mountPath string) {
 	template.Spec.Volumes = append(template.Spec.Volumes, corev1.Volume{
