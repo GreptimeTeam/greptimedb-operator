@@ -35,6 +35,10 @@ func (in *GreptimeDBCluster) Validate() error {
 		return err
 	}
 
+	if err := in.validateFrontendGroup(); err != nil {
+		return err
+	}
+
 	if err := in.validateMeta(); err != nil {
 		return err
 	}
@@ -110,6 +114,22 @@ func (in *GreptimeDBCluster) Check(ctx context.Context, client client.Client) er
 func (in *GreptimeDBCluster) validateFrontend() error {
 	if err := validateTomlConfig(in.GetFrontend().GetConfig()); err != nil {
 		return fmt.Errorf("invalid frontend toml config: '%v'", err)
+	}
+	return nil
+}
+
+func (in *GreptimeDBCluster) validateFrontendGroup() error {
+	if in.GetFrontend() != nil && in.GetFrontendGroup() != nil {
+		return fmt.Errorf("only one of 'frontend' or 'frontendGroup' can be set")
+	}
+
+	for _, frontend := range in.GetFrontendGroup() {
+		if len(frontend.Name) == 0 {
+			return fmt.Errorf("must be configure frontend with a name")
+		}
+		if err := validateTomlConfig(frontend.GetConfig()); err != nil {
+			return fmt.Errorf("invalid frontend toml config: '%v'", err)
+		}
 	}
 	return nil
 }

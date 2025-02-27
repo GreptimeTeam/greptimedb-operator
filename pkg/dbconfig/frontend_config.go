@@ -30,14 +30,14 @@ type FrontendConfig struct {
 }
 
 // ConfigureByCluster configures the frontend configuration by the given cluster.
-func (c *FrontendConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster) error {
-	if cfg := cluster.GetFrontend().GetConfig(); cfg != "" {
+func (c *FrontendConfig) ConfigureByCluster(_ *v1alpha1.GreptimeDBCluster, frontend *v1alpha1.FrontendSpec) error {
+	if cfg := frontend.GetConfig(); cfg != "" {
 		if err := c.SetInputConfig(cfg); err != nil {
 			return err
 		}
 	}
 
-	c.ConfigureLogging(cluster.GetFrontend().GetLogging())
+	c.ConfigureLogging(frontend.GetLogging())
 
 	return nil
 }

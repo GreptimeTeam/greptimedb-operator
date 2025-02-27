@@ -42,7 +42,7 @@ type DatanodeConfig struct {
 }
 
 // ConfigureByCluster configures the datanode config by the given cluster.
-func (c *DatanodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster) error {
+func (c *DatanodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster, _ *v1alpha1.FrontendSpec) error {
 	if objectStorage := cluster.GetObjectStorageProvider(); objectStorage != nil {
 		if err := c.ConfigureObjectStorage(cluster.GetNamespace(), objectStorage); err != nil {
 			return err

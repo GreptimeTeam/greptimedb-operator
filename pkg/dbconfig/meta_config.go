@@ -44,7 +44,7 @@ type MetaConfig struct {
 }
 
 // ConfigureByCluster configures the meta config by the given cluster.
-func (c *MetaConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster) error {
+func (c *MetaConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster, _ *v1alpha1.FrontendSpec) error {
 	c.EnableRegionFailover = ptr.To(cluster.GetMeta().IsEnableRegionFailover())
 
 	if prefix := cluster.GetMeta().GetStoreKeyPrefix(); prefix != "" {

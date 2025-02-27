@@ -1,0 +1,51 @@
+apiVersion: greptime.io/v1alpha1
+kind: GreptimeDBCluster
+metadata:
+  name: test01
+  namespace: default
+spec:
+  base:
+    main:
+      image: greptime/greptimedb:latest
+      resources:
+        requests:
+          cpu: 100m
+          memory: 128Mi
+        limits:
+          cpu: 100m
+          memory: 128Mi
+  frontendGroup:
+  - name: read
+    replicas: 2
+    httpPort: 6000
+    template:
+      main:
+        image: greptime/greptimedb:test
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 50m
+            memory: 64Mi
+  meta:
+    etcdEndpoints:
+      - etcd.etcd-cluster.svc.cluster.local:2379
+    replicas: 1
+    template:
+      main:
+        resources:
+          requests:
+            cpu: 50m
+            memory: 64Mi
+          limits:
+            cpu: 50m
+            memory: 64Mi
+  datanode:
+    replicas: 3
+    httpPort: 7000
+    logging:
+      level: debug
+    rollingUpdate:
+      partition: 1
+      maxUnavailable: 25%

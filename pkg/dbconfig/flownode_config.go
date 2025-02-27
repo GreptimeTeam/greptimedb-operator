@@ -34,7 +34,7 @@ type FlownodeConfig struct {
 }
 
 // ConfigureByCluster configures the datanode config by the given cluster.
-func (c *FlownodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster) error {
+func (c *FlownodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster, _ *v1alpha1.FrontendSpec) error {
 	if cfg := cluster.GetFlownode().GetConfig(); cfg != "" {
 		if err := c.SetInputConfig(cfg); err != nil {
 			return err
