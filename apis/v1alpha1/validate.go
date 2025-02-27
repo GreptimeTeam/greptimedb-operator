@@ -124,7 +124,7 @@ func (in *GreptimeDBCluster) validateFrontendGroup() error {
 	}
 
 	for _, frontend := range in.GetFrontendGroup() {
-		if name := frontend.Name; len(name) == 0 {
+		if len(frontend.Name) == 0 {
 			return fmt.Errorf("must be configure frontend with a name")
 		}
 		if err := validateTomlConfig(frontend.GetConfig()); err != nil {

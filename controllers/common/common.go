@@ -46,17 +46,22 @@ func ResourceName(name string, componentKind v1alpha1.ComponentKind) string {
 	return name + "-" + string(componentKind)
 }
 
-func FrontendGroupResourceName(name string, componentKind v1alpha1.ComponentKind, specificName string) string {
-	return name + "-" + string(componentKind) + "-" + specificName
+func FrontendGroupResourceName(name string, componentKind v1alpha1.ComponentKind, frontendName string) string {
+	return name + "-" + string(componentKind) + "-" + frontendName
 }
 
-func MountConfigDir(name string, kind v1alpha1.ComponentKind, template *corev1.PodTemplateSpec) {
+func MountConfigDir(name string, kind v1alpha1.ComponentKind, template *corev1.PodTemplateSpec, frontendName string) {
+	resourceName := ResourceName(name, kind)
+	if len(frontendName) != 0 {
+		resourceName = FrontendGroupResourceName(name, kind, frontendName)
+	}
+
 	template.Spec.Volumes = append(template.Spec.Volumes, corev1.Volume{
 		Name: constant.ConfigVolumeName,
 		VolumeSource: corev1.VolumeSource{
 			ConfigMap: &corev1.ConfigMapVolumeSource{
 				LocalObjectReference: corev1.LocalObjectReference{
-					Name: ResourceName(name, kind),
+					Name: resourceName,
 				},
 			},
 		},
@@ -71,35 +76,20 @@ func MountConfigDir(name string, kind v1alpha1.ComponentKind, template *corev1.P
 		)
 }
 
-func MountFrontendGroupConfigDir(name string, kind v1alpha1.ComponentKind, template *corev1.PodTemplateSpec, specificName string) {
-	template.Spec.Volumes = append(template.Spec.Volumes, corev1.Volume{
-		Name: constant.ConfigVolumeName,
-		VolumeSource: corev1.VolumeSource{
-			ConfigMap: &corev1.ConfigMapVolumeSource{
-				LocalObjectReference: corev1.LocalObjectReference{
-					Name: FrontendGroupResourceName(name, kind, specificName),
-				},
-			},
-		},
-	})
+func GenerateConfigMap(namespace, name string, kind v1alpha1.ComponentKind, configData []byte, frontendName string) (*corev1.ConfigMap, error) {
+	resourceName := ResourceName(name, kind)
 
-	template.Spec.Containers[constant.MainContainerIndex].VolumeMounts =
-		append(template.Spec.Containers[constant.MainContainerIndex].VolumeMounts,
-			corev1.VolumeMount{
-				Name:      constant.ConfigVolumeName,
-				MountPath: constant.GreptimeDBConfigDir,
-			},
-		)
-}
+	if len(frontendName) != 0 {
+		resourceName = FrontendGroupResourceName(name, kind, frontendName)
+	}
 
-func GenerateConfigMap(namespace, name string, kind v1alpha1.ComponentKind, configData []byte) (*corev1.ConfigMap, error) {
 	configmap := &corev1.ConfigMap{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "ConfigMap",
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      ResourceName(name, kind),
+			Name:      resourceName,
 			Namespace: namespace,
 		},
 		Data: map[string]string{
@@ -110,32 +100,19 @@ func GenerateConfigMap(namespace, name string, kind v1alpha1.ComponentKind, conf
 	return configmap, nil
 }
 
-func GenerateFrontendGroupConfigMap(namespace, name string, kind v1alpha1.ComponentKind, configData []byte, specificName string) (*corev1.ConfigMap, error) {
-	configmap := &corev1.ConfigMap{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "ConfigMap",
-			APIVersion: "v1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      FrontendGroupResourceName(name, kind, specificName),
-			Namespace: namespace,
-		},
-		Data: map[string]string{
-			constant.GreptimeDBConfigFileName: string(configData),
-		},
+func GeneratePodMonitor(namespace, name string, kind v1alpha1.ComponentKind, promSpec *v1alpha1.PrometheusMonitorSpec, frontendName string) (*monitoringv1.PodMonitor, error) {
+	resourceName := ResourceName(name, kind)
+	if len(frontendName) != 0 {
+		resourceName = FrontendGroupResourceName(name, kind, frontendName)
 	}
 
-	return configmap, nil
-}
-
-func GeneratePodMonitor(namespace, name string, kind v1alpha1.ComponentKind, promSpec *v1alpha1.PrometheusMonitorSpec) (*monitoringv1.PodMonitor, error) {
 	pm := &monitoringv1.PodMonitor{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       monitoringv1.PodMonitorsKind,
 			APIVersion: monitoringv1.SchemeGroupVersion.String(),
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      ResourceName(name, kind),
+			Name:      resourceName,
 			Namespace: namespace,
 			Labels:    promSpec.Labels,
 		},
@@ -150,43 +127,7 @@ func GeneratePodMonitor(namespace, name string, kind v1alpha1.ComponentKind, pro
 			},
 			Selector: metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					constant.GreptimeDBComponentName: ResourceName(name, kind),
-				},
-			},
-			NamespaceSelector: monitoringv1.NamespaceSelector{
-				MatchNames: []string{
-					namespace,
-				},
-			},
-		},
-	}
-
-	return pm, nil
-}
-
-func GenerateFrontendGroupPodMonitor(namespace, name string, kind v1alpha1.ComponentKind, promSpec *v1alpha1.PrometheusMonitorSpec, specificName string) (*monitoringv1.PodMonitor, error) {
-	pm := &monitoringv1.PodMonitor{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       monitoringv1.PodMonitorsKind,
-			APIVersion: monitoringv1.SchemeGroupVersion.String(),
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      FrontendGroupResourceName(name, kind, specificName),
-			Namespace: namespace,
-			Labels:    promSpec.Labels,
-		},
-		Spec: monitoringv1.PodMonitorSpec{
-			PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
-				{
-					Path:        "/metrics",
-					Port:        "http",
-					Interval:    promSpec.Interval,
-					HonorLabels: true,
-				},
-			},
-			Selector: metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					constant.GreptimeDBComponentName: FrontendGroupResourceName(name, kind, specificName),
+					constant.GreptimeDBComponentName: resourceName,
 				},
 			},
 			NamespaceSelector: monitoringv1.NamespaceSelector{

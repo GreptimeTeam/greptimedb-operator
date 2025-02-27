@@ -34,7 +34,7 @@ type FlownodeConfig struct {
 }
 
 // ConfigureByCluster configures the datanode config by the given cluster.
-func (c *FlownodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster) error {
+func (c *FlownodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster, _ *v1alpha1.FrontendSpec) error {
 	if cfg := cluster.GetFlownode().GetConfig(); cfg != "" {
 		if err := c.SetInputConfig(cfg); err != nil {
 			return err
@@ -48,11 +48,6 @@ func (c *FlownodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster)
 
 // ConfigureByStandalone is not need to implement in cluster mode.
 func (c *FlownodeConfig) ConfigureByStandalone(_ *v1alpha1.GreptimeDBStandalone) error {
-	return nil
-}
-
-// ConfigureByFrontendGroup is not need to implement in frontend.
-func (c *FlownodeConfig) ConfigureByFrontendGroup(frontend *v1alpha1.FrontendSpec) error {
 	return nil
 }
 

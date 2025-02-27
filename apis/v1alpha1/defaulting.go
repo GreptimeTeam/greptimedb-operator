@@ -49,12 +49,7 @@ func (in *GreptimeDBCluster) MergeTemplate() error {
 		in.mergeMetaTemplate,
 		in.mergeDatanodeTemplate,
 		in.mergeFlownodeTemplate,
-	}
-
-	if in.GetFrontendGroup() != nil {
-		mergeFuncs = append(mergeFuncs, in.mergeFrontendGroupTemplate)
-	} else {
-		mergeFuncs = append(mergeFuncs, in.mergeFrontendTemplate)
+		in.mergeFrontendTemplate,
 	}
 
 	for _, mergeFunc := range mergeFuncs {
@@ -315,7 +310,20 @@ func (in *GreptimeDBCluster) defaultMonitoringStandaloneSpec() *GreptimeDBStanda
 }
 
 func (in *GreptimeDBCluster) mergeFrontendTemplate() error {
-	if in.Spec.Frontend != nil {
+	if in.Spec.FrontendGroup != nil {
+		for _, frontend := range in.Spec.FrontendGroup {
+			if frontend.Template == nil {
+				frontend.Template = &PodTemplateSpec{}
+			}
+			if err := mergo.Merge(frontend.Template, in.DeepCopy().Spec.Base); err != nil {
+				return err
+			}
+
+			frontend.Template.MainContainer.StartupProbe.HTTPGet.Port = intstr.FromInt32(frontend.HTTPPort)
+			frontend.Template.MainContainer.LivenessProbe.HTTPGet.Port = intstr.FromInt32(frontend.HTTPPort)
+			frontend.Template.MainContainer.ReadinessProbe.HTTPGet.Port = intstr.FromInt32(frontend.HTTPPort)
+		}
+	} else {
 		// Use DeepCopy to avoid the same pointer.
 		if err := mergo.Merge(in.Spec.Frontend.Template, in.DeepCopy().Spec.Base); err != nil {
 			return err
@@ -325,23 +333,6 @@ func (in *GreptimeDBCluster) mergeFrontendTemplate() error {
 		in.Spec.Frontend.Template.MainContainer.StartupProbe.HTTPGet.Port = intstr.FromInt32(in.Spec.Frontend.HTTPPort)
 		in.Spec.Frontend.Template.MainContainer.LivenessProbe.HTTPGet.Port = intstr.FromInt32(in.Spec.Frontend.HTTPPort)
 		in.Spec.Frontend.Template.MainContainer.ReadinessProbe.HTTPGet.Port = intstr.FromInt32(in.Spec.Frontend.HTTPPort)
-	}
-
-	return nil
-}
-
-func (in *GreptimeDBCluster) mergeFrontendGroupTemplate() error {
-	for _, frontend := range in.Spec.FrontendGroup {
-		if frontend.Template == nil {
-			frontend.Template = &PodTemplateSpec{}
-		}
-		if err := mergo.Merge(frontend.Template, in.DeepCopy().Spec.Base); err != nil {
-			return err
-		}
-
-		frontend.Template.MainContainer.StartupProbe.HTTPGet.Port = intstr.FromInt32(frontend.HTTPPort)
-		frontend.Template.MainContainer.LivenessProbe.HTTPGet.Port = intstr.FromInt32(frontend.HTTPPort)
-		frontend.Template.MainContainer.ReadinessProbe.HTTPGet.Port = intstr.FromInt32(frontend.HTTPPort)
 	}
 
 	return nil

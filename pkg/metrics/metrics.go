@@ -175,13 +175,13 @@ func (c *MetricsCollector) collectPodMetricsByRole(ctx context.Context, cluster 
 	var pods []corev1.Pod
 	if cluster.GetFrontendGroup() == nil {
 		var err error
-		pods, err = c.getPods(ctx, cluster, role)
+		pods, err = c.getPods(ctx, cluster, role, "")
 		if err != nil {
 			return err
 		}
 	} else {
 		for _, frontend := range cluster.GetFrontendGroup() {
-			frontendPods, err := c.getFrontendGroupPods(ctx, cluster, role, frontend.Name)
+			frontendPods, err := c.getPods(ctx, cluster, role, frontend.Name)
 			if err != nil {
 				return err
 			}
@@ -277,29 +277,14 @@ func (c *MetricsCollector) getPodConditionTime(podStatus *corev1.PodStatus, cond
 	return nil, fmt.Errorf("condition %s not found", conditionType)
 }
 
-func (c *MetricsCollector) getPods(ctx context.Context, cluster *greptimev1alpha1.GreptimeDBCluster, componentKind greptimev1alpha1.ComponentKind) ([]corev1.Pod, error) {
+func (c *MetricsCollector) getPods(ctx context.Context, cluster *greptimev1alpha1.GreptimeDBCluster, componentKind greptimev1alpha1.ComponentKind, frontendName string) ([]corev1.Pod, error) {
+	resourceName := common.ResourceName(cluster.Name, componentKind)
+	if len(frontendName) != 0 && componentKind == greptimev1alpha1.FrontendComponentKind {
+		resourceName = common.FrontendGroupResourceName(cluster.Name, componentKind, frontendName)
+	}
 	selector := metav1.LabelSelector{
 		MatchLabels: map[string]string{
-			constant.GreptimeDBComponentName: common.ResourceName(cluster.Name, componentKind),
-		},
-	}
-
-	pods := &corev1.PodList{}
-	if err := c.client.List(ctx, pods,
-		client.InNamespace(cluster.Namespace),
-		client.MatchingLabels(selector.MatchLabels),
-		client.MatchingFields{"status.phase": string(corev1.PodRunning)},
-	); err != nil {
-		return nil, err
-	}
-
-	return pods.Items, nil
-}
-
-func (c *MetricsCollector) getFrontendGroupPods(ctx context.Context, cluster *greptimev1alpha1.GreptimeDBCluster, componentKind greptimev1alpha1.ComponentKind, specificName string) ([]corev1.Pod, error) {
-	selector := metav1.LabelSelector{
-		MatchLabels: map[string]string{
-			constant.GreptimeDBComponentName: common.FrontendGroupResourceName(cluster.Name, componentKind, specificName),
+			constant.GreptimeDBComponentName: resourceName,
 		},
 	}
 

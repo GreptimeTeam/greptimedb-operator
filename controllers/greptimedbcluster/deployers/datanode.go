@@ -353,7 +353,7 @@ func (b *datanodeBuilder) BuildConfigMap() deployer.Builder {
 		return b
 	}
 
-	cm, err := b.GenerateConfigMap()
+	cm, err := b.GenerateConfigMap(nil)
 	if err != nil {
 		b.Err = err
 		return b
@@ -403,7 +403,7 @@ func (b *datanodeBuilder) BuildStatefulSet() deployer.Builder {
 		},
 	}
 
-	configData, err := dbconfig.FromCluster(b.Cluster, b.ComponentKind)
+	configData, err := dbconfig.FromCluster(b.Cluster, b.ComponentKind, nil)
 	if err != nil {
 		b.Err = err
 		return b
@@ -430,7 +430,7 @@ func (b *datanodeBuilder) BuildPodMonitor() deployer.Builder {
 		return b
 	}
 
-	pm, err := b.GeneratePodMonitor()
+	pm, err := b.GeneratePodMonitor("")
 	if err != nil {
 		b.Err = err
 		return b

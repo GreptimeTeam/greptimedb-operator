@@ -44,7 +44,7 @@ type MetaConfig struct {
 }
 
 // ConfigureByCluster configures the meta config by the given cluster.
-func (c *MetaConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster) error {
+func (c *MetaConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster, _ *v1alpha1.FrontendSpec) error {
 	c.EnableRegionFailover = ptr.To(cluster.GetMeta().IsEnableRegionFailover())
 
 	if prefix := cluster.GetMeta().GetStoreKeyPrefix(); prefix != "" {
@@ -69,11 +69,6 @@ func (c *MetaConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster) err
 
 // ConfigureByStandalone is not need to implement in cluster mode.
 func (c *MetaConfig) ConfigureByStandalone(_ *v1alpha1.GreptimeDBStandalone) error {
-	return nil
-}
-
-// ConfigureByFrontendGroup is not need to implement in frontend.
-func (c *MetaConfig) ConfigureByFrontendGroup(frontend *v1alpha1.FrontendSpec) error {
 	return nil
 }
 
