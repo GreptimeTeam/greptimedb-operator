@@ -22,9 +22,9 @@ var _ Config = &FlownodeConfig{}
 
 // FlownodeConfig is the configuration for the datanode.
 type FlownodeConfig struct {
-	NodeID        *uint64 `tomlmapping:"node_id"`
-	RPCBindAddr   *string `tomlmapping:"grpc.bind_addr"`
-	RPCServerAddr *string `tomlmapping:"grpc.server_addr"`
+	NodeID   *uint64 `tomlmapping:"node_id"`
+	Addr     *string `tomlmapping:"grpc.addr"`
+	Hostname *string `tomlmapping:"grpc.hostname"`
 
 	// LoggingConfig is the configuration for the logging.
 	LoggingConfig `tomlmapping:",inline"`

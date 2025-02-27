@@ -4,10 +4,10 @@ metadata:
   name: cluster-with-frontend-group
 spec:
   initializer:
-    image: greptime-registry.cn-hangzhou.cr.aliyuncs.com/greptime/greptimedb-initializer:latest
+    image: greptime-registry.cn-hangzhou.cr.aliyuncs.com/greptime/greptimedb-initializer:v0.1.4-alpha.3
   base:
     main:
-      image: greptime-registry.cn-hangzhou.cr.aliyuncs.com/greptime/greptimedb:latest
+      image: greptime-registry.cn-hangzhou.cr.aliyuncs.com/greptime/greptimedb:v0.11.0
   frontendGroup:
   - name: read
     replicas: 1
