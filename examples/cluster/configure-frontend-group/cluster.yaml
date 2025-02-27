@@ -12,7 +12,7 @@ spec:
   - name: read
     replicas: 1
   - name: write
-    replicas: 2
+    replicas: 1
   meta:
     replicas: 1
     etcdEndpoints:
