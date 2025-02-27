@@ -6117,6 +6117,11 @@ spec:
                 properties:
                   config:
                     type: string
+                  httpPort:
+                    format: int32
+                    maximum: 65535
+                    minimum: 0
+                    type: integer
                   logging:
                     properties:
                       filters:
