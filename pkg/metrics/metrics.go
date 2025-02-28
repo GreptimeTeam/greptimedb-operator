@@ -173,19 +173,20 @@ func (c *MetricsCollector) CollectClusterPodMetrics(ctx context.Context, cluster
 
 func (c *MetricsCollector) collectPodMetricsByRole(ctx context.Context, cluster *greptimev1alpha1.GreptimeDBCluster, role greptimev1alpha1.ComponentKind) error {
 	var pods []corev1.Pod
-	if cluster.GetFrontends() == nil {
-		var err error
-		pods, err = c.getPods(ctx, cluster, role, "")
-		if err != nil {
-			return err
-		}
-	} else {
+	var err error
+
+	if role == greptimev1alpha1.FrontendComponentKind {
 		for _, frontend := range cluster.GetFrontends() {
 			frontendPods, err := c.getPods(ctx, cluster, role, frontend.Name)
 			if err != nil {
 				return err
 			}
 			pods = append(pods, frontendPods...)
+		}
+	} else {
+		pods, err = c.getPods(ctx, cluster, role, "")
+		if err != nil {
+			return err
 		}
 	}
 
