@@ -253,6 +253,7 @@ _Appears in:_
 | `config` _string_ | The content of the configuration file of the component in TOML format. |  |  |
 | `template` _[PodTemplateSpec](#podtemplatespec)_ | Template defines the pod template for the component, if not specified, the pod template will use the default value. |  |  |
 | `logging` _[LoggingSpec](#loggingspec)_ | Logging defines the logging configuration for the component. |  |  |
+| `name` _string_ | Name is the name of the frontend. |  |  |
 | `rpcPort` _integer_ | RPCPort is the gRPC port of the frontend. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
 | `httpPort` _integer_ | HTTPPort is the HTTP port of the frontend. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
 | `mysqlPort` _integer_ | MySQLPort is the MySQL port of the frontend. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
@@ -354,6 +355,7 @@ _Appears in:_
 | `meta` _[MetaSpec](#metaspec)_ | Meta is the specification of meta node. |  |  |
 | `datanode` _[DatanodeSpec](#datanodespec)_ | Datanode is the specification of datanode node. |  |  |
 | `flownode` _[FlownodeSpec](#flownodespec)_ | Flownode is the specification of flownode node. |  |  |
+| `frontends` _[FrontendSpec](#frontendspec) array_ | Frontends is a group of frontend nodes. |  |  |
 | `httpPort` _integer_ | HTTPPort is the HTTP port of the greptimedb cluster. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
 | `rpcPort` _integer_ | RPCPort is the RPC port of the greptimedb cluster. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
 | `mysqlPort` _integer_ | MySQLPort is the MySQL port of the greptimedb cluster. |  | Maximum: 65535 <br />Minimum: 0 <br /> |

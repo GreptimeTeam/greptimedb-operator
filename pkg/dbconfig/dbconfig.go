@@ -43,6 +43,9 @@ type Config interface {
 	// ConfigureByStandalone configures the config by the given standalone.
 	ConfigureByStandalone(standalone *v1alpha1.GreptimeDBStandalone) error
 
+	// ConfigureByFrontend configures the config by the given frontend.
+	ConfigureByFrontend(cluster *v1alpha1.FrontendSpec) error
+
 	// GetInputConfig returns the input config.
 	GetInputConfig() string
 
@@ -91,6 +94,19 @@ func FromCluster(cluster *v1alpha1.GreptimeDBCluster, componentKind v1alpha1.Com
 	}
 
 	if err := cfg.ConfigureByCluster(cluster); err != nil {
+		return nil, err
+	}
+
+	return Marshal(cfg)
+}
+
+func FromFrontend(frontend *v1alpha1.FrontendSpec, componentKind v1alpha1.ComponentKind) ([]byte, error) {
+	cfg, err := NewFromComponentKind(componentKind)
+	if err != nil {
+		return nil, err
+	}
+
+	if err := cfg.ConfigureByFrontend(frontend); err != nil {
 		return nil, err
 	}
 

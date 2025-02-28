@@ -1,0 +1,19 @@
+apiVersion: greptime.io/v1alpha1
+kind: GreptimeDBCluster
+metadata:
+  name: test04-error
+  namespace: default
+spec:
+  base:
+    main:
+      image: greptime/greptimedb:latest
+  frontend:
+    replicas: 1
+  frontends: # This is an error because must configure frontend with a name.
+  - replicas: 1
+  meta:
+    etcdEndpoints:
+      - etcd.etcd-cluster.svc.cluster.local:2379
+    replicas: 1
+  datanode:
+    replicas: 3

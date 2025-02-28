@@ -1,0 +1,39 @@
+apiVersion: greptime.io/v1alpha1
+kind: GreptimeDBCluster
+metadata:
+  name: test04
+  namespace: default
+spec:
+  base:
+    main:
+      image: greptime/greptimedb:latest
+  frontends:
+  - name: read
+    replicas: 1
+    service:
+      type: ClusterIP
+    mysqlPort: 6002
+    postgreSQLPort: 6003
+    rpcPort: 6001
+    httpPort: 6000
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+  - name: write
+    replicas: 2
+    service:
+      type: ClusterIP
+    mysqlPort: 7002
+    postgreSQLPort: 7003
+    rpcPort: 7001
+    httpPort: 7000
+    rollingUpdate:
+      maxSurge: 50%
+      maxUnavailable: 50%
+  meta:
+    etcdEndpoints:
+      - etcd.etcd-cluster.svc.cluster.local:2379
+    replicas: 1
+  datanode:
+    replicas: 3
+  httpPort: 5000

@@ -117,6 +117,10 @@ func (in *MetaSpec) IsEnableCheckEtcdService() bool {
 type FrontendSpec struct {
 	ComponentSpec `json:",inline"`
 
+	// Name is the name of the frontend.
+	// +optional
+	Name string `json:"name,omitempty"`
+
 	// RPCPort is the gRPC port of the frontend.
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=65535
@@ -171,6 +175,13 @@ func (in *FrontendSpec) GetService() *ServiceSpec {
 func (in *FrontendSpec) GetConfig() string {
 	if in != nil {
 		return in.Config
+	}
+	return ""
+}
+
+func (in *FrontendSpec) GetName() string {
+	if in != nil {
+		return in.Name
 	}
 	return ""
 }
@@ -298,6 +309,9 @@ type GreptimeDBClusterSpec struct {
 	// Flownode is the specification of flownode node.
 	// +optional
 	Flownode *FlownodeSpec `json:"flownode,omitempty"`
+
+	// Frontends is a group of frontend nodes.
+	Frontends []*FrontendSpec `json:"frontends,omitempty"`
 
 	// HTTPPort is the HTTP port of the greptimedb cluster.
 	// +kubebuilder:validation:Minimum=0
@@ -459,6 +473,13 @@ func (in *GreptimeDBCluster) GetLogging() *LoggingSpec {
 func (in *GreptimeDBCluster) GetFrontend() *FrontendSpec {
 	if in != nil {
 		return in.Spec.Frontend
+	}
+	return nil
+}
+
+func (in *GreptimeDBCluster) GetFrontends() []*FrontendSpec {
+	if in != nil {
+		return in.Spec.Frontends
 	}
 	return nil
 }

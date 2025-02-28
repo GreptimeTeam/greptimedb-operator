@@ -1,0 +1,22 @@
+apiVersion: greptime.io/v1alpha1
+kind: GreptimeDBCluster
+metadata:
+  name: e2e-cluster-with-frontends
+  namespace: default
+spec:
+  initializer:
+    image: localhost:5001/greptime/greptimedb-initializer:latest
+  base:
+    main:
+      image: localhost:5001/greptime/greptimedb:latest
+  frontends:
+  - name: read
+    replicas: 1
+  - name: write
+    replicas: 2
+  meta:
+    replicas: 1
+    etcdEndpoints:
+      - etcd.etcd-cluster:2379
+  datanode:
+    replicas: 3

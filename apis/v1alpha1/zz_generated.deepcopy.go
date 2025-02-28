@@ -385,6 +385,17 @@ func (in *GreptimeDBClusterSpec) DeepCopyInto(out *GreptimeDBClusterSpec) {
 		*out = new(FlownodeSpec)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.Frontends != nil {
+		in, out := &in.Frontends, &out.Frontends
+		*out = make([]*FrontendSpec, len(*in))
+		for i := range *in {
+			if (*in)[i] != nil {
+				in, out := &(*in)[i], &(*out)[i]
+				*out = new(FrontendSpec)
+				(*in).DeepCopyInto(*out)
+			}
+		}
+	}
 	if in.PrometheusMonitor != nil {
 		in, out := &in.PrometheusMonitor, &out.PrometheusMonitor
 		*out = new(PrometheusMonitorSpec)

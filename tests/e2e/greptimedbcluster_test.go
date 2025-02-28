@@ -56,4 +56,8 @@ var _ = Describe("Test GreptimeDBCluster", func() {
 	It("Test a cluster that enables monitoring", func() {
 		greptimedbcluster.TestClusterEnableMonitoring(ctx, h)
 	})
+
+	It("Test a cluster with frontend group", func() {
+		greptimedbcluster.TestClusterFrontendGroup(ctx, h)
+	})
 })

@@ -42,6 +42,10 @@ func (c *StandaloneConfig) ConfigureByCluster(_ *v1alpha1.GreptimeDBCluster) err
 	return nil
 }
 
+func (c *StandaloneConfig) ConfigureByFrontend(_ *v1alpha1.FrontendSpec) error {
+	return nil
+}
+
 // ConfigureByStandalone is not need to implement in cluster mode.
 func (c *StandaloneConfig) ConfigureByStandalone(standalone *v1alpha1.GreptimeDBStandalone) error {
 	if objectStorage := standalone.GetObjectStorageProvider(); objectStorage != nil {

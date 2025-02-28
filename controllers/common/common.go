@@ -46,13 +46,25 @@ func ResourceName(name string, componentKind v1alpha1.ComponentKind) string {
 	return name + "-" + string(componentKind)
 }
 
-func MountConfigDir(name string, kind v1alpha1.ComponentKind, template *corev1.PodTemplateSpec) {
+func AdditionalResourceName(name, additionalName string, componentKind v1alpha1.ComponentKind) string {
+	if len(additionalName) == 0 {
+		return name + "-" + string(componentKind)
+	}
+	return name + "-" + string(componentKind) + "-" + additionalName
+}
+
+func MountConfigDir(name string, kind v1alpha1.ComponentKind, template *corev1.PodTemplateSpec, additionalName string) {
+	resourceName := ResourceName(name, kind)
+	if len(additionalName) != 0 {
+		resourceName = AdditionalResourceName(name, additionalName, kind)
+	}
+
 	template.Spec.Volumes = append(template.Spec.Volumes, corev1.Volume{
 		Name: constant.ConfigVolumeName,
 		VolumeSource: corev1.VolumeSource{
 			ConfigMap: &corev1.ConfigMapVolumeSource{
 				LocalObjectReference: corev1.LocalObjectReference{
-					Name: ResourceName(name, kind),
+					Name: resourceName,
 				},
 			},
 		},
@@ -67,14 +79,19 @@ func MountConfigDir(name string, kind v1alpha1.ComponentKind, template *corev1.P
 		)
 }
 
-func GenerateConfigMap(namespace, name string, kind v1alpha1.ComponentKind, configData []byte) (*corev1.ConfigMap, error) {
+func GenerateConfigMap(namespace, name string, kind v1alpha1.ComponentKind, configData []byte, additionalName string) (*corev1.ConfigMap, error) {
+	resourceName := ResourceName(name, kind)
+	if len(additionalName) != 0 {
+		resourceName = AdditionalResourceName(name, additionalName, kind)
+	}
+
 	configmap := &corev1.ConfigMap{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "ConfigMap",
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      ResourceName(name, kind),
+			Name:      resourceName,
 			Namespace: namespace,
 		},
 		Data: map[string]string{
@@ -85,14 +102,19 @@ func GenerateConfigMap(namespace, name string, kind v1alpha1.ComponentKind, conf
 	return configmap, nil
 }
 
-func GeneratePodMonitor(namespace, name string, kind v1alpha1.ComponentKind, promSpec *v1alpha1.PrometheusMonitorSpec) (*monitoringv1.PodMonitor, error) {
+func GeneratePodMonitor(namespace, name string, kind v1alpha1.ComponentKind, promSpec *v1alpha1.PrometheusMonitorSpec, additionalName string) (*monitoringv1.PodMonitor, error) {
+	resourceName := ResourceName(name, kind)
+	if len(additionalName) != 0 {
+		resourceName = AdditionalResourceName(name, additionalName, kind)
+	}
+
 	pm := &monitoringv1.PodMonitor{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       monitoringv1.PodMonitorsKind,
 			APIVersion: monitoringv1.SchemeGroupVersion.String(),
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      ResourceName(name, kind),
+			Name:      resourceName,
 			Namespace: namespace,
 			Labels:    promSpec.Labels,
 		},
@@ -107,7 +129,7 @@ func GeneratePodMonitor(namespace, name string, kind v1alpha1.ComponentKind, pro
 			},
 			Selector: metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					constant.GreptimeDBComponentName: ResourceName(name, kind),
+					constant.GreptimeDBComponentName: resourceName,
 				},
 			},
 			NamespaceSelector: monitoringv1.NamespaceSelector{

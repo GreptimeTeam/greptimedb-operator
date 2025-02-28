@@ -51,6 +51,10 @@ func (c *FlownodeConfig) ConfigureByStandalone(_ *v1alpha1.GreptimeDBStandalone)
 	return nil
 }
 
+func (c *FlownodeConfig) ConfigureByFrontend(_ *v1alpha1.FrontendSpec) error {
+	return nil
+}
+
 // Kind returns the component kind of the datanode.
 func (c *FlownodeConfig) Kind() v1alpha1.ComponentKind {
 	return v1alpha1.FlownodeComponentKind
