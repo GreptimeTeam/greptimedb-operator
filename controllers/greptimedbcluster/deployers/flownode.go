@@ -157,7 +157,7 @@ func (b *flownodeBuilder) BuildConfigMap() deployer.Builder {
 		return b
 	}
 
-	cm, err := b.GenerateConfigMap(nil)
+	cm, err := b.GenerateConfigMap()
 	if err != nil {
 		b.Err = err
 		return b
@@ -206,7 +206,7 @@ func (b *flownodeBuilder) BuildStatefulSet() deployer.Builder {
 		},
 	}
 
-	configData, err := dbconfig.FromCluster(b.Cluster, b.ComponentKind, nil)
+	configData, err := dbconfig.FromCluster(b.Cluster, b.ComponentKind)
 	if err != nil {
 		b.Err = err
 		return b
@@ -233,7 +233,7 @@ func (b *flownodeBuilder) BuildPodMonitor() deployer.Builder {
 		return b
 	}
 
-	pm, err := b.GeneratePodMonitor("")
+	pm, err := b.GeneratePodMonitor()
 	if err != nil {
 		b.Err = err
 		return b

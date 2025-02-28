@@ -83,7 +83,8 @@ func (d *FrontendDeployer) CheckAndUpdateStatus(ctx context.Context, crdObject c
 		readyReplicas int32
 	)
 
-	if cluster.GetFrontendGroup() == nil {
+	// Check if the .Spec.Replicas of the frontend or frontends deployment equals the .Status.ReadyReplicas to confirm it is ready.
+	if cluster.GetFrontend() != nil {
 		objectKey := client.ObjectKey{
 			Namespace: cluster.Namespace,
 			Name:      common.ResourceName(cluster.Name, v1alpha1.FrontendComponentKind),
@@ -96,13 +97,18 @@ func (d *FrontendDeployer) CheckAndUpdateStatus(ctx context.Context, crdObject c
 		if err != nil {
 			return false, err
 		}
+
 		replicas = *deployment.Spec.Replicas
 		readyReplicas = deployment.Status.ReadyReplicas
-	} else {
-		for _, frontend := range cluster.GetFrontendGroup() {
+
+		if !k8sutil.IsDeploymentReady(deployment) {
+			return false, nil
+		}
+	} else if len(cluster.GetFrontends()) != 0 {
+		for _, frontend := range cluster.GetFrontends() {
 			objectKey := client.ObjectKey{
 				Namespace: cluster.Namespace,
-				Name:      common.FrontendGroupResourceName(cluster.Name, v1alpha1.FrontendComponentKind, frontend.Name),
+				Name:      common.AdditionalResourceName(cluster.Name, frontend.GetName(), v1alpha1.FrontendComponentKind),
 			}
 
 			err = d.Get(ctx, objectKey, deployment)
@@ -114,6 +120,10 @@ func (d *FrontendDeployer) CheckAndUpdateStatus(ctx context.Context, crdObject c
 			}
 			replicas += *deployment.Spec.Replicas
 			readyReplicas += deployment.Status.ReadyReplicas
+
+			if !k8sutil.IsDeploymentReady(deployment) {
+				return false, nil
+			}
 		}
 	}
 
@@ -123,7 +133,7 @@ func (d *FrontendDeployer) CheckAndUpdateStatus(ctx context.Context, crdObject c
 		klog.Errorf("Failed to update status: %s", err)
 	}
 
-	return k8sutil.IsDeploymentReady(deployment), nil
+	return true, nil
 }
 
 var _ deployer.Builder = &frontendBuilder{}
@@ -164,7 +174,7 @@ func (b *frontendBuilder) BuildService() deployer.Builder {
 		return b
 	}
 
-	if b.Cluster.GetFrontend() == nil && b.Cluster.GetFrontendGroup() == nil {
+	if b.Cluster.GetFrontend() == nil && len(b.Cluster.GetFrontends()) == 0 {
 		return b
 	}
 
@@ -172,9 +182,9 @@ func (b *frontendBuilder) BuildService() deployer.Builder {
 		b.generateService(common.ResourceName(b.Cluster.Name, b.ComponentKind), b.Cluster.Spec.Frontend)
 	}
 
-	if b.Cluster.GetFrontendGroup() != nil {
-		for _, frontend := range b.Cluster.Spec.FrontendGroup {
-			b.generateService(common.FrontendGroupResourceName(b.Cluster.Name, b.ComponentKind, frontend.Name), frontend)
+	if len(b.Cluster.GetFrontends()) != 0 {
+		for _, frontend := range b.Cluster.Spec.Frontends {
+			b.generateService(common.AdditionalResourceName(b.Cluster.Name, frontend.GetName(), b.ComponentKind), frontend)
 		}
 	}
 
@@ -209,7 +219,7 @@ func (b *frontendBuilder) generateDeployment(name string, frontendSpec *v1alpha1
 		},
 	}
 
-	configData, err := dbconfig.FromCluster(b.Cluster, b.ComponentKind, frontendSpec)
+	configData, err := dbconfig.FromFrontend(b.Frontend, b.ComponentKind)
 	if err != nil {
 		b.Err = err
 		return
@@ -226,7 +236,7 @@ func (b *frontendBuilder) BuildDeployment() deployer.Builder {
 		return b
 	}
 
-	if b.Cluster.GetFrontend() == nil && b.Cluster.GetFrontendGroup() == nil {
+	if b.Cluster.GetFrontend() == nil && len(b.Cluster.GetFrontends()) == 0 {
 		return b
 	}
 
@@ -234,9 +244,9 @@ func (b *frontendBuilder) BuildDeployment() deployer.Builder {
 		b.generateDeployment(common.ResourceName(b.Cluster.Name, b.ComponentKind), b.Cluster.Spec.Frontend)
 	}
 
-	if b.Cluster.GetFrontendGroup() != nil {
-		for _, frontend := range b.Cluster.Spec.FrontendGroup {
-			b.generateDeployment(common.FrontendGroupResourceName(b.Cluster.Name, b.ComponentKind, frontend.Name), frontend)
+	if len(b.Cluster.GetFrontends()) != 0 {
+		for _, frontend := range b.Cluster.Spec.Frontends {
+			b.generateDeployment(common.AdditionalResourceName(b.Cluster.Name, frontend.GetName(), b.ComponentKind), frontend)
 		}
 	}
 
@@ -248,12 +258,13 @@ func (b *frontendBuilder) BuildConfigMap() deployer.Builder {
 		return b
 	}
 
-	if b.Cluster.GetFrontend() == nil && b.Cluster.GetFrontendGroup() == nil {
+	if b.Cluster.GetFrontend() == nil && len(b.Cluster.GetFrontends()) == 0 {
 		return b
 	}
 
 	if b.Cluster.GetFrontend() != nil {
-		cm, err := b.GenerateConfigMap(b.Cluster.GetFrontend())
+		b.Frontend = b.Cluster.GetFrontend()
+		cm, err := b.GenerateConfigMap()
 		if err != nil {
 			b.Err = err
 			return b
@@ -261,9 +272,10 @@ func (b *frontendBuilder) BuildConfigMap() deployer.Builder {
 		b.Objects = append(b.Objects, cm)
 	}
 
-	if b.Cluster.GetFrontendGroup() != nil {
-		for _, frontend := range b.Cluster.Spec.FrontendGroup {
-			cm, err := b.GenerateConfigMap(frontend)
+	if len(b.Cluster.GetFrontends()) != 0 {
+		for _, frontend := range b.Cluster.Spec.Frontends {
+			b.Frontend = frontend
+			cm, err := b.GenerateConfigMap()
 			if err != nil {
 				b.Err = err
 				return b
@@ -280,7 +292,7 @@ func (b *frontendBuilder) BuildPodMonitor() deployer.Builder {
 		return b
 	}
 
-	if b.Cluster.GetFrontend() == nil && b.Cluster.GetFrontendGroup() == nil {
+	if b.Cluster.GetFrontend() == nil && len(b.Cluster.GetFrontends()) == 0 {
 		return b
 	}
 
@@ -289,7 +301,8 @@ func (b *frontendBuilder) BuildPodMonitor() deployer.Builder {
 	}
 
 	if b.Cluster.GetFrontend() != nil {
-		pm, err := b.GeneratePodMonitor("")
+		b.Frontend = b.Cluster.GetFrontend()
+		pm, err := b.GeneratePodMonitor()
 		if err != nil {
 			b.Err = err
 			return b
@@ -298,9 +311,10 @@ func (b *frontendBuilder) BuildPodMonitor() deployer.Builder {
 		b.Objects = append(b.Objects, pm)
 	}
 
-	if b.Cluster.GetFrontendGroup() != nil {
-		for _, frontend := range b.Cluster.Spec.FrontendGroup {
-			pm, err := b.GeneratePodMonitor(frontend.Name)
+	if len(b.Cluster.GetFrontends()) != 0 {
+		for _, frontend := range b.Cluster.Spec.Frontends {
+			b.Frontend = frontend
+			pm, err := b.GeneratePodMonitor()
 			if err != nil {
 				b.Err = err
 				return b
@@ -349,8 +363,8 @@ func (b *frontendBuilder) generatePodTemplateSpec(frontendSpec *v1alpha1.Fronten
 	}
 
 	resourceName := common.ResourceName(b.Cluster.Name, b.ComponentKind)
-	if len(frontendSpec.Name) != 0 {
-		resourceName = common.FrontendGroupResourceName(b.Cluster.Name, b.ComponentKind, frontendSpec.Name)
+	if len(frontendSpec.GetName()) != 0 {
+		resourceName = common.AdditionalResourceName(b.Cluster.Name, frontendSpec.GetName(), b.ComponentKind)
 	}
 	podTemplateSpec.ObjectMeta.Labels = util.MergeStringMap(podTemplateSpec.ObjectMeta.Labels, map[string]string{
 		constant.GreptimeDBComponentName: resourceName,
@@ -359,7 +373,8 @@ func (b *frontendBuilder) generatePodTemplateSpec(frontendSpec *v1alpha1.Fronten
 	podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Ports = b.containerPorts(frontendSpec)
 	podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Env = append(podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Env, b.env(v1alpha1.FrontendComponentKind)...)
 
-	b.MountConfigDir(podTemplateSpec, frontendSpec.Name)
+	b.Frontend = frontendSpec
+	b.MountConfigDir(podTemplateSpec)
 
 	if logging := frontendSpec.GetLogging(); logging != nil && !logging.IsOnlyLogToStdout() {
 		b.AddLogsVolume(podTemplateSpec, logging.GetLogsDir())

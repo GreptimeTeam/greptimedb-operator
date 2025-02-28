@@ -46,14 +46,17 @@ func ResourceName(name string, componentKind v1alpha1.ComponentKind) string {
 	return name + "-" + string(componentKind)
 }
 
-func FrontendGroupResourceName(name string, componentKind v1alpha1.ComponentKind, frontendName string) string {
-	return name + "-" + string(componentKind) + "-" + frontendName
+func AdditionalResourceName(name, additionalName string, componentKind v1alpha1.ComponentKind) string {
+	if len(additionalName) == 0 {
+		return name + "-" + string(componentKind)
+	}
+	return name + "-" + string(componentKind) + "-" + additionalName
 }
 
-func MountConfigDir(name string, kind v1alpha1.ComponentKind, template *corev1.PodTemplateSpec, frontendName string) {
+func MountConfigDir(name string, kind v1alpha1.ComponentKind, template *corev1.PodTemplateSpec, additionalName string) {
 	resourceName := ResourceName(name, kind)
-	if len(frontendName) != 0 {
-		resourceName = FrontendGroupResourceName(name, kind, frontendName)
+	if len(additionalName) != 0 {
+		resourceName = AdditionalResourceName(name, additionalName, kind)
 	}
 
 	template.Spec.Volumes = append(template.Spec.Volumes, corev1.Volume{
@@ -76,11 +79,10 @@ func MountConfigDir(name string, kind v1alpha1.ComponentKind, template *corev1.P
 		)
 }
 
-func GenerateConfigMap(namespace, name string, kind v1alpha1.ComponentKind, configData []byte, frontendName string) (*corev1.ConfigMap, error) {
+func GenerateConfigMap(namespace, name string, kind v1alpha1.ComponentKind, configData []byte, additionalName string) (*corev1.ConfigMap, error) {
 	resourceName := ResourceName(name, kind)
-
-	if len(frontendName) != 0 {
-		resourceName = FrontendGroupResourceName(name, kind, frontendName)
+	if len(additionalName) != 0 {
+		resourceName = AdditionalResourceName(name, additionalName, kind)
 	}
 
 	configmap := &corev1.ConfigMap{
@@ -100,10 +102,10 @@ func GenerateConfigMap(namespace, name string, kind v1alpha1.ComponentKind, conf
 	return configmap, nil
 }
 
-func GeneratePodMonitor(namespace, name string, kind v1alpha1.ComponentKind, promSpec *v1alpha1.PrometheusMonitorSpec, frontendName string) (*monitoringv1.PodMonitor, error) {
+func GeneratePodMonitor(namespace, name string, kind v1alpha1.ComponentKind, promSpec *v1alpha1.PrometheusMonitorSpec, additionalName string) (*monitoringv1.PodMonitor, error) {
 	resourceName := ResourceName(name, kind)
-	if len(frontendName) != 0 {
-		resourceName = FrontendGroupResourceName(name, kind, frontendName)
+	if len(additionalName) != 0 {
+		resourceName = AdditionalResourceName(name, additionalName, kind)
 	}
 
 	pm := &monitoringv1.PodMonitor{

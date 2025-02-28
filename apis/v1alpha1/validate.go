@@ -35,7 +35,7 @@ func (in *GreptimeDBCluster) Validate() error {
 		return err
 	}
 
-	if err := in.validateFrontendGroup(); err != nil {
+	if err := in.validateFrontends(); err != nil {
 		return err
 	}
 
@@ -115,22 +115,35 @@ func (in *GreptimeDBCluster) validateFrontend() error {
 	if err := validateTomlConfig(in.GetFrontend().GetConfig()); err != nil {
 		return fmt.Errorf("invalid frontend toml config: '%v'", err)
 	}
+
 	return nil
 }
 
-func (in *GreptimeDBCluster) validateFrontendGroup() error {
-	if in.GetFrontend() != nil && in.GetFrontendGroup() != nil {
-		return fmt.Errorf("only one of 'frontend' or 'frontendGroup' can be set")
-	}
-
-	for _, frontend := range in.GetFrontendGroup() {
-		if len(frontend.Name) == 0 {
-			return fmt.Errorf("must be configure frontend with a name")
+func (in *GreptimeDBCluster) validateFrontends() error {
+	nameCount := 0
+	for _, frontend := range in.GetFrontends() {
+		if len(frontend.GetName()) != 0 {
+			nameCount++
 		}
+
 		if err := validateTomlConfig(frontend.GetConfig()); err != nil {
 			return fmt.Errorf("invalid frontend toml config: '%v'", err)
 		}
 	}
+
+	// FIXME(liyang): When there are multiple frontend instances, the frontend name must be set.
+	if in.GetFrontend() == nil {
+		// If there is no single frontend instance, nameCount must be at least len(in.GetFrontends()) - 1
+		if nameCount < len(in.GetFrontends())-1 {
+			return fmt.Errorf("must configure at least one frontend with a name")
+		}
+	} else {
+		// If there is a single frontend instance, nameCount must equal len(in.GetFrontends())
+		if nameCount != len(in.GetFrontends()) {
+			return fmt.Errorf("must configure all frontends with a name")
+		}
+	}
+
 	return nil
 }
 

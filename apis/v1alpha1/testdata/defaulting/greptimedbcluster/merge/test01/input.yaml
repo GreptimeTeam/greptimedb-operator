@@ -14,7 +14,7 @@ spec:
         limits:
           cpu: 100m
           memory: 128Mi
-  frontendGroup:
+  frontends:
   - name: read
     replicas: 2
     httpPort: 6000

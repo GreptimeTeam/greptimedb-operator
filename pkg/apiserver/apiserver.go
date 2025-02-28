@@ -212,7 +212,7 @@ func (s *Server) getClusters(c *gin.Context) {
 
 	var data []GreptimeDBCluster
 	for _, cluster := range clusters.Items {
-		topology, err := s.getTopology(c, cluster.Namespace, cluster.Name)
+		topology, err := s.getTopology(c, cluster)
 		if err != nil {
 			klog.Errorf("failed to get topology for cluster %s/%s: %v", cluster.Namespace, cluster.Name, err)
 			c.JSON(http.StatusInternalServerError, Response{
@@ -277,7 +277,7 @@ func (s *Server) getCluster(c *gin.Context) {
 		return
 	}
 
-	topology, err := s.getTopology(c, namespace, name)
+	topology, err := s.getTopology(c, cluster)
 	if err != nil {
 		klog.Errorf("failed to get topology for cluster %s/%s: %v", namespace, name, err)
 		c.JSON(http.StatusInternalServerError, Response{
@@ -299,7 +299,7 @@ func (s *Server) getCluster(c *gin.Context) {
 	})
 }
 
-func (s *Server) getTopology(ctx context.Context, namespace, name string) (*GreptimeDBClusterTopology, error) {
+func (s *Server) getTopology(ctx context.Context, cluster greptimev1alpha1.GreptimeDBCluster) (*GreptimeDBClusterTopology, error) {
 	topology := new(GreptimeDBClusterTopology)
 
 	for _, kind := range []greptimev1alpha1.ComponentKind{
@@ -308,7 +308,7 @@ func (s *Server) getTopology(ctx context.Context, namespace, name string) (*Grep
 		greptimev1alpha1.FrontendComponentKind,
 		greptimev1alpha1.FlownodeComponentKind,
 	} {
-		if err := s.getPods(ctx, namespace, name, kind, topology); err != nil {
+		if err := s.getPods(ctx, cluster, kind, topology); err != nil {
 			return nil, err
 		}
 	}
@@ -316,20 +316,30 @@ func (s *Server) getTopology(ctx context.Context, namespace, name string) (*Grep
 	return topology, nil
 }
 
-func (s *Server) getPods(ctx context.Context, namespace, name string, kind greptimev1alpha1.ComponentKind, topology *GreptimeDBClusterTopology) error {
+func (s *Server) getPods(ctx context.Context, cluster greptimev1alpha1.GreptimeDBCluster, kind greptimev1alpha1.ComponentKind, topology *GreptimeDBClusterTopology) error {
 	var internalPods corev1.PodList
-	if err := s.List(ctx, &internalPods, client.InNamespace(namespace),
-		client.MatchingLabels{constant.GreptimeDBComponentName: common.ResourceName(name, kind)}); err != nil {
+	if err := s.List(ctx, &internalPods, client.InNamespace(cluster.Namespace),
+		client.MatchingLabels{constant.GreptimeDBComponentName: common.ResourceName(cluster.Name, kind)}); err != nil {
 		return err
+	}
+
+	// List the frontends Pod
+	var frontendsPod corev1.PodList
+	for _, frontend := range cluster.GetFrontends() {
+		if err := s.List(ctx, &frontendsPod, client.InNamespace(cluster.Namespace),
+			client.MatchingLabels{constant.GreptimeDBComponentName: common.AdditionalResourceName(cluster.Name, frontend.Name, kind)}); err != nil {
+			return err
+		}
+		internalPods.Items = append(internalPods.Items, frontendsPod.Items...)
 	}
 
 	var metrics []*podmetricsv1beta1.PodMetrics
 	if s.enablePodMetrics {
 		for _, pod := range internalPods.Items {
-			podMetrics, err := s.getPodMetrics(ctx, namespace, pod.Name)
+			podMetrics, err := s.getPodMetrics(ctx, cluster.Namespace, pod.Name)
 			if err != nil {
 				// Logs the error and continue to get the next pod metrics. We don't want the error of getting podmetrics to block the whole API.
-				klog.Errorf("failed to get pod metrics for pod %s/%s: %v", namespace, pod.Name, err)
+				klog.Errorf("failed to get pod metrics for pod %s/%s: %v", cluster.Namespace, pod.Name, err)
 			}
 			metrics = append(metrics, podMetrics)
 		}

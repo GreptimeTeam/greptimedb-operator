@@ -7,7 +7,7 @@ spec:
   base:
     main:
       image: greptime/greptimedb:latest
-  frontendGroup:
+  frontends:
   - name: read
     replicas: 1
     service:

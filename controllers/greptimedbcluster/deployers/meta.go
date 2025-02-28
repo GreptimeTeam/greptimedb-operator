@@ -260,7 +260,7 @@ func (b *metaBuilder) BuildDeployment() deployer.Builder {
 		},
 	}
 
-	configData, err := dbconfig.FromCluster(b.Cluster, b.ComponentKind, nil)
+	configData, err := dbconfig.FromCluster(b.Cluster, b.ComponentKind)
 	if err != nil {
 		b.Err = err
 		return b
@@ -283,7 +283,7 @@ func (b *metaBuilder) BuildConfigMap() deployer.Builder {
 		return b
 	}
 
-	cm, err := b.GenerateConfigMap(nil)
+	cm, err := b.GenerateConfigMap()
 	if err != nil {
 		b.Err = err
 		return b
@@ -307,7 +307,7 @@ func (b *metaBuilder) BuildPodMonitor() deployer.Builder {
 		return b
 	}
 
-	pm, err := b.GeneratePodMonitor("")
+	pm, err := b.GeneratePodMonitor()
 	if err != nil {
 		b.Err = err
 		return b
@@ -333,7 +333,7 @@ func (b *metaBuilder) generatePodTemplateSpec() *corev1.PodTemplateSpec {
 	podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Ports = b.containerPorts()
 	podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Env = append(podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Env, b.env(v1alpha1.MetaComponentKind)...)
 
-	b.MountConfigDir(podTemplateSpec, "")
+	b.MountConfigDir(podTemplateSpec)
 
 	if logging := b.Cluster.GetMeta().GetLogging(); logging != nil && !logging.IsOnlyLogToStdout() {
 		b.AddLogsVolume(podTemplateSpec, logging.GetLogsDir())

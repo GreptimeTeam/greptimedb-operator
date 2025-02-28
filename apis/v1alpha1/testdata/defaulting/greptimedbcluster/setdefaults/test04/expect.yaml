@@ -38,7 +38,7 @@ spec:
           port: 4000
         periodSeconds: 5
         failureThreshold: 60
-  frontendGroup:
+  frontends:
   - name: read
     replicas: 1
     httpPort: 6000
@@ -47,21 +47,21 @@ spec:
     rpcPort: 6001
     service:
       type: ClusterIP
+    logging: {}
+    template: {}
     rollingUpdate:
       maxSurge: 25%
       maxUnavailable: 25%
-    logging: {}
-    template: {}
   - name: write
     replicas: 2
     httpPort: 7000
     mysqlPort: 7002
     postgreSQLPort: 7003
     rpcPort: 7001
-    service:
-      type: ClusterIP
     logging: {}
     template: {}
+    service:
+      type: ClusterIP
     rollingUpdate:
       maxSurge: 50%
       maxUnavailable: 50%

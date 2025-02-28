@@ -9,9 +9,8 @@ spec:
       image: greptime/greptimedb:latest
   frontend:
     replicas: 1
-  frontendGroup: # This is an error because multiple frontend configs are not allowed.
-  - name: read
-    replicas: 1
+  frontends: # This is an error because must configure frontend with a name.
+  - replicas: 1
   meta:
     etcdEndpoints:
       - etcd.etcd-cluster.svc.cluster.local:2379

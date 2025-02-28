@@ -42,7 +42,7 @@ type DatanodeConfig struct {
 }
 
 // ConfigureByCluster configures the datanode config by the given cluster.
-func (c *DatanodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster, _ *v1alpha1.FrontendSpec) error {
+func (c *DatanodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster) error {
 	if objectStorage := cluster.GetObjectStorageProvider(); objectStorage != nil {
 		if err := c.ConfigureObjectStorage(cluster.GetNamespace(), objectStorage); err != nil {
 			return err
@@ -76,6 +76,10 @@ func (c *DatanodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster,
 
 // ConfigureByStandalone is not need to implement in cluster mode.
 func (c *DatanodeConfig) ConfigureByStandalone(_ *v1alpha1.GreptimeDBStandalone) error {
+	return nil
+}
+
+func (c *DatanodeConfig) ConfigureByFrontend(_ *v1alpha1.FrontendSpec) error {
 	return nil
 }
 

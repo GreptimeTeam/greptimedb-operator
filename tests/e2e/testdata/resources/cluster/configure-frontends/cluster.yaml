@@ -1,7 +1,7 @@
 apiVersion: greptime.io/v1alpha1
 kind: GreptimeDBCluster
 metadata:
-  name: e2e-cluster-basic
+  name: e2e-cluster-with-frontends
   namespace: default
 spec:
   initializer:
@@ -9,23 +9,11 @@ spec:
   base:
     main:
       image: localhost:5001/greptime/greptimedb:latest
-  frontendGroup:
+  frontends:
   - name: read
-    replicas: 2
-    httpPort: 4000
-    mysqlPort: 4002
-    postgreSQLPort: 4003
-    rpcPort: 4001
-    service:
-      type: ClusterIP
+    replicas: 1
   - name: write
     replicas: 2
-    httpPort: 4000
-    mysqlPort: 4002
-    postgreSQLPort: 4003
-    rpcPort: 4001
-    service:
-      type: ClusterIP
   meta:
     replicas: 1
     etcdEndpoints:

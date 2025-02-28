@@ -117,7 +117,7 @@ func (in *MetaSpec) IsEnableCheckEtcdService() bool {
 type FrontendSpec struct {
 	ComponentSpec `json:",inline"`
 
-	// Name is the name of the frontend when FrontendGroup is set.
+	// Name is the name of the frontend.
 	// +optional
 	Name string `json:"name,omitempty"`
 
@@ -175,6 +175,13 @@ func (in *FrontendSpec) GetService() *ServiceSpec {
 func (in *FrontendSpec) GetConfig() string {
 	if in != nil {
 		return in.Config
+	}
+	return ""
+}
+
+func (in *FrontendSpec) GetName() string {
+	if in != nil {
+		return in.Name
 	}
 	return ""
 }
@@ -297,8 +304,8 @@ type GreptimeDBClusterSpec struct {
 	// +optional
 	Flownode *FlownodeSpec `json:"flownode,omitempty"`
 
-	// FrontendGroup is a group of frontend nodes.
-	FrontendGroup []*FrontendSpec `json:"frontendGroup,omitempty"`
+	// Frontends is a group of frontend nodes.
+	Frontends []*FrontendSpec `json:"frontends,omitempty"`
 
 	// HTTPPort is the HTTP port of the greptimedb cluster.
 	// +kubebuilder:validation:Minimum=0
@@ -464,9 +471,9 @@ func (in *GreptimeDBCluster) GetFrontend() *FrontendSpec {
 	return nil
 }
 
-func (in *GreptimeDBCluster) GetFrontendGroup() []*FrontendSpec {
+func (in *GreptimeDBCluster) GetFrontends() []*FrontendSpec {
 	if in != nil {
-		return in.Spec.FrontendGroup
+		return in.Spec.Frontends
 	}
 	return nil
 }

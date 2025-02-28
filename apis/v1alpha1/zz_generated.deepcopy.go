@@ -385,8 +385,8 @@ func (in *GreptimeDBClusterSpec) DeepCopyInto(out *GreptimeDBClusterSpec) {
 		*out = new(FlownodeSpec)
 		(*in).DeepCopyInto(*out)
 	}
-	if in.FrontendGroup != nil {
-		in, out := &in.FrontendGroup, &out.FrontendGroup
+	if in.Frontends != nil {
+		in, out := &in.Frontends, &out.Frontends
 		*out = make([]*FrontendSpec, len(*in))
 		for i := range *in {
 			if (*in)[i] != nil {

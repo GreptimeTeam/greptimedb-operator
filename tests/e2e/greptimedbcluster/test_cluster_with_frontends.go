@@ -34,7 +34,7 @@ import (
 // TestClusterFrontendGroup tests a frontend group cluster.
 func TestClusterFrontendGroup(ctx context.Context, h *helper.Helper) {
 	const (
-		testCRFile       = "./testdata/resources/cluster/frontend-group/cluster.yaml"
+		testCRFile       = "./testdata/resources/cluster/configure-frontends/cluster.yaml"
 		testReadSQLFile  = "./testdata/sql/cluster/read.sql"
 		testWriteSQLFile = "./testdata/sql/cluster/write.sql"
 	)
@@ -66,7 +66,7 @@ func TestClusterFrontendGroup(ctx context.Context, h *helper.Helper) {
 	Expect(err).NotTo(HaveOccurred(), "failed to get cluster")
 	By("Execute distributed SQL test")
 
-	frontends := testCluster.GetFrontendGroup()
+	frontends := testCluster.GetFrontends()
 	if len(frontends) < 2 {
 		err = errors.New("expected at least 2 frontends in the group")
 	}
@@ -74,11 +74,11 @@ func TestClusterFrontendGroup(ctx context.Context, h *helper.Helper) {
 		Expect(err).NotTo(HaveOccurred(), "Incorrect number of frontends")
 	}
 	var (
-		readFrontendName  = frontends[0].Name
-		writeFrontendName = frontends[1].Name
+		readFrontendName  = frontends[0].GetName()
+		writeFrontendName = frontends[1].GetName()
 	)
 
-	frontendAddr, err := h.PortForward(ctx, testCluster.Namespace, common.FrontendGroupResourceName(testCluster.Name, greptimev1alpha1.FrontendComponentKind, writeFrontendName), int(testCluster.Spec.PostgreSQLPort))
+	frontendAddr, err := h.PortForward(ctx, testCluster.Namespace, common.AdditionalResourceName(testCluster.Name, writeFrontendName, greptimev1alpha1.FrontendComponentKind), int(testCluster.Spec.PostgreSQLPort))
 	Expect(err).NotTo(HaveOccurred(), "failed to port forward frontend service")
 	Eventually(func() error {
 		conn, err := net.Dial("tcp", frontendAddr)
@@ -92,7 +92,7 @@ func TestClusterFrontendGroup(ctx context.Context, h *helper.Helper) {
 	err = h.RunSQLTest(ctx, frontendAddr, testWriteSQLFile)
 	Expect(err).NotTo(HaveOccurred(), "failed to run sql test")
 
-	frontendAddr, err = h.PortForward(ctx, testCluster.Namespace, common.FrontendGroupResourceName(testCluster.Name, greptimev1alpha1.FrontendComponentKind, readFrontendName), int(testCluster.Spec.PostgreSQLPort))
+	frontendAddr, err = h.PortForward(ctx, testCluster.Namespace, common.AdditionalResourceName(testCluster.Name, readFrontendName, greptimev1alpha1.FrontendComponentKind), int(testCluster.Spec.PostgreSQLPort))
 	Expect(err).NotTo(HaveOccurred(), "failed to port forward frontend service")
 	Eventually(func() error {
 		conn, err := net.Dial("tcp", frontendAddr)

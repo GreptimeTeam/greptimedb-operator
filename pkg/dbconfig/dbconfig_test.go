@@ -62,7 +62,7 @@ func TestFromClusterForDatanodeConfig(t *testing.T) {
   provider = "kafka"
 `
 
-	data, err := FromCluster(testCluster, v1alpha1.DatanodeComponentKind, nil)
+	data, err := FromCluster(testCluster, v1alpha1.DatanodeComponentKind)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -122,7 +122,7 @@ key2 = 'value2'
   type = "S3"
 `
 
-	data, err := FromCluster(testCluster, v1alpha1.DatanodeComponentKind, nil)
+	data, err := FromCluster(testCluster, v1alpha1.DatanodeComponentKind)
 	if err != nil {
 		t.Fatal(err)
 	}

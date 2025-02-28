@@ -46,10 +46,10 @@ func (in *GreptimeDBCluster) SetDefaults() error {
 // MergeTemplate merges the base template with the component's template.
 func (in *GreptimeDBCluster) MergeTemplate() error {
 	mergeFuncs := []func() error{
+		in.mergeFrontendTemplate,
 		in.mergeMetaTemplate,
 		in.mergeDatanodeTemplate,
 		in.mergeFlownodeTemplate,
-		in.mergeFrontendTemplate,
 	}
 
 	for _, mergeFunc := range mergeFuncs {
@@ -69,12 +69,14 @@ func (in *GreptimeDBCluster) MergeLogging() error {
 		in.GetFlownode().GetLogging(),
 	}
 
-	if in.GetFrontendGroup() != nil {
-		for _, frontend := range in.GetFrontendGroup() {
+	if in.GetFrontend() != nil {
+		loggingSpecs = append(loggingSpecs, in.GetFrontend().GetLogging())
+	}
+
+	if len(in.GetFrontends()) != 0 {
+		for _, frontend := range in.GetFrontends() {
 			loggingSpecs = append(loggingSpecs, frontend.GetLogging())
 		}
-	} else {
-		loggingSpecs = append(loggingSpecs, in.GetFrontend().GetLogging())
 	}
 
 	for _, logging := range loggingSpecs {
@@ -125,10 +127,12 @@ func (in *GreptimeDBCluster) defaultSpec() *GreptimeDBClusterSpec {
 		Datanode:       in.defaultDatanode(),
 	}
 
-	if in.GetFrontendGroup() == nil {
+	if in.GetFrontend() != nil {
 		defaultSpec.Frontend = in.defaultFrontend()
-	} else {
-		defaultSpec.FrontendGroup = in.defaultFrontendGroup()
+	}
+
+	if len(in.GetFrontends()) != 0 {
+		defaultSpec.Frontends = in.defaultFrontends()
 	}
 
 	if in.GetFlownode() != nil {
@@ -188,8 +192,8 @@ func (in *GreptimeDBCluster) defaultFrontend() *FrontendSpec {
 	}
 }
 
-func (in *GreptimeDBCluster) defaultFrontendGroup() []*FrontendSpec {
-	var frontendGroup []*FrontendSpec
+func (in *GreptimeDBCluster) defaultFrontends() []*FrontendSpec {
+	var frontends []*FrontendSpec
 	var (
 		replicas       *int32
 		rpcPort        = DefaultRPCPort
@@ -199,7 +203,7 @@ func (in *GreptimeDBCluster) defaultFrontendGroup() []*FrontendSpec {
 		rollingUpdate  = defaultRollingUpdateForDeployment()
 	)
 
-	for _, frontend := range in.GetFrontendGroup() {
+	for _, frontend := range in.GetFrontends() {
 		if frontend.Replicas != nil {
 			replicas = frontend.Replicas
 		}
@@ -219,7 +223,7 @@ func (in *GreptimeDBCluster) defaultFrontendGroup() []*FrontendSpec {
 			rollingUpdate = frontend.RollingUpdate
 		}
 		frontendSpec := &FrontendSpec{
-			Name: frontend.Name,
+			Name: frontend.GetName(),
 			ComponentSpec: ComponentSpec{
 				Template: &PodTemplateSpec{},
 				Replicas: replicas,
@@ -234,14 +238,12 @@ func (in *GreptimeDBCluster) defaultFrontendGroup() []*FrontendSpec {
 			},
 			RollingUpdate: rollingUpdate,
 		}
-		frontendGroup = append(frontendGroup, frontendSpec)
+		frontends = append(frontends, frontendSpec)
 	}
 
-	if err := mergo.Merge(&in.Spec.FrontendGroup, frontendGroup, mergo.WithSliceDeepCopy); err != nil {
-		return frontendGroup
-	}
+	mergo.Merge(&in.Spec.Frontends, frontends, mergo.WithSliceDeepCopy)
 
-	return frontendGroup
+	return frontends
 }
 
 func (in *GreptimeDBCluster) defaultMeta() *MetaSpec {
@@ -310,8 +312,8 @@ func (in *GreptimeDBCluster) defaultMonitoringStandaloneSpec() *GreptimeDBStanda
 }
 
 func (in *GreptimeDBCluster) mergeFrontendTemplate() error {
-	if in.Spec.FrontendGroup != nil {
-		for _, frontend := range in.Spec.FrontendGroup {
+	if len(in.Spec.Frontends) != 0 {
+		for _, frontend := range in.Spec.Frontends {
 			if frontend.Template == nil {
 				frontend.Template = &PodTemplateSpec{}
 			}
@@ -323,7 +325,9 @@ func (in *GreptimeDBCluster) mergeFrontendTemplate() error {
 			frontend.Template.MainContainer.LivenessProbe.HTTPGet.Port = intstr.FromInt32(frontend.HTTPPort)
 			frontend.Template.MainContainer.ReadinessProbe.HTTPGet.Port = intstr.FromInt32(frontend.HTTPPort)
 		}
-	} else {
+	}
+
+	if in.GetFrontend() != nil {
 		// Use DeepCopy to avoid the same pointer.
 		if err := mergo.Merge(in.Spec.Frontend.Template, in.DeepCopy().Spec.Base); err != nil {
 			return err

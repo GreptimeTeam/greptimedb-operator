@@ -38,7 +38,11 @@ type StandaloneConfig struct {
 }
 
 // ConfigureByCluster is not need to implement in standalone mode.
-func (c *StandaloneConfig) ConfigureByCluster(_ *v1alpha1.GreptimeDBCluster, _ *v1alpha1.FrontendSpec) error {
+func (c *StandaloneConfig) ConfigureByCluster(_ *v1alpha1.GreptimeDBCluster) error {
+	return nil
+}
+
+func (c *StandaloneConfig) ConfigureByFrontend(_ *v1alpha1.FrontendSpec) error {
 	return nil
 }
 
