@@ -172,8 +172,7 @@ func (c *MetricsCollector) CollectClusterPodMetrics(ctx context.Context, cluster
 }
 
 func (c *MetricsCollector) collectPodMetricsByRole(ctx context.Context, cluster *greptimev1alpha1.GreptimeDBCluster, role greptimev1alpha1.ComponentKind) error {
-	var pods []corev1.Pod
-	var err error
+	var podList []corev1.Pod
 
 	if role == greptimev1alpha1.FrontendComponentKind {
 		for _, frontend := range cluster.GetFrontends() {
@@ -181,16 +180,17 @@ func (c *MetricsCollector) collectPodMetricsByRole(ctx context.Context, cluster 
 			if err != nil {
 				return err
 			}
-			pods = append(pods, frontendPods...)
-		}
-	} else {
-		pods, err = c.getPods(ctx, cluster, role, "")
-		if err != nil {
-			return err
+			podList = append(podList, frontendPods...)
 		}
 	}
 
-	for _, pod := range pods {
+	pods, err := c.getPods(ctx, cluster, role, "")
+	if err != nil {
+		return err
+	}
+	podList = append(podList, pods...)
+
+	for _, pod := range podList {
 		if err := c.collectPodMetrics(ctx, cluster.Name, &pod, role); err != nil {
 			return err
 		}
@@ -279,10 +279,8 @@ func (c *MetricsCollector) getPodConditionTime(podStatus *corev1.PodStatus, cond
 }
 
 func (c *MetricsCollector) getPods(ctx context.Context, cluster *greptimev1alpha1.GreptimeDBCluster, componentKind greptimev1alpha1.ComponentKind, additionalName string) ([]corev1.Pod, error) {
-	resourceName := common.ResourceName(cluster.Name, componentKind)
-	if len(additionalName) != 0 {
-		resourceName = common.AdditionalResourceName(cluster.Name, additionalName, componentKind)
-	}
+	resourceName := common.AdditionalResourceName(cluster.Name, additionalName, componentKind)
+
 	selector := metav1.LabelSelector{
 		MatchLabels: map[string]string{
 			constant.GreptimeDBComponentName: resourceName,

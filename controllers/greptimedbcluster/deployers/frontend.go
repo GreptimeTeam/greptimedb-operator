@@ -104,7 +104,8 @@ func (d *FrontendDeployer) CheckAndUpdateStatus(ctx context.Context, crdObject c
 		if !k8sutil.IsDeploymentReady(deployment) {
 			return false, nil
 		}
-	} else if len(cluster.GetFrontends()) != 0 {
+	}
+	if cluster.GetFrontends() != nil {
 		for _, frontend := range cluster.GetFrontends() {
 			objectKey := client.ObjectKey{
 				Namespace: cluster.Namespace,
