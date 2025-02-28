@@ -241,7 +241,9 @@ func (in *GreptimeDBCluster) defaultFrontends() []*FrontendSpec {
 		frontends = append(frontends, frontendSpec)
 	}
 
-	mergo.Merge(&in.Spec.Frontends, frontends, mergo.WithSliceDeepCopy)
+	if err := mergo.Merge(&in.Spec.Frontends, frontends, mergo.WithSliceDeepCopy); err != nil {
+		return frontends
+	}
 
 	return frontends
 }

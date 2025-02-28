@@ -80,7 +80,7 @@ func (c *CommonDeployer) NewCommonBuilder(crdObject client.Object, componentKind
 			Owner:  crdObject,
 		},
 		ComponentKind: componentKind,
-		Frontend:      &v1alpha1.FrontendSpec{},
+		Frontend:      new(v1alpha1.FrontendSpec),
 	}
 
 	cluster, err := c.GetCluster(crdObject)
@@ -98,13 +98,13 @@ func (c *CommonBuilder) GenerateConfigMap() (*corev1.ConfigMap, error) {
 		err        error
 	)
 
-	if c.Frontend == nil {
-		configData, err = dbconfig.FromCluster(c.Cluster, c.ComponentKind)
+	if c.ComponentKind == v1alpha1.FrontendComponentKind {
+		configData, err = dbconfig.FromFrontend(c.Frontend, c.ComponentKind)
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		configData, err = dbconfig.FromFrontend(c.Frontend, c.ComponentKind)
+		configData, err = dbconfig.FromCluster(c.Cluster, c.ComponentKind)
 		if err != nil {
 			return nil, err
 		}

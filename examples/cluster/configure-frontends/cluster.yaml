@@ -19,4 +19,3 @@ spec:
       - "etcd.etcd-cluster.svc.cluster.local:2379"
   datanode:
     replicas: 1
-
