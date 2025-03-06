@@ -322,6 +322,7 @@ type GreptimeDBClusterSpec struct {
 	Flownode *FlownodeSpec `json:"flownode,omitempty"`
 
 	// Frontends is a group of frontend nodes.
+	// +optional
 	Frontends []*FrontendSpec `json:"frontends,omitempty"`
 
 	// HTTPPort is the HTTP port of the greptimedb cluster.

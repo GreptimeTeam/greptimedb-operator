@@ -2,6 +2,7 @@ apiVersion: greptime.io/v1alpha1
 kind: GreptimeDBCluster
 metadata:
   name: configure-frontends-ingress
+  namespace: default
 spec:
   initializer:
     image: greptime-registry.cn-hangzhou.cr.aliyuncs.com/greptime/greptimedb-initializer:latest
