@@ -19,8 +19,10 @@ import (
 	"fmt"
 	"math/rand"
 	"net"
+	"net/http"
 	"os"
 	"os/exec"
+	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -85,6 +87,65 @@ func (h *Helper) RunSQLTest(ctx context.Context, addr string, sqlFile string) er
 	_, err = conn.Exec(context.Background(), string(data))
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// RunHTTPTest runs the HTTP request to the specified hostname with the given data.
+func (h *Helper) RunHTTPTest(hostname string, data string) error {
+	req, err := http.NewRequest("POST", hostname, strings.NewReader(data))
+	if err != nil {
+		return fmt.Errorf("failed to create HTTP request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	c := &http.Client{}
+	resp, err := c.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to run HTTP request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("unexpected HTTP response status: got %v, want %v", resp.StatusCode, http.StatusOK)
+	}
+
+	return nil
+}
+
+// AddIPToHosts adds the loadBalancer IP and url to the /etc/hosts file.
+func (h *Helper) AddIPToHosts(ip string, url string) error {
+	const (
+		hostsFile = "/etc/hosts"
+	)
+
+	// Read the current contents of the /etc/hosts file
+	content, err := os.ReadFile(hostsFile)
+	if err != nil {
+		return fmt.Errorf("failed to read file: %w", err)
+	}
+
+	// Check if the entry already exists
+	lines := strings.Split(string(content), "\n")
+	for _, line := range lines {
+		if strings.Contains(line, url) && strings.Contains(line, ip) {
+			return nil
+		}
+	}
+
+	// Prepare the new entry
+	newEntry := fmt.Sprintf("%s\t%s\n", ip, url)
+
+	// Append the new entry to the /etc/hosts file
+	f, err := os.OpenFile(hostsFile, os.O_APPEND|os.O_WRONLY, 0644)
+	if err != nil {
+		return fmt.Errorf("failed to open /etc/hosts for writing: %w", err)
+	}
+	defer f.Close()
+
+	if _, err = f.WriteString(newEntry); err != nil {
+		return fmt.Errorf("failed to write ingress ip to /etc/hosts: %w", err)
 	}
 
 	return nil

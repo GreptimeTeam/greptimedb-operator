@@ -156,11 +156,22 @@ type FrontendSpec struct {
 	// RollingUpdate is the rolling update configuration. We always use `RollingUpdate` strategyt.
 	// +optional
 	RollingUpdate *appsv1.RollingUpdateDeployment `json:"rollingUpdate,omitempty"`
+
+	// Ingress is the Ingress configuration of the frontend.
+	// +optional
+	Ingress *IngressSpec `json:"ingress,omitempty"`
 }
 
 func (in *FrontendSpec) GetTLS() *TLSSpec {
 	if in != nil {
 		return in.TLS
+	}
+	return nil
+}
+
+func (in *FrontendSpec) GetIngress() *IngressSpec {
+	if in != nil {
+		return in.Ingress
 	}
 	return nil
 }

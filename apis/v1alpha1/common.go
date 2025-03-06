@@ -16,6 +16,7 @@ package v1alpha1
 
 import (
 	corev1 "k8s.io/api/core/v1"
+	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -854,6 +855,21 @@ func (in *AZBlobStorage) GetRoot() string {
 		return in.Root
 	}
 	return ""
+}
+
+// IngressSpec defines the Ingress configuration.
+type IngressSpec struct {
+	// Annotations is the annotations for the ingress.
+	// +optional
+	Annotations map[string]string `json:"annotations,omitempty"`
+
+	// Labels is the labels for the ingress.
+	// +optional
+	Labels map[string]string `json:"labels,omitempty"`
+
+	// IngressSpec is the ingress specification.
+	// +optional
+	networkingv1.IngressSpec `json:",inline"`
 }
 
 // PrometheusMonitorSpec defines the PodMonitor configuration.
