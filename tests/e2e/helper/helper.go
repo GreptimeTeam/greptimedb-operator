@@ -137,9 +137,9 @@ func (h *Helper) AddIPToHosts(ip string, hostname string) error {
 	// Prepare the new entry
 	newEntry := fmt.Sprintf("%s\t%s\n", ip, hostname)
 
-	if err := os.Chmod(hostsFile, 0666); err != nil {
-		return fmt.Errorf("failed to change permissions on %s: %w", hostsFile, err)
-	}
+	//if err := os.Chmod(hostsFile, 0666); err != nil {
+	//	return fmt.Errorf("failed to change permissions on %s: %w", hostsFile, err)
+	//}
 
 	// Append the new entry to the /etc/hosts file
 	f, err := os.OpenFile(hostsFile, os.O_APPEND|os.O_WRONLY, 0644)
