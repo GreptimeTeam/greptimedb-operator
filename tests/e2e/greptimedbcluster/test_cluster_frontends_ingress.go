@@ -33,7 +33,7 @@ import (
 // TestClusterFrontendGroupIngress tests a frontend ingress cluster.
 func TestClusterFrontendGroupIngress(ctx context.Context, h *helper.Helper) {
 	const (
-		testCRFile              = "./testdata/resources/cluster/frontend-ingress/cluster.yaml"
+		testCRFile              = "./testdata/resources/cluster/frontends-ingress/cluster.yaml"
 		ingressNginxNamespace   = "ingress-nginx"
 		ingressNginxServiceName = "ingress-nginx-controller"
 		hostname                = "https://configure-frontend-ingress.example.com"
