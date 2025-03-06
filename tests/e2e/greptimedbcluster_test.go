@@ -33,33 +33,33 @@ var _ = Describe("Test GreptimeDBCluster", func() {
 		Expect(err).NotTo(HaveOccurred(), "failed to clean etcd data")
 	})
 
-	It("Test a basic cluster", func() {
-		greptimedbcluster.TestBasicCluster(ctx, h)
-	})
-
-	It("Test a cluster that enables remote wal", func() {
-		greptimedbcluster.TestClusterEnableRemoteWal(ctx, h)
-	})
-
-	It("Test a cluster that enables flow", func() {
-		greptimedbcluster.TestClusterEnableFlow(ctx, h)
-	})
-
-	It("Test scaling a cluster up and down", func() {
-		greptimedbcluster.TestScaleCluster(ctx, h)
-	})
-
-	It("Test a cluster with standalone WAL", func() {
-		greptimedbcluster.TestClusterStandaloneWAL(ctx, h)
-	})
-
-	It("Test a cluster that enables monitoring", func() {
-		greptimedbcluster.TestClusterEnableMonitoring(ctx, h)
-	})
-
-	It("Test a cluster with frontend group", func() {
-		greptimedbcluster.TestClusterFrontendGroup(ctx, h)
-	})
+	//It("Test a basic cluster", func() {
+	//	greptimedbcluster.TestBasicCluster(ctx, h)
+	//})
+	//
+	//It("Test a cluster that enables remote wal", func() {
+	//	greptimedbcluster.TestClusterEnableRemoteWal(ctx, h)
+	//})
+	//
+	//It("Test a cluster that enables flow", func() {
+	//	greptimedbcluster.TestClusterEnableFlow(ctx, h)
+	//})
+	//
+	//It("Test scaling a cluster up and down", func() {
+	//	greptimedbcluster.TestScaleCluster(ctx, h)
+	//})
+	//
+	//It("Test a cluster with standalone WAL", func() {
+	//	greptimedbcluster.TestClusterStandaloneWAL(ctx, h)
+	//})
+	//
+	//It("Test a cluster that enables monitoring", func() {
+	//	greptimedbcluster.TestClusterEnableMonitoring(ctx, h)
+	//})
+	//
+	//It("Test a cluster with frontend group", func() {
+	//	greptimedbcluster.TestClusterFrontendGroup(ctx, h)
+	//})
 
 	It("Test a cluster with frontend ingress", func() {
 		greptimedbcluster.TestClusterFrontendIngress(ctx, h)

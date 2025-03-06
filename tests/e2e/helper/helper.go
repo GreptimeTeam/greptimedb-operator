@@ -114,8 +114,8 @@ func (h *Helper) RunHTTPTest(hostname string, data string) error {
 	return nil
 }
 
-// AddIPToHosts adds the loadBalancer IP and url to the /etc/hosts file.
-func (h *Helper) AddIPToHosts(ip string, url string) error {
+// AddIPToHosts adds the loadBalancer IP and hostname to the /etc/hosts file.
+func (h *Helper) AddIPToHosts(ip string, hostname string) error {
 	const (
 		hostsFile = "/etc/hosts"
 	)
@@ -129,13 +129,17 @@ func (h *Helper) AddIPToHosts(ip string, url string) error {
 	// Check if the entry already exists
 	lines := strings.Split(string(content), "\n")
 	for _, line := range lines {
-		if strings.Contains(line, url) && strings.Contains(line, ip) {
+		if strings.Contains(line, hostname) && strings.Contains(line, ip) {
 			return nil
 		}
 	}
 
 	// Prepare the new entry
-	newEntry := fmt.Sprintf("%s\t%s\n", ip, url)
+	newEntry := fmt.Sprintf("%s\t%s\n", ip, hostname)
+
+	if err := os.Chmod(hostsFile, 0666); err != nil {
+		return fmt.Errorf("failed to change permissions on %s: %w", hostsFile, err)
+	}
 
 	// Append the new entry to the /etc/hosts file
 	f, err := os.OpenFile(hostsFile, os.O_APPEND|os.O_WRONLY, 0644)
