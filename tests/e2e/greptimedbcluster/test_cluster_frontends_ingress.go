@@ -46,6 +46,8 @@ func TestClusterFrontendGroupIngress(ctx context.Context, h *helper.Helper) {
 	      memory FLOAT64,
 	      PRIMARY KEY(host)
 	    );`
+
+		insertSQL = "sql=INSERT INTO monitor VALUES (\"127.0.0.1\", 1667446797450, 0.1, 0.4), (\"127.0.0.2\", 1667446798450, 0.2, 0.3), (\"127.0.0.1\", 1667446798450, 0.5, 0.2)"
 	)
 
 	By(fmt.Sprintf("greptimecluster test with CR file %s", testCRFile))
@@ -84,8 +86,7 @@ func TestClusterFrontendGroupIngress(ctx context.Context, h *helper.Helper) {
 	err = h.RunHTTPTest(hostname+"/v1/sql", data)
 	Expect(err).NotTo(HaveOccurred(), "failed to run HTTP test")
 
-	data = "sql=INSERT INTO monitor VALUES (\"127.0.0.1\", 1667446797450, 0.1, 0.4), (\"127.0.0.2\", 1667446798450, 0.2, 0.3), (\"127.0.0.1\", 1667446798450, 0.5, 0.2)"
-	err = h.RunHTTPTest(hostname+"/v1/sql", data)
+	err = h.RunHTTPTest(hostname+"/v1/sql", insertSQL)
 	Expect(err).NotTo(HaveOccurred(), "failed to run HTTP test")
 
 	err = h.RunHTTPTest(hostname+"/config", "")
