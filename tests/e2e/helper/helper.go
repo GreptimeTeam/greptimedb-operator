@@ -137,20 +137,26 @@ func (h *Helper) AddIPToHosts(ip string, host string) error {
 	// Prepare the new entry
 	newEntry := fmt.Sprintf("%s\t%s\n", ip, host)
 
-	if err := os.Chmod(hostsFile, 0777); err != nil {
-		return fmt.Errorf("failed to change permissions on %s: %w", hostsFile, err)
-	}
-
-	// Append the new entry to the /etc/hosts file
-	f, err := os.OpenFile(hostsFile, os.O_APPEND|os.O_WRONLY, 0644)
-	if err != nil {
-		return fmt.Errorf("failed to open /etc/hosts for writing: %w", err)
-	}
-	defer f.Close()
-
-	if _, err = f.WriteString(newEntry); err != nil {
+	// Use sudo to append the new entry to the /etc/hosts file
+	cmd := exec.Command("sudo", "sh", "-c", fmt.Sprintf("echo '%s' >> %s", newEntry, hostsFile))
+	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed to write ingress ip to /etc/hosts: %w", err)
 	}
+
+	//if err := os.Chmod(hostsFile, 0777); err != nil {
+	//	return fmt.Errorf("failed to change permissions on %s: %w", hostsFile, err)
+	//}
+	//
+	//// Append the new entry to the /etc/hosts file
+	//f, err := os.OpenFile(hostsFile, os.O_APPEND|os.O_WRONLY, 0644)
+	//if err != nil {
+	//	return fmt.Errorf("failed to open /etc/hosts for writing: %w", err)
+	//}
+	//defer f.Close()
+	//
+	//if _, err = f.WriteString(newEntry); err != nil {
+	//	return fmt.Errorf("failed to write ingress ip to /etc/hosts: %w", err)
+	//}
 
 	return nil
 }
