@@ -19,7 +19,7 @@ spec:
           dedicated: configure-frontends-ingress
         ingressClassName: nginx
         rules:
-          - host: configure-frontend-ingress.example.com
+          - host: configure-frontends-ingress.example.com
             http:
               paths:
                 - backend:
@@ -38,7 +38,7 @@ spec:
           dedicated: configure-frontends-ingress
         ingressClassName: nginx
         rules:
-          - host: configure-frontend-ingress.example.com
+          - host: configure-frontends-ingress.example.com
             http:
               paths:
                 - backend:

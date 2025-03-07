@@ -93,8 +93,8 @@ func (h *Helper) RunSQLTest(ctx context.Context, addr string, sqlFile string) er
 }
 
 // RunHTTPTest runs the HTTP request to the specified hostname with the given data.
-func (h *Helper) RunHTTPTest(hostname string, data string) error {
-	req, err := http.NewRequest("POST", hostname, strings.NewReader(data))
+func (h *Helper) RunHTTPTest(url string, data string) error {
+	req, err := http.NewRequest("POST", url, strings.NewReader(data))
 	if err != nil {
 		return fmt.Errorf("failed to create HTTP request: %w", err)
 	}
@@ -114,8 +114,8 @@ func (h *Helper) RunHTTPTest(hostname string, data string) error {
 	return nil
 }
 
-// AddIPToHosts adds the loadBalancer IP and hostname to the /etc/hosts file.
-func (h *Helper) AddIPToHosts(ip string, hostname string) error {
+// AddIPToHosts adds the loadBalancer IP and host to the /etc/hosts file.
+func (h *Helper) AddIPToHosts(ip string, host string) error {
 	const (
 		hostsFile = "/etc/hosts"
 	)
@@ -129,17 +129,17 @@ func (h *Helper) AddIPToHosts(ip string, hostname string) error {
 	// Check if the entry already exists
 	lines := strings.Split(string(content), "\n")
 	for _, line := range lines {
-		if strings.Contains(line, hostname) && strings.Contains(line, ip) {
+		if strings.Contains(line, host) && strings.Contains(line, ip) {
 			return nil
 		}
 	}
 
 	// Prepare the new entry
-	newEntry := fmt.Sprintf("%s\t%s\n", ip, hostname)
+	newEntry := fmt.Sprintf("%s\t%s\n", ip, host)
 
-	//if err := os.Chmod(hostsFile, 0666); err != nil {
-	//	return fmt.Errorf("failed to change permissions on %s: %w", hostsFile, err)
-	//}
+	if err := os.Chmod(hostsFile, 0777); err != nil {
+		return fmt.Errorf("failed to change permissions on %s: %w", hostsFile, err)
+	}
 
 	// Append the new entry to the /etc/hosts file
 	f, err := os.OpenFile(hostsFile, os.O_APPEND|os.O_WRONLY, 0644)

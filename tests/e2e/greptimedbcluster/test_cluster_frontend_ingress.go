@@ -35,7 +35,7 @@ func TestClusterFrontendIngress(ctx context.Context, h *helper.Helper) {
 		testCRFile              = "./testdata/resources/cluster/frontend-ingress/cluster.yaml"
 		ingressNginxNamespace   = "ingress-nginx"
 		ingressNginxServiceName = "ingress-nginx-controller"
-		hostname                = "https://configure-frontend-ingress.example.com"
+		host                    = "configure-frontend-ingress.example.com"
 	)
 
 	By(fmt.Sprintf("greptimecluster test with CR file %s", testCRFile))
@@ -67,15 +67,15 @@ func TestClusterFrontendIngress(ctx context.Context, h *helper.Helper) {
 	By("Run distributed HTTP test")
 	ingressIP, err := h.GetIngressIP(ctx, ingressNginxNamespace, ingressNginxServiceName)
 	Expect(err).NotTo(HaveOccurred(), "failed to get ingress ip")
-	err = h.AddIPToHosts(ingressIP, hostname)
+	err = h.AddIPToHosts(ingressIP, host)
 	Expect(err).NotTo(HaveOccurred(), "failed to add ip to host")
 
 	data := "sql=show tables"
-	err = h.RunHTTPTest(hostname+"/v1/sql", data)
+	err = h.RunHTTPTest("http://"+host+"/v1/sql", data)
 	Expect(err).NotTo(HaveOccurred(), "failed to run HTTP test")
 
 	data = "sql=SELECT * FROM numbers"
-	err = h.RunHTTPTest(hostname+"/v1/sql", data)
+	err = h.RunHTTPTest("http://"+host+"/v1/sql", data)
 	Expect(err).NotTo(HaveOccurred(), "failed to run HTTP test")
 
 	By("Delete cluster")

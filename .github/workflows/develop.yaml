@@ -96,7 +96,7 @@ jobs:
 
   e2e:
     name: Run e2e
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     steps:
       - name: Checkout sources
         uses: actions/checkout@v4
