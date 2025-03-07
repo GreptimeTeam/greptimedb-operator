@@ -94,7 +94,7 @@ func (h *Helper) RunSQLTest(ctx context.Context, addr string, sqlFile string) er
 
 // RunHTTPTest runs the HTTP request to the specified hostname with the given data.
 func (h *Helper) RunHTTPTest(url string, data string) error {
-	req, err := http.NewRequest("POST", url, strings.NewReader(data))
+	req, err := http.NewRequest(http.MethodPost, url, strings.NewReader(data))
 	if err != nil {
 		return fmt.Errorf("failed to create HTTP request: %w", err)
 	}

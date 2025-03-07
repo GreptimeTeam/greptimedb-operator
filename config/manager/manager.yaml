@@ -46,6 +46,8 @@ spec:
         image: controller:latest
         imagePullPolicy: IfNotPresent
         name: manager
+        securityContext:
+          runAsUser: 0
         livenessProbe:
           httpGet:
             path: /healthz
