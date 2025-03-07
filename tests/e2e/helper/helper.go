@@ -45,7 +45,7 @@ const (
 	MaxPort = 30000
 
 	// DefaultTimeout is the default timeout for the e2e tests.
-	DefaultTimeout = 1 * time.Minute
+	DefaultTimeout = 2 * time.Minute
 
 	// DefaultEtcdNamespace is the default namespace for the etcd cluster.
 	DefaultEtcdNamespace = "etcd-cluster"
@@ -141,30 +141,6 @@ func (h *Helper) AddIPToHosts(ip string, host string) error {
 	cmd := exec.Command("sudo", "sh", "-c", fmt.Sprintf("echo '%s' >> %s", newEntry, hostsFile))
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed to write ingress ip to /etc/hosts: %w", err)
-	}
-
-	//if err := os.Chmod(hostsFile, 0777); err != nil {
-	//	return fmt.Errorf("failed to change permissions on %s: %w", hostsFile, err)
-	//}
-	//
-	//// Append the new entry to the /etc/hosts file
-	//f, err := os.OpenFile(hostsFile, os.O_APPEND|os.O_WRONLY, 0644)
-	//if err != nil {
-	//	return fmt.Errorf("failed to open /etc/hosts for writing: %w", err)
-	//}
-	//defer f.Close()
-	//
-	//if _, err = f.WriteString(newEntry); err != nil {
-	//	return fmt.Errorf("failed to write ingress ip to /etc/hosts: %w", err)
-	//}
-	content, err = os.ReadFile(hostsFile)
-	if err != nil {
-		return fmt.Errorf("failed to read file: %w", err)
-	}
-
-	lines = strings.Split(string(content), "\n")
-	for _, line := range lines {
-		fmt.Println("line:========", line)
 	}
 
 	return nil

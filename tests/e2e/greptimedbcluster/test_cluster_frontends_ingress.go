@@ -74,6 +74,9 @@ func TestClusterFrontendGroupIngress(ctx context.Context, h *helper.Helper) {
 		return nil
 	}, helper.DefaultTimeout, time.Second).ShouldNot(HaveOccurred())
 
+	// Wait for GreptimeDB cluster ready.
+	time.Sleep(15 * time.Second)
+
 	err = h.Get(ctx, client.ObjectKey{Name: testCluster.Name, Namespace: testCluster.Namespace}, testCluster)
 	Expect(err).NotTo(HaveOccurred(), "failed to get cluster")
 
