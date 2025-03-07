@@ -93,8 +93,8 @@ func (h *Helper) RunSQLTest(ctx context.Context, addr string, sqlFile string) er
 }
 
 // RunHTTPTest runs the HTTP request to the specified hostname with the given data.
-func (h *Helper) RunHTTPTest(url string, data string) error {
-	req, err := http.NewRequest(http.MethodPost, url, strings.NewReader(data))
+func (h *Helper) RunHTTPTest(url, data, httpMethod string) error {
+	req, err := http.NewRequest(httpMethod, url, strings.NewReader(data))
 	if err != nil {
 		return fmt.Errorf("failed to create HTTP request: %w", err)
 	}
@@ -157,6 +157,15 @@ func (h *Helper) AddIPToHosts(ip string, host string) error {
 	//if _, err = f.WriteString(newEntry); err != nil {
 	//	return fmt.Errorf("failed to write ingress ip to /etc/hosts: %w", err)
 	//}
+	content, err = os.ReadFile(hostsFile)
+	if err != nil {
+		return fmt.Errorf("failed to read file: %w", err)
+	}
+
+	lines = strings.Split(string(content), "\n")
+	for _, line := range lines {
+		fmt.Println("line:========", line)
+	}
 
 	return nil
 }

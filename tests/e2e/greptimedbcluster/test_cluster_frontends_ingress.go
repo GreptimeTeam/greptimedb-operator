@@ -17,6 +17,7 @@ package greptimedbcluster
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"net/url"
 	"time"
 
@@ -83,13 +84,13 @@ func TestClusterFrontendGroupIngress(ctx context.Context, h *helper.Helper) {
 	Expect(err).NotTo(HaveOccurred(), "failed to add ip to host")
 
 	data := fmt.Sprintf("sql=%s", url.QueryEscape(createTableSQL))
-	err = h.RunHTTPTest("http://"+host+"/v1/sql", data)
+	err = h.RunHTTPTest("http://"+host+"/v1/sql", data, http.MethodPost)
 	Expect(err).NotTo(HaveOccurred(), "failed to run HTTP test")
 
-	err = h.RunHTTPTest("http://"+host+"/v1/sql", insertSQL)
+	err = h.RunHTTPTest("http://"+host+"/v1/sql", insertSQL, http.MethodPost)
 	Expect(err).NotTo(HaveOccurred(), "failed to run HTTP test")
 
-	err = h.RunHTTPTest("http://"+host+"/config", "")
+	err = h.RunHTTPTest("http://"+host+"/config", "", http.MethodGet)
 	Expect(err).NotTo(HaveOccurred(), "failed to run HTTP test")
 
 	By("Delete cluster")

@@ -17,6 +17,7 @@ package greptimedbcluster
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"time"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -67,15 +68,18 @@ func TestClusterFrontendIngress(ctx context.Context, h *helper.Helper) {
 	By("Run distributed HTTP test")
 	ingressIP, err := h.GetIngressIP(ctx, ingressNginxNamespace, ingressNginxServiceName)
 	Expect(err).NotTo(HaveOccurred(), "failed to get ingress ip")
+
+	By("Add ingress ip to hosts")
+	fmt.Println("ingress ip=======:", ingressIP, host)
 	err = h.AddIPToHosts(ingressIP, host)
 	Expect(err).NotTo(HaveOccurred(), "failed to add ip to host")
 
 	data := "sql=show tables"
-	err = h.RunHTTPTest("http://"+host+"/v1/sql", data)
+	err = h.RunHTTPTest("http://"+host+"/v1/sql", data, http.MethodPost)
 	Expect(err).NotTo(HaveOccurred(), "failed to run HTTP test")
 
 	data = "sql=SELECT * FROM numbers"
-	err = h.RunHTTPTest("http://"+host+"/v1/sql", data)
+	err = h.RunHTTPTest("http://"+host+"/v1/sql", data, http.MethodPost)
 	Expect(err).NotTo(HaveOccurred(), "failed to run HTTP test")
 
 	By("Delete cluster")
