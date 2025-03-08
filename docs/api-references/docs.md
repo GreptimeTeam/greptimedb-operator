@@ -261,6 +261,7 @@ _Appears in:_
 | `service` _[ServiceSpec](#servicespec)_ | Service is the service configuration of the frontend. |  |  |
 | `tls` _[TLSSpec](#tlsspec)_ | TLS is the TLS configuration of the frontend. |  |  |
 | `rollingUpdate` _[RollingUpdateDeployment](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#rollingupdatedeployment-v1-apps)_ | RollingUpdate is the rolling update configuration. We always use `RollingUpdate` strategyt. |  |  |
+| `ingress` _[IngressSpec](#ingressspec)_ | Ingress is the Ingress configuration of the frontend. |  |  |
 
 
 #### FrontendStatus
@@ -440,6 +441,27 @@ _Appears in:_
 | `rollingUpdate` _[RollingUpdateStatefulSetStrategy](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#rollingupdatestatefulsetstrategy-v1-apps)_ | RollingUpdate is the rolling update configuration. We always use `RollingUpdate` strategy. |  |  |
 
 
+
+
+#### IngressSpec
+
+
+
+IngressSpec defines the Ingress configuration.
+
+
+
+_Appears in:_
+- [FrontendSpec](#frontendspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `annotations` _object (keys:string, values:string)_ | Annotations is the annotations for the ingress. |  |  |
+| `labels` _object (keys:string, values:string)_ | Labels is the labels for the ingress. |  |  |
+| `ingressClassName` _string_ | ingressClassName is the name of an IngressClass cluster resource. Ingress<br />controller implementations use this field to know whether they should be<br />serving this Ingress resource, by a transitive connection<br />(controller -> IngressClass -> Ingress resource). Although the<br />`kubernetes.io/ingress.class` annotation (simple constant name) was never<br />formally defined, it was widely supported by Ingress controllers to create<br />a direct binding between Ingress controller and Ingress resources. Newly<br />created Ingress resources should prefer using the field. However, even<br />though the annotation is officially deprecated, for backwards compatibility<br />reasons, ingress controllers should still honor that annotation if present. |  |  |
+| `defaultBackend` _[IngressBackend](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#ingressbackend-v1-networking)_ | defaultBackend is the backend that should handle requests that don't<br />match any rule. If Rules are not specified, DefaultBackend must be specified.<br />If DefaultBackend is not set, the handling of requests that do not match any<br />of the rules will be up to the Ingress controller. |  |  |
+| `tls` _[IngressTLS](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#ingresstls-v1-networking) array_ | tls represents the TLS configuration. Currently the Ingress only supports a<br />single TLS port, 443. If multiple members of this list specify different hosts,<br />they will be multiplexed on the same port according to the hostname specified<br />through the SNI TLS extension, if the ingress controller fulfilling the<br />ingress supports SNI. |  |  |
+| `rules` _[IngressRule](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#ingressrule-v1-networking) array_ | rules is a list of host rules used to configure the Ingress. If unspecified,<br />or no rule matches, all traffic is sent to the default backend. |  |  |
 
 
 #### InitializerSpec
