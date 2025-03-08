@@ -360,6 +360,7 @@ func (b *frontendBuilder) generateIngress(frontend *v1alpha1.FrontendSpec) {
 		},
 		Spec: frontend.Ingress.IngressSpec,
 	}
+
 	b.Objects = append(b.Objects, ing)
 }
 
@@ -372,13 +373,13 @@ func (b *frontendBuilder) BuildIngress() deployer.Builder {
 		return b
 	}
 
-	if b.Cluster.GetFrontend().GetIngress() != nil {
+	if b.Cluster.GetFrontend().GetIngress() != nil && len(b.Cluster.GetFrontend().GetIngress().Rules) != 0 {
 		b.generateIngress(b.Cluster.GetFrontend())
 	}
 
 	if len(b.Cluster.GetFrontends()) != 0 {
 		for _, frontend := range b.Cluster.Spec.Frontends {
-			if frontend.GetIngress() != nil {
+			if frontend.GetIngress() != nil && len(frontend.GetIngress().Rules) != 0 {
 				b.generateIngress(frontend)
 			}
 		}

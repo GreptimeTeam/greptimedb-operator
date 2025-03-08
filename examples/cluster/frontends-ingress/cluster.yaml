@@ -18,20 +18,20 @@ spec:
           dedicated: configure-frontends-ingress
         ingressClassName: nginx
         rules:
-          - host: configure-frontend-ingress.example.com
+          - host: configure-frontends-ingress.example.com
             http:
               paths:
-                - backend:
-                    service:
-                      name: configure-frontends-ingress-frontend-read
-                      port:
-                        number: 4000
-                  path: /health
-                  pathType: Prefix
+              - backend:
+                  service:
+                    name: configure-frontends-ingress-frontend-read
+                    port:
+                      number: 4000
+                path: /config
+                pathType: Prefix
         tls:
-          - hosts:
-              - configure-frontend-ingress.example.com
-            secretName: configure-frontend-ingress-tls
+        - hosts:
+            - configure-frontends-ingress.example.com
+          secretName: configure-frontends-ingress-frontend-read-tls
     - name: write
       replicas: 1
       ingress:
@@ -41,20 +41,20 @@ spec:
           dedicated: configure-frontends-ingress
         ingressClassName: nginx
         rules:
-          - host: configure-frontend-ingress.example.com
+          - host: configure-frontends-ingress.example.com
             http:
               paths:
-                - backend:
-                    service:
-                      name: configure-frontends-ingress-frontend-write
-                      port:
-                        number: 4000
-                  path: /v1/sql
-                  pathType: Prefix
+              - backend:
+                  service:
+                    name: configure-frontends-ingress-frontend-write
+                    port:
+                      number: 4000
+                path: /v1/sql
+                pathType: Prefix
         tls:
-          - hosts:
-              - configure-frontend-ingress.example.com
-            secretName: configure-frontend-ingress-tls
+        - hosts:
+            - configure-frontends-ingress.example.com
+          secretName: configure-frontends-ingress-frontend-write-tls
   meta:
     replicas: 1
     etcdEndpoints:

@@ -30,7 +30,7 @@ spec:
       tls:
       - hosts:
         - configure-frontend-ingress.example.com
-        secretName: configure-frontend-ingress-tls
+        secretName: configure-frontend-ingress-frontend-tls
   meta:
     replicas: 1
     etcdEndpoints:

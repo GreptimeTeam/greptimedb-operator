@@ -22,13 +22,13 @@ spec:
           - host: configure-frontends-ingress.example.com
             http:
               paths:
-                - backend:
-                    service:
-                      name: configure-frontends-ingress-frontend-read
-                      port:
-                        number: 4000
-                  path: /config
-                  pathType: Prefix
+              - backend:
+                  service:
+                    name: configure-frontends-ingress-frontend-read
+                    port:
+                      number: 4000
+                path: /config
+                pathType: Prefix
     - name: write
       replicas: 1
       ingress:
@@ -41,13 +41,13 @@ spec:
           - host: configure-frontends-ingress.example.com
             http:
               paths:
-                - backend:
-                    service:
-                      name: configure-frontends-ingress-frontend-write
-                      port:
-                        number: 4000
-                  path: /v1/sql
-                  pathType: Prefix
+              - backend:
+                  service:
+                    name: configure-frontends-ingress-frontend-write
+                    port:
+                      number: 4000
+                path: /v1/sql
+                pathType: Prefix
   meta:
     replicas: 1
     etcdEndpoints:
