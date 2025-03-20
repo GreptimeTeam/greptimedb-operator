@@ -361,6 +361,37 @@ func (b *frontendBuilder) generateIngress(frontend *v1alpha1.FrontendSpec) {
 		Spec: frontend.Ingress.IngressSpec,
 	}
 
+	// Forward to frontend service when backend is not set.
+	const (
+		defaultPath = "/"
+	)
+	if len(ing.Spec.Rules) != 0 {
+		for i := range ing.Spec.Rules {
+			rule := &ing.Spec.Rules[i]
+			if rule.HTTP == nil {
+				rule.HTTP = &networkingv1.HTTPIngressRuleValue{
+					Paths: []networkingv1.HTTPIngressPath{
+						{
+							Backend: networkingv1.IngressBackend{
+								Service: &networkingv1.IngressServiceBackend{
+									Name: name,
+									Port: networkingv1.ServiceBackendPort{
+										Number: b.Cluster.Spec.HTTPPort,
+									},
+								},
+							},
+							Path: defaultPath,
+							PathType: func() *networkingv1.PathType {
+								pathType := networkingv1.PathTypePrefix
+								return &pathType
+							}(),
+						},
+					},
+				}
+			}
+		}
+	}
+
 	b.Objects = append(b.Objects, ing)
 }
 
@@ -373,13 +404,13 @@ func (b *frontendBuilder) BuildIngress() deployer.Builder {
 		return b
 	}
 
-	if b.Cluster.GetFrontend().GetIngress() != nil && len(b.Cluster.GetFrontend().GetIngress().Rules) != 0 {
+	if b.Cluster.GetFrontend() != nil && b.Cluster.GetFrontend().GetIngress() != nil {
 		b.generateIngress(b.Cluster.GetFrontend())
 	}
 
 	if len(b.Cluster.GetFrontends()) != 0 {
 		for _, frontend := range b.Cluster.Spec.Frontends {
-			if frontend.GetIngress() != nil && len(frontend.GetIngress().Rules) != 0 {
+			if frontend.GetIngress() != nil {
 				b.generateIngress(frontend)
 			}
 		}
