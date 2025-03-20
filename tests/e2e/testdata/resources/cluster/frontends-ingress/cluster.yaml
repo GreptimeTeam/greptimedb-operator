@@ -20,15 +20,6 @@ spec:
         ingressClassName: nginx
         rules:
           - host: configure-frontends-ingress.example.com
-            http:
-              paths:
-              - backend:
-                  service:
-                    name: configure-frontends-ingress-frontend-read
-                    port:
-                      number: 4000
-                path: /config
-                pathType: Prefix
     - name: write
       replicas: 1
       ingress:
