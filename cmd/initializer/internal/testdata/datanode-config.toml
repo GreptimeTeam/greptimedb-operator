@@ -12,6 +12,8 @@ connect_timeout_millis = 5000
 tcp_nodelay = true
 
 [wal]
+provider = 'raft_engine'
+dir = './greptimedb_data/wal'
 file_size = '1GB'
 purge_threshold = '50GB'
 purge_interval = '10m'
@@ -20,7 +22,7 @@ sync_write = false
 
 [storage]
 type = 'File'
-data_home = '/tmp/greptimedb/'
+data_home = './greptimedb_data/'
 
 [storage.manifest]
 checkpoint_margin = 10
@@ -39,5 +41,5 @@ max_retry_times = 3
 retry_delay = '500ms'
 
 [logging]
-dir = '/tmp/greptimedb/logs'
+dir = './greptimedb_data/logs'
 level = 'info'
