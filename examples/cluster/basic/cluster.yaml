@@ -3,9 +3,11 @@ kind: GreptimeDBCluster
 metadata:
   name: basic
 spec:
+  initializer:
+    image: greptime-registry.cn-hangzhou.cr.aliyuncs.com/greptime/greptimedb-initializer:latest
   base:
     main:
-      image: greptime/greptimedb:latest
+      image: greptime-registry.cn-hangzhou.cr.aliyuncs.com/greptime/greptimedb:latest
   frontend:
     replicas: 1
   meta:
@@ -13,4 +15,4 @@ spec:
     etcdEndpoints:
       - "etcd.etcd-cluster.svc.cluster.local:2379"
   datanode:
-    replicas: 1
+    replicas: 3
