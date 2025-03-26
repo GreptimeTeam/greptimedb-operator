@@ -66,4 +66,4 @@ The script checks for the following conditions and provides relevant error messa
 
 ## Next
 
-After executing the script, you will also need to manually delete object storage files and PG backend data, etc.
+After executing the script, you will also need to manually delete object storage files and RDS backend data, etc.

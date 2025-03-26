@@ -49,7 +49,9 @@ fi
 PVC_LABEL="app.greptime.io/component=${NAME}-datanode"
 
 # Find and delete PVCs with the specified label
+if [[ -n "$NAME" && -n "$NAMESPACE" ]]; then
 PVCS=$(kubectl get pvc -n "$NAMESPACE" -l "$PVC_LABEL" -o jsonpath='{.items[*].metadata.name}')
+fi
 
 if [ -z "$PVCS" ]; then
     echo -e "${RED}No PVCs found.${RESET}"
@@ -74,6 +76,10 @@ else
     done
 fi
 
+if [[ -z "$ETCD_NAME" || -z "$ETCD_NAMESPACE" ]]; then
+    exit 0
+fi
+
 # Clean up etcd data
 echo -e "${YELLOW}Starting etcd data cleanup...${RESET}"
 
@@ -81,7 +87,7 @@ echo -e "${YELLOW}Starting etcd data cleanup...${RESET}"
 ETCD_SELECTOR=$(kubectl get statefulset -n "$ETCD_NAMESPACE" "$ETCD_NAME" -o jsonpath='{.spec.selector.matchLabels}' | jq -r 'to_entries|map("\(.key)=\(.value|tostring)")|join(",")')
 
 if [ -z "$ETCD_SELECTOR" ]; then
-    echo -e "${RED}Failed to get StatefulSet ${ETCD_NAME} in namespace ${ETCD_NAMESPACE}${RESET}"
+    echo -e "${RED}Failed to get ETCD StatefulSet ${ETCD_NAME} in namespace ${ETCD_NAMESPACE}${RESET}"
     exit 1
 fi
 

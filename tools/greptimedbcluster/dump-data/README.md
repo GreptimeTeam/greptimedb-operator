@@ -1,4 +1,4 @@
-# Dump GreptimeDB data Script
+# Dump data Script
 
 This script collects various information about a GreptimeDB cluster and its associated resources in Kubernetes. It gathers global resource information, specific cluster details, ETCD status, pod information, and SQL queries execution results, packaging all the data into a compressed file.
 
@@ -42,9 +42,9 @@ This script collects various information about a GreptimeDB cluster and its asso
 ├── 1_global_resources.txt           # Global resources information
 ├── 2_cluster_<namespace>_<name>.txt # Cluster-specific details
 ├── 3_etcd_status.txt                # ETCD pod status and health information
+├── 4_pod_<pod-name>_info.txt        # Pod descriptions and configurations
 ├── 5_information_schema_table.txt   # Results from SQL queries
 ├── pod_logs/
-│   ├── pod_<pod-name>_info.txt       # Pod descriptions and configurations
-│   ├── pod_<pod-name>.log            # Current logs of the pod
+│   ├── pod_<pod-name>_info.txt       # Current logs of the pod 
 │   └── pod_<pod-name>_previous.log   # Previous logs of the pod
 ```

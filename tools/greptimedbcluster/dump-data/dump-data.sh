@@ -52,22 +52,25 @@ echo -e "${CYAN}[2/6] Collecting cluster (${NAMESPACE}/${NAME}) information...${
 } > "${OUTPUT_DIR}/2_cluster_${NAMESPACE}_${NAME}.txt"
 
 # Get etcd StatefulSet pods
+if [[ -n "$ETCD_NAME" || -n "$ETCD_NAMESPACE" ]]; then
 ETCD_SELECTOR=$(kubectl get statefulset -n "$ETCD_NAMESPACE" "$ETCD_NAME" -o jsonpath='{.spec.selector.matchLabels}' | jq -r 'to_entries|map("\(.key)=\(.value|tostring)")|join(",")')
+fi
 
 if [ -z "$ETCD_SELECTOR" ]; then
-    echo -e "${RED}Failed to get StatefulSet ${ETCD_NAME} in namespace ${ETCD_NAMESPACE}${RESET}"
-    exit 1
+    echo -e "${RED}Failed to get ETCD StatefulSet ${ETCD_NAME} in namespace ${ETCD_NAMESPACE}${RESET}"
 fi
 
 # Get only Running etcd pods using the StatefulSet's selector
+if [[ -n "$ETCD_NAME" || -n "$ETCD_NAMESPACE" ]]; then
 ETCD_PODS=$(kubectl get pods -n "$ETCD_NAMESPACE" -l "$ETCD_SELECTOR" --field-selector status.phase=Running -o jsonpath='{.items[*].metadata.name}')
+fi
 
 if [ -z "$ETCD_PODS" ]; then
     echo -e "${RED}No Running etcd pods found for StatefulSet '${ETCD_NAME}' in namespace '${ETCD_NAMESPACE}'.${RESET}"
-    exit 1
 fi
 
 # Collect ETCD status
+if [[ -n "$ETCD_NAME" && -n "$ETCD_NAMESPACE" ]]; then
 echo -e "${CYAN}[3/6] Collecting ETCD status...${RESET}"
 {
   echo "===== ETCD Pod Status ====="
@@ -83,6 +86,7 @@ echo -e "${CYAN}[3/6] Collecting ETCD status...${RESET}"
     timeout 30 kubectl logs -n "${ETCD_NAMESPACE}" "${pod}" > "${OUTPUT_DIR}/pod_logs/${pod}.log" 2>&1
   done
 } > "${OUTPUT_DIR}/3_etcd_status.txt"
+fi
 
 # Collect pod details and logs
 echo -e "${CYAN}[4/6] Collecting pod details and logs...${RESET}"
@@ -96,7 +100,7 @@ kubectl get pods -n "${NAMESPACE}" -o name | while read -r pod; do
 
     echo -e "\n\n===== Pod Configuration ====="
     kubectl get -n "${NAMESPACE}" "${pod}" -oyaml
-  } > "${OUTPUT_DIR}/pod_${pod_name}_info.txt"
+  } > "${OUTPUT_DIR}/4_pod_${pod_name}_info.txt"
 
   # Collect logs with a timeout to prevent hanging
   timeout 30 kubectl logs -n "${NAMESPACE}" "${pod}" --all-containers=true --timestamps > "${OUTPUT_DIR}/pod_logs/${pod_name}.log" 2>&1 || true
@@ -106,7 +110,7 @@ kubectl get pods -n "${NAMESPACE}" -o name | while read -r pod; do
 done
 
 sql_query() {
-  local query="$1"
+  local query=$1
 
   # Get the frontend pod name
   FRONTEND=$(kubectl get pods -n "$NAMESPACE" --no-headers | grep "^$NAME-frontend" | awk '{print $1}' | head -n 1)
@@ -117,7 +121,7 @@ sql_query() {
   fi
 
   # Get the raw JSON data
-  response=$(kubectl exec -it "$FRONTEND" -n "$NAMESPACE" -- /bin/bash -c "curl -s -X POST -H 'Content-Type: application/x-www-form-urlencoded' -d 'sql=${query}' http://localhost:4000/v1/sql")
+  response=$(kubectl exec -it "$FRONTEND" -n "$NAMESPACE" -- /bin/bash -c "curl -s -X POST -H 'Content-Type: application/x-www-form-urlencoded' -d 'sql=$query' http://localhost:4000/v1/sql")
 
   # Extract column names
   columns=$(echo "$response" | tr -d '\n' | grep -o '"column_schemas":\[.*\]' | grep -o '"name":"[^"]*"' | sed 's/"name":"//;s/"//g')
@@ -179,11 +183,11 @@ sql_query() {
 # Collect information_schema table
 echo -e "${CYAN}[5/6] Collecting information_schema table...${RESET}"
 {
-    echo -e "\n\n===== build_info Table ====="
-    sql_query 'SELECT * FROM build_info'
+    echo "\n\n===== build_info Table ====="
+    sql_query "SELECT * FROM information_schema.build_info"
 
-    echo -e "\n\n===== cluster_info Table ====="
-    sql_query 'SELECT * FROM cluster_info'
+    echo "\n\n===== cluster_info Table ====="
+    sql_query "SELECT * FROM information_schema.cluster_info"
 
 } > "${OUTPUT_DIR}/5_information_schema_table.txt" 2>&1
 
