@@ -727,6 +727,12 @@ type S3Storage struct {
 	// The endpoint of the bucket.
 	// +optional
 	Endpoint string `json:"endpoint,omitempty"`
+
+	// Enable virtual host style so that opendal will send API requests in virtual host style instead of path style.
+	// By default, opendal will send API to 'https://s3.us-east-1.amazonaws.com/${BUCKET_NAME}'.
+	// Enabled, opendal will send API to 'https://${BUCKET_NAME}.s3.us-east-1.amazonaws.com'.
+	// +optional
+	EnableVirtualHostStyle bool `json:"enableVirtualHostStyle,omitempty"`
 }
 
 func (in *S3Storage) GetSecretName() string {

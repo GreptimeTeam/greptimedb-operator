@@ -21619,6 +21619,8 @@ spec:
                             properties:
                               bucket:
                                 type: string
+                              enableVirtualHostStyle:
+                                type: boolean
                               endpoint:
                                 type: string
                               region:
@@ -21859,6 +21861,8 @@ spec:
                     properties:
                       bucket:
                         type: string
+                      enableVirtualHostStyle:
+                        type: boolean
                       endpoint:
                         type: string
                       region:
