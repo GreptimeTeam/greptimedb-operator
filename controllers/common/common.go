@@ -198,7 +198,7 @@ func GeneratePodTemplateSpec(kind v1alpha1.ComponentKind, template *v1alpha1.Pod
 	return spec
 }
 
-func FileStorageToPVC(fs v1alpha1.FileStorageAccessor, fsType FileStorageType) *corev1.PersistentVolumeClaim {
+func FileStorageToPVC(name string, fs v1alpha1.FileStorageAccessor, fsType FileStorageType, kind v1alpha1.ComponentKind) *corev1.PersistentVolumeClaim {
 	var (
 		labels      map[string]string
 		annotations map[string]string
@@ -207,15 +207,19 @@ func FileStorageToPVC(fs v1alpha1.FileStorageAccessor, fsType FileStorageType) *
 	switch fsType {
 	case FileStorageTypeWAL:
 		labels = map[string]string{
-			FileStorageTypeLabelKey: string(FileStorageTypeWAL),
+			FileStorageTypeLabelKey:          string(FileStorageTypeWAL),
+			constant.GreptimeDBComponentName: ResourceName(name, kind),
 		}
 	case FileStorageTypeCache:
 		labels = map[string]string{
-			FileStorageTypeLabelKey: string(FileStorageTypeCache),
+			FileStorageTypeLabelKey:          string(FileStorageTypeCache),
+			constant.GreptimeDBComponentName: ResourceName(name, kind),
 		}
 	default:
-		// For legacy datanode PVCs, we don't need to set the file storage type label because statefulset doesn't support to modify the PVC labels.
-		labels = nil
+		// Add common label: 'app.greptime.io/component: ${CLUSTER_NAME}-${RESOURCE_KIND}'.
+		labels = map[string]string{
+			constant.GreptimeDBComponentName: ResourceName(name, kind),
+		}
 	}
 
 	if fs.GetLabels() != nil {

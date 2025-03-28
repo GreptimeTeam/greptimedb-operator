@@ -489,17 +489,17 @@ func (b *datanodeBuilder) generatePVCs() []corev1.PersistentVolumeClaim {
 
 	// It's always not nil because it's the default value.
 	if fs := b.Cluster.GetDatanode().GetFileStorage(); fs != nil {
-		claims = append(claims, *common.FileStorageToPVC(fs, common.FileStorageTypeDatanode))
+		claims = append(claims, *common.FileStorageToPVC(b.Cluster.Name, fs, common.FileStorageTypeDatanode, b.ComponentKind))
 	}
 
 	// Allocate the standalone WAL storage for the raft-engine.
 	if fs := b.Cluster.GetWALProvider().GetRaftEngineWAL().GetFileStorage(); fs != nil {
-		claims = append(claims, *common.FileStorageToPVC(fs, common.FileStorageTypeWAL))
+		claims = append(claims, *common.FileStorageToPVC(b.Cluster.Name, fs, common.FileStorageTypeWAL, b.ComponentKind))
 	}
 
 	// Allocate the standalone cache file storage for the datanode.
 	if fs := b.Cluster.GetObjectStorageProvider().GetCacheFileStorage(); fs != nil {
-		claims = append(claims, *common.FileStorageToPVC(fs, common.FileStorageTypeCache))
+		claims = append(claims, *common.FileStorageToPVC(b.Cluster.Name, fs, common.FileStorageTypeCache, b.ComponentKind))
 	}
 
 	return claims
