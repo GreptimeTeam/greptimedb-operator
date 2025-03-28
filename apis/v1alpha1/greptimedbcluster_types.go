@@ -156,22 +156,11 @@ type FrontendSpec struct {
 	// RollingUpdate is the rolling update configuration. We always use `RollingUpdate` strategyt.
 	// +optional
 	RollingUpdate *appsv1.RollingUpdateDeployment `json:"rollingUpdate,omitempty"`
-
-	// Ingress is the Ingress configuration of the frontend.
-	// +optional
-	Ingress *IngressSpec `json:"ingress,omitempty"`
 }
 
 func (in *FrontendSpec) GetTLS() *TLSSpec {
 	if in != nil {
 		return in.TLS
-	}
-	return nil
-}
-
-func (in *FrontendSpec) GetIngress() *IngressSpec {
-	if in != nil {
-		return in.Ingress
 	}
 	return nil
 }
@@ -376,6 +365,10 @@ type GreptimeDBClusterSpec struct {
 	// Monitoring is the specification for monitor bootstrapping. It will create a standalone greptimedb instance to monitor the cluster.
 	// +optional
 	Monitoring *MonitoringSpec `json:"monitoring,omitempty"`
+
+	// Ingress is the Ingress configuration of the frontend.
+	// +optional
+	Ingress *IngressSpec `json:"ingress,omitempty"`
 }
 
 // MonitoringSpec is the specification for monitor bootstrapping. It will create a standalone greptimedb instance to monitor the cluster.
@@ -556,6 +549,13 @@ func (in *GreptimeDBCluster) GetPrometheusMonitor() *PrometheusMonitorSpec {
 func (in *GreptimeDBCluster) GetMonitoring() *MonitoringSpec {
 	if in != nil {
 		return in.Spec.Monitoring
+	}
+	return nil
+}
+
+func (in *GreptimeDBCluster) GetIngress() *IngressSpec {
+	if in != nil {
+		return in.Spec.Ingress
 	}
 	return nil
 }

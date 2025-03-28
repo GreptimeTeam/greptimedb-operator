@@ -261,7 +261,6 @@ _Appears in:_
 | `service` _[ServiceSpec](#servicespec)_ | Service is the service configuration of the frontend. |  |  |
 | `tls` _[TLSSpec](#tlsspec)_ | TLS is the TLS configuration of the frontend. |  |  |
 | `rollingUpdate` _[RollingUpdateDeployment](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#rollingupdatedeployment-v1-apps)_ | RollingUpdate is the rolling update configuration. We always use `RollingUpdate` strategyt. |  |  |
-| `ingress` _[IngressSpec](#ingressspec)_ | Ingress is the Ingress configuration of the frontend. |  |  |
 
 
 #### FrontendStatus
@@ -368,6 +367,7 @@ _Appears in:_
 | `wal` _[WALProviderSpec](#walproviderspec)_ | WALProvider is the WAL provider for the greptimedb cluster. |  |  |
 | `logging` _[LoggingSpec](#loggingspec)_ | The global logging configuration for all components. It can be overridden by the logging configuration of individual component. |  |  |
 | `monitoring` _[MonitoringSpec](#monitoringspec)_ | Monitoring is the specification for monitor bootstrapping. It will create a standalone greptimedb instance to monitor the cluster. |  |  |
+| `ingress` _[IngressSpec](#ingressspec)_ | Ingress is the Ingress configuration of the frontend. |  |  |
 
 
 
@@ -452,7 +452,7 @@ IngressSpec defines the Ingress configuration.
 
 
 _Appears in:_
-- [FrontendSpec](#frontendspec)
+- [GreptimeDBClusterSpec](#greptimedbclusterspec)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |

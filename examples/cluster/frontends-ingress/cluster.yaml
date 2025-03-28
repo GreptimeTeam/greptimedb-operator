@@ -11,44 +11,39 @@ spec:
   frontends:
     - name: read
       replicas: 1
-      ingress:
-        annotations:
-          dedicated: configure-frontends-ingress
-        labels:
-          dedicated: configure-frontends-ingress
-        ingressClassName: nginx
-        rules:
-          - host: configure-frontends-ingress.example.com
-        tls:
-        - hosts:
-            - configure-frontends-ingress.example.com
-          secretName: configure-frontends-ingress-frontend-read-tls
     - name: write
       replicas: 1
-      ingress:
-        annotations:
-          dedicated: configure-frontends-ingress
-        labels:
-          dedicated: configure-frontends-ingress
-        ingressClassName: nginx
-        rules:
-          - host: configure-frontends-ingress.example.com
-            http:
-              paths:
-              - backend:
-                  service:
-                    name: configure-frontends-ingress-frontend-write
-                    port:
-                      number: 4000
-                path: /v1/sql
-                pathType: Prefix
-        tls:
-        - hosts:
-            - configure-frontends-ingress.example.com
-          secretName: configure-frontends-ingress-frontend-write-tls
   meta:
     replicas: 1
     etcdEndpoints:
       - "etcd.etcd-cluster.svc.cluster.local:2379"
   datanode:
     replicas: 1
+  ingress:
+    annotations:
+      dedicated: configure-frontends-ingress
+    labels:
+      dedicated: configure-frontends-ingress
+    ingressClassName: nginx
+    rules:
+      - host: configure-frontends-ingress.example.com
+        http:
+          paths:
+            - backend:
+                service:
+                  name: configure-frontends-ingress-frontend-read
+                  port:
+                    number: 4000
+              path: /
+              pathType: Prefix
+            - backend:
+                service:
+                  name: configure-frontends-ingress-frontend-write
+                  port:
+                    number: 4000
+              path: /v1/sql
+              pathType: Prefix
+    tls:
+      - hosts:
+          - configure-frontends-ingress.example.com
+        secretName: configure-frontends-ingress-frontend-tls

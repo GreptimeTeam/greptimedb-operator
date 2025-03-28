@@ -339,12 +339,7 @@ func (b *frontendBuilder) BuildPodMonitor() deployer.Builder {
 	return b
 }
 
-func (b *frontendBuilder) generateIngress(frontend *v1alpha1.FrontendSpec) {
-	name := common.ResourceName(b.Cluster.Name, b.ComponentKind)
-	if len(frontend.GetName()) != 0 {
-		name = common.AdditionalResourceName(b.Cluster.Name, frontend.GetName(), b.ComponentKind)
-	}
-
+func (b *frontendBuilder) generateIngress() {
 	ing := &networkingv1.Ingress{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Ingress",
@@ -352,44 +347,13 @@ func (b *frontendBuilder) generateIngress(frontend *v1alpha1.FrontendSpec) {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace:   b.Cluster.Namespace,
-			Name:        name,
-			Annotations: frontend.Ingress.Annotations,
-			Labels: util.MergeStringMap(frontend.Ingress.Labels, map[string]string{
-				constant.GreptimeDBComponentName: name,
+			Name:        b.Cluster.Name,
+			Annotations: b.Cluster.GetIngress().Annotations,
+			Labels: util.MergeStringMap(b.Cluster.GetIngress().Labels, map[string]string{
+				constant.GreptimeDBComponentName: b.Cluster.Name,
 			}),
 		},
-		Spec: frontend.Ingress.IngressSpec,
-	}
-
-	// Forward to frontend service when backend is not set.
-	const (
-		defaultPath = "/"
-	)
-	if len(ing.Spec.Rules) != 0 {
-		for i := range ing.Spec.Rules {
-			rule := &ing.Spec.Rules[i]
-			if rule.HTTP == nil {
-				rule.HTTP = &networkingv1.HTTPIngressRuleValue{
-					Paths: []networkingv1.HTTPIngressPath{
-						{
-							Backend: networkingv1.IngressBackend{
-								Service: &networkingv1.IngressServiceBackend{
-									Name: name,
-									Port: networkingv1.ServiceBackendPort{
-										Number: b.Cluster.Spec.HTTPPort,
-									},
-								},
-							},
-							Path: defaultPath,
-							PathType: func() *networkingv1.PathType {
-								pathType := networkingv1.PathTypePrefix
-								return &pathType
-							}(),
-						},
-					},
-				}
-			}
-		}
+		Spec: b.Cluster.GetIngress().IngressSpec,
 	}
 
 	b.Objects = append(b.Objects, ing)
@@ -404,16 +368,8 @@ func (b *frontendBuilder) BuildIngress() deployer.Builder {
 		return b
 	}
 
-	if b.Cluster.GetFrontend() != nil && b.Cluster.GetFrontend().GetIngress() != nil {
-		b.generateIngress(b.Cluster.GetFrontend())
-	}
-
-	if len(b.Cluster.GetFrontends()) != 0 {
-		for _, frontend := range b.Cluster.Spec.Frontends {
-			if frontend.GetIngress() != nil {
-				b.generateIngress(frontend)
-			}
-		}
+	if b.Cluster.GetIngress() != nil {
+		b.generateIngress()
 	}
 
 	return b

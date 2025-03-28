@@ -11,16 +11,22 @@ spec:
       image: greptime-registry.cn-hangzhou.cr.aliyuncs.com/greptime/greptimedb:latest
   frontend:
     replicas: 1
-    ingress:
-      annotations:
-        dedicated: configure-frontend-ingress
-      labels:
-        dedicated: configure-frontend-ingress
-      ingressClassName: nginx
-      rules:
-        - host: configure-frontend-ingress.example.com
-          http:
-            paths:
+  meta:
+    replicas: 1
+    etcdEndpoints:
+      - "etcd.etcd-cluster.svc.cluster.local:2379"
+  datanode:
+    replicas: 1
+  ingress:
+    annotations:
+      dedicated: configure-frontend-ingress
+    labels:
+      dedicated: configure-frontend-ingress
+    ingressClassName: nginx
+    rules:
+      - host: configure-frontend-ingress.example.com
+        http:
+          paths:
             - backend:
                 service:
                   name: configure-frontend-ingress-frontend
@@ -28,9 +34,3 @@ spec:
                     number: 4000
               path: /
               pathType: Prefix
-  meta:
-    replicas: 1
-    etcdEndpoints:
-      - "etcd.etcd-cluster.svc.cluster.local:2379"
-  datanode:
-    replicas: 1
