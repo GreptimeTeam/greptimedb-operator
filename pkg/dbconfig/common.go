@@ -89,9 +89,7 @@ func (c *StorageConfig) configureS3(namespace string, s3 *v1alpha1.S3Storage) er
 		c.StorageSecretAccessKey = ptr.To(string(data[1]))
 	}
 
-	if s3.EnableVirtualHostStyle {
-		c.EnableVirtualHostStyle = ptr.To(s3.EnableVirtualHostStyle)
-	}
+	c.EnableVirtualHostStyle = ptr.To(s3.EnableVirtualHostStyle)
 
 	return nil
 }
