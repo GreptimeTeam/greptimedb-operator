@@ -43,6 +43,7 @@ type StorageConfig struct {
 	Container              *string `tomlmapping:"storage.container"`
 	AccountName            *string `tomlmapping:"storage.account_name"`
 	AccountKey             *string `tomlmapping:"storage.account_key"`
+	EnableVirtualHostStyle *bool   `tomlmapping:"storage.enable_virtual_host_style"`
 }
 
 // ConfigureObjectStorage configures the storage config by the given object storage provider accessor.
@@ -86,6 +87,10 @@ func (c *StorageConfig) configureS3(namespace string, s3 *v1alpha1.S3Storage) er
 		}
 		c.StorageAccessKeyID = ptr.To(string(data[0]))
 		c.StorageSecretAccessKey = ptr.To(string(data[1]))
+	}
+
+	if s3.EnableVirtualHostStyle {
+		c.EnableVirtualHostStyle = ptr.To(s3.EnableVirtualHostStyle)
 	}
 
 	return nil
