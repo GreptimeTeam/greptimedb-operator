@@ -100,6 +100,7 @@ func (r *Reconciler) SetupWithManager(mgr ctrl.Manager) error {
 // +kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;watch;patch;create;
 // +kubebuilder:rbac:groups=core,resources=services,verbs=get;list;patch;watch;create;update;delete;
 // +kubebuilder:rbac:groups=core,resources=secrets,verbs=get;list;patch;watch;
+// +kubebuilder:rbac:groups=networking.k8s.io,resources=ingresses,verbs=get;list;patch;watch;create;update;delete;
 // +kubebuilder:rbac:groups=core,resources=configmaps,verbs=get;list;watch;patch;create;update;delete;
 // +kubebuilder:rbac:groups=core,resources=events,verbs=get;list;patch;watch;create;
 // +kubebuilder:rbac:groups=core,resources=persistentvolumeclaims,verbs=get;list;patch;watch;create;update;delete;
