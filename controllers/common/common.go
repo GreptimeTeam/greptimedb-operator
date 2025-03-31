@@ -198,7 +198,7 @@ func GeneratePodTemplateSpec(kind v1alpha1.ComponentKind, template *v1alpha1.Pod
 	return spec
 }
 
-func FileStorageToPVC(name string, fs v1alpha1.FileStorageAccessor, fsType FileStorageType) *corev1.PersistentVolumeClaim {
+func FileStorageToPVC(name string, fs v1alpha1.FileStorageAccessor, fsType FileStorageType, kind v1alpha1.ComponentKind) *corev1.PersistentVolumeClaim {
 	var (
 		labels      map[string]string
 		annotations map[string]string
@@ -208,17 +208,17 @@ func FileStorageToPVC(name string, fs v1alpha1.FileStorageAccessor, fsType FileS
 	case FileStorageTypeWAL:
 		labels = map[string]string{
 			FileStorageTypeLabelKey:          string(FileStorageTypeWAL),
-			constant.GreptimeDBComponentName: ResourceName(name, v1alpha1.DatanodeComponentKind),
+			constant.GreptimeDBComponentName: ResourceName(name, kind),
 		}
 	case FileStorageTypeCache:
 		labels = map[string]string{
 			FileStorageTypeLabelKey:          string(FileStorageTypeCache),
-			constant.GreptimeDBComponentName: ResourceName(name, v1alpha1.DatanodeComponentKind),
+			constant.GreptimeDBComponentName: ResourceName(name, kind),
 		}
 	default:
-		// Add common label: 'app.greptime.io/component: ${CLUSTER_NAME}-${RESOURCE_KIND}'.
+		// Add common label: 'app.greptime.io/component: ${CLUSTER_NAME}-${COMPONENT_KIND}'.
 		labels = map[string]string{
-			constant.GreptimeDBComponentName: ResourceName(name, v1alpha1.DatanodeComponentKind),
+			constant.GreptimeDBComponentName: ResourceName(name, kind),
 		}
 	}
 
@@ -273,13 +273,15 @@ func GetPVCs(ctx context.Context, k8sClient client.Client, namespace, name strin
 	case FileStorageTypeWAL:
 		labelSelector = &metav1.LabelSelector{
 			MatchLabels: map[string]string{
-				FileStorageTypeLabelKey: string(FileStorageTypeWAL),
+				FileStorageTypeLabelKey:          string(FileStorageTypeWAL),
+				constant.GreptimeDBComponentName: ResourceName(name, kind),
 			},
 		}
 	case FileStorageTypeCache:
 		labelSelector = &metav1.LabelSelector{
 			MatchLabels: map[string]string{
-				FileStorageTypeLabelKey: string(FileStorageTypeCache),
+				FileStorageTypeLabelKey:          string(FileStorageTypeCache),
+				constant.GreptimeDBComponentName: ResourceName(name, kind),
 			},
 		}
 	}
