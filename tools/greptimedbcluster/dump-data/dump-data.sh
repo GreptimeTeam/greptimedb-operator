@@ -156,7 +156,7 @@ collect_etcd_info() {
 
             timeout 30 $KUBECTL logs -n "${ETCD_NAMESPACE}" "${pod}" > "${OUTPUT_DIR}/pod_logs/${pod}.log" 2>&1
         done
-    } > "${OUTPUT_DIR}/3_etcd_status.txt"
+    } > "${OUTPUT_DIR}/3_etcd_info.txt"
 }
 
 collect_pod_details() {

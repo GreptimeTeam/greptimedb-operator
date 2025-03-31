@@ -48,7 +48,7 @@ Collection complete! All data saved to: /tmp/greptime_dump_20250401_005417.tar.g
 Contents:
 -rw-r--r--  1 greptime  wheel   176B  4  1 00:54 /tmp/greptime_dump_20250401_005417/1_global_resources.txt
 -rw-r--r--  1 greptime  wheel    28K  4  1 00:54 /tmp/greptime_dump_20250401_005417/2_cluster_default_basic.txt
--rw-r--r--  1 greptime  wheel   9.7K  4  1 00:54 /tmp/greptime_dump_20250401_005417/3_etcd_status.txt
+-rw-r--r--  1 greptime  wheel   9.7K  4  1 00:54 /tmp/greptime_dump_20250401_005417/3_etcd_info.txt
 -rw-r--r--  1 greptime  wheel    13K  4  1 00:54 /tmp/greptime_dump_20250401_005417/4_pod_basic-datanode-0_info.txt
 -rw-r--r--  1 greptime  wheel   8.7K  4  1 00:54 /tmp/greptime_dump_20250401_005417/4_pod_basic-frontend-759768ff9d-qq48s_info.txt
 -rw-r--r--  1 greptime  wheel   8.4K  4  1 00:54 /tmp/greptime_dump_20250401_005417/4_pod_basic-meta-5f76ccd8bb-5c2bs_info.txt
@@ -72,7 +72,7 @@ total 792
 /tmp/greptime_dump_<timestamp>/
 ├── 1_global_resources.txt           # Global resources information
 ├── 2_cluster_<namespace>_<name>.txt # Cluster-specific details
-├── 3_etcd_status.txt                # ETCD pod status and health information
+├── 3_etcd_info.txt                  # ETCD pod and health status information
 ├── 4_pod_<pod-name>_info.txt        # Pod descriptions and configurations
 ├── 5_information_schema_table.txt   # Results from SQL queries
 ├── pod_logs/
