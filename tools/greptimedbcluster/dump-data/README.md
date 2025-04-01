@@ -20,8 +20,12 @@ This script collects various information about a GreptimeDB cluster and its asso
 
 1. Run the script:
   ```bash
-  ./tools/greptimedbcluster/dump-data/dump-data.sh --cluster basic --namespace default --etcd etcd --etcd-namespace etcd-cluster --output-dir
- /tmp
+  ./tools/greptimedbcluster/dump-data/dump-data.sh \
+  --cluster basic \
+  --namespace default \
+  --etcd etcd \
+  --etcd-namespace etcd-cluster \
+  --output-dir /tmp
   ```
 
 2. During execution, you will need to enter:     
@@ -35,7 +39,7 @@ This script collects various information about a GreptimeDB cluster and its asso
 
 3. The script will then begin collecting data and display progress as it processes:
   ```bash
-  Output directory: /tmp/greptime_dump_20250401_005417
+Output directory: /tmp/greptime_dump_20250401_005417
 => Check prerequisites...
 <= All prerequisites are met.
 [1/6] Collecting global resources...
@@ -76,6 +80,6 @@ total 792
 ├── 4_pod_<pod-name>_info.txt        # Pod descriptions and configurations
 ├── 5_information_schema_table.txt   # Results from SQL queries
 ├── pod_logs/
-│   ├── pod_<pod-name>_info.txt       # Current logs of the pod 
-│   └── pod_<pod-name>_previous.log   # Previous logs of the pod
+│   ├── pod_<pod-name>_info.txt      # Current logs of the pod 
+│   └── pod_<pod-name>_previous.log  # Previous logs of the pod
 ```

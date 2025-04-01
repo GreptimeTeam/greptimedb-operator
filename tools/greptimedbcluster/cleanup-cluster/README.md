@@ -20,7 +20,11 @@ Note: Please proceed with caution when executing this script, as it will permane
 1. Find the script file: `./tools/greptimedbcluster/clean-cluster/cleanup-cluster.sh`.
 2. Run the script:
    ```bash
-   ./tools/greptimedbcluster/cleanup-cluster/cleanup-cluster.sh --cluster basic --namespace default --etcd etcd --etcd-namespace etcd-cluster
+   ./tools/greptimedbcluster/cleanup-cluster/cleanup-cluster.sh \
+   --cluster basic \
+   --namespace default \
+   --etcd etcd \
+   --etcd-namespace etcd-cluster
    ```
 
 During execution, you will need to enter:
@@ -29,10 +33,9 @@ During execution, you will need to enter:
 - `--etcd`: The name of the ETCD StatefulSet
 - `--etcd-namespace`: The namespace of the ETCD StatefulSet
 
-## Example
+3. Output:
 
 ```bash
-# ./tools/greptimedbcluster/cleanup-cluster/cleanup-cluster.sh --cluster basic --namespace default --etcd etcd --etcd-namespace etcd-cluster
 => Check prerequisites...
 <= All prerequisites are met.
 Would you like to cleanup the GreptimeDBCluster 'basic' in namespace 'default', delete the datanode PVCs, and remove the metadata in etcd StatefulSet 'etcd' in namespace 'etcd-cluster'? type 'yes' or 'no':
