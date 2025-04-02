@@ -835,6 +835,7 @@ _Appears in:_
 | `secretName` _string_ | The secret of storing the credentials of access key id and secret access key.<br />The secret should contain keys named `access-key-id` and `secret-access-key`.<br />The secret must be the same namespace with the GreptimeDBCluster resource. |  |  |
 | `root` _string_ | The S3 directory path. |  |  |
 | `endpoint` _string_ | The endpoint of the bucket. |  |  |
+| `enableVirtualHostStyle` _boolean_ | Enable virtual host style so that OpenDAL will send API requests in virtual host style instead of path style.<br />By default, OpenDAL will send API to 'https://s3.us-east-1.amazonaws.com/$\{BUCKET_NAME\}'.<br />If EnableVirtualHostStyle is true, OpenDAL will send API to 'https://$\{BUCKET_NAME\}.s3.us-east-1.amazonaws.com'. |  |  |
 
 
 #### ServiceSpec
