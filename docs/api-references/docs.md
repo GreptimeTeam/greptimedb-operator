@@ -367,6 +367,7 @@ _Appears in:_
 | `wal` _[WALProviderSpec](#walproviderspec)_ | WALProvider is the WAL provider for the greptimedb cluster. |  |  |
 | `logging` _[LoggingSpec](#loggingspec)_ | The global logging configuration for all components. It can be overridden by the logging configuration of individual component. |  |  |
 | `monitoring` _[MonitoringSpec](#monitoringspec)_ | Monitoring is the specification for monitor bootstrapping. It will create a standalone greptimedb instance to monitor the cluster. |  |  |
+| `ingress` _[IngressSpec](#ingressspec)_ | Ingress is the Ingress configuration of the frontend. |  |  |
 
 
 
@@ -440,6 +441,61 @@ _Appears in:_
 | `rollingUpdate` _[RollingUpdateStatefulSetStrategy](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#rollingupdatestatefulsetstrategy-v1-apps)_ | RollingUpdate is the rolling update configuration. We always use `RollingUpdate` strategy. |  |  |
 
 
+
+
+#### IngressBackend
+
+
+
+IngressBackend defines the Ingress backend configuration.
+
+
+
+_Appears in:_
+- [IngressRule](#ingressrule)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `name` _string_ | Name is the referenced frontend name. |  |  |
+| `path` _string_ | Path is matched against the path of an incoming request. |  |  |
+| `pathType` _[PathType](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#pathtype-v1-networking)_ | PathType determines the interpretation of the path matching. |  |  |
+
+
+#### IngressRule
+
+
+
+IngressRule defines the Ingress rule configuration.
+
+
+
+_Appears in:_
+- [IngressSpec](#ingressspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `host` _string_ | Host is the fully qualified domain name of a network host. |  |  |
+| `backends` _[IngressBackend](#ingressbackend) array_ | IngressBackend is the Ingress backend configuration. |  |  |
+
+
+#### IngressSpec
+
+
+
+IngressSpec defines the Ingress configuration.
+
+
+
+_Appears in:_
+- [GreptimeDBClusterSpec](#greptimedbclusterspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `annotations` _object (keys:string, values:string)_ | Annotations is the annotations for the ingress. |  |  |
+| `labels` _object (keys:string, values:string)_ | Labels is the labels for the ingress. |  |  |
+| `ingressClassName` _string_ | IngressClassName is the name of an IngressClass. |  |  |
+| `rules` _[IngressRule](#ingressrule) array_ | IngressRule is a list of host rules used to configure the Ingress. |  |  |
+| `tls` _[IngressTLS](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#ingresstls-v1-networking) array_ | TLS is the Ingress TLS configuration. |  |  |
 
 
 #### InitializerSpec

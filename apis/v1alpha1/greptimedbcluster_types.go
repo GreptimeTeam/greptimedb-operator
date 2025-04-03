@@ -311,6 +311,7 @@ type GreptimeDBClusterSpec struct {
 	Flownode *FlownodeSpec `json:"flownode,omitempty"`
 
 	// Frontends is a group of frontend nodes.
+	// +optional
 	Frontends []*FrontendSpec `json:"frontends,omitempty"`
 
 	// HTTPPort is the HTTP port of the greptimedb cluster.
@@ -364,6 +365,10 @@ type GreptimeDBClusterSpec struct {
 	// Monitoring is the specification for monitor bootstrapping. It will create a standalone greptimedb instance to monitor the cluster.
 	// +optional
 	Monitoring *MonitoringSpec `json:"monitoring,omitempty"`
+
+	// Ingress is the Ingress configuration of the frontend.
+	// +optional
+	Ingress *IngressSpec `json:"ingress,omitempty"`
 }
 
 // MonitoringSpec is the specification for monitor bootstrapping. It will create a standalone greptimedb instance to monitor the cluster.
@@ -544,6 +549,13 @@ func (in *GreptimeDBCluster) GetPrometheusMonitor() *PrometheusMonitorSpec {
 func (in *GreptimeDBCluster) GetMonitoring() *MonitoringSpec {
 	if in != nil {
 		return in.Spec.Monitoring
+	}
+	return nil
+}
+
+func (in *GreptimeDBCluster) GetIngress() *IngressSpec {
+	if in != nil {
+		return in.Spec.Ingress
 	}
 	return nil
 }

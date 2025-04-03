@@ -1,0 +1,37 @@
+apiVersion: greptime.io/v1alpha1
+kind: GreptimeDBCluster
+metadata:
+  name: configure-frontends-ingress
+  namespace: default
+spec:
+  initializer:
+    image: greptime-registry.cn-hangzhou.cr.aliyuncs.com/greptime/greptimedb-initializer:latest
+  base:
+    main:
+      image: greptime-registry.cn-hangzhou.cr.aliyuncs.com/greptime/greptimedb:latest
+  frontends:
+    - name: read
+      replicas: 1
+    - name: write
+      replicas: 1
+  meta:
+    replicas: 1
+    etcdEndpoints:
+      - "etcd.etcd-cluster.svc.cluster.local:2379"
+  datanode:
+    replicas: 1
+  ingress:
+    annotations:
+      dedicated: configure-frontends-ingress
+    labels:
+      dedicated: configure-frontends-ingress
+    ingressClassName: nginx
+    rules:
+      - host: configure-frontends-ingress.example.com
+        backends:
+          - name: read
+            path: /
+            pathType: Prefix
+          - name: write
+            path: /v1/sql
+            pathType: Prefix
