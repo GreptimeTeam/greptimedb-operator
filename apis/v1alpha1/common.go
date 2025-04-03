@@ -867,9 +867,43 @@ type IngressSpec struct {
 	// +optional
 	Labels map[string]string `json:"labels,omitempty"`
 
-	// IngressSpec is the ingress specification.
+	// IngressClassName is the name of an IngressClass.
 	// +optional
-	networkingv1.IngressSpec `json:",inline"`
+	IngressClassName *string `json:"ingressClassName,omitempty"`
+
+	// IngressRule is a list of host rules used to configure the Ingress.
+	// +optional
+	Rules []IngressRule `json:"rules,omitempty"`
+
+	// TLS is the Ingress TLS configuration.
+	// +optional
+	TLS []networkingv1.IngressTLS `json:"tls,omitempty"`
+}
+
+// IngressRule defines the Ingress rule configuration.
+type IngressRule struct {
+	// Host is the fully qualified domain name of a network host.
+	// +optional
+	Host string `json:"host,omitempty"`
+
+	// IngressBackend is the Ingress backend configuration.
+	// +optional
+	IngressBackend []IngressBackend `json:"backends,omitempty"`
+}
+
+// IngressBackend defines the Ingress backend configuration.
+type IngressBackend struct {
+	// Name is the referenced frontend name.
+	// +optional
+	Name string `json:"name,omitempty"`
+
+	// Path is matched against the path of an incoming request.
+	// +optional
+	Path string `json:"path,omitempty"`
+
+	// PathType determines the interpretation of the path matching.
+	// +optional
+	PathType *networkingv1.PathType `json:"pathType,omitempty"`
 }
 
 // PrometheusMonitorSpec defines the PodMonitor configuration.

@@ -24,15 +24,9 @@ spec:
     ingressClassName: nginx
     rules:
       - host: configure-frontend-ingress.example.com
-        http:
-          paths:
-            - backend:
-                service:
-                  name: configure-frontend-ingress-frontend
-                  port:
-                    number: 4000
-              path: /
-              pathType: Prefix
+        backends:
+          - path: /
+            pathType: Prefix
     tls:
       - hosts:
           - configure-frontend-ingress.example.com
