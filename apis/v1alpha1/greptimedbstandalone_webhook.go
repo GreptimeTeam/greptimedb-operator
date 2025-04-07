@@ -31,9 +31,7 @@ func (r *GreptimeDBStandalone) SetupWebhookWithManager(mgr ctrl.Manager) error {
 		Complete()
 }
 
-// TODO(user): EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-
-// TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
+// TODO(liyang): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
 //+kubebuilder:webhook:path=/validate-greptime-io-v1alpha1-greptimedbstandalone,mutating=false,failurePolicy=fail,sideEffects=None,groups=greptime.io,resources=greptimedbstandalones,verbs=create;update,versions=v1alpha1,name=vgreptimedbstandalone.kb.io,admissionReviewVersions=v1
 
 var _ webhook.Validator = &GreptimeDBStandalone{}
@@ -42,22 +40,26 @@ var _ webhook.Validator = &GreptimeDBStandalone{}
 func (r *GreptimeDBStandalone) ValidateCreate() (admission.Warnings, error) {
 	greptimedbstandalonelog.Info("validate create", "name", r.Name)
 
-	// TODO(user): fill in your validation logic upon object creation.
+	if err := r.Validate(); err != nil {
+		return nil, err
+	}
+
 	return nil, nil
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *GreptimeDBStandalone) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
+func (r *GreptimeDBStandalone) ValidateUpdate(_ runtime.Object) (admission.Warnings, error) {
 	greptimedbstandalonelog.Info("validate update", "name", r.Name)
 
-	// TODO(user): fill in your validation logic upon object update.
+	if err := r.Validate(); err != nil {
+		return nil, err
+	}
+
 	return nil, nil
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
 func (r *GreptimeDBStandalone) ValidateDelete() (admission.Warnings, error) {
-	greptimedbstandalonelog.Info("validate delete", "name", r.Name)
-
-	// TODO(user): fill in your validation logic upon object deletion.
+	// FIXME(liyang): Unnecessary validation when object deletion.
 	return nil, nil
 }

@@ -109,11 +109,6 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, err
 	}
 
-	if err = standalone.Validate(); err != nil {
-		r.Recorder.Event(standalone, corev1.EventTypeWarning, "InvalidStandalone", fmt.Sprintf("Invalid standalone: %v", err))
-		return ctrl.Result{}, err
-	}
-
 	if err = standalone.Check(ctx, r.Client); err != nil {
 		r.Recorder.Event(standalone, corev1.EventTypeWarning, "InvalidStandalone", fmt.Sprintf("Invalid standalone: %v", err))
 		return ctrl.Result{}, err
