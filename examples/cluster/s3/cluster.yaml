@@ -3,11 +3,9 @@ kind: GreptimeDBCluster
 metadata:
   name: cluster-with-s3
 spec:
-  initializer:
-    image: greptime-registry.cn-hangzhou.cr.aliyuncs.com/greptime/greptimedb-initializer:latest
   base:
     main:
-      image: greptime-registry.cn-hangzhou.cr.aliyuncs.com/greptime/greptimedb:latest
+      image: greptime/greptimedb:latest
   frontend:
     replicas: 1
   meta:
@@ -18,9 +16,7 @@ spec:
     replicas: 1
   objectStorage:
     s3:
-      bucket: "ap-southeast-1-test-bucket"
+      bucket: "greptimedb"
       region: "ap-southeast-1"
       secretName: "s3-credentials"
-      root: "cluster-with-s3-dataaaaa"
-    cache:
-      cacheCapacity: "5GiB"
+      root: "cluster-with-s3-data"
