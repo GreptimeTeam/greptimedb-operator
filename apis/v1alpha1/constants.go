@@ -91,6 +91,9 @@ const (
 	// SecretAccessKeySecretKey is the key for the secret access key in the secret.
 	SecretAccessKeySecretKey = "secret-access-key"
 
+	// AccessKeySecretSecretKey is the key for the access key secret in the secret.
+	AccessKeySecretSecretKey = "access-key-secret"
+
 	// ServiceAccountKey is the key for the service account in the secret.
 	ServiceAccountKey = "service-account-key"
 

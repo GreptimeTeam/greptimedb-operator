@@ -626,6 +626,7 @@ type ObjectStorageProviderAccessor interface {
 	GetOSSStorage() *OSSStorage
 	GetAZBlobStorage() *AZBlobStorage
 	GetCacheFileStorage() *FileStorage
+	GetCacheStorage() *CacheStorage
 }
 
 var _ ObjectStorageProviderAccessor = &ObjectStorageProviderSpec{}
@@ -633,6 +634,13 @@ var _ ObjectStorageProviderAccessor = &ObjectStorageProviderSpec{}
 func (in *ObjectStorageProviderSpec) GetCacheFileStorage() *FileStorage {
 	if in != nil && in.Cache != nil {
 		return in.Cache.FileStorage
+	}
+	return nil
+}
+
+func (in *ObjectStorageProviderSpec) GetCacheStorage() *CacheStorage {
+	if in != nil {
+		return in.Cache
 	}
 	return nil
 }
