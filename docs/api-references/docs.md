@@ -694,7 +694,7 @@ _Appears in:_
 | --- | --- | --- | --- |
 | `bucket` _string_ | The data will be stored in the bucket. |  |  |
 | `region` _string_ | The region of the bucket. |  |  |
-| `secretName` _string_ | The secret of storing the credentials of access key id and secret access key.<br />The secret should contain keys named `access-key-id` and `secret-access-key`.<br />The secret must be the same namespace with the GreptimeDBCluster resource. |  |  |
+| `secretName` _string_ | The secret of storing the credentials of access key id and access key secret.<br />The secret should contain keys named `access-key-id` and `access-key-secret`.<br />The secret must be the same namespace with the GreptimeDBCluster resource. |  |  |
 | `root` _string_ | The OSS directory path. |  |  |
 | `endpoint` _string_ | The endpoint of the bucket. |  |  |
 

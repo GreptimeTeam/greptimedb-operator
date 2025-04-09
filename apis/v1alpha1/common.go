@@ -767,8 +767,8 @@ type OSSStorage struct {
 	// +required
 	Region string `json:"region"`
 
-	// The secret of storing the credentials of access key id and secret access key.
-	// The secret should contain keys named `access-key-id` and `secret-access-key`.
+	// The secret of storing the credentials of access key id and access key secret.
+	// The secret should contain keys named `access-key-id` and `access-key-secret`.
 	// The secret must be the same namespace with the GreptimeDBCluster resource.
 	// +optional
 	SecretName string `json:"secretName,omitempty"`
