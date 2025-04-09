@@ -320,7 +320,7 @@ func checkGCSCredentialsSecret(ctx context.Context, client client.Client, namesp
 }
 
 func checkOSSCredentialsSecret(ctx context.Context, client client.Client, namespace, name string) error {
-	return checkSecretData(ctx, client, namespace, name, []string{AccessKeyIDSecretKey, SecretAccessKeySecretKey})
+	return checkSecretData(ctx, client, namespace, name, []string{AccessKeyIDSecretKey, AccessKeySecretSecretKey})
 }
 
 func checkS3CredentialsSecret(ctx context.Context, client client.Client, namespace, name string) error {

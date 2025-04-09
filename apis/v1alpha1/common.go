@@ -626,6 +626,7 @@ type ObjectStorageProviderAccessor interface {
 	GetOSSStorage() *OSSStorage
 	GetAZBlobStorage() *AZBlobStorage
 	GetCacheFileStorage() *FileStorage
+	GetCacheStorage() *CacheStorage
 }
 
 var _ ObjectStorageProviderAccessor = &ObjectStorageProviderSpec{}
@@ -633,6 +634,13 @@ var _ ObjectStorageProviderAccessor = &ObjectStorageProviderSpec{}
 func (in *ObjectStorageProviderSpec) GetCacheFileStorage() *FileStorage {
 	if in != nil && in.Cache != nil {
 		return in.Cache.FileStorage
+	}
+	return nil
+}
+
+func (in *ObjectStorageProviderSpec) GetCacheStorage() *CacheStorage {
+	if in != nil {
+		return in.Cache
 	}
 	return nil
 }
@@ -759,8 +767,8 @@ type OSSStorage struct {
 	// +required
 	Region string `json:"region"`
 
-	// The secret of storing the credentials of access key id and secret access key.
-	// The secret should contain keys named `access-key-id` and `secret-access-key`.
+	// The secret of storing the credentials of access key id and access key secret.
+	// The secret should contain keys named `access-key-id` and `access-key-secret`.
 	// The secret must be the same namespace with the GreptimeDBCluster resource.
 	// +optional
 	SecretName string `json:"secretName,omitempty"`

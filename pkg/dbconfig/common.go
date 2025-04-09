@@ -43,6 +43,7 @@ type StorageConfig struct {
 	Container              *string `tomlmapping:"storage.container"`
 	AccountName            *string `tomlmapping:"storage.account_name"`
 	AccountKey             *string `tomlmapping:"storage.account_key"`
+	CacheCapacity          *string `tomlmapping:"storage.cache_capacity"`
 	EnableVirtualHostStyle *bool   `tomlmapping:"storage.enable_virtual_host_style"`
 }
 
@@ -66,14 +67,20 @@ func (c *StorageConfig) ConfigureObjectStorage(namespace string, accessor v1alph
 		}
 	}
 
+	if cacheStorage := accessor.GetCacheStorage(); cacheStorage != nil {
+		c.configureCacheStorage(cacheStorage)
+	}
+
 	return nil
 }
 
-func (c *StorageConfig) configureS3(namespace string, s3 *v1alpha1.S3Storage) error {
-	if s3 == nil {
-		return nil
+func (c *StorageConfig) configureCacheStorage(cacheStorage *v1alpha1.CacheStorage) {
+	if len(cacheStorage.CacheCapacity) != 0 {
+		c.CacheCapacity = ptr.To(cacheStorage.CacheCapacity)
 	}
+}
 
+func (c *StorageConfig) configureS3(namespace string, s3 *v1alpha1.S3Storage) error {
 	c.StorageType = ptr.To("S3")
 	c.StorageBucket = ptr.To(s3.Bucket)
 	c.StorageRoot = ptr.To(s3.Root)
@@ -90,17 +97,13 @@ func (c *StorageConfig) configureS3(namespace string, s3 *v1alpha1.S3Storage) er
 	}
 
 	if s3.EnableVirtualHostStyle {
-	    c.EnableVirtualHostStyle = ptr.To(s3.EnableVirtualHostStyle)
+		c.EnableVirtualHostStyle = ptr.To(s3.EnableVirtualHostStyle)
 	}
 
 	return nil
 }
 
 func (c *StorageConfig) configureOSS(namespace string, oss *v1alpha1.OSSStorage) error {
-	if oss == nil {
-		return nil
-	}
-
 	c.StorageType = ptr.To("Oss")
 	c.StorageBucket = ptr.To(oss.Bucket)
 	c.StorageRoot = ptr.To(oss.Root)
@@ -108,7 +111,7 @@ func (c *StorageConfig) configureOSS(namespace string, oss *v1alpha1.OSSStorage)
 	c.StorageRegion = ptr.To(oss.Region)
 
 	if oss.SecretName != "" {
-		data, err := k8sutil.GetSecretsData(namespace, oss.SecretName, []string{v1alpha1.AccessKeyIDSecretKey, v1alpha1.SecretAccessKeySecretKey})
+		data, err := k8sutil.GetSecretsData(namespace, oss.SecretName, []string{v1alpha1.AccessKeyIDSecretKey, v1alpha1.AccessKeySecretSecretKey})
 		if err != nil {
 			return err
 		}
@@ -120,10 +123,6 @@ func (c *StorageConfig) configureOSS(namespace string, oss *v1alpha1.OSSStorage)
 }
 
 func (c *StorageConfig) configureGCS(namespace string, gcs *v1alpha1.GCSStorage) error {
-	if gcs == nil {
-		return nil
-	}
-
 	c.StorageType = ptr.To("Gcs")
 	c.StorageBucket = ptr.To(gcs.Bucket)
 	c.StorageRoot = ptr.To(gcs.Root)
@@ -146,10 +145,6 @@ func (c *StorageConfig) configureGCS(namespace string, gcs *v1alpha1.GCSStorage)
 }
 
 func (c *StorageConfig) configureAZBlob(namespace string, azblob *v1alpha1.AZBlobStorage) error {
-	if azblob == nil {
-		return nil
-	}
-
 	c.StorageType = ptr.To("Azblob")
 	c.Container = ptr.To(azblob.Container)
 	c.StorageRoot = ptr.To(azblob.Root)
