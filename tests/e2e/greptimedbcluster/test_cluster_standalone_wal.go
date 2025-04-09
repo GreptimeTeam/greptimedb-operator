@@ -33,7 +33,7 @@ import (
 // TestClusterStandaloneWAL tests a basic cluster.
 func TestClusterStandaloneWAL(ctx context.Context, h *helper.Helper) {
 	const (
-		testCRFile  = "./testdata/resources/cluster/standalone-wal/cluster.yaml"
+		testCRFile  = "./testdata/resources/cluster/dedicated-wal/cluster.yaml"
 		testSQLFile = "./testdata/sql/cluster/partition.sql"
 	)
 
