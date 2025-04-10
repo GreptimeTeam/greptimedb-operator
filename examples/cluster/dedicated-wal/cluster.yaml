@@ -1,7 +1,7 @@
 apiVersion: greptime.io/v1alpha1
 kind: GreptimeDBCluster
 metadata:
-  name: cluster-with-standalone-wal
+  name: cluster-with-dedicated-wal
 spec:
   base:
     main:
