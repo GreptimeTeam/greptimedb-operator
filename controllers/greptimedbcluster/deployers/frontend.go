@@ -21,6 +21,7 @@ import (
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	networkingv1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -61,6 +62,7 @@ func (d *FrontendDeployer) Generate(crdObject client.Object) ([]client.Object, e
 		BuildConfigMap().
 		BuildDeployment().
 		BuildPodMonitor().
+		BuildIngress().
 		SetControllerAndAnnotation().
 		Generate()
 
@@ -143,7 +145,12 @@ type frontendBuilder struct {
 	*CommonBuilder
 }
 
-func (b *frontendBuilder) generateService(name string, frontendSpec *v1alpha1.FrontendSpec) {
+func (b *frontendBuilder) generateService(frontend *v1alpha1.FrontendSpec) {
+	name := common.ResourceName(b.Cluster.Name, b.ComponentKind)
+	if len(frontend.GetName()) != 0 {
+		name = common.AdditionalResourceName(b.Cluster.Name, frontend.GetName(), b.ComponentKind)
+	}
+
 	svc := &corev1.Service{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Service",
@@ -152,18 +159,18 @@ func (b *frontendBuilder) generateService(name string, frontendSpec *v1alpha1.Fr
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace:   b.Cluster.Namespace,
 			Name:        name,
-			Annotations: frontendSpec.Service.Annotations,
-			Labels: util.MergeStringMap(frontendSpec.Service.Labels, map[string]string{
+			Annotations: frontend.Service.Annotations,
+			Labels: util.MergeStringMap(frontend.Service.Labels, map[string]string{
 				constant.GreptimeDBComponentName: name,
 			}),
 		},
 		Spec: corev1.ServiceSpec{
-			Type: frontendSpec.Service.Type,
+			Type: frontend.Service.Type,
 			Selector: map[string]string{
 				constant.GreptimeDBComponentName: name,
 			},
-			Ports:             b.servicePorts(frontendSpec),
-			LoadBalancerClass: frontendSpec.Service.LoadBalancerClass,
+			Ports:             b.servicePorts(frontend),
+			LoadBalancerClass: frontend.Service.LoadBalancerClass,
 		},
 	}
 
@@ -180,19 +187,24 @@ func (b *frontendBuilder) BuildService() deployer.Builder {
 	}
 
 	if b.Cluster.GetFrontend() != nil {
-		b.generateService(common.ResourceName(b.Cluster.Name, b.ComponentKind), b.Cluster.Spec.Frontend)
+		b.generateService(b.Cluster.Spec.Frontend)
 	}
 
 	if len(b.Cluster.GetFrontends()) != 0 {
 		for _, frontend := range b.Cluster.Spec.Frontends {
-			b.generateService(common.AdditionalResourceName(b.Cluster.Name, frontend.GetName(), b.ComponentKind), frontend)
+			b.generateService(frontend)
 		}
 	}
 
 	return b
 }
 
-func (b *frontendBuilder) generateDeployment(name string, frontendSpec *v1alpha1.FrontendSpec) {
+func (b *frontendBuilder) generateDeployment(frontend *v1alpha1.FrontendSpec) {
+	name := common.ResourceName(b.Cluster.Name, b.ComponentKind)
+	if len(frontend.GetName()) != 0 {
+		name = common.AdditionalResourceName(b.Cluster.Name, frontend.GetName(), b.ComponentKind)
+	}
+
 	deployment := &appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Deployment",
@@ -206,16 +218,16 @@ func (b *frontendBuilder) generateDeployment(name string, frontendSpec *v1alpha1
 			},
 		},
 		Spec: appsv1.DeploymentSpec{
-			Replicas: frontendSpec.Replicas,
+			Replicas: frontend.Replicas,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					constant.GreptimeDBComponentName: name,
 				},
 			},
-			Template: *b.generatePodTemplateSpec(frontendSpec),
+			Template: *b.generatePodTemplateSpec(frontend),
 			Strategy: appsv1.DeploymentStrategy{
 				Type:          appsv1.RollingUpdateDeploymentStrategyType,
-				RollingUpdate: frontendSpec.RollingUpdate,
+				RollingUpdate: frontend.RollingUpdate,
 			},
 		},
 	}
@@ -242,12 +254,12 @@ func (b *frontendBuilder) BuildDeployment() deployer.Builder {
 	}
 
 	if b.Cluster.GetFrontend() != nil {
-		b.generateDeployment(common.ResourceName(b.Cluster.Name, b.ComponentKind), b.Cluster.Spec.Frontend)
+		b.generateDeployment(b.Cluster.Spec.Frontend)
 	}
 
 	if len(b.Cluster.GetFrontends()) != 0 {
 		for _, frontend := range b.Cluster.Spec.Frontends {
-			b.generateDeployment(common.AdditionalResourceName(b.Cluster.Name, frontend.GetName(), b.ComponentKind), frontend)
+			b.generateDeployment(frontend)
 		}
 	}
 
@@ -327,24 +339,92 @@ func (b *frontendBuilder) BuildPodMonitor() deployer.Builder {
 	return b
 }
 
+func (b *frontendBuilder) generateIngress() {
+	var rules []networkingv1.IngressRule
+	for _, rule := range b.Cluster.GetIngress().Rules {
+		ingressRule := networkingv1.IngressRule{
+			Host: rule.Host,
+		}
+
+		var paths []networkingv1.HTTPIngressPath
+		for _, backend := range rule.IngressBackend {
+			paths = append(paths, networkingv1.HTTPIngressPath{
+				Path:     backend.Path,
+				PathType: backend.PathType,
+				Backend: networkingv1.IngressBackend{
+					Service: &networkingv1.IngressServiceBackend{
+						Name: common.AdditionalResourceName(b.Cluster.Name, backend.Name, b.ComponentKind),
+						Port: networkingv1.ServiceBackendPort{
+							Number: b.Cluster.Spec.HTTPPort,
+						},
+					},
+				},
+			})
+		}
+		ingressRule.HTTP = &networkingv1.HTTPIngressRuleValue{
+			Paths: paths,
+		}
+
+		rules = append(rules, ingressRule)
+	}
+
+	ing := &networkingv1.Ingress{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Ingress",
+			APIVersion: "networking.k8s.io/v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace:   b.Cluster.Namespace,
+			Name:        b.Cluster.Name,
+			Annotations: b.Cluster.GetIngress().Annotations,
+			Labels: util.MergeStringMap(b.Cluster.GetIngress().Labels, map[string]string{
+				constant.GreptimeDBComponentName: b.Cluster.Name,
+			}),
+		},
+		Spec: networkingv1.IngressSpec{
+			IngressClassName: b.Cluster.GetIngress().IngressClassName,
+			TLS:              b.Cluster.GetIngress().TLS,
+			Rules:            rules,
+		},
+	}
+
+	b.Objects = append(b.Objects, ing)
+}
+
+func (b *frontendBuilder) BuildIngress() deployer.Builder {
+	if b.Err != nil {
+		return b
+	}
+
+	if b.Cluster.GetFrontend() == nil && len(b.Cluster.GetFrontends()) == 0 {
+		return b
+	}
+
+	if b.Cluster.GetIngress() != nil && len(b.Cluster.GetIngress().Rules) != 0 {
+		b.generateIngress()
+	}
+
+	return b
+}
+
 func (b *frontendBuilder) Generate() ([]client.Object, error) {
 	return b.Objects, b.Err
 }
 
-func (b *frontendBuilder) generateMainContainerArgs(frontendSpec *v1alpha1.FrontendSpec) []string {
+func (b *frontendBuilder) generateMainContainerArgs(frontend *v1alpha1.FrontendSpec) []string {
 	var args = []string{
 		"frontend", "start",
-		"--rpc-bind-addr", fmt.Sprintf("0.0.0.0:%d", frontendSpec.RPCPort),
-		"--rpc-server-addr", fmt.Sprintf("$(%s):%d", deployer.EnvPodIP, frontendSpec.RPCPort),
+		"--rpc-bind-addr", fmt.Sprintf("0.0.0.0:%d", frontend.RPCPort),
+		"--rpc-server-addr", fmt.Sprintf("$(%s):%d", deployer.EnvPodIP, frontend.RPCPort),
 		"--metasrv-addrs", fmt.Sprintf("%s.%s:%d", common.ResourceName(b.Cluster.Name, v1alpha1.MetaComponentKind),
 			b.Cluster.Namespace, b.Cluster.Spec.Meta.RPCPort),
-		"--http-addr", fmt.Sprintf("0.0.0.0:%d", frontendSpec.HTTPPort),
-		"--mysql-addr", fmt.Sprintf("0.0.0.0:%d", frontendSpec.MySQLPort),
-		"--postgres-addr", fmt.Sprintf("0.0.0.0:%d", frontendSpec.PostgreSQLPort),
+		"--http-addr", fmt.Sprintf("0.0.0.0:%d", frontend.HTTPPort),
+		"--mysql-addr", fmt.Sprintf("0.0.0.0:%d", frontend.MySQLPort),
+		"--postgres-addr", fmt.Sprintf("0.0.0.0:%d", frontend.PostgreSQLPort),
 		"--config-file", path.Join(constant.GreptimeDBConfigDir, constant.GreptimeDBConfigFileName),
 	}
 
-	if frontendSpec.TLS != nil {
+	if frontend.TLS != nil {
 		args = append(args, []string{
 			"--tls-mode", constant.DefaultTLSMode,
 			"--tls-cert-path", path.Join(constant.GreptimeDBTLSDir, v1alpha1.TLSCrtSecretKey),
@@ -355,29 +435,29 @@ func (b *frontendBuilder) generateMainContainerArgs(frontendSpec *v1alpha1.Front
 	return args
 }
 
-func (b *frontendBuilder) generatePodTemplateSpec(frontendSpec *v1alpha1.FrontendSpec) *corev1.PodTemplateSpec {
-	podTemplateSpec := b.GeneratePodTemplateSpec(frontendSpec.Template)
+func (b *frontendBuilder) generatePodTemplateSpec(frontend *v1alpha1.FrontendSpec) *corev1.PodTemplateSpec {
+	podTemplateSpec := b.GeneratePodTemplateSpec(frontend.Template)
 
-	if len(frontendSpec.Template.MainContainer.Args) == 0 {
+	if len(frontend.Template.MainContainer.Args) == 0 {
 		// Setup main container args.
-		podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Args = b.generateMainContainerArgs(frontendSpec)
+		podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Args = b.generateMainContainerArgs(frontend)
 	}
 
 	resourceName := common.ResourceName(b.Cluster.Name, b.ComponentKind)
-	if len(frontendSpec.GetName()) != 0 {
-		resourceName = common.AdditionalResourceName(b.Cluster.Name, frontendSpec.GetName(), b.ComponentKind)
+	if len(frontend.GetName()) != 0 {
+		resourceName = common.AdditionalResourceName(b.Cluster.Name, frontend.GetName(), b.ComponentKind)
 	}
 	podTemplateSpec.ObjectMeta.Labels = util.MergeStringMap(podTemplateSpec.ObjectMeta.Labels, map[string]string{
 		constant.GreptimeDBComponentName: resourceName,
 	})
 
-	podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Ports = b.containerPorts(frontendSpec)
+	podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Ports = b.containerPorts(frontend)
 	podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Env = append(podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Env, b.env(v1alpha1.FrontendComponentKind)...)
 
-	b.Frontend = frontendSpec
+	b.Frontend = frontend
 	b.MountConfigDir(podTemplateSpec)
 
-	if logging := frontendSpec.GetLogging(); logging != nil && !logging.IsOnlyLogToStdout() {
+	if logging := frontend.GetLogging(); logging != nil && !logging.IsOnlyLogToStdout() {
 		b.AddLogsVolume(podTemplateSpec, logging.GetLogsDir())
 	}
 
@@ -386,8 +466,8 @@ func (b *frontendBuilder) generatePodTemplateSpec(frontendSpec *v1alpha1.Fronten
 		b.AddVectorSidecar(podTemplateSpec, v1alpha1.FrontendComponentKind)
 	}
 
-	if frontendSpec.TLS != nil {
-		b.mountTLSSecret(frontendSpec.TLS.SecretName, podTemplateSpec)
+	if frontend.TLS != nil {
+		b.mountTLSSecret(frontend.TLS.SecretName, podTemplateSpec)
 	}
 
 	return podTemplateSpec
@@ -413,56 +493,56 @@ func (b *frontendBuilder) mountTLSSecret(secretName string, template *corev1.Pod
 		)
 }
 
-func (b *frontendBuilder) servicePorts(frontendSpec *v1alpha1.FrontendSpec) []corev1.ServicePort {
+func (b *frontendBuilder) servicePorts(frontend *v1alpha1.FrontendSpec) []corev1.ServicePort {
 	return []corev1.ServicePort{
 		{
 			Name:       "rpc",
 			Protocol:   corev1.ProtocolTCP,
 			Port:       b.Cluster.Spec.RPCPort,
-			TargetPort: intstr.FromInt32(frontendSpec.RPCPort),
+			TargetPort: intstr.FromInt32(frontend.RPCPort),
 		},
 		{
 			Name:       "http",
 			Protocol:   corev1.ProtocolTCP,
 			Port:       b.Cluster.Spec.HTTPPort,
-			TargetPort: intstr.FromInt32(frontendSpec.HTTPPort),
+			TargetPort: intstr.FromInt32(frontend.HTTPPort),
 		},
 		{
 			Name:       "mysql",
 			Protocol:   corev1.ProtocolTCP,
 			Port:       b.Cluster.Spec.MySQLPort,
-			TargetPort: intstr.FromInt32(frontendSpec.MySQLPort),
+			TargetPort: intstr.FromInt32(frontend.MySQLPort),
 		},
 		{
 			Name:       "pg",
 			Protocol:   corev1.ProtocolTCP,
 			Port:       b.Cluster.Spec.PostgreSQLPort,
-			TargetPort: intstr.FromInt32(frontendSpec.PostgreSQLPort),
+			TargetPort: intstr.FromInt32(frontend.PostgreSQLPort),
 		},
 	}
 }
 
-func (b *frontendBuilder) containerPorts(frontendSpec *v1alpha1.FrontendSpec) []corev1.ContainerPort {
+func (b *frontendBuilder) containerPorts(frontend *v1alpha1.FrontendSpec) []corev1.ContainerPort {
 	return []corev1.ContainerPort{
 		{
 			Name:          "rpc",
 			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: frontendSpec.RPCPort,
+			ContainerPort: frontend.RPCPort,
 		},
 		{
 			Name:          "http",
 			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: frontendSpec.HTTPPort,
+			ContainerPort: frontend.HTTPPort,
 		},
 		{
 			Name:          "mysql",
 			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: frontendSpec.MySQLPort,
+			ContainerPort: frontend.MySQLPort,
 		},
 		{
 			Name:          "pg",
 			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: frontendSpec.PostgreSQLPort,
+			ContainerPort: frontend.PostgreSQLPort,
 		},
 	}
 }

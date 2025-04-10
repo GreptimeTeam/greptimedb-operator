@@ -19,8 +19,10 @@ import (
 	"fmt"
 	"math/rand"
 	"net"
+	"net/http"
 	"os"
 	"os/exec"
+	"strings"
 	"time"
 
 	"github.com/jackc/pgx/v5"
@@ -43,7 +45,7 @@ const (
 	MaxPort = 30000
 
 	// DefaultTimeout is the default timeout for the e2e tests.
-	DefaultTimeout = 1 * time.Minute
+	DefaultTimeout = 2 * time.Minute
 
 	// DefaultEtcdNamespace is the default namespace for the etcd cluster.
 	DefaultEtcdNamespace = "etcd-cluster"
@@ -85,6 +87,60 @@ func (h *Helper) RunSQLTest(ctx context.Context, addr string, sqlFile string) er
 	_, err = conn.Exec(context.Background(), string(data))
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+// RunHTTPTest runs the HTTP request to the specified hostname with the given data.
+func (h *Helper) RunHTTPTest(url, data, httpMethod string) error {
+	req, err := http.NewRequest(httpMethod, url, strings.NewReader(data))
+	if err != nil {
+		return fmt.Errorf("failed to create HTTP request: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	c := &http.Client{}
+	resp, err := c.Do(req)
+	if err != nil {
+		return fmt.Errorf("failed to run HTTP request: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("unexpected HTTP response status: got %v, want %v", resp.StatusCode, http.StatusOK)
+	}
+
+	return nil
+}
+
+// AddIPToHosts adds the loadBalancer IP and host to the /etc/hosts file.
+func (h *Helper) AddIPToHosts(ip string, host string) error {
+	const (
+		hostsFile = "/etc/hosts"
+	)
+
+	// Read the current contents of the /etc/hosts file
+	content, err := os.ReadFile(hostsFile)
+	if err != nil {
+		return fmt.Errorf("failed to read file: %w", err)
+	}
+
+	// Check if the entry already exists
+	lines := strings.Split(string(content), "\n")
+	for _, line := range lines {
+		if strings.Contains(line, host) && strings.Contains(line, ip) {
+			return nil
+		}
+	}
+
+	// Prepare the new entry
+	newEntry := fmt.Sprintf("%s\t%s\n", ip, host)
+
+	// Use sudo to append the new entry to the /etc/hosts file
+	cmd := exec.Command("sudo", "sh", "-c", fmt.Sprintf("echo '%s' >> %s", newEntry, hostsFile))
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to write ingress ip to /etc/hosts: %w", err)
 	}
 
 	return nil

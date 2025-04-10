@@ -16,6 +16,7 @@ package v1alpha1
 
 import (
 	corev1 "k8s.io/api/core/v1"
+	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -868,6 +869,55 @@ func (in *AZBlobStorage) GetRoot() string {
 		return in.Root
 	}
 	return ""
+}
+
+// IngressSpec defines the Ingress configuration.
+type IngressSpec struct {
+	// Annotations is the annotations for the ingress.
+	// +optional
+	Annotations map[string]string `json:"annotations,omitempty"`
+
+	// Labels is the labels for the ingress.
+	// +optional
+	Labels map[string]string `json:"labels,omitempty"`
+
+	// IngressClassName is the name of an IngressClass.
+	// +optional
+	IngressClassName *string `json:"ingressClassName,omitempty"`
+
+	// IngressRule is a list of host rules used to configure the Ingress.
+	// +optional
+	Rules []IngressRule `json:"rules,omitempty"`
+
+	// TLS is the Ingress TLS configuration.
+	// +optional
+	TLS []networkingv1.IngressTLS `json:"tls,omitempty"`
+}
+
+// IngressRule defines the Ingress rule configuration.
+type IngressRule struct {
+	// Host is the fully qualified domain name of a network host.
+	// +optional
+	Host string `json:"host,omitempty"`
+
+	// IngressBackend is the Ingress backend configuration.
+	// +optional
+	IngressBackend []IngressBackend `json:"backends,omitempty"`
+}
+
+// IngressBackend defines the Ingress backend configuration.
+type IngressBackend struct {
+	// Name is the referenced frontend name.
+	// +optional
+	Name string `json:"name,omitempty"`
+
+	// Path is matched against the path of an incoming request.
+	// +optional
+	Path string `json:"path,omitempty"`
+
+	// PathType determines the interpretation of the path matching.
+	// +optional
+	PathType *networkingv1.PathType `json:"pathType,omitempty"`
 }
 
 // PrometheusMonitorSpec defines the PodMonitor configuration.
