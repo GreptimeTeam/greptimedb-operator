@@ -23,7 +23,7 @@ const (
 	defaultHealthProbeAddr         = ":9494"
 	defaultAPIServerPort           = 8081
 	defaultAdmissionWebhookPort    = 8082
-	defaultAdmissionWebhookCertDir = "/etc/greptimedb/admission-webhook-tls"
+	defaultAdmissionWebhookCertDir = "/etc/webhook-tls"
 )
 
 type Options struct {
@@ -43,6 +43,7 @@ func NewDefaultOptions() *Options {
 		MetricsAddr:             defaultMetricsAddr,
 		HealthProbeAddr:         defaultHealthProbeAddr,
 		APIServerPort:           defaultAPIServerPort,
+		EnableLeaderElection:    true,
 		EnableAPIServer:         false,
 		EnablePodMetrics:        false,
 		EnableAdmissionWebhook:  false,

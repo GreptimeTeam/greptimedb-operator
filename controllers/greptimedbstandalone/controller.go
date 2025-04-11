@@ -49,13 +49,17 @@ var (
 type Reconciler struct {
 	client.Client
 
+	EnableAdmissionWebhook bool
+
 	Scheme   *runtime.Scheme
 	Deployer deployer.Deployer
 	Recorder record.EventRecorder
 }
 
-func Setup(mgr ctrl.Manager, _ *options.Options) error {
+func Setup(mgr ctrl.Manager, o *options.Options) error {
 	reconciler := &Reconciler{
+		EnableAdmissionWebhook: o.EnableAdmissionWebhook,
+
 		Client:   mgr.GetClient(),
 		Scheme:   mgr.GetScheme(),
 		Recorder: mgr.GetEventRecorderFor("greptimedbstandalone-controller"),
@@ -109,9 +113,11 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, err
 	}
 
-	if err = standalone.Validate(); err != nil {
-		r.Recorder.Event(standalone, corev1.EventTypeWarning, "InvalidStandalone", fmt.Sprintf("Invalid standalone: %v", err))
-		return ctrl.Result{}, err
+	if !r.EnableAdmissionWebhook {
+		if err = standalone.Validate(); err != nil {
+			r.Recorder.Event(standalone, corev1.EventTypeWarning, "InvalidStandalone", fmt.Sprintf("Invalid standalone: %v", err))
+			return ctrl.Result{}, err
+		}
 	}
 
 	if err = standalone.Check(ctx, r.Client); err != nil {
