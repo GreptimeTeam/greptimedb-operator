@@ -43,7 +43,7 @@ func NewDefaultOptions() *Options {
 		MetricsAddr:             defaultMetricsAddr,
 		HealthProbeAddr:         defaultHealthProbeAddr,
 		APIServerPort:           defaultAPIServerPort,
-		EnableLeaderElection:    true,
+		EnableLeaderElection:    false,
 		EnableAPIServer:         false,
 		EnablePodMetrics:        false,
 		EnableAdmissionWebhook:  false,
