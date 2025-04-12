@@ -117,7 +117,7 @@ func (d *DatanodeDeployer) CheckAndUpdateStatus(ctx context.Context, crdObject c
 		}
 	)
 
-	err = d.Get(ctx, objectKey, sts)
+	err = d.Client.Get(ctx, objectKey, sts)
 	if errors.IsNotFound(err) {
 		return false, nil
 	}
@@ -190,7 +190,7 @@ func (d *DatanodeDeployer) PostSyncHooks() []deployer.Hook {
 func (d *DatanodeDeployer) turnOnMaintenanceMode(ctx context.Context, newSts *appsv1.StatefulSet, cluster *v1alpha1.GreptimeDBCluster) error {
 	oldSts := new(appsv1.StatefulSet)
 	// The oldSts must exist since we have checked it before.
-	if err := d.Get(ctx, client.ObjectKeyFromObject(newSts), oldSts); err != nil {
+	if err := d.Client.Get(ctx, client.ObjectKeyFromObject(newSts), oldSts); err != nil {
 		return err
 	}
 
@@ -246,7 +246,7 @@ func (d *DatanodeDeployer) deleteStorage(ctx context.Context, namespace, name st
 
 	for _, pvc := range claims {
 		klog.Infof("Deleting datanode PVC: %s", pvc.Name)
-		if err := d.Delete(ctx, &pvc); err != nil {
+		if err := d.Client.Delete(ctx, &pvc); err != nil {
 			return err
 		}
 	}

@@ -118,7 +118,7 @@ func (d *MetaDeployer) CheckAndUpdateStatus(ctx context.Context, highLevelObject
 		}
 	)
 
-	err = d.Get(ctx, objectKey, deployment)
+	err = d.Client.Get(ctx, objectKey, deployment)
 	if errors.IsNotFound(err) {
 		return false, nil
 	}

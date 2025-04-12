@@ -132,7 +132,7 @@ func (d *StandaloneDeployer) CheckAndUpdateStatus(ctx context.Context, crdObject
 		}
 	)
 
-	err = d.Get(ctx, objectKey, sts)
+	err = d.Client.Get(ctx, objectKey, sts)
 	if errors.IsNotFound(err) {
 		return false, nil
 	}
@@ -161,7 +161,7 @@ func (d *StandaloneDeployer) deleteStorage(ctx context.Context, namespace, name 
 
 	for _, pvc := range claims {
 		klog.Infof("Deleting standalone PVC: %s", pvc.Name)
-		if err := d.Delete(ctx, &pvc); err != nil {
+		if err := d.Client.Delete(ctx, &pvc); err != nil {
 			return err
 		}
 	}

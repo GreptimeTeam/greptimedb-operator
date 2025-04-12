@@ -89,7 +89,7 @@ func (d *MonitoringDeployer) CheckAndUpdateStatus(ctx context.Context, crdObject
 		}
 	)
 
-	err = d.Get(ctx, objectKey, standalone)
+	err = d.Client.Get(ctx, objectKey, standalone)
 	if errors.IsNotFound(err) {
 		return false, nil
 	}

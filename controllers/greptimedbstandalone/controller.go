@@ -86,7 +86,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 	var err error
 	standalone := new(v1alpha1.GreptimeDBStandalone)
-	if err := r.Get(ctx, req.NamespacedName, standalone); err != nil {
+	if err := r.Client.Get(ctx, req.NamespacedName, standalone); err != nil {
 		if k8serrors.IsNotFound(err) {
 			return ctrl.Result{}, nil
 		}
@@ -133,7 +133,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 
 	if !cmp.Equal(originalObject.Spec, standalone.Spec) {
 		// Update the default values to the standalone spec if it is not set.
-		if err = r.Update(ctx, standalone); err != nil {
+		if err = r.Client.Update(ctx, standalone); err != nil {
 			r.Recorder.Event(standalone, corev1.EventTypeWarning, "UpdateStandaloneFailed", fmt.Sprintf("Update standalone failed: %v", err))
 			return ctrl.Result{}, err
 		}
@@ -205,7 +205,7 @@ func (r *Reconciler) sync(ctx context.Context, standalone *v1alpha1.GreptimeDBSt
 func (r *Reconciler) addFinalizer(ctx context.Context, standalone *v1alpha1.GreptimeDBStandalone) error {
 	if !controllerutil.ContainsFinalizer(standalone, greptimedbStandaloneFinalizer) {
 		controllerutil.AddFinalizer(standalone, greptimedbStandaloneFinalizer)
-		if err := r.Update(ctx, standalone); err != nil {
+		if err := r.Client.Update(ctx, standalone); err != nil {
 			return err
 		}
 	}
@@ -226,7 +226,7 @@ func (r *Reconciler) delete(ctx context.Context, standalone *v1alpha1.GreptimeDB
 	// remove our finalizer from the list.
 	controllerutil.RemoveFinalizer(standalone, greptimedbStandaloneFinalizer)
 
-	if err := r.Update(ctx, standalone); err != nil {
+	if err := r.Client.Update(ctx, standalone); err != nil {
 		return ctrl.Result{}, err
 	}
 
