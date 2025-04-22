@@ -54,12 +54,10 @@ transforms:
       - slow_queries
     source: |
       . = parse_json!(.message)
-      .message = .fields.message
       .pod = "${POD_NAME}"
       .pod_ip = "${POD_IP}"
       .namespace = "${POD_NAMESPACE}"
       .cluster = "{{ .ClusterName }}"
-      .role = "${ROLE}"
       if exists(.fields.cost) {
         .cost = .fields.cost
       }
@@ -86,7 +84,7 @@ sinks:
   sink_greptimedb_logs:
     type: greptimedb_logs
     table: {{ .LogsTableName }}
-    pipeline_name: {{ .PipelineName }}
+    pipeline_name: {{ .LogsPipelineName }}
     compression: gzip
     inputs:
       - transform_logs
@@ -95,7 +93,7 @@ sinks:
   sink_greptimedb_slow_queries:
     type: greptimedb_logs
     table: {{ .SlowQueriesTableName }}
-    pipeline_name: {{ .PipelineName }}
+    pipeline_name: {{ .SlowQueriesPipelineName }}
     compression: gzip
     inputs:
       - transform_slow_queries

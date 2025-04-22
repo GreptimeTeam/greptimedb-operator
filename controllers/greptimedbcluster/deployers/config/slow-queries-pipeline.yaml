@@ -7,25 +7,19 @@ processors:
 
 transform:
   - fields:
-      - level
-      - target
-      - module_path
-      - file
-      - pod
       - pod_ip
       - namespace
       - cluster
-      - role
       - cost
       - threshold
+      - pod
     type: string
-    index: tag
+
   - fields:
-      - message
       - query
-      - err
     type: string
     index: fulltext
+
   - field: timestamp
     type: time
     index: timestamp

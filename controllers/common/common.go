@@ -16,6 +16,7 @@ package common
 
 import (
 	"context"
+	"strings"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -308,5 +309,9 @@ func MonitoringServiceName(name string) string {
 }
 
 func LogsPipelineName(namespace, name string) string {
-	return namespace + "-" + name + "-logs"
+	return strings.Join([]string{namespace, name, "logs"}, "-")
+}
+
+func SlowQueriesPipelineName(namespace, name string) string {
+	return strings.Join([]string{namespace, name, "slow-queries"}, "-")
 }

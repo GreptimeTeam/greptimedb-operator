@@ -1,0 +1,37 @@
+processors:
+  - date:
+      fields:
+        - timestamp # 2024-08-30T08:55:48.817419Z
+      formats:
+        - "%Y-%m-%dT%H:%M:%S.%6fZ"
+
+transform:
+  - fields:
+      - pod_ip
+      - namespace
+      - cluster
+      - file
+      - module_path
+    type: string
+
+  - fields:
+      - level
+      - target
+      - role
+    type: string
+    index: tag
+
+  - fields:
+      - pod
+    type: string
+    index: skipping
+
+  - fields:
+      - message
+      - err
+    type: string
+    index: fulltext
+    
+  - field: timestamp
+    type: time
+    index: timestamp
