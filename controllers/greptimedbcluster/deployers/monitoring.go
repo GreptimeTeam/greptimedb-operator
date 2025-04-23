@@ -44,6 +44,11 @@ type MonitoringDeployer struct {
 	*CommonDeployer
 }
 
+type pipeline struct {
+	name string
+	data string
+}
+
 var _ deployer.Deployer = &MonitoringDeployer{}
 
 func NewMonitoringDeployer(mgr ctrl.Manager) *MonitoringDeployer {
@@ -95,40 +100,44 @@ func (d *MonitoringDeployer) CheckAndUpdateStatus(ctx context.Context, crdObject
 	}
 
 	if cluster.GetMonitoring().IsEnabled() && standalone.Status.StandalonePhase == v1alpha1.PhaseRunning {
-		pipeline, err := d.getPipeline(ctx, cluster)
+		pipelines, err := d.pipelines(cluster)
 		if err != nil {
-			klog.Errorf("Failed to get pipeline for standalone, err: '%v'", err)
+			klog.Errorf("Failed to get pipelines for standalone, err: '%v'", err)
 			return false, err
 		}
 
-		if pipeline == "" {
-			klog.Infof("Create pipeline '%s' for standalone monitoring", common.LogsPipelineName(cluster.Namespace, cluster.Name))
-			if err := d.createPipeline(cluster); err != nil {
-				klog.Errorf("Failed to create pipeline for standalone, err: '%v'", err)
+		for _, p := range pipelines {
+			pipeline, err := d.getPipeline(ctx, cluster, p.name)
+			if err != nil {
+				klog.Errorf("Failed to get pipeline for standalone, err: '%v'", err)
 				return false, err
+			}
+
+			if pipeline == "" {
+				klog.Infof("Create pipeline '%s' for standalone monitoring", p.name)
+				if err := d.createPipeline(cluster, p.data, p.name); err != nil {
+					klog.Errorf("Failed to create pipeline '%s' for standalone, err: '%v'", p.name, err)
+					return false, err
+				}
+			}
+
+			cluster.Status.Monitoring.InternalDNSName = fmt.Sprintf("%s.%s.svc.cluster.local", common.ResourceName(common.MonitoringServiceName(cluster.Name), v1alpha1.StandaloneKind), cluster.Namespace)
+			if err := UpdateStatus(ctx, cluster, d.Client); err != nil {
+				klog.Errorf("Failed to update status: %s", err)
 			}
 		}
 
-		cluster.Status.Monitoring.InternalDNSName = fmt.Sprintf("%s.%s.svc.cluster.local", common.ResourceName(common.MonitoringServiceName(cluster.Name), v1alpha1.StandaloneKind), cluster.Namespace)
-		if err := UpdateStatus(ctx, cluster, d.Client); err != nil {
-			klog.Errorf("Failed to update status: %s", err)
-		}
 		return true, nil
 	}
 
 	return false, nil
 }
 
-func (d *MonitoringDeployer) createPipeline(cluster *v1alpha1.GreptimeDBCluster) error {
+func (d *MonitoringDeployer) createPipeline(cluster *v1alpha1.GreptimeDBCluster, pipeline string, pipelineName string) error {
 	var b bytes.Buffer
 	w := multipart.NewWriter(&b)
 
 	fw, err := w.CreateFormFile("file", "pipeline.yaml")
-	if err != nil {
-		return err
-	}
-
-	pipeline, err := d.defaultPipeline()
 	if err != nil {
 		return err
 	}
@@ -153,7 +162,7 @@ func (d *MonitoringDeployer) createPipeline(cluster *v1alpha1.GreptimeDBCluster)
 	}
 
 	operation := func() error {
-		req, err := http.NewRequest("POST", fmt.Sprintf("http://%s/v1/events/pipelines/%s", svc, common.LogsPipelineName(cluster.Namespace, cluster.Name)), &b)
+		req, err := http.NewRequest("POST", fmt.Sprintf("http://%s/v1/events/pipelines/%s", svc, pipelineName), &b)
 		if err != nil {
 			return err
 		}
@@ -191,16 +200,48 @@ func (d *MonitoringDeployer) createPipeline(cluster *v1alpha1.GreptimeDBCluster)
 	return nil
 }
 
-// defaultPipeline returns the default pipeline that will be used by the standalone greptimedb instance to collect greptimedb logs.
-func (d *MonitoringDeployer) defaultPipeline() (string, error) {
-	data, err := fs.ReadFile(config.DefaultPipeline, "pipeline.yaml")
+func (d *MonitoringDeployer) pipelines(cluster *v1alpha1.GreptimeDBCluster) ([]*pipeline, error) {
+	logsPipeline, err := d.defaultLogsPipeline()
+	if err != nil {
+		return nil, err
+	}
+
+	slowQueriesPipeline, err := d.defaultSlowQueriesPipeline()
+	if err != nil {
+		return nil, err
+	}
+
+	return []*pipeline{
+		{
+			name: common.LogsPipelineName(cluster.Namespace, cluster.Name),
+			data: logsPipeline,
+		},
+		{
+			name: common.SlowQueriesPipelineName(cluster.Namespace, cluster.Name),
+			data: slowQueriesPipeline,
+		},
+	}, nil
+}
+
+// defaultLogsPipeline returns the default pipeline that will be used by the standalone greptimedb instance to collect greptimedb logs.
+func (d *MonitoringDeployer) defaultLogsPipeline() (string, error) {
+	data, err := fs.ReadFile(config.DefaultLogsPipeline, "logs-pipeline.yaml")
 	if err != nil {
 		return "", err
 	}
 	return string(data), nil
 }
 
-func (d *MonitoringDeployer) getPipeline(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster) (string, error) {
+// defaultSlowQueriesPipeline returns the default pipeline that will be used by the standalone greptimedb instance to collect slow queries.
+func (d *MonitoringDeployer) defaultSlowQueriesPipeline() (string, error) {
+	data, err := fs.ReadFile(config.DefaultSlowQueriesPipeline, "slow-queries-pipeline.yaml")
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
+}
+
+func (d *MonitoringDeployer) getPipeline(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster, pipelineName string) (string, error) {
 	cfg := mysql.Config{
 		Net:                  "tcp",
 		Addr:                 fmt.Sprintf("%s.%s.svc.cluster.local:%d", common.ResourceName(common.MonitoringServiceName(cluster.Name), v1alpha1.StandaloneKind), cluster.Namespace, v1alpha1.DefaultMySQLPort),
@@ -224,7 +265,6 @@ func (d *MonitoringDeployer) getPipeline(ctx context.Context, cluster *v1alpha1.
 	}
 	defer rows.Close()
 
-	pipelineName := common.LogsPipelineName(cluster.Namespace, cluster.Name)
 	rows, err = db.QueryContext(ctx, "SELECT pipeline FROM pipelines WHERE name = ? LIMIT 1", pipelineName)
 	if err != nil {
 		return "", err

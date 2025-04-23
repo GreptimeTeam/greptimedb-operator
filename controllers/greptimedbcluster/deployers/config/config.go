@@ -21,5 +21,8 @@ import (
 //go:embed vector-config-template.yaml
 var VectorConfigTemplate embed.FS
 
-//go:embed pipeline.yaml
-var DefaultPipeline embed.FS
+//go:embed logs-pipeline.yaml
+var DefaultLogsPipeline embed.FS
+
+//go:embed slow-queries-pipeline.yaml
+var DefaultSlowQueriesPipeline embed.FS
