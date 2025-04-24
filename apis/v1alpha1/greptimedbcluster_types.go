@@ -77,6 +77,13 @@ type MetaSpec struct {
 	RollingUpdate *appsv1.RollingUpdateDeployment `json:"rollingUpdate,omitempty"`
 }
 
+func (in *MetaSpec) GetReplicas() *int32 {
+	if in != nil && in.Replicas != nil {
+		return in.Replicas
+	}
+	return nil
+}
+
 func (in *MetaSpec) GetConfig() string {
 	if in != nil {
 		return in.Config
@@ -158,6 +165,13 @@ type FrontendSpec struct {
 	RollingUpdate *appsv1.RollingUpdateDeployment `json:"rollingUpdate,omitempty"`
 }
 
+func (in *FrontendSpec) GetReplicas() *int32 {
+	if in != nil && in.Replicas != nil {
+		return in.Replicas
+	}
+	return nil
+}
+
 func (in *FrontendSpec) GetTLS() *TLSSpec {
 	if in != nil {
 		return in.TLS
@@ -218,6 +232,13 @@ type DatanodeSpec struct {
 	RollingUpdate *appsv1.RollingUpdateStatefulSetStrategy `json:"rollingUpdate,omitempty"`
 }
 
+func (in *DatanodeSpec) GetReplicas() *int32 {
+	if in != nil && in.Replicas != nil {
+		return in.Replicas
+	}
+	return nil
+}
+
 func (in *DatanodeSpec) GetConfig() string {
 	if in != nil {
 		return in.Config
@@ -265,6 +286,13 @@ type FlownodeSpec struct {
 	// RollingUpdate is the rolling update configuration. We always use `RollingUpdate` strategy.
 	// +optional
 	RollingUpdate *appsv1.RollingUpdateStatefulSetStrategy `json:"rollingUpdate,omitempty"`
+}
+
+func (in *FlownodeSpec) GetReplicas() *int32 {
+	if in != nil && in.Replicas != nil {
+		return in.Replicas
+	}
+	return nil
 }
 
 func (in *FlownodeSpec) GetConfig() string {

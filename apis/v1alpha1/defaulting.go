@@ -175,10 +175,9 @@ func (in *GreptimeDBCluster) defaultSpec() *GreptimeDBClusterSpec {
 }
 
 func (in *GreptimeDBCluster) defaultFrontend() *FrontendSpec {
-	return &FrontendSpec{
+	defaultSpec := &FrontendSpec{
 		ComponentSpec: ComponentSpec{
 			Template: &PodTemplateSpec{},
-			Replicas: ptr.To(int32(DefaultReplicas)),
 			Logging:  &LoggingSpec{},
 		},
 		RPCPort:        DefaultRPCPort,
@@ -190,6 +189,12 @@ func (in *GreptimeDBCluster) defaultFrontend() *FrontendSpec {
 		},
 		RollingUpdate: defaultRollingUpdateForDeployment(),
 	}
+
+	if in.GetFrontend().GetReplicas() == nil {
+		defaultSpec.Replicas = ptr.To(int32(DefaultReplicas))
+	}
+
+	return defaultSpec
 }
 
 func (in *GreptimeDBCluster) defaultFrontends() []*FrontendSpec {
@@ -249,10 +254,9 @@ func (in *GreptimeDBCluster) defaultFrontends() []*FrontendSpec {
 }
 
 func (in *GreptimeDBCluster) defaultMeta() *MetaSpec {
-	return &MetaSpec{
+	defaultSpec := &MetaSpec{
 		ComponentSpec: ComponentSpec{
 			Template: &PodTemplateSpec{},
-			Replicas: ptr.To(int32(DefaultReplicas)),
 			Logging:  &LoggingSpec{},
 		},
 		RPCPort:              DefaultMetaRPCPort,
@@ -260,13 +264,18 @@ func (in *GreptimeDBCluster) defaultMeta() *MetaSpec {
 		EnableRegionFailover: ptr.To(false),
 		RollingUpdate:        defaultRollingUpdateForDeployment(),
 	}
+
+	if in.GetMeta().GetReplicas() == nil {
+		defaultSpec.Replicas = ptr.To(int32(DefaultReplicas))
+	}
+
+	return defaultSpec
 }
 
 func (in *GreptimeDBCluster) defaultDatanode() *DatanodeSpec {
-	return &DatanodeSpec{
+	defaultSpec := &DatanodeSpec{
 		ComponentSpec: ComponentSpec{
 			Template: &PodTemplateSpec{},
-			Replicas: ptr.To(int32(DefaultReplicas)),
 			Logging:  &LoggingSpec{},
 		},
 		RPCPort:       DefaultRPCPort,
@@ -274,18 +283,29 @@ func (in *GreptimeDBCluster) defaultDatanode() *DatanodeSpec {
 		Storage:       defaultDatanodeStorage(),
 		RollingUpdate: defaultRollingUpdateForStatefulSet(),
 	}
+
+	if in.GetDatanode().GetReplicas() == nil {
+		defaultSpec.Replicas = ptr.To(int32(DefaultReplicas))
+	}
+
+	return defaultSpec
 }
 
 func (in *GreptimeDBCluster) defaultFlownodeSpec() *FlownodeSpec {
-	return &FlownodeSpec{
+	defaultSpec := &FlownodeSpec{
 		ComponentSpec: ComponentSpec{
 			Template: &PodTemplateSpec{},
-			Replicas: ptr.To(int32(DefaultReplicas)),
 			Logging:  &LoggingSpec{},
 		},
 		RPCPort:  DefaultRPCPort,
 		HTTPPort: DefaultHTTPPort,
 	}
+
+	if in.GetFlownode().GetReplicas() == nil {
+		defaultSpec.Replicas = ptr.To(int32(DefaultReplicas))
+	}
+
+	return defaultSpec
 }
 
 func (in *GreptimeDBCluster) defaultMonitoringStandaloneSpec() *GreptimeDBStandaloneSpec {
