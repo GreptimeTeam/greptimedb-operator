@@ -152,12 +152,6 @@ func (in *GreptimeDBCluster) validateMeta() error {
 		return fmt.Errorf("invalid meta toml config: '%v'", err)
 	}
 
-	if in.GetMeta().IsEnableRegionFailover() {
-		if in.GetWALProvider().GetKafkaWAL() == nil || in.GetObjectStorageProvider() == nil {
-			return fmt.Errorf("enabling region failover in meta requires kafka wal and object storage")
-		}
-	}
-
 	return nil
 }
 
