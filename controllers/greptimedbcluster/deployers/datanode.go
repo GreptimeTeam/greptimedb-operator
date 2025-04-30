@@ -159,7 +159,7 @@ func (d *DatanodeDeployer) Apply(ctx context.Context, crdObject client.Object, o
 
 			// If the spec or labels is not equal, update the object.
 			if !specEqual || !labelsEqual {
-				if sts, ok := newObject.(*appsv1.StatefulSet); ok && d.shouldUserMaintenanceMode(cluster) {
+				if sts, ok := newObject.(*appsv1.StatefulSet); ok && d.shouldUseMaintenanceMode(cluster) {
 					if err := d.turnOnMaintenanceMode(ctx, sts, cluster); err != nil {
 						return err
 					}
@@ -211,7 +211,7 @@ func (d *DatanodeDeployer) turnOffMaintenanceMode(ctx context.Context, crdObject
 		return err
 	}
 
-	if d.maintenanceMode && d.shouldUserMaintenanceMode(cluster) {
+	if d.maintenanceMode && d.shouldUseMaintenanceMode(cluster) {
 		klog.Infof("Turn off maintenance mode for datanode, cluster: %s", cluster.Name)
 		if err := d.requestMetasrvForMaintenance(cluster, false); err != nil {
 			return err
@@ -296,11 +296,8 @@ func (d *DatanodeDeployer) isOldPodRestart(new, old appsv1.StatefulSet) bool {
 	return false
 }
 
-func (d *DatanodeDeployer) shouldUserMaintenanceMode(cluster *v1alpha1.GreptimeDBCluster) bool {
-	if cluster.GetWALProvider().GetKafkaWAL() != nil && cluster.GetMeta().IsEnableRegionFailover() {
-		return true
-	}
-	return false
+func (d *DatanodeDeployer) shouldUseMaintenanceMode(cluster *v1alpha1.GreptimeDBCluster) bool {
+	return cluster.GetMeta().IsEnableRegionFailover()
 }
 
 var _ deployer.Builder = &datanodeBuilder{}
