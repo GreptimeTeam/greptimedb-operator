@@ -90,7 +90,7 @@ func (d *FlownodeDeployer) CheckAndUpdateStatus(ctx context.Context, crdObject c
 		}
 	)
 
-	err = d.Get(ctx, objectKey, sts)
+	err = d.Client.Get(ctx, objectKey, sts)
 	if errors.IsNotFound(err) {
 		return false, nil
 	}

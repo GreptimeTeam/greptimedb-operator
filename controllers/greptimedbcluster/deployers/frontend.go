@@ -92,7 +92,7 @@ func (d *FrontendDeployer) CheckAndUpdateStatus(ctx context.Context, crdObject c
 			Name:      common.ResourceName(cluster.Name, v1alpha1.FrontendComponentKind),
 		}
 
-		err = d.Get(ctx, objectKey, deployment)
+		err = d.Client.Get(ctx, objectKey, deployment)
 		if errors.IsNotFound(err) {
 			return false, nil
 		}
@@ -114,7 +114,7 @@ func (d *FrontendDeployer) CheckAndUpdateStatus(ctx context.Context, crdObject c
 				Name:      common.AdditionalResourceName(cluster.Name, frontend.GetName(), v1alpha1.FrontendComponentKind),
 			}
 
-			err = d.Get(ctx, objectKey, deployment)
+			err = d.Client.Get(ctx, objectKey, deployment)
 			if errors.IsNotFound(err) {
 				return false, nil
 			}

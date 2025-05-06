@@ -149,7 +149,7 @@ func (h *Helper) AddIPToHosts(ip string, host string) error {
 // GetIngressIP returns the ingress IP of the given service. It is assumed that the service is of type LoadBalancer.
 func (h *Helper) GetIngressIP(ctx context.Context, namespace, name string) (string, error) {
 	var svc corev1.Service
-	if err := h.Get(ctx, client.ObjectKey{Namespace: namespace, Name: name}, &svc); err != nil {
+	if err := h.Client.Get(ctx, client.ObjectKey{Namespace: namespace, Name: name}, &svc); err != nil {
 		return "", err
 	}
 
@@ -162,7 +162,7 @@ func (h *Helper) GetIngressIP(ctx context.Context, namespace, name string) (stri
 
 // GetPhase returns the phase of GreptimeDBCluster or GreptimeDBStandalone object.
 func (h *Helper) GetPhase(ctx context.Context, namespace, name string, object client.Object) (greptimev1alpha1.Phase, error) {
-	if err := h.Get(ctx, client.ObjectKey{Namespace: namespace, Name: name}, object); err != nil {
+	if err := h.Client.Get(ctx, client.ObjectKey{Namespace: namespace, Name: name}, object); err != nil {
 		return "", err
 	}
 
