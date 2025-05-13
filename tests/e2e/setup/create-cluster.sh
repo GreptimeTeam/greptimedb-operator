@@ -220,7 +220,7 @@ function deploy_kafka_cluster() {
     crd/kafkas.kafka.strimzi.io \
     crd/kafkatopics.kafka.strimzi.io \
     crd/kafkausers.kafka.strimzi.io \
-    crd/strimzipodsets.core.strimzi.io
+    crd/strimzipodsets.core.strimzi.io \
     --timeout="$DEFAULT_TIMEOUT"
 
   kubectl apply -f ./tests/e2e/setup/kafka-wal.yaml -n "$KAFKA_NAMESPACE"
