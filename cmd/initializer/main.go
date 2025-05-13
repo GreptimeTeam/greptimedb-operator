@@ -36,6 +36,7 @@ func main() {
 	pflag.Int32Var(&opts.RPCPort, "rpc-port", 4001, "the RPC port")
 	pflag.StringVar(&opts.DatanodeServiceName, "datanode-service-name", "", "the name of datanode service")
 	pflag.Int32Var(&opts.DatanodeRPCPort, "datanode-rpc-port", 4001, "the datanode RPC port")
+	pflag.Int32Var(&opts.DatanodeGroupID, "datanode-group-id", -1, "the datanode group id")
 
 	klog.InitFlags(nil)
 	pflag.CommandLine.AddGoFlagSet(goflag.CommandLine)

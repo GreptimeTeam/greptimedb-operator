@@ -328,17 +328,17 @@ func (b *standaloneBuilder) generatePVCs() []corev1.PersistentVolumeClaim {
 
 	// It's always not nil because it's the default value.
 	if fs := b.standalone.GetDatanodeFileStorage(); fs != nil {
-		claims = append(claims, *common.FileStorageToPVC(b.standalone.Name, fs, common.FileStorageTypeDatanode, v1alpha1.StandaloneKind))
+		claims = append(claims, *common.FileStorageToPVC(b.standalone.Name, "", fs, common.FileStorageTypeDatanode, v1alpha1.StandaloneKind))
 	}
 
 	// Allocate the standalone WAL storage for the raft-engine.
 	if fs := b.standalone.GetWALProvider().GetRaftEngineWAL().GetFileStorage(); fs != nil {
-		claims = append(claims, *common.FileStorageToPVC(b.standalone.Name, fs, common.FileStorageTypeWAL, v1alpha1.StandaloneKind))
+		claims = append(claims, *common.FileStorageToPVC(b.standalone.Name, "", fs, common.FileStorageTypeWAL, v1alpha1.StandaloneKind))
 	}
 
 	// Allocate the standalone cache file storage for the datanode.
 	if fs := b.standalone.GetObjectStorageProvider().GetCacheFileStorage(); fs != nil {
-		claims = append(claims, *common.FileStorageToPVC(b.standalone.Name, fs, common.FileStorageTypeCache, v1alpha1.StandaloneKind))
+		claims = append(claims, *common.FileStorageToPVC(b.standalone.Name, "", fs, common.FileStorageTypeCache, v1alpha1.StandaloneKind))
 	}
 
 	return claims

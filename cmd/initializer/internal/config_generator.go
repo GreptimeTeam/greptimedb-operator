@@ -41,6 +41,9 @@ type Options struct {
 	// Note: It's Deprecated and will be removed soon. For generating config of datanode.
 	DatanodeRPCPort     int32
 	DatanodeServiceName string
+
+	// DatanodeGroupID is the id of the datanode group when use `DatanodeGroups` in GreptimeDBCluster.
+	DatanodeGroupID int32
 }
 
 type ConfigGenerator struct {
@@ -200,6 +203,10 @@ func (c *ConfigGenerator) allocateNodeID() (uint64, error) {
 	nodeID, err := strconv.ParseUint(podIndex, 10, 64)
 	if err != nil {
 		return 0, fmt.Errorf("invalid hostname format '%s'", name)
+	}
+
+	if c.DatanodeGroupID >= 0 {
+		nodeID = uint64(c.DatanodeGroupID)<<32 | nodeID
 	}
 
 	return nodeID, nil
