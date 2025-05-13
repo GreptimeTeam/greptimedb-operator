@@ -1,15 +1,14 @@
 apiVersion: greptime.io/v1alpha1
 kind: GreptimeDBCluster
 metadata:
-  name: configure-frontends-ingress
-  namespace: default
+  name: configure-frontend-groups-ingress
 spec:
   initializer:
     image: greptime-registry.cn-hangzhou.cr.aliyuncs.com/greptime/greptimedb-initializer:latest
   base:
     main:
       image: greptime-registry.cn-hangzhou.cr.aliyuncs.com/greptime/greptimedb:latest
-  frontends:
+  frontendGroups:
     - name: read
       replicas: 1
     - name: write
@@ -22,12 +21,12 @@ spec:
     replicas: 1
   ingress:
     annotations:
-      dedicated: configure-frontends-ingress
+      dedicated: configure-frontend-groups-ingress
     labels:
-      dedicated: configure-frontends-ingress
+      dedicated: configure-frontend-groups-ingress
     ingressClassName: nginx
     rules:
-      - host: configure-frontends-ingress.example.com
+      - host: configure-frontend-groups-ingress.example.com
         backends:
           - name: read
             path: /
@@ -35,3 +34,7 @@ spec:
           - name: write
             path: /v1/sql
             pathType: Prefix
+    tls:
+      - hosts:
+          - configure-frontend-groups-ingress.example.com
+        secretName: configure-frontend-groups-ingress-tls

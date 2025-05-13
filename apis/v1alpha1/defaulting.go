@@ -73,8 +73,8 @@ func (in *GreptimeDBCluster) MergeLogging() error {
 		loggingSpecs = append(loggingSpecs, in.GetFrontend().GetLogging())
 	}
 
-	if len(in.GetFrontends()) != 0 {
-		for _, frontend := range in.GetFrontends() {
+	if len(in.GetFrontendGroups()) != 0 {
+		for _, frontend := range in.GetFrontendGroups() {
 			loggingSpecs = append(loggingSpecs, frontend.GetLogging())
 		}
 	}
@@ -131,8 +131,8 @@ func (in *GreptimeDBCluster) defaultSpec() *GreptimeDBClusterSpec {
 		defaultSpec.Frontend = in.defaultFrontend()
 	}
 
-	if len(in.GetFrontends()) != 0 {
-		defaultSpec.Frontends = in.defaultFrontends()
+	if len(in.GetFrontendGroups()) != 0 {
+		defaultSpec.FrontendGroups = in.defaultFrontendGroups()
 	}
 
 	if in.GetFlownode() != nil {
@@ -197,8 +197,8 @@ func (in *GreptimeDBCluster) defaultFrontend() *FrontendSpec {
 	return defaultSpec
 }
 
-func (in *GreptimeDBCluster) defaultFrontends() []*FrontendSpec {
-	var frontends []*FrontendSpec
+func (in *GreptimeDBCluster) defaultFrontendGroups() []*FrontendSpec {
+	var frontendGroups []*FrontendSpec
 	var (
 		replicas       *int32
 		rpcPort        = DefaultRPCPort
@@ -208,7 +208,7 @@ func (in *GreptimeDBCluster) defaultFrontends() []*FrontendSpec {
 		rollingUpdate  = defaultRollingUpdateForDeployment()
 	)
 
-	for _, frontend := range in.GetFrontends() {
+	for _, frontend := range in.GetFrontendGroups() {
 		if frontend.Replicas != nil {
 			replicas = frontend.Replicas
 		}
@@ -243,14 +243,14 @@ func (in *GreptimeDBCluster) defaultFrontends() []*FrontendSpec {
 			},
 			RollingUpdate: rollingUpdate,
 		}
-		frontends = append(frontends, frontendSpec)
+		frontendGroups = append(frontendGroups, frontendSpec)
 	}
 
-	if err := mergo.Merge(&in.Spec.Frontends, frontends, mergo.WithSliceDeepCopy); err != nil {
-		return frontends
+	if err := mergo.Merge(&in.Spec.FrontendGroups, frontendGroups, mergo.WithSliceDeepCopy); err != nil {
+		return frontendGroups
 	}
 
-	return frontends
+	return frontendGroups
 }
 
 func (in *GreptimeDBCluster) defaultMeta() *MetaSpec {
@@ -335,8 +335,8 @@ func (in *GreptimeDBCluster) defaultMonitoringStandaloneSpec() *GreptimeDBStanda
 }
 
 func (in *GreptimeDBCluster) mergeFrontendTemplate() error {
-	if len(in.Spec.Frontends) != 0 {
-		for _, frontend := range in.Spec.Frontends {
+	if len(in.Spec.FrontendGroups) != 0 {
+		for _, frontend := range in.Spec.FrontendGroups {
 			if frontend.Template == nil {
 				frontend.Template = &PodTemplateSpec{}
 			}

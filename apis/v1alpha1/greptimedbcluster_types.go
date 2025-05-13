@@ -338,9 +338,9 @@ type GreptimeDBClusterSpec struct {
 	// +optional
 	Flownode *FlownodeSpec `json:"flownode,omitempty"`
 
-	// Frontends is a group of frontend nodes.
+	// FrontendGroups is groups of frontend node.
 	// +optional
-	Frontends []*FrontendSpec `json:"frontends,omitempty"`
+	FrontendGroups []*FrontendSpec `json:"frontendGroups,omitempty"`
 
 	// HTTPPort is the HTTP port of the greptimedb cluster.
 	// +kubebuilder:validation:Minimum=0
@@ -510,9 +510,9 @@ func (in *GreptimeDBCluster) GetFrontend() *FrontendSpec {
 	return nil
 }
 
-func (in *GreptimeDBCluster) GetFrontends() []*FrontendSpec {
+func (in *GreptimeDBCluster) GetFrontendGroups() []*FrontendSpec {
 	if in != nil {
-		return in.Spec.Frontends
+		return in.Spec.FrontendGroups
 	}
 	return nil
 }

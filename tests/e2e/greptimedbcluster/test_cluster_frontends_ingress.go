@@ -31,13 +31,13 @@ import (
 	"github.com/GreptimeTeam/greptimedb-operator/tests/e2e/helper"
 )
 
-// TestClusterFrontendGroupIngress tests a frontend ingress cluster.
-func TestClusterFrontendGroupIngress(ctx context.Context, h *helper.Helper) {
+// TestClusterFrontendGroupsIngress tests a frontend groups ingress cluster.
+func TestClusterFrontendGroupsIngress(ctx context.Context, h *helper.Helper) {
 	const (
-		testCRFile              = "./testdata/resources/cluster/frontends-ingress/cluster.yaml"
+		testCRFile              = "./testdata/resources/cluster/frontend-groups-ingress/cluster.yaml"
 		ingressNginxNamespace   = "ingress-nginx"
 		ingressNginxServiceName = "ingress-nginx-controller"
-		host                    = "configure-frontends-ingress.example.com"
+		host                    = "configure-frontend-groups-ingress.example.com"
 
 		createTableSQL = `
 	      CREATE TABLE monitor (

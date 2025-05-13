@@ -35,7 +35,7 @@ func (in *GreptimeDBCluster) Validate() error {
 		return err
 	}
 
-	if err := in.validateFrontends(); err != nil {
+	if err := in.validateFrontendGroups(); err != nil {
 		return err
 	}
 
@@ -119,9 +119,9 @@ func (in *GreptimeDBCluster) validateFrontend() error {
 	return nil
 }
 
-func (in *GreptimeDBCluster) validateFrontends() error {
+func (in *GreptimeDBCluster) validateFrontendGroups() error {
 	nameCount := 0
-	for _, frontend := range in.GetFrontends() {
+	for _, frontend := range in.GetFrontendGroups() {
 		if len(frontend.GetName()) != 0 {
 			nameCount++
 		}
@@ -133,14 +133,14 @@ func (in *GreptimeDBCluster) validateFrontends() error {
 
 	// FIXME(liyang): When there are multiple frontend instances, the frontend name must be set.
 	if in.GetFrontend() == nil {
-		// If there is no single frontend instance, nameCount must be at least len(in.GetFrontends()) - 1
-		if nameCount < len(in.GetFrontends())-1 {
+		// If there is no single frontend instance, nameCount must be at least len(in.GetFrontendGroups()) - 1
+		if nameCount < len(in.GetFrontendGroups())-1 {
 			return fmt.Errorf("must configure at least one frontend with a name")
 		}
 	} else {
-		// If there is a single frontend instance, nameCount must equal len(in.GetFrontends())
-		if nameCount != len(in.GetFrontends()) {
-			return fmt.Errorf("must configure all frontends with a name")
+		// If there is a single frontend instance, nameCount must equal len(in.GetFrontendGroups())
+		if nameCount != len(in.GetFrontendGroups()) {
+			return fmt.Errorf("must configure all frontend groups with a name")
 		}
 	}
 
