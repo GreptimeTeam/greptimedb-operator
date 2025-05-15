@@ -15,6 +15,8 @@
 package dbconfig
 
 import (
+	"fmt"
+
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 )
 
@@ -34,8 +36,17 @@ type FlownodeConfig struct {
 }
 
 // ConfigureByCluster configures the datanode config by the given cluster.
-func (c *FlownodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster) error {
-	if cfg := cluster.GetFlownode().GetConfig(); cfg != "" {
+func (c *FlownodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster, roleSpec v1alpha1.RoleSpec) error {
+	if roleSpec.GetRoleKind() != v1alpha1.FlownodeComponentKind {
+		return fmt.Errorf("invalid role kind: %s", roleSpec.GetRoleKind())
+	}
+
+	flownodeSpec, ok := roleSpec.(*v1alpha1.FlownodeSpec)
+	if !ok {
+		return fmt.Errorf("invalid role spec type: %T", roleSpec)
+	}
+
+	if cfg := flownodeSpec.GetConfig(); cfg != "" {
 		if err := c.SetInputConfig(cfg); err != nil {
 			return err
 		}
@@ -48,10 +59,6 @@ func (c *FlownodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster)
 
 // ConfigureByStandalone is not need to implement in cluster mode.
 func (c *FlownodeConfig) ConfigureByStandalone(_ *v1alpha1.GreptimeDBStandalone) error {
-	return nil
-}
-
-func (c *FlownodeConfig) ConfigureByFrontend(_ *v1alpha1.FrontendSpec) error {
 	return nil
 }
 

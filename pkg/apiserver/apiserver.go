@@ -327,7 +327,7 @@ func (s *Server) getPods(ctx context.Context, cluster greptimev1alpha1.GreptimeD
 	var frontendGroupsPod corev1.PodList
 	for _, frontend := range cluster.GetFrontendGroups() {
 		if err := s.List(ctx, &frontendGroupsPod, client.InNamespace(cluster.Namespace),
-			client.MatchingLabels{constant.GreptimeDBComponentName: common.AdditionalResourceName(cluster.Name, frontend.Name, kind)}); err != nil {
+			client.MatchingLabels{constant.GreptimeDBComponentName: common.ResourceName(cluster.Name, kind, frontend.Name)}); err != nil {
 			return err
 		}
 		internalPods.Items = append(internalPods.Items, frontendGroupsPod.Items...)

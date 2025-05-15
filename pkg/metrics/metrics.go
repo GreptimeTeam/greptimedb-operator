@@ -279,7 +279,7 @@ func (c *MetricsCollector) getPodConditionTime(podStatus *corev1.PodStatus, cond
 }
 
 func (c *MetricsCollector) getPods(ctx context.Context, cluster *greptimev1alpha1.GreptimeDBCluster, componentKind greptimev1alpha1.ComponentKind, additionalName string) ([]corev1.Pod, error) {
-	resourceName := common.AdditionalResourceName(cluster.Name, additionalName, componentKind)
+	resourceName := common.ResourceName(cluster.Name, componentKind, additionalName)
 
 	selector := metav1.LabelSelector{
 		MatchLabels: map[string]string{

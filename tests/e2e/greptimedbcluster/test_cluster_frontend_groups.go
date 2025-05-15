@@ -78,7 +78,7 @@ func TestClusterFrontendGroups(ctx context.Context, h *helper.Helper) {
 		writeFrontendName = frontendGroups[1].GetName()
 	)
 
-	frontendAddr, err := h.PortForward(ctx, testCluster.Namespace, common.AdditionalResourceName(testCluster.Name, writeFrontendName, greptimev1alpha1.FrontendComponentKind), int(testCluster.Spec.PostgreSQLPort))
+	frontendAddr, err := h.PortForward(ctx, testCluster.Namespace, common.ResourceName(testCluster.Name, greptimev1alpha1.FrontendComponentKind, writeFrontendName), int(testCluster.Spec.PostgreSQLPort))
 	Expect(err).NotTo(HaveOccurred(), "failed to port forward frontend service")
 	Eventually(func() error {
 		conn, err := net.Dial("tcp", frontendAddr)
@@ -92,7 +92,7 @@ func TestClusterFrontendGroups(ctx context.Context, h *helper.Helper) {
 	err = h.RunSQLTest(ctx, frontendAddr, testWriteSQLFile)
 	Expect(err).NotTo(HaveOccurred(), "failed to run sql test")
 
-	frontendAddr, err = h.PortForward(ctx, testCluster.Namespace, common.AdditionalResourceName(testCluster.Name, readFrontendName, greptimev1alpha1.FrontendComponentKind), int(testCluster.Spec.PostgreSQLPort))
+	frontendAddr, err = h.PortForward(ctx, testCluster.Namespace, common.ResourceName(testCluster.Name, greptimev1alpha1.FrontendComponentKind, readFrontendName), int(testCluster.Spec.PostgreSQLPort))
 	Expect(err).NotTo(HaveOccurred(), "failed to port forward frontend service")
 	Eventually(func() error {
 		conn, err := net.Dial("tcp", frontendAddr)

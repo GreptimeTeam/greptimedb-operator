@@ -77,6 +77,17 @@ type MetaSpec struct {
 	RollingUpdate *appsv1.RollingUpdateDeployment `json:"rollingUpdate,omitempty"`
 }
 
+var _ RoleSpec = &MetaSpec{}
+
+// GetRoleKind returns the role kind.
+func (in *MetaSpec) GetRoleKind() ComponentKind {
+	return MetaComponentKind
+}
+
+func (in *MetaSpec) GetName() string {
+	return ""
+}
+
 func (in *MetaSpec) GetReplicas() *int32 {
 	if in != nil && in.Replicas != nil {
 		return in.Replicas
@@ -165,6 +176,13 @@ type FrontendSpec struct {
 	RollingUpdate *appsv1.RollingUpdateDeployment `json:"rollingUpdate,omitempty"`
 }
 
+var _ RoleSpec = &FrontendSpec{}
+
+// GetRoleKind returns the role kind.
+func (in *FrontendSpec) GetRoleKind() ComponentKind {
+	return FrontendComponentKind
+}
+
 func (in *FrontendSpec) GetReplicas() *int32 {
 	if in != nil && in.Replicas != nil {
 		return in.Replicas
@@ -232,6 +250,17 @@ type DatanodeSpec struct {
 	RollingUpdate *appsv1.RollingUpdateStatefulSetStrategy `json:"rollingUpdate,omitempty"`
 }
 
+var _ RoleSpec = &DatanodeSpec{}
+
+// GetRoleKind returns the role kind.
+func (in *DatanodeSpec) GetRoleKind() ComponentKind {
+	return DatanodeComponentKind
+}
+
+func (in *DatanodeSpec) GetName() string {
+	return ""
+}
+
 func (in *DatanodeSpec) GetReplicas() *int32 {
 	if in != nil && in.Replicas != nil {
 		return in.Replicas
@@ -286,6 +315,17 @@ type FlownodeSpec struct {
 	// RollingUpdate is the rolling update configuration. We always use `RollingUpdate` strategy.
 	// +optional
 	RollingUpdate *appsv1.RollingUpdateStatefulSetStrategy `json:"rollingUpdate,omitempty"`
+}
+
+var _ RoleSpec = &FlownodeSpec{}
+
+// GetRoleKind returns the role kind.
+func (in *FlownodeSpec) GetRoleKind() ComponentKind {
+	return FlownodeComponentKind
+}
+
+func (in *FlownodeSpec) GetName() string {
+	return ""
 }
 
 func (in *FlownodeSpec) GetReplicas() *int32 {
