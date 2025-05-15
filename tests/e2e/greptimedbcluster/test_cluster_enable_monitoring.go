@@ -68,7 +68,7 @@ func TestClusterEnableMonitoring(ctx context.Context, h *helper.Helper) {
 	Expect(err).NotTo(HaveOccurred(), "failed to get cluster")
 
 	By("Execute distributed SQL test")
-	frontendAddr, err := h.PortForward(ctx, testCluster.Namespace, common.ResourceName(testCluster.Name, greptimev1alpha1.FrontendComponentKind), int(testCluster.Spec.PostgreSQLPort))
+	frontendAddr, err := h.PortForward(ctx, testCluster.Namespace, common.ResourceName(testCluster.Name, greptimev1alpha1.FrontendRoleKind), int(testCluster.Spec.PostgreSQLPort))
 	Expect(err).NotTo(HaveOccurred(), "failed to port forward frontend service")
 	Eventually(func() error {
 		conn, err := net.Dial("tcp", frontendAddr)
@@ -82,7 +82,7 @@ func TestClusterEnableMonitoring(ctx context.Context, h *helper.Helper) {
 	err = h.RunSQLTest(ctx, frontendAddr, testSQLFile)
 	Expect(err).NotTo(HaveOccurred(), "failed to run sql test")
 
-	monitoringAddr, err := h.PortForward(ctx, testCluster.Namespace, common.ResourceName(common.MonitoringServiceName(testCluster.Name), greptimev1alpha1.StandaloneKind), int(testCluster.Spec.PostgreSQLPort))
+	monitoringAddr, err := h.PortForward(ctx, testCluster.Namespace, common.ResourceName(common.MonitoringServiceName(testCluster.Name), greptimev1alpha1.StandaloneRoleKind), int(testCluster.Spec.PostgreSQLPort))
 	Expect(err).NotTo(HaveOccurred(), "failed to port forward monitoring service")
 	Eventually(func() error {
 		conn, err := net.Dial("tcp", monitoringAddr)
@@ -130,7 +130,7 @@ func TestClusterEnableMonitoring(ctx context.Context, h *helper.Helper) {
 	}, helper.DefaultTimeout, time.Second).Should(HaveOccurred())
 
 	By("The PVC of the datanode should be retained")
-	datanodePVCs, err := h.GetPVCs(ctx, testCluster.Namespace, testCluster.Name, greptimev1alpha1.DatanodeComponentKind, common.FileStorageTypeDatanode)
+	datanodePVCs, err := h.GetPVCs(ctx, testCluster.Namespace, testCluster.Name, greptimev1alpha1.DatanodeRoleKind, common.FileStorageTypeDatanode)
 	Expect(err).NotTo(HaveOccurred(), "failed to get datanode PVCs")
 	Expect(int32(len(datanodePVCs))).To(Equal(*testCluster.Spec.Datanode.Replicas), "the number of datanode PVCs should be equal to the number of datanode replicas")
 

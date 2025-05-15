@@ -33,7 +33,7 @@ type FrontendConfig struct {
 
 // ConfigureByCluster is not need to implement in frontend components.
 func (c *FrontendConfig) ConfigureByCluster(_ *v1alpha1.GreptimeDBCluster, roleSpec v1alpha1.RoleSpec) error {
-	if roleSpec.GetRoleKind() != v1alpha1.FrontendComponentKind {
+	if roleSpec.GetRoleKind() != v1alpha1.FrontendRoleKind {
 		return fmt.Errorf("invalid role kind: %s", roleSpec.GetRoleKind())
 	}
 
@@ -59,8 +59,8 @@ func (c *FrontendConfig) ConfigureByStandalone(_ *v1alpha1.GreptimeDBStandalone)
 }
 
 // Kind returns the component kind of the frontend.
-func (c *FrontendConfig) Kind() v1alpha1.ComponentKind {
-	return v1alpha1.FrontendComponentKind
+func (c *FrontendConfig) Kind() v1alpha1.RoleKind {
+	return v1alpha1.FrontendRoleKind
 }
 
 // GetInputConfig returns the input config of the frontend.

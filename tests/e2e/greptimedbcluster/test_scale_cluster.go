@@ -65,7 +65,7 @@ func TestScaleCluster(ctx context.Context, h *helper.Helper) {
 	Expect(err).NotTo(HaveOccurred(), "failed to get cluster")
 
 	By("Execute distributed SQL test")
-	frontendAddr, err := h.PortForward(ctx, testCluster.Namespace, common.ResourceName(testCluster.Name, greptimev1alpha1.FrontendComponentKind), int(testCluster.Spec.PostgreSQLPort))
+	frontendAddr, err := h.PortForward(ctx, testCluster.Namespace, common.ResourceName(testCluster.Name, greptimev1alpha1.FrontendRoleKind), int(testCluster.Spec.PostgreSQLPort))
 	Expect(err).NotTo(HaveOccurred(), "failed to port forward frontend service")
 	Eventually(func() error {
 		conn, err := net.Dial("tcp", frontendAddr)

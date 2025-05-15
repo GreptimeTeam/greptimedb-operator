@@ -55,7 +55,7 @@ func NewDatanodeDeployer(mgr ctrl.Manager) *DatanodeDeployer {
 
 func (d *DatanodeDeployer) NewBuilder(crdObject client.Object) deployer.Builder {
 	return &datanodeBuilder{
-		CommonBuilder: d.NewCommonBuilder(crdObject, v1alpha1.DatanodeComponentKind),
+		CommonBuilder: d.NewCommonBuilder(crdObject, v1alpha1.DatanodeRoleKind),
 	}
 }
 
@@ -113,7 +113,7 @@ func (d *DatanodeDeployer) CheckAndUpdateStatus(ctx context.Context, crdObject c
 
 		objectKey = client.ObjectKey{
 			Namespace: cluster.Namespace,
-			Name:      common.ResourceName(cluster.Name, v1alpha1.DatanodeComponentKind),
+			Name:      common.ResourceName(cluster.Name, v1alpha1.DatanodeRoleKind),
 		}
 	)
 
@@ -223,7 +223,7 @@ func (d *DatanodeDeployer) turnOffMaintenanceMode(ctx context.Context, crdObject
 }
 
 func (d *DatanodeDeployer) requestMetasrvForMaintenance(cluster *v1alpha1.GreptimeDBCluster, enabled bool) error {
-	requestURL := fmt.Sprintf("http://%s.%s:%d/admin/maintenance?enable=%v", common.ResourceName(cluster.GetName(), v1alpha1.MetaComponentKind), cluster.GetNamespace(), cluster.Spec.Meta.RPCPort, enabled)
+	requestURL := fmt.Sprintf("http://%s.%s:%d/admin/maintenance?enable=%v", common.ResourceName(cluster.GetName(), v1alpha1.MetaRoleKind), cluster.GetNamespace(), cluster.Spec.Meta.RPCPort, enabled)
 	rsp, err := http.Get(requestURL)
 	if err != nil {
 		return err
@@ -239,7 +239,7 @@ func (d *DatanodeDeployer) requestMetasrvForMaintenance(cluster *v1alpha1.Grepti
 func (d *DatanodeDeployer) deleteStorage(ctx context.Context, namespace, name string, fsType common.FileStorageType) error {
 	klog.Infof("Deleting datanode storage...")
 
-	claims, err := common.GetPVCs(ctx, d.Client, namespace, name, v1alpha1.DatanodeComponentKind, fsType)
+	claims, err := common.GetPVCs(ctx, d.Client, namespace, name, v1alpha1.DatanodeRoleKind, fsType)
 	if err != nil {
 		return err
 	}
@@ -322,15 +322,15 @@ func (b *datanodeBuilder) BuildService() deployer.Builder {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: b.Cluster.Namespace,
-			Name:      common.ResourceName(b.Cluster.Name, b.ComponentKind),
+			Name:      common.ResourceName(b.Cluster.Name, b.RoleKind),
 			Labels: map[string]string{
-				constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.ComponentKind),
+				constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.RoleKind),
 			},
 		},
 		Spec: corev1.ServiceSpec{
 			ClusterIP: corev1.ClusterIPNone,
 			Selector: map[string]string{
-				constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.ComponentKind),
+				constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.RoleKind),
 			},
 			Ports: b.servicePorts(),
 		},
@@ -376,19 +376,19 @@ func (b *datanodeBuilder) BuildStatefulSet() deployer.Builder {
 			APIVersion: "apps/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      common.ResourceName(b.Cluster.Name, b.ComponentKind),
+			Name:      common.ResourceName(b.Cluster.Name, b.RoleKind),
 			Namespace: b.Cluster.Namespace,
 			Labels: map[string]string{
-				constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.ComponentKind),
+				constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.RoleKind),
 			},
 		},
 		Spec: appsv1.StatefulSetSpec{
 			PodManagementPolicy: appsv1.ParallelPodManagement,
-			ServiceName:         common.ResourceName(b.Cluster.Name, b.ComponentKind),
+			ServiceName:         common.ResourceName(b.Cluster.Name, b.RoleKind),
 			Replicas:            b.Cluster.Spec.Datanode.Replicas,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.ComponentKind),
+					constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.RoleKind),
 				},
 			},
 			Template:             b.generatePodTemplateSpec(),
@@ -427,7 +427,7 @@ func (b *datanodeBuilder) BuildPodMonitor() deployer.Builder {
 		return b
 	}
 
-	pm, err := b.GeneratePodMonitor(b.Cluster.Namespace, common.ResourceName(b.Cluster.Name, b.ComponentKind))
+	pm, err := b.GeneratePodMonitor(b.Cluster.Namespace, common.ResourceName(b.Cluster.Name, b.RoleKind))
 	if err != nil {
 		b.Err = err
 		return b
@@ -441,7 +441,7 @@ func (b *datanodeBuilder) BuildPodMonitor() deployer.Builder {
 func (b *datanodeBuilder) generateMainContainerArgs() []string {
 	return []string{
 		"datanode", "start",
-		"--metasrv-addrs", fmt.Sprintf("%s.%s:%d", common.ResourceName(b.Cluster.Name, v1alpha1.MetaComponentKind),
+		"--metasrv-addrs", fmt.Sprintf("%s.%s:%d", common.ResourceName(b.Cluster.Name, v1alpha1.MetaRoleKind),
 			b.Cluster.Namespace, b.Cluster.Spec.Meta.RPCPort),
 		"--http-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.Datanode.HTTPPort),
 		"--config-file", path.Join(constant.GreptimeDBConfigDir, constant.GreptimeDBConfigFileName),
@@ -457,7 +457,7 @@ func (b *datanodeBuilder) generatePodTemplateSpec() corev1.PodTemplateSpec {
 	}
 
 	podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Ports = b.containerPorts()
-	podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Env = append(podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Env, b.env(v1alpha1.DatanodeComponentKind)...)
+	podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Env = append(podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Env, b.env(v1alpha1.DatanodeRoleKind)...)
 
 	b.mountConfigDir(podTemplateSpec)
 	b.addVolumeMounts(podTemplateSpec)
@@ -470,12 +470,12 @@ func (b *datanodeBuilder) generatePodTemplateSpec() corev1.PodTemplateSpec {
 
 	if b.Cluster.GetMonitoring().IsEnabled() && b.Cluster.GetMonitoring().GetVector() != nil {
 		b.AddVectorConfigVolume(podTemplateSpec)
-		b.AddVectorSidecar(podTemplateSpec, v1alpha1.DatanodeComponentKind)
+		b.AddVectorSidecar(podTemplateSpec, v1alpha1.DatanodeRoleKind)
 	}
 
 	podTemplateSpec.Spec.InitContainers = append(podTemplateSpec.Spec.InitContainers, *b.generateInitializer())
 	podTemplateSpec.ObjectMeta.Labels = util.MergeStringMap(podTemplateSpec.ObjectMeta.Labels, map[string]string{
-		constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.ComponentKind),
+		constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.RoleKind),
 	})
 
 	return *podTemplateSpec
@@ -486,17 +486,17 @@ func (b *datanodeBuilder) generatePVCs() []corev1.PersistentVolumeClaim {
 
 	// It's always not nil because it's the default value.
 	if fs := b.Cluster.GetDatanode().GetFileStorage(); fs != nil {
-		claims = append(claims, *common.FileStorageToPVC(b.Cluster.Name, fs, common.FileStorageTypeDatanode, v1alpha1.DatanodeComponentKind))
+		claims = append(claims, *common.FileStorageToPVC(b.Cluster.Name, fs, common.FileStorageTypeDatanode, v1alpha1.DatanodeRoleKind))
 	}
 
 	// Allocate the standalone WAL storage for the raft-engine.
 	if fs := b.Cluster.GetWALProvider().GetRaftEngineWAL().GetFileStorage(); fs != nil {
-		claims = append(claims, *common.FileStorageToPVC(b.Cluster.Name, fs, common.FileStorageTypeWAL, v1alpha1.DatanodeComponentKind))
+		claims = append(claims, *common.FileStorageToPVC(b.Cluster.Name, fs, common.FileStorageTypeWAL, v1alpha1.DatanodeRoleKind))
 	}
 
 	// Allocate the standalone cache file storage for the datanode.
 	if fs := b.Cluster.GetObjectStorageProvider().GetCacheFileStorage(); fs != nil {
-		claims = append(claims, *common.FileStorageToPVC(b.Cluster.Name, fs, common.FileStorageTypeCache, v1alpha1.DatanodeComponentKind))
+		claims = append(claims, *common.FileStorageToPVC(b.Cluster.Name, fs, common.FileStorageTypeCache, v1alpha1.DatanodeRoleKind))
 	}
 
 	return claims
@@ -513,9 +513,9 @@ func (b *datanodeBuilder) generateInitializer() *corev1.Container {
 			"--config-path", path.Join(constant.GreptimeDBConfigDir, constant.GreptimeDBConfigFileName),
 			"--init-config-path", path.Join(constant.GreptimeDBInitConfigDir, constant.GreptimeDBConfigFileName),
 			"--datanode-rpc-port", fmt.Sprintf("%d", b.Cluster.Spec.Datanode.RPCPort),
-			"--datanode-service-name", common.ResourceName(b.Cluster.Name, b.ComponentKind),
+			"--datanode-service-name", common.ResourceName(b.Cluster.Name, b.RoleKind),
 			"--namespace", b.Cluster.Namespace,
-			"--component-kind", string(b.ComponentKind),
+			"--component-kind", string(b.RoleKind),
 		},
 		VolumeMounts: []corev1.VolumeMount{
 			{
@@ -529,7 +529,7 @@ func (b *datanodeBuilder) generateInitializer() *corev1.Container {
 		},
 
 		// TODO(zyy17): the datanode don't support to accept hostname.
-		Env: b.env(v1alpha1.DatanodeComponentKind),
+		Env: b.env(v1alpha1.DatanodeRoleKind),
 	}
 
 	return initializer
@@ -593,7 +593,7 @@ func (b *datanodeBuilder) addInitConfigDirVolume(template *corev1.PodTemplateSpe
 			// Mount the configmap as init-config.
 			ConfigMap: &corev1.ConfigMapVolumeSource{
 				LocalObjectReference: corev1.LocalObjectReference{
-					Name: common.ResourceName(b.Cluster.Name, b.ComponentKind),
+					Name: common.ResourceName(b.Cluster.Name, b.RoleKind),
 				},
 			},
 		},

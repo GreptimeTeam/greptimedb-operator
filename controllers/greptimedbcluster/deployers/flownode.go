@@ -51,7 +51,7 @@ func NewFlownodeDeployer(mgr ctrl.Manager) *FlownodeDeployer {
 
 func (d *FlownodeDeployer) NewBuilder(crdObject client.Object) deployer.Builder {
 	return &flownodeBuilder{
-		CommonBuilder: d.NewCommonBuilder(crdObject, v1alpha1.FlownodeComponentKind),
+		CommonBuilder: d.NewCommonBuilder(crdObject, v1alpha1.FlownodeRoleKind),
 	}
 }
 
@@ -86,7 +86,7 @@ func (d *FlownodeDeployer) CheckAndUpdateStatus(ctx context.Context, crdObject c
 
 		objectKey = client.ObjectKey{
 			Namespace: cluster.Namespace,
-			Name:      common.ResourceName(cluster.Name, v1alpha1.FlownodeComponentKind),
+			Name:      common.ResourceName(cluster.Name, v1alpha1.FlownodeRoleKind),
 		}
 	)
 
@@ -129,15 +129,15 @@ func (b *flownodeBuilder) BuildService() deployer.Builder {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: b.Cluster.Namespace,
-			Name:      common.ResourceName(b.Cluster.Name, b.ComponentKind),
+			Name:      common.ResourceName(b.Cluster.Name, b.RoleKind),
 			Labels: map[string]string{
-				constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.ComponentKind),
+				constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.RoleKind),
 			},
 		},
 		Spec: corev1.ServiceSpec{
 			ClusterIP: corev1.ClusterIPNone,
 			Selector: map[string]string{
-				constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.ComponentKind),
+				constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.RoleKind),
 			},
 			Ports: b.servicePorts(),
 		},
@@ -183,19 +183,19 @@ func (b *flownodeBuilder) BuildStatefulSet() deployer.Builder {
 			APIVersion: "apps/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      common.ResourceName(b.Cluster.Name, b.ComponentKind),
+			Name:      common.ResourceName(b.Cluster.Name, b.RoleKind),
 			Namespace: b.Cluster.Namespace,
 			Labels: map[string]string{
-				constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.ComponentKind),
+				constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.RoleKind),
 			},
 		},
 		Spec: appsv1.StatefulSetSpec{
 			PodManagementPolicy: appsv1.ParallelPodManagement,
-			ServiceName:         common.ResourceName(b.Cluster.Name, b.ComponentKind),
+			ServiceName:         common.ResourceName(b.Cluster.Name, b.RoleKind),
 			Replicas:            b.Cluster.Spec.Flownode.Replicas,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.ComponentKind),
+					constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.RoleKind),
 				},
 			},
 			Template: b.generatePodTemplateSpec(),
@@ -233,7 +233,7 @@ func (b *flownodeBuilder) BuildPodMonitor() deployer.Builder {
 		return b
 	}
 
-	pm, err := b.GeneratePodMonitor(b.Cluster.Namespace, common.ResourceName(b.Cluster.Name, b.ComponentKind))
+	pm, err := b.GeneratePodMonitor(b.Cluster.Namespace, common.ResourceName(b.Cluster.Name, b.RoleKind))
 	if err != nil {
 		b.Err = err
 		return b
@@ -250,7 +250,7 @@ func (b *flownodeBuilder) generateMainContainerArgs() []string {
 		"--rpc-bind-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.Flownode.RPCPort),
 		"--rpc-server-addr", fmt.Sprintf("$(%s):%d", deployer.EnvPodIP, b.Cluster.Spec.Flownode.RPCPort),
 		"--http-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.Flownode.HTTPPort),
-		"--metasrv-addrs", fmt.Sprintf("%s.%s:%d", common.ResourceName(b.Cluster.Name, v1alpha1.MetaComponentKind), b.Cluster.Namespace, b.Cluster.Spec.Meta.RPCPort),
+		"--metasrv-addrs", fmt.Sprintf("%s.%s:%d", common.ResourceName(b.Cluster.Name, v1alpha1.MetaRoleKind), b.Cluster.Namespace, b.Cluster.Spec.Meta.RPCPort),
 		"--config-file", path.Join(constant.GreptimeDBConfigDir, constant.GreptimeDBConfigFileName),
 	}
 }
@@ -264,7 +264,7 @@ func (b *flownodeBuilder) generatePodTemplateSpec() corev1.PodTemplateSpec {
 	}
 
 	podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Ports = b.containerPorts()
-	podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Env = append(podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Env, b.env(v1alpha1.FlownodeComponentKind)...)
+	podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Env = append(podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Env, b.env(v1alpha1.FlownodeRoleKind)...)
 
 	b.mountConfigDir(podTemplateSpec)
 	b.addInitConfigDirVolume(podTemplateSpec)
@@ -275,12 +275,12 @@ func (b *flownodeBuilder) generatePodTemplateSpec() corev1.PodTemplateSpec {
 
 	if b.Cluster.GetMonitoring().IsEnabled() && b.Cluster.GetMonitoring().GetVector() != nil {
 		b.AddVectorConfigVolume(podTemplateSpec)
-		b.AddVectorSidecar(podTemplateSpec, v1alpha1.FlownodeComponentKind)
+		b.AddVectorSidecar(podTemplateSpec, v1alpha1.FlownodeRoleKind)
 	}
 
 	podTemplateSpec.Spec.InitContainers = append(podTemplateSpec.Spec.InitContainers, *b.generateInitializer())
 	podTemplateSpec.ObjectMeta.Labels = util.MergeStringMap(podTemplateSpec.ObjectMeta.Labels, map[string]string{
-		constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.ComponentKind),
+		constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.RoleKind),
 	})
 
 	return *podTemplateSpec
@@ -297,9 +297,9 @@ func (b *flownodeBuilder) generateInitializer() *corev1.Container {
 			"--config-path", path.Join(constant.GreptimeDBConfigDir, constant.GreptimeDBConfigFileName),
 			"--init-config-path", path.Join(constant.GreptimeDBInitConfigDir, constant.GreptimeDBConfigFileName),
 			"--rpc-port", fmt.Sprintf("%d", b.Cluster.Spec.Flownode.RPCPort),
-			"--service-name", common.ResourceName(b.Cluster.Name, b.ComponentKind),
+			"--service-name", common.ResourceName(b.Cluster.Name, b.RoleKind),
 			"--namespace", b.Cluster.Namespace,
-			"--component-kind", string(b.ComponentKind),
+			"--component-kind", string(b.RoleKind),
 		},
 		VolumeMounts: []corev1.VolumeMount{
 			{
@@ -362,7 +362,7 @@ func (b *flownodeBuilder) addInitConfigDirVolume(template *corev1.PodTemplateSpe
 			// Mount the configmap as init-config.
 			ConfigMap: &corev1.ConfigMapVolumeSource{
 				LocalObjectReference: corev1.LocalObjectReference{
-					Name: common.ResourceName(b.Cluster.Name, b.ComponentKind),
+					Name: common.ResourceName(b.Cluster.Name, b.RoleKind),
 				},
 			},
 		},
