@@ -108,30 +108,15 @@ func (d *DatanodeDeployer) CheckAndUpdateStatus(ctx context.Context, crdObject c
 		return false, err
 	}
 
-	var (
-		sts = new(appsv1.StatefulSet)
-
-		objectKey = client.ObjectKey{
-			Namespace: cluster.Namespace,
-			Name:      common.ResourceName(cluster.Name, v1alpha1.DatanodeRoleKind),
-		}
-	)
-
-	err = d.Get(ctx, objectKey, sts)
-	if errors.IsNotFound(err) {
-		return false, nil
-	}
-	if err != nil {
-		return false, err
+	if cluster.GetDatanode() != nil {
+		return d.checkDatanodeStatus(ctx, cluster.Namespace, common.ResourceName(cluster.Name, v1alpha1.DatanodeRoleKind), cluster)
 	}
 
-	cluster.Status.Datanode.Replicas = *sts.Spec.Replicas
-	cluster.Status.Datanode.ReadyReplicas = sts.Status.ReadyReplicas
-	if err := UpdateStatus(ctx, cluster, d.Client); err != nil {
-		klog.Errorf("Failed to update status: %s", err)
+	if len(cluster.GetDatanodeGroups()) > 0 {
+		return d.checkDatanodeGroupStatus(ctx, cluster)
 	}
 
-	return k8sutils.IsStatefulSetReady(sts), nil
+	return true, nil
 }
 
 // Apply is re-implemented for datanode to handle the maintenance mode.
@@ -185,6 +170,58 @@ func (d *DatanodeDeployer) PostSyncHooks() []deployer.Hook {
 	return []deployer.Hook{
 		d.turnOffMaintenanceMode,
 	}
+}
+
+func (d *DatanodeDeployer) checkDatanodeGroupStatus(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster) (bool, error) {
+	readyCount := 0
+	for _, spec := range cluster.GetDatanodeGroups() {
+		resourceName := common.ResourceName(cluster.Name, v1alpha1.DatanodeRoleKind, spec.GetName())
+
+		// TODO(zyy17): Update datanode status.
+		ready, err := d.checkDatanodeStatus(ctx, cluster.Namespace, resourceName, nil)
+		if err != nil {
+			return false, err
+		}
+		if ready {
+			readyCount++
+		}
+	}
+
+	if readyCount == len(cluster.GetDatanodeGroups()) {
+		return true, nil
+	}
+
+	return false, nil
+}
+
+func (d *DatanodeDeployer) checkDatanodeStatus(ctx context.Context, namespace, resourceName string, cluster *v1alpha1.GreptimeDBCluster) (bool, error) {
+	var (
+		sts = new(appsv1.StatefulSet)
+
+		objectKey = client.ObjectKey{
+			Namespace: namespace,
+			Name:      resourceName,
+		}
+	)
+
+	err := d.Get(ctx, objectKey, sts)
+	if errors.IsNotFound(err) {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+
+	// Update the status if the cluster is not nil.
+	if cluster != nil {
+		cluster.Status.Datanode.Replicas = *sts.Spec.Replicas
+		cluster.Status.Datanode.ReadyReplicas = sts.Status.ReadyReplicas
+		if err := UpdateStatus(ctx, cluster, d.Client); err != nil {
+			klog.Errorf("Failed to update status: %s", err)
+		}
+	}
+
+	return k8sutils.IsStatefulSetReady(sts), nil
 }
 
 func (d *DatanodeDeployer) turnOnMaintenanceMode(ctx context.Context, newSts *appsv1.StatefulSet, cluster *v1alpha1.GreptimeDBCluster) error {
@@ -311,32 +348,28 @@ func (b *datanodeBuilder) BuildService() deployer.Builder {
 		return b
 	}
 
-	if b.Cluster.Spec.Datanode == nil {
+	if b.Cluster.GetDatanode() == nil && len(b.Cluster.GetDatanodeGroups()) == 0 {
 		return b
 	}
 
-	svc := &corev1.Service{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "Service",
-			APIVersion: "v1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Namespace: b.Cluster.Namespace,
-			Name:      common.ResourceName(b.Cluster.Name, b.RoleKind),
-			Labels: map[string]string{
-				constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.RoleKind),
-			},
-		},
-		Spec: corev1.ServiceSpec{
-			ClusterIP: corev1.ClusterIPNone,
-			Selector: map[string]string{
-				constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.RoleKind),
-			},
-			Ports: b.servicePorts(),
-		},
+	if b.Cluster.GetDatanode() != nil {
+		svc, err := b.generateDatanodeService(b.Cluster.GetDatanode())
+		if err != nil {
+			b.Err = err
+			return b
+		}
+		b.Objects = append(b.Objects, svc)
+		return b
 	}
 
-	b.Objects = append(b.Objects, svc)
+	for _, datanodeSpec := range b.Cluster.GetDatanodeGroups() {
+		svc, err := b.generateDatanodeService(datanodeSpec)
+		if err != nil {
+			b.Err = err
+			return b
+		}
+		b.Objects = append(b.Objects, svc)
+	}
 
 	return b
 }
@@ -346,17 +379,27 @@ func (b *datanodeBuilder) BuildConfigMap() deployer.Builder {
 		return b
 	}
 
-	if b.Cluster.GetDatanode() == nil {
+	if b.Cluster.GetDatanode() == nil && len(b.Cluster.GetDatanodeGroups()) == 0 {
 		return b
 	}
 
-	cm, err := b.GenerateConfigMap(b.Cluster.GetDatanode())
-	if err != nil {
-		b.Err = err
-		return b
+	if b.Cluster.GetDatanode() != nil {
+		cm, err := b.GenerateConfigMap(b.Cluster.GetDatanode())
+		if err != nil {
+			b.Err = err
+			return b
+		}
+		b.Objects = append(b.Objects, cm)
 	}
 
-	b.Objects = append(b.Objects, cm)
+	for _, datanodeSpec := range b.Cluster.GetDatanodeGroups() {
+		cm, err := b.GenerateConfigMap(datanodeSpec)
+		if err != nil {
+			b.Err = err
+			return b
+		}
+		b.Objects = append(b.Objects, cm)
+	}
 
 	return b
 }
@@ -366,50 +409,29 @@ func (b *datanodeBuilder) BuildStatefulSet() deployer.Builder {
 		return b
 	}
 
-	if b.Cluster.Spec.Datanode == nil {
+	if b.Cluster.GetDatanode() == nil && len(b.Cluster.GetDatanodeGroups()) == 0 {
 		return b
 	}
 
-	sts := &appsv1.StatefulSet{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "StatefulSet",
-			APIVersion: "apps/v1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      common.ResourceName(b.Cluster.Name, b.RoleKind),
-			Namespace: b.Cluster.Namespace,
-			Labels: map[string]string{
-				constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.RoleKind),
-			},
-		},
-		Spec: appsv1.StatefulSetSpec{
-			PodManagementPolicy: appsv1.ParallelPodManagement,
-			ServiceName:         common.ResourceName(b.Cluster.Name, b.RoleKind),
-			Replicas:            b.Cluster.Spec.Datanode.Replicas,
-			Selector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.RoleKind),
-				},
-			},
-			Template:             b.generatePodTemplateSpec(),
-			VolumeClaimTemplates: b.generatePVCs(),
-			UpdateStrategy: appsv1.StatefulSetUpdateStrategy{
-				Type:          appsv1.RollingUpdateStatefulSetStrategyType,
-				RollingUpdate: b.Cluster.Spec.Datanode.RollingUpdate,
-			},
-		},
-	}
-
-	configData, err := dbconfig.FromCluster(b.Cluster, b.Cluster.GetDatanode())
-	if err != nil {
-		b.Err = err
+	if b.Cluster.GetDatanode() != nil {
+		sts, err := b.generateDatanodeStatefulSet(nil, b.Cluster.GetDatanode())
+		if err != nil {
+			b.Err = err
+			return b
+		}
+		b.Objects = append(b.Objects, sts)
 		return b
 	}
 
-	sts.Spec.Template.Annotations = util.MergeStringMap(sts.Spec.Template.Annotations,
-		map[string]string{deployer.ConfigHash: util.CalculateConfigHash(configData)})
-
-	b.Objects = append(b.Objects, sts)
+	for i, datanodeSpec := range b.Cluster.GetDatanodeGroups() {
+		groupID := int32(i)
+		sts, err := b.generateDatanodeStatefulSet(&groupID, datanodeSpec)
+		if err != nil {
+			b.Err = err
+			return b
+		}
+		b.Objects = append(b.Objects, sts)
+	}
 
 	return b
 }
@@ -419,7 +441,7 @@ func (b *datanodeBuilder) BuildPodMonitor() deployer.Builder {
 		return b
 	}
 
-	if b.Cluster.Spec.Datanode == nil {
+	if b.Cluster.GetDatanode() == nil && len(b.Cluster.GetDatanodeGroups()) == 0 {
 		return b
 	}
 
@@ -427,43 +449,126 @@ func (b *datanodeBuilder) BuildPodMonitor() deployer.Builder {
 		return b
 	}
 
-	pm, err := b.GeneratePodMonitor(b.Cluster.Namespace, common.ResourceName(b.Cluster.Name, b.RoleKind))
-	if err != nil {
-		b.Err = err
+	if b.Cluster.GetDatanode() != nil {
+		pm, err := b.GeneratePodMonitor(b.Cluster.Namespace, common.ResourceName(b.Cluster.Name, b.RoleKind))
+		if err != nil {
+			b.Err = err
+			return b
+		}
+		b.Objects = append(b.Objects, pm)
+
 		return b
 	}
 
-	b.Objects = append(b.Objects, pm)
+	for _, datanodeSpec := range b.Cluster.GetDatanodeGroups() {
+		pm, err := b.GeneratePodMonitor(b.Cluster.Namespace, common.ResourceName(b.Cluster.Name, b.RoleKind, datanodeSpec.GetName()))
+		if err != nil {
+			b.Err = err
+			return b
+		}
+		b.Objects = append(b.Objects, pm)
+	}
 
 	return b
 }
 
-func (b *datanodeBuilder) generateMainContainerArgs() []string {
+func (b *datanodeBuilder) generateDatanodeStatefulSet(groupID *int32, spec *v1alpha1.DatanodeSpec) (*appsv1.StatefulSet, error) {
+	resourceName := common.ResourceName(b.Cluster.Name, b.RoleKind, spec.GetName())
+
+	sts := &appsv1.StatefulSet{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "StatefulSet",
+			APIVersion: "apps/v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      resourceName,
+			Namespace: b.Cluster.Namespace,
+			Labels: map[string]string{
+				constant.GreptimeDBComponentName: resourceName,
+			},
+		},
+		Spec: appsv1.StatefulSetSpec{
+			PodManagementPolicy: appsv1.ParallelPodManagement,
+			ServiceName:         resourceName,
+			Replicas:            spec.Replicas,
+			Selector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					constant.GreptimeDBComponentName: resourceName,
+				},
+			},
+			Template:             b.generatePodTemplateSpec(spec, groupID),
+			VolumeClaimTemplates: b.generatePVCs(spec),
+			UpdateStrategy: appsv1.StatefulSetUpdateStrategy{
+				Type:          appsv1.RollingUpdateStatefulSetStrategyType,
+				RollingUpdate: spec.RollingUpdate,
+			},
+		},
+	}
+
+	configData, err := dbconfig.FromCluster(b.Cluster, spec)
+	if err != nil {
+		return nil, err
+	}
+
+	sts.Spec.Template.Annotations = util.MergeStringMap(sts.Spec.Template.Annotations,
+		map[string]string{deployer.ConfigHash: util.CalculateConfigHash(configData)})
+
+	return sts, nil
+}
+
+func (b *datanodeBuilder) generateDatanodeService(spec *v1alpha1.DatanodeSpec) (*corev1.Service, error) {
+	resourceName := common.ResourceName(b.Cluster.Name, b.RoleKind, spec.GetName())
+
+	svc := &corev1.Service{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Service",
+			APIVersion: "v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: b.Cluster.Namespace,
+			Name:      resourceName,
+			Labels: map[string]string{
+				constant.GreptimeDBComponentName: resourceName,
+			},
+		},
+		Spec: corev1.ServiceSpec{
+			ClusterIP: corev1.ClusterIPNone,
+			Selector: map[string]string{
+				constant.GreptimeDBComponentName: resourceName,
+			},
+			Ports: b.servicePorts(spec),
+		},
+	}
+
+	return svc, nil
+}
+
+func (b *datanodeBuilder) generateMainContainerArgs(spec *v1alpha1.DatanodeSpec) []string {
 	return []string{
 		"datanode", "start",
 		"--metasrv-addrs", fmt.Sprintf("%s.%s:%d", common.ResourceName(b.Cluster.Name, v1alpha1.MetaRoleKind),
 			b.Cluster.Namespace, b.Cluster.Spec.Meta.RPCPort),
-		"--http-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.Datanode.HTTPPort),
+		"--http-addr", fmt.Sprintf("0.0.0.0:%d", spec.HTTPPort),
 		"--config-file", path.Join(constant.GreptimeDBConfigDir, constant.GreptimeDBConfigFileName),
 	}
 }
 
-func (b *datanodeBuilder) generatePodTemplateSpec() corev1.PodTemplateSpec {
-	podTemplateSpec := b.GeneratePodTemplateSpec(b.Cluster.Spec.Datanode.Template)
+func (b *datanodeBuilder) generatePodTemplateSpec(spec *v1alpha1.DatanodeSpec, groupID *int32) corev1.PodTemplateSpec {
+	podTemplateSpec := b.GeneratePodTemplateSpec(spec.Template)
 
-	if len(b.Cluster.Spec.Datanode.Template.MainContainer.Args) == 0 {
+	if len(spec.Template.MainContainer.Args) == 0 {
 		// Setup main container args.
-		podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Args = b.generateMainContainerArgs()
+		podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Args = b.generateMainContainerArgs(spec)
 	}
 
-	podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Ports = b.containerPorts()
+	podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Ports = b.containerPorts(spec)
 	podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Env = append(podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Env, b.env(v1alpha1.DatanodeRoleKind)...)
 
 	b.mountConfigDir(podTemplateSpec)
-	b.addVolumeMounts(podTemplateSpec)
-	b.addInitConfigDirVolume(podTemplateSpec)
+	b.addVolumeMounts(podTemplateSpec, spec)
+	b.addInitConfigDirVolume(podTemplateSpec, common.ResourceName(b.Cluster.Name, b.RoleKind, spec.GetName()))
 
-	if logging := b.Cluster.GetDatanode().GetLogging(); logging != nil &&
+	if logging := spec.GetLogging(); logging != nil &&
 		!logging.IsOnlyLogToStdout() && !logging.IsPersistentWithData() {
 		b.AddLogsVolume(podTemplateSpec, logging.GetLogsDir())
 	}
@@ -473,36 +578,36 @@ func (b *datanodeBuilder) generatePodTemplateSpec() corev1.PodTemplateSpec {
 		b.AddVectorSidecar(podTemplateSpec, v1alpha1.DatanodeRoleKind)
 	}
 
-	podTemplateSpec.Spec.InitContainers = append(podTemplateSpec.Spec.InitContainers, *b.generateInitializer())
+	podTemplateSpec.Spec.InitContainers = append(podTemplateSpec.Spec.InitContainers, *b.generateInitializer(spec, groupID))
 	podTemplateSpec.ObjectMeta.Labels = util.MergeStringMap(podTemplateSpec.ObjectMeta.Labels, map[string]string{
-		constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.RoleKind),
+		constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.RoleKind, spec.GetName()),
 	})
 
 	return *podTemplateSpec
 }
 
-func (b *datanodeBuilder) generatePVCs() []corev1.PersistentVolumeClaim {
+func (b *datanodeBuilder) generatePVCs(spec *v1alpha1.DatanodeSpec) []corev1.PersistentVolumeClaim {
 	var claims []corev1.PersistentVolumeClaim
 
 	// It's always not nil because it's the default value.
 	if fs := b.Cluster.GetDatanode().GetFileStorage(); fs != nil {
-		claims = append(claims, *common.FileStorageToPVC(b.Cluster.Name, fs, common.FileStorageTypeDatanode, v1alpha1.DatanodeRoleKind))
+		claims = append(claims, *common.FileStorageToPVC(b.Cluster.Name, spec.GetName(), fs, common.FileStorageTypeDatanode, v1alpha1.DatanodeRoleKind))
 	}
 
 	// Allocate the standalone WAL storage for the raft-engine.
 	if fs := b.Cluster.GetWALProvider().GetRaftEngineWAL().GetFileStorage(); fs != nil {
-		claims = append(claims, *common.FileStorageToPVC(b.Cluster.Name, fs, common.FileStorageTypeWAL, v1alpha1.DatanodeRoleKind))
+		claims = append(claims, *common.FileStorageToPVC(b.Cluster.Name, spec.GetName(), fs, common.FileStorageTypeWAL, v1alpha1.DatanodeRoleKind))
 	}
 
 	// Allocate the standalone cache file storage for the datanode.
 	if fs := b.Cluster.GetObjectStorageProvider().GetCacheFileStorage(); fs != nil {
-		claims = append(claims, *common.FileStorageToPVC(b.Cluster.Name, fs, common.FileStorageTypeCache, v1alpha1.DatanodeRoleKind))
+		claims = append(claims, *common.FileStorageToPVC(b.Cluster.Name, spec.GetName(), fs, common.FileStorageTypeCache, v1alpha1.DatanodeRoleKind))
 	}
 
 	return claims
 }
 
-func (b *datanodeBuilder) generateInitializer() *corev1.Container {
+func (b *datanodeBuilder) generateInitializer(spec *v1alpha1.DatanodeSpec, groupID *int32) *corev1.Container {
 	initializer := &corev1.Container{
 		Name:  "initializer",
 		Image: b.Cluster.Spec.Initializer.Image,
@@ -512,8 +617,8 @@ func (b *datanodeBuilder) generateInitializer() *corev1.Container {
 		Args: []string{
 			"--config-path", path.Join(constant.GreptimeDBConfigDir, constant.GreptimeDBConfigFileName),
 			"--init-config-path", path.Join(constant.GreptimeDBInitConfigDir, constant.GreptimeDBConfigFileName),
-			"--datanode-rpc-port", fmt.Sprintf("%d", b.Cluster.Spec.Datanode.RPCPort),
-			"--datanode-service-name", common.ResourceName(b.Cluster.Name, b.RoleKind),
+			"--datanode-rpc-port", fmt.Sprintf("%d", spec.RPCPort),
+			"--datanode-service-name", common.ResourceName(b.Cluster.Name, b.RoleKind, spec.GetName()),
 			"--namespace", b.Cluster.Namespace,
 			"--component-kind", string(b.RoleKind),
 		},
@@ -530,6 +635,10 @@ func (b *datanodeBuilder) generateInitializer() *corev1.Container {
 
 		// TODO(zyy17): the datanode don't support to accept hostname.
 		Env: b.env(v1alpha1.DatanodeRoleKind),
+	}
+
+	if groupID != nil {
+		initializer.Args = append(initializer.Args, "--datanode-group-id", fmt.Sprintf("%d", *groupID))
 	}
 
 	return initializer
@@ -553,7 +662,7 @@ func (b *datanodeBuilder) mountConfigDir(template *corev1.PodTemplateSpec) {
 		)
 }
 
-func (b *datanodeBuilder) addVolumeMounts(template *corev1.PodTemplateSpec) {
+func (b *datanodeBuilder) addVolumeMounts(template *corev1.PodTemplateSpec, spec *v1alpha1.DatanodeSpec) {
 	if fs := b.Cluster.GetDatanode().GetFileStorage(); fs != nil {
 		template.Spec.Containers[constant.MainContainerIndex].VolumeMounts =
 			append(template.Spec.Containers[constant.MainContainerIndex].VolumeMounts,
@@ -586,46 +695,46 @@ func (b *datanodeBuilder) addVolumeMounts(template *corev1.PodTemplateSpec) {
 }
 
 // The init-config volume is used for initializer.
-func (b *datanodeBuilder) addInitConfigDirVolume(template *corev1.PodTemplateSpec) {
+func (b *datanodeBuilder) addInitConfigDirVolume(template *corev1.PodTemplateSpec, configMapName string) {
 	template.Spec.Volumes = append(template.Spec.Volumes, corev1.Volume{
 		Name: constant.InitConfigVolumeName,
 		VolumeSource: corev1.VolumeSource{
 			// Mount the configmap as init-config.
 			ConfigMap: &corev1.ConfigMapVolumeSource{
 				LocalObjectReference: corev1.LocalObjectReference{
-					Name: common.ResourceName(b.Cluster.Name, b.RoleKind),
+					Name: configMapName,
 				},
 			},
 		},
 	})
 }
 
-func (b *datanodeBuilder) servicePorts() []corev1.ServicePort {
+func (b *datanodeBuilder) servicePorts(spec *v1alpha1.DatanodeSpec) []corev1.ServicePort {
 	return []corev1.ServicePort{
 		{
 			Name:     "rpc",
 			Protocol: corev1.ProtocolTCP,
-			Port:     b.Cluster.Spec.Datanode.RPCPort,
+			Port:     spec.RPCPort,
 		},
 		{
 			Name:     "http",
 			Protocol: corev1.ProtocolTCP,
-			Port:     b.Cluster.Spec.Datanode.HTTPPort,
+			Port:     spec.HTTPPort,
 		},
 	}
 }
 
-func (b *datanodeBuilder) containerPorts() []corev1.ContainerPort {
+func (b *datanodeBuilder) containerPorts(spec *v1alpha1.DatanodeSpec) []corev1.ContainerPort {
 	return []corev1.ContainerPort{
 		{
 			Name:          "rpc",
 			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: b.Cluster.Spec.Datanode.RPCPort,
+			ContainerPort: spec.RPCPort,
 		},
 		{
 			Name:          "http",
 			Protocol:      corev1.ProtocolTCP,
-			ContainerPort: b.Cluster.Spec.Datanode.HTTPPort,
+			ContainerPort: spec.HTTPPort,
 		},
 	}
 }

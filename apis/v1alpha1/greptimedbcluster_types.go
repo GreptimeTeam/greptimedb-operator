@@ -229,6 +229,10 @@ func (in *FrontendSpec) GetLogging() *LoggingSpec {
 type DatanodeSpec struct {
 	ComponentSpec `json:",inline"`
 
+	// Name is the name of the datanode.
+	// +optional
+	Name string `json:"name,omitempty"`
+
 	// RPCPort is the gRPC port of the datanode.
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=65535
@@ -258,6 +262,9 @@ func (in *DatanodeSpec) GetRoleKind() RoleKind {
 }
 
 func (in *DatanodeSpec) GetName() string {
+	if in != nil {
+		return in.Name
+	}
 	return ""
 }
 
@@ -373,6 +380,10 @@ type GreptimeDBClusterSpec struct {
 	// Datanode is the specification of datanode node.
 	// +optional
 	Datanode *DatanodeSpec `json:"datanode,omitempty"`
+
+	// DatanodeGroups is a group of datanode statefulsets.
+	// +optional
+	DatanodeGroups []*DatanodeSpec `json:"datanodeGroups,omitempty"`
 
 	// Flownode is the specification of flownode node.
 	// +optional
@@ -567,6 +578,13 @@ func (in *GreptimeDBCluster) GetMeta() *MetaSpec {
 func (in *GreptimeDBCluster) GetDatanode() *DatanodeSpec {
 	if in != nil {
 		return in.Spec.Datanode
+	}
+	return nil
+}
+
+func (in *GreptimeDBCluster) GetDatanodeGroups() []*DatanodeSpec {
+	if in != nil {
+		return in.Spec.DatanodeGroups
 	}
 	return nil
 }

@@ -14,6 +14,8 @@ spec:
       - "etcd.etcd-cluster.svc.cluster.local:2379"
   datanode:
     replicas: 1
+    template:
+      main:
     config: |
       [[region_engine]]
       [region_engine.mito]

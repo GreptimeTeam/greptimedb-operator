@@ -187,7 +187,7 @@ func GeneratePodTemplateSpec(kind v1alpha1.RoleKind, template *v1alpha1.PodTempl
 	return spec
 }
 
-func FileStorageToPVC(name string, fs v1alpha1.FileStorageAccessor, fsType FileStorageType, kind v1alpha1.RoleKind) *corev1.PersistentVolumeClaim {
+func FileStorageToPVC(clusterName string, datanodeGroupName string, fs v1alpha1.FileStorageAccessor, fsType FileStorageType, kind v1alpha1.RoleKind) *corev1.PersistentVolumeClaim {
 	var (
 		labels      map[string]string
 		annotations map[string]string
@@ -197,17 +197,17 @@ func FileStorageToPVC(name string, fs v1alpha1.FileStorageAccessor, fsType FileS
 	case FileStorageTypeWAL:
 		labels = map[string]string{
 			FileStorageTypeLabelKey:          string(FileStorageTypeWAL),
-			constant.GreptimeDBComponentName: ResourceName(name, kind),
+			constant.GreptimeDBComponentName: ResourceName(clusterName, kind, datanodeGroupName),
 		}
 	case FileStorageTypeCache:
 		labels = map[string]string{
 			FileStorageTypeLabelKey:          string(FileStorageTypeCache),
-			constant.GreptimeDBComponentName: ResourceName(name, kind),
+			constant.GreptimeDBComponentName: ResourceName(clusterName, kind, datanodeGroupName),
 		}
 	default:
 		// Add common label: 'app.greptime.io/component: ${CLUSTER_NAME}-${COMPONENT_KIND}'.
 		labels = map[string]string{
-			constant.GreptimeDBComponentName: ResourceName(name, kind),
+			constant.GreptimeDBComponentName: ResourceName(clusterName, kind, datanodeGroupName),
 		}
 	}
 
