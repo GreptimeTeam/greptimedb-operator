@@ -77,6 +77,17 @@ type MetaSpec struct {
 	RollingUpdate *appsv1.RollingUpdateDeployment `json:"rollingUpdate,omitempty"`
 }
 
+var _ RoleSpec = &MetaSpec{}
+
+// GetRoleKind returns the role kind.
+func (in *MetaSpec) GetRoleKind() RoleKind {
+	return MetaRoleKind
+}
+
+func (in *MetaSpec) GetName() string {
+	return ""
+}
+
 func (in *MetaSpec) GetReplicas() *int32 {
 	if in != nil && in.Replicas != nil {
 		return in.Replicas
@@ -165,6 +176,13 @@ type FrontendSpec struct {
 	RollingUpdate *appsv1.RollingUpdateDeployment `json:"rollingUpdate,omitempty"`
 }
 
+var _ RoleSpec = &FrontendSpec{}
+
+// GetRoleKind returns the role kind.
+func (in *FrontendSpec) GetRoleKind() RoleKind {
+	return FrontendRoleKind
+}
+
 func (in *FrontendSpec) GetReplicas() *int32 {
 	if in != nil && in.Replicas != nil {
 		return in.Replicas
@@ -211,6 +229,10 @@ func (in *FrontendSpec) GetLogging() *LoggingSpec {
 type DatanodeSpec struct {
 	ComponentSpec `json:",inline"`
 
+	// Name is the name of the datanode.
+	// +optional
+	Name string `json:"name,omitempty"`
+
 	// RPCPort is the gRPC port of the datanode.
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=65535
@@ -230,6 +252,20 @@ type DatanodeSpec struct {
 	// RollingUpdate is the rolling update configuration. We always use `RollingUpdate` strategy.
 	// +optional
 	RollingUpdate *appsv1.RollingUpdateStatefulSetStrategy `json:"rollingUpdate,omitempty"`
+}
+
+var _ RoleSpec = &DatanodeSpec{}
+
+// GetRoleKind returns the role kind.
+func (in *DatanodeSpec) GetRoleKind() RoleKind {
+	return DatanodeRoleKind
+}
+
+func (in *DatanodeSpec) GetName() string {
+	if in != nil {
+		return in.Name
+	}
+	return ""
 }
 
 func (in *DatanodeSpec) GetReplicas() *int32 {
@@ -288,6 +324,17 @@ type FlownodeSpec struct {
 	RollingUpdate *appsv1.RollingUpdateStatefulSetStrategy `json:"rollingUpdate,omitempty"`
 }
 
+var _ RoleSpec = &FlownodeSpec{}
+
+// GetRoleKind returns the role kind.
+func (in *FlownodeSpec) GetRoleKind() RoleKind {
+	return FlownodeRoleKind
+}
+
+func (in *FlownodeSpec) GetName() string {
+	return ""
+}
+
 func (in *FlownodeSpec) GetReplicas() *int32 {
 	if in != nil && in.Replicas != nil {
 		return in.Replicas
@@ -333,6 +380,10 @@ type GreptimeDBClusterSpec struct {
 	// Datanode is the specification of datanode node.
 	// +optional
 	Datanode *DatanodeSpec `json:"datanode,omitempty"`
+
+	// DatanodeGroups is a group of datanode statefulsets.
+	// +optional
+	DatanodeGroups []*DatanodeSpec `json:"datanodeGroups,omitempty"`
 
 	// Flownode is the specification of flownode node.
 	// +optional
@@ -527,6 +578,13 @@ func (in *GreptimeDBCluster) GetMeta() *MetaSpec {
 func (in *GreptimeDBCluster) GetDatanode() *DatanodeSpec {
 	if in != nil {
 		return in.Spec.Datanode
+	}
+	return nil
+}
+
+func (in *GreptimeDBCluster) GetDatanodeGroups() []*DatanodeSpec {
+	if in != nil {
+		return in.Spec.DatanodeGroups
 	}
 	return nil
 }

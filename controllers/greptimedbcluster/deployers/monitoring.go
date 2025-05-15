@@ -58,7 +58,7 @@ func NewMonitoringDeployer(mgr ctrl.Manager) *MonitoringDeployer {
 }
 
 func (d *MonitoringDeployer) NewBuilder(crdObject client.Object) deployer.Builder {
-	return &monitoringBuilder{CommonBuilder: d.NewCommonBuilder(crdObject, v1alpha1.StandaloneKind)}
+	return &monitoringBuilder{CommonBuilder: d.NewCommonBuilder(crdObject, v1alpha1.StandaloneRoleKind)}
 }
 
 func (d *MonitoringDeployer) Generate(crdObject client.Object) ([]client.Object, error) {
@@ -121,7 +121,7 @@ func (d *MonitoringDeployer) CheckAndUpdateStatus(ctx context.Context, crdObject
 				}
 			}
 
-			cluster.Status.Monitoring.InternalDNSName = fmt.Sprintf("%s.%s.svc.cluster.local", common.ResourceName(common.MonitoringServiceName(cluster.Name), v1alpha1.StandaloneKind), cluster.Namespace)
+			cluster.Status.Monitoring.InternalDNSName = fmt.Sprintf("%s.%s.svc.cluster.local", common.ResourceName(common.MonitoringServiceName(cluster.Name), v1alpha1.StandaloneRoleKind), cluster.Namespace)
 			if err := UpdateStatus(ctx, cluster, d.Client); err != nil {
 				klog.Errorf("Failed to update status: %s", err)
 			}
@@ -153,7 +153,7 @@ func (d *MonitoringDeployer) createPipeline(cluster *v1alpha1.GreptimeDBCluster,
 	}
 	w.Close()
 
-	standaloneName := common.ResourceName(common.MonitoringServiceName(cluster.Name), v1alpha1.StandaloneKind)
+	standaloneName := common.ResourceName(common.MonitoringServiceName(cluster.Name), v1alpha1.StandaloneRoleKind)
 
 	// FIXME(zyy17): Make the port configurable.
 	svc := fmt.Sprintf("%s.%s.svc.cluster.local:%d", standaloneName, cluster.Namespace, v1alpha1.DefaultHTTPPort)
@@ -244,7 +244,7 @@ func (d *MonitoringDeployer) defaultSlowQueriesPipeline() (string, error) {
 func (d *MonitoringDeployer) getPipeline(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster, pipelineName string) (string, error) {
 	cfg := mysql.Config{
 		Net:                  "tcp",
-		Addr:                 fmt.Sprintf("%s.%s.svc.cluster.local:%d", common.ResourceName(common.MonitoringServiceName(cluster.Name), v1alpha1.StandaloneKind), cluster.Namespace, v1alpha1.DefaultMySQLPort),
+		Addr:                 fmt.Sprintf("%s.%s.svc.cluster.local:%d", common.ResourceName(common.MonitoringServiceName(cluster.Name), v1alpha1.StandaloneRoleKind), cluster.Namespace, v1alpha1.DefaultMySQLPort),
 		DBName:               "greptime_private",
 		AllowNativePasswords: true,
 		Timeout:              5 * time.Second,

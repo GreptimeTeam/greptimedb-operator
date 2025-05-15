@@ -61,27 +61,27 @@ var _ = Describe("Test greptimedbcluster controller", func() {
 
 		By("Check meta resource")
 		svc = &corev1.Service{}
-		checkResource(testNamespace, common.ResourceName(testClusterName, v1alpha1.MetaComponentKind), svc, req)
+		checkResource(testNamespace, common.ResourceName(testClusterName, v1alpha1.MetaRoleKind), svc, req)
 		deployment = &appsv1.Deployment{}
-		checkResource(testNamespace, common.ResourceName(testClusterName, v1alpha1.MetaComponentKind), deployment, req)
+		checkResource(testNamespace, common.ResourceName(testClusterName, v1alpha1.MetaRoleKind), deployment, req)
 
 		// Move forward to sync datanode.
 		Expect(makeDeploymentReady(deployment, cluster.Spec.Meta.Replicas)).NotTo(HaveOccurred(), "failed to update meta deployment status")
 
 		By("Check datanode resource")
 		svc = &corev1.Service{}
-		checkResource(testNamespace, common.ResourceName(testClusterName, v1alpha1.DatanodeComponentKind), svc, req)
+		checkResource(testNamespace, common.ResourceName(testClusterName, v1alpha1.DatanodeRoleKind), svc, req)
 		statefulSet = &appsv1.StatefulSet{}
-		checkResource(testNamespace, common.ResourceName(testClusterName, v1alpha1.DatanodeComponentKind), statefulSet, req)
+		checkResource(testNamespace, common.ResourceName(testClusterName, v1alpha1.DatanodeRoleKind), statefulSet, req)
 
 		// Move forward to sync frontend.
 		Expect(makeStatefulSetReady(statefulSet, cluster.Spec.Datanode.Replicas)).NotTo(HaveOccurred(), "failed to update datanode statefulset status")
 
 		By("Check frontend resource")
 		svc = &corev1.Service{}
-		checkResource(testNamespace, common.ResourceName(testClusterName, v1alpha1.FrontendComponentKind), svc, req)
+		checkResource(testNamespace, common.ResourceName(testClusterName, v1alpha1.FrontendRoleKind), svc, req)
 		deployment = &appsv1.Deployment{}
-		checkResource(testNamespace, common.ResourceName(testClusterName, v1alpha1.FrontendComponentKind), deployment, req)
+		checkResource(testNamespace, common.ResourceName(testClusterName, v1alpha1.FrontendRoleKind), deployment, req)
 
 		// Move forward to complete status.
 		Expect(makeDeploymentReady(deployment, cluster.Spec.Frontend.Replicas)).NotTo(HaveOccurred(), "failed to update frontend deployment status")
