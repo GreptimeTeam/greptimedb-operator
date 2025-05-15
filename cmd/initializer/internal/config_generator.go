@@ -32,7 +32,7 @@ type Options struct {
 	ConfigPath     string
 	InitConfigPath string
 	Namespace      string
-	ComponentKind  string
+	RoleKind       string
 
 	// For generating config of datanode or flownode.
 	RPCPort     int32
@@ -64,19 +64,19 @@ func (c *ConfigGenerator) Generate() error {
 	}
 
 	var configData []byte
-	switch c.ComponentKind {
-	case string(v1alpha1.DatanodeComponentKind):
+	switch c.RoleKind {
+	case string(v1alpha1.DatanodeRoleKind):
 		configData, err = c.generateDatanodeConfig(initConfig)
 		if err != nil {
 			return err
 		}
-	case string(v1alpha1.FlownodeComponentKind):
+	case string(v1alpha1.FlownodeRoleKind):
 		configData, err = c.generateFlownodeConfig(initConfig)
 		if err != nil {
 			return err
 		}
 	default:
-		return fmt.Errorf("unknown component kind: %s", c.ComponentKind)
+		return fmt.Errorf("unknown role kind: %s", c.RoleKind)
 	}
 
 	if err := os.WriteFile(c.ConfigPath, configData, 0644); err != nil {
@@ -90,7 +90,7 @@ func (c *ConfigGenerator) Generate() error {
 }
 
 func (c *ConfigGenerator) generateDatanodeConfig(initConfig []byte) ([]byte, error) {
-	cfg, err := dbconfig.NewFromComponentKind(v1alpha1.DatanodeComponentKind)
+	cfg, err := dbconfig.NewFromRoleKind(v1alpha1.DatanodeRoleKind)
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +133,7 @@ func (c *ConfigGenerator) generateDatanodeConfig(initConfig []byte) ([]byte, err
 }
 
 func (c *ConfigGenerator) generateFlownodeConfig(initConfig []byte) ([]byte, error) {
-	cfg, err := dbconfig.NewFromComponentKind(v1alpha1.FlownodeComponentKind)
+	cfg, err := dbconfig.NewFromRoleKind(v1alpha1.FlownodeRoleKind)
 	if err != nil {
 		return nil, err
 	}

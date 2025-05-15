@@ -47,7 +47,7 @@ type MetaConfig struct {
 
 // ConfigureByCluster configures the meta config by the given cluster.
 func (c *MetaConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster, roleSpec v1alpha1.RoleSpec) error {
-	if roleSpec.GetRoleKind() != v1alpha1.MetaComponentKind {
+	if roleSpec.GetRoleKind() != v1alpha1.MetaRoleKind {
 		return fmt.Errorf("invalid role kind: %s", roleSpec.GetRoleKind())
 	}
 
@@ -84,8 +84,8 @@ func (c *MetaConfig) ConfigureByStandalone(_ *v1alpha1.GreptimeDBStandalone) err
 }
 
 // Kind returns the component kind of the meta.
-func (c *MetaConfig) Kind() v1alpha1.ComponentKind {
-	return v1alpha1.MetaComponentKind
+func (c *MetaConfig) Kind() v1alpha1.RoleKind {
+	return v1alpha1.MetaRoleKind
 }
 
 // GetInputConfig returns the input config of the meta.

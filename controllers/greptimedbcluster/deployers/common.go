@@ -66,19 +66,19 @@ func (c *CommonDeployer) GetCluster(crdObject client.Object) (*v1alpha1.Greptime
 }
 
 type CommonBuilder struct {
-	Cluster       *v1alpha1.GreptimeDBCluster
-	ComponentKind v1alpha1.ComponentKind
+	Cluster  *v1alpha1.GreptimeDBCluster
+	RoleKind v1alpha1.RoleKind
 
 	*deployer.DefaultBuilder
 }
 
-func (c *CommonDeployer) NewCommonBuilder(crdObject client.Object, componentKind v1alpha1.ComponentKind) *CommonBuilder {
+func (c *CommonDeployer) NewCommonBuilder(crdObject client.Object, roleKind v1alpha1.RoleKind) *CommonBuilder {
 	cb := &CommonBuilder{
 		DefaultBuilder: &deployer.DefaultBuilder{
 			Scheme: c.Scheme,
 			Owner:  crdObject,
 		},
-		ComponentKind: componentKind,
+		RoleKind: roleKind,
 	}
 
 	cluster, err := c.GetCluster(crdObject)
@@ -101,13 +101,13 @@ func (c *CommonBuilder) GenerateConfigMap(roleSpec v1alpha1.RoleSpec) (*corev1.C
 		return nil, err
 	}
 
-	resourceName := common.ResourceName(c.Cluster.Name, c.ComponentKind, roleSpec.GetName())
+	resourceName := common.ResourceName(c.Cluster.Name, c.RoleKind, roleSpec.GetName())
 
 	return common.GenerateConfigMap(c.Cluster.Namespace, resourceName, configData)
 }
 
 func (c *CommonBuilder) GeneratePodTemplateSpec(template *v1alpha1.PodTemplateSpec) *corev1.PodTemplateSpec {
-	return common.GeneratePodTemplateSpec(c.ComponentKind, template)
+	return common.GeneratePodTemplateSpec(c.RoleKind, template)
 }
 
 func (c *CommonBuilder) GeneratePodMonitor(namespace, resourceName string) (*monitoringv1.PodMonitor, error) {
@@ -147,7 +147,7 @@ func (c *CommonBuilder) AddVectorConfigVolume(template *corev1.PodTemplateSpec) 
 	})
 }
 
-func (c *CommonBuilder) AddVectorSidecar(template *corev1.PodTemplateSpec, kind v1alpha1.ComponentKind) {
+func (c *CommonBuilder) AddVectorSidecar(template *corev1.PodTemplateSpec, kind v1alpha1.RoleKind) {
 	template.Spec.Containers = append(template.Spec.Containers, corev1.Container{
 		Name:  "vector",
 		Image: c.Cluster.Spec.Monitoring.Vector.Image,
@@ -170,7 +170,7 @@ func (c *CommonBuilder) AddVectorSidecar(template *corev1.PodTemplateSpec, kind 
 }
 
 func (c *CommonBuilder) GenerateVectorConfigMap() (*corev1.ConfigMap, error) {
-	standaloneName := common.ResourceName(c.Cluster.Name+"-monitor", v1alpha1.StandaloneKind)
+	standaloneName := common.ResourceName(c.Cluster.Name+"-monitor", v1alpha1.StandaloneRoleKind)
 	svc := fmt.Sprintf("%s.%s.svc.cluster.local", standaloneName, c.Cluster.Namespace)
 	vars := map[string]string{
 		"ClusterName":             c.Cluster.Name,
@@ -222,7 +222,7 @@ func (c *CommonBuilder) vectorConfigTemplate() (string, error) {
 	return string(data), nil
 }
 
-func (c *CommonBuilder) env(kind v1alpha1.ComponentKind) []corev1.EnvVar {
+func (c *CommonBuilder) env(kind v1alpha1.RoleKind) []corev1.EnvVar {
 	return []corev1.EnvVar{
 		{
 			Name: deployer.EnvPodIP,

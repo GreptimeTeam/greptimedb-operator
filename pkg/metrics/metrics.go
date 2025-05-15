@@ -139,31 +139,31 @@ func NewMetricsCollector() (*MetricsCollector, error) {
 // CollectClusterPodMetrics collects pod metrics for a cluster.
 func (c *MetricsCollector) CollectClusterPodMetrics(ctx context.Context, cluster *greptimev1alpha1.GreptimeDBCluster) error {
 	if cluster.GetMeta() != nil {
-		if err := c.collectPodMetricsByRole(ctx, cluster, greptimev1alpha1.MetaComponentKind); err != nil {
+		if err := c.collectPodMetricsByRole(ctx, cluster, greptimev1alpha1.MetaRoleKind); err != nil {
 			return err
 		}
 	}
 
 	if cluster.GetDatanode() != nil {
-		if err := c.collectPodMetricsByRole(ctx, cluster, greptimev1alpha1.DatanodeComponentKind); err != nil {
+		if err := c.collectPodMetricsByRole(ctx, cluster, greptimev1alpha1.DatanodeRoleKind); err != nil {
 			return err
 		}
 	}
 
 	if cluster.GetFrontend() != nil {
-		if err := c.collectPodMetricsByRole(ctx, cluster, greptimev1alpha1.FrontendComponentKind); err != nil {
+		if err := c.collectPodMetricsByRole(ctx, cluster, greptimev1alpha1.FrontendRoleKind); err != nil {
 			return err
 		}
 	}
 
 	if cluster.GetFlownode() != nil {
-		if err := c.collectPodMetricsByRole(ctx, cluster, greptimev1alpha1.FlownodeComponentKind); err != nil {
+		if err := c.collectPodMetricsByRole(ctx, cluster, greptimev1alpha1.FlownodeRoleKind); err != nil {
 			return err
 		}
 	}
 
 	if cluster.GetFrontendGroups() != nil {
-		if err := c.collectPodMetricsByRole(ctx, cluster, greptimev1alpha1.FrontendComponentKind); err != nil {
+		if err := c.collectPodMetricsByRole(ctx, cluster, greptimev1alpha1.FrontendRoleKind); err != nil {
 			return err
 		}
 	}
@@ -171,10 +171,10 @@ func (c *MetricsCollector) CollectClusterPodMetrics(ctx context.Context, cluster
 	return nil
 }
 
-func (c *MetricsCollector) collectPodMetricsByRole(ctx context.Context, cluster *greptimev1alpha1.GreptimeDBCluster, role greptimev1alpha1.ComponentKind) error {
+func (c *MetricsCollector) collectPodMetricsByRole(ctx context.Context, cluster *greptimev1alpha1.GreptimeDBCluster, role greptimev1alpha1.RoleKind) error {
 	var podList []corev1.Pod
 
-	if role == greptimev1alpha1.FrontendComponentKind {
+	if role == greptimev1alpha1.FrontendRoleKind {
 		for _, frontend := range cluster.GetFrontendGroups() {
 			frontendPods, err := c.getPods(ctx, cluster, role, frontend.Name)
 			if err != nil {
@@ -199,7 +199,7 @@ func (c *MetricsCollector) collectPodMetricsByRole(ctx context.Context, cluster 
 	return nil
 }
 
-func (c *MetricsCollector) collectPodMetrics(ctx context.Context, clusterName string, pod *corev1.Pod, role greptimev1alpha1.ComponentKind) error {
+func (c *MetricsCollector) collectPodMetrics(ctx context.Context, clusterName string, pod *corev1.Pod, role greptimev1alpha1.RoleKind) error {
 	if pod.Status.Conditions == nil {
 		return nil
 	}
@@ -278,7 +278,7 @@ func (c *MetricsCollector) getPodConditionTime(podStatus *corev1.PodStatus, cond
 	return nil, fmt.Errorf("condition %s not found", conditionType)
 }
 
-func (c *MetricsCollector) getPods(ctx context.Context, cluster *greptimev1alpha1.GreptimeDBCluster, componentKind greptimev1alpha1.ComponentKind, additionalName string) ([]corev1.Pod, error) {
+func (c *MetricsCollector) getPods(ctx context.Context, cluster *greptimev1alpha1.GreptimeDBCluster, componentKind greptimev1alpha1.RoleKind, additionalName string) ([]corev1.Pod, error) {
 	resourceName := common.ResourceName(cluster.Name, componentKind, additionalName)
 
 	selector := metav1.LabelSelector{
@@ -299,7 +299,7 @@ func (c *MetricsCollector) getPods(ctx context.Context, cluster *greptimev1alpha
 	return pods.Items, nil
 }
 
-func (c *MetricsCollector) collectPodImagePullingDuration(ctx context.Context, clusterName string, pod *corev1.Pod, role greptimev1alpha1.ComponentKind) error {
+func (c *MetricsCollector) collectPodImagePullingDuration(ctx context.Context, clusterName string, pod *corev1.Pod, role greptimev1alpha1.RoleKind) error {
 	imageName, duration, err := c.getImagePullingDurationFromEvents(ctx, pod)
 	if errors.Is(err, ErrEmptyEvents) { // Maybe the events are deleted by the garbage collector.
 		return nil

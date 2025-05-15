@@ -47,7 +47,7 @@ const (
 // If extraNames are provided, they will be appended to the resource name. For example,
 // - If the name is `my-cluster` and the component kind is `datanode`, the resource name will be `my-cluster-datanode`.
 // - If the name is `my-cluster` and the component kind is `datanode` and the extra names `read`, the resource name will be `my-cluster-datanode-read`.
-func ResourceName(name string, componentKind v1alpha1.ComponentKind, extraNames ...string) string {
+func ResourceName(name string, componentKind v1alpha1.RoleKind, extraNames ...string) string {
 	for _, extraName := range extraNames {
 		if extraName != "" {
 			name = name + "-" + extraName
@@ -132,7 +132,7 @@ func GeneratePodMonitor(namespace, resourceName string, promSpec *v1alpha1.Prome
 	return pm, nil
 }
 
-func GeneratePodTemplateSpec(kind v1alpha1.ComponentKind, template *v1alpha1.PodTemplateSpec) *corev1.PodTemplateSpec {
+func GeneratePodTemplateSpec(kind v1alpha1.RoleKind, template *v1alpha1.PodTemplateSpec) *corev1.PodTemplateSpec {
 	if template == nil || template.MainContainer == nil {
 		return nil
 	}
@@ -187,7 +187,7 @@ func GeneratePodTemplateSpec(kind v1alpha1.ComponentKind, template *v1alpha1.Pod
 	return spec
 }
 
-func FileStorageToPVC(name string, fs v1alpha1.FileStorageAccessor, fsType FileStorageType, kind v1alpha1.ComponentKind) *corev1.PersistentVolumeClaim {
+func FileStorageToPVC(name string, fs v1alpha1.FileStorageAccessor, fsType FileStorageType, kind v1alpha1.RoleKind) *corev1.PersistentVolumeClaim {
 	var (
 		labels      map[string]string
 		annotations map[string]string
@@ -239,7 +239,7 @@ func FileStorageToPVC(name string, fs v1alpha1.FileStorageAccessor, fsType FileS
 	}
 }
 
-func GetPVCs(ctx context.Context, k8sClient client.Client, namespace, name string, kind v1alpha1.ComponentKind, fsType FileStorageType) ([]corev1.PersistentVolumeClaim, error) {
+func GetPVCs(ctx context.Context, k8sClient client.Client, namespace, name string, kind v1alpha1.RoleKind, fsType FileStorageType) ([]corev1.PersistentVolumeClaim, error) {
 	var labelSelector *metav1.LabelSelector
 	switch fsType {
 	case FileStorageTypeDatanode:

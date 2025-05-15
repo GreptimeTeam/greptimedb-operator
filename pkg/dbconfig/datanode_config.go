@@ -45,7 +45,7 @@ type DatanodeConfig struct {
 
 // ConfigureByCluster configures the datanode config by the given cluster.
 func (c *DatanodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster, roleSpec v1alpha1.RoleSpec) error {
-	if roleSpec.GetRoleKind() != v1alpha1.DatanodeComponentKind {
+	if roleSpec.GetRoleKind() != v1alpha1.DatanodeRoleKind {
 		return fmt.Errorf("invalid role kind: %s", roleSpec.GetRoleKind())
 	}
 
@@ -91,8 +91,8 @@ func (c *DatanodeConfig) ConfigureByStandalone(_ *v1alpha1.GreptimeDBStandalone)
 }
 
 // Kind returns the component kind of the datanode.
-func (c *DatanodeConfig) Kind() v1alpha1.ComponentKind {
-	return v1alpha1.DatanodeComponentKind
+func (c *DatanodeConfig) Kind() v1alpha1.RoleKind {
+	return v1alpha1.DatanodeRoleKind
 }
 
 // GetInputConfig returns the input config.

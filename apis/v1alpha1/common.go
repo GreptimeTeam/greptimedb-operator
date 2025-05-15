@@ -52,24 +52,24 @@ const (
 	PhaseTerminating Phase = "Terminating"
 )
 
-// ComponentKind is the kind of the component in the cluster.
-type ComponentKind string
+// RoleKind is the role of the component in the cluster.
+type RoleKind string
 
 const (
-	// FrontendComponentKind is the frontend component kind.
-	FrontendComponentKind ComponentKind = "frontend"
+	// FrontendRoleKind is the frontend role.
+	FrontendRoleKind RoleKind = "frontend"
 
-	// DatanodeComponentKind is the datanode component kind.
-	DatanodeComponentKind ComponentKind = "datanode"
+	// DatanodeRoleKind is the datanode role.
+	DatanodeRoleKind RoleKind = "datanode"
 
-	// MetaComponentKind is the meta component kind.
-	MetaComponentKind ComponentKind = "meta"
+	// MetaRoleKind is the meta role.
+	MetaRoleKind RoleKind = "meta"
 
-	// FlownodeComponentKind is the flownode component kind.
-	FlownodeComponentKind ComponentKind = "flownode"
+	// FlownodeRoleKind is the flownode role.
+	FlownodeRoleKind RoleKind = "flownode"
 
-	// StandaloneKind is the standalone component kind.
-	StandaloneKind ComponentKind = "standalone"
+	// StandaloneRoleKind is the standalone role.
+	StandaloneRoleKind RoleKind = "standalone"
 )
 
 // RoleSpec is the interface for the role spec.
@@ -79,7 +79,7 @@ type RoleSpec interface {
 	GetName() string
 
 	// GetRoleKind returns the role kind.
-	GetRoleKind() ComponentKind
+	GetRoleKind() RoleKind
 }
 
 // SlimPodSpec is a slimmed down version of corev1.PodSpec.
