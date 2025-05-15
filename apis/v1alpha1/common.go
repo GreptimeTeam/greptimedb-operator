@@ -72,6 +72,16 @@ const (
 	StandaloneKind ComponentKind = "standalone"
 )
 
+// RoleSpec is the interface for the role spec.
+// +kubebuilder:object:generate=false
+type RoleSpec interface {
+	// GetName returns the spec name if it has. It will return empty string if the spec has no name.
+	GetName() string
+
+	// GetRoleKind returns the role kind.
+	GetRoleKind() ComponentKind
+}
+
 // SlimPodSpec is a slimmed down version of corev1.PodSpec.
 // Most of the fields in SlimPodSpec are copied from `corev1.PodSpec`.
 type SlimPodSpec struct {
