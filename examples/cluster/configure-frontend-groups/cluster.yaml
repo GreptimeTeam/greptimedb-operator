@@ -1,14 +1,14 @@
 apiVersion: greptime.io/v1alpha1
 kind: GreptimeDBCluster
 metadata:
-  name: cluster-with-frontends
+  name: cluster-with-frontend-groups
 spec:
   initializer:
     image: greptime-registry.cn-hangzhou.cr.aliyuncs.com/greptime/greptimedb-initializer:latest
   base:
     main:
       image: greptime-registry.cn-hangzhou.cr.aliyuncs.com/greptime/greptimedb:latest
-  frontends:
+  frontendGroups:
   - name: read
     replicas: 1
   - name: write

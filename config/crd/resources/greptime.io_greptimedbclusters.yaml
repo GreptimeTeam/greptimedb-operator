@@ -12252,7 +12252,7 @@ spec:
                     - secretName
                     type: object
                 type: object
-              frontends:
+              frontendGroups:
                 items:
                   properties:
                     config:

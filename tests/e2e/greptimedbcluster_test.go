@@ -57,15 +57,15 @@ var _ = Describe("Test GreptimeDBCluster", func() {
 		greptimedbcluster.TestClusterEnableMonitoring(ctx, h)
 	})
 
-	It("Test a cluster with frontend group", func() {
-		greptimedbcluster.TestClusterFrontendGroup(ctx, h)
+	It("Test a cluster with frontend groups", func() {
+		greptimedbcluster.TestClusterFrontendGroups(ctx, h)
 	})
 
 	It("Test a cluster with frontend ingress", func() {
 		greptimedbcluster.TestClusterFrontendIngress(ctx, h)
 	})
 
-	It("Test a cluster with frontend group ingress", func() {
-		greptimedbcluster.TestClusterFrontendGroupIngress(ctx, h)
+	It("Test a cluster with frontend groups ingress", func() {
+		greptimedbcluster.TestClusterFrontendGroupsIngress(ctx, h)
 	})
 })

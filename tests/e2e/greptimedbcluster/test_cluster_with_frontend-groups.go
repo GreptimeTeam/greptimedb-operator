@@ -31,10 +31,10 @@ import (
 	"github.com/GreptimeTeam/greptimedb-operator/tests/e2e/helper"
 )
 
-// TestClusterFrontendGroup tests a frontend group cluster.
-func TestClusterFrontendGroup(ctx context.Context, h *helper.Helper) {
+// TestClusterFrontendGroups tests a frontend groups cluster.
+func TestClusterFrontendGroups(ctx context.Context, h *helper.Helper) {
 	const (
-		testCRFile       = "./testdata/resources/cluster/configure-frontends/cluster.yaml"
+		testCRFile       = "./testdata/resources/cluster/configure-frontend-groups/cluster.yaml"
 		testReadSQLFile  = "./testdata/sql/cluster/read.sql"
 		testWriteSQLFile = "./testdata/sql/cluster/write.sql"
 	)
@@ -66,16 +66,16 @@ func TestClusterFrontendGroup(ctx context.Context, h *helper.Helper) {
 	Expect(err).NotTo(HaveOccurred(), "failed to get cluster")
 	By("Execute distributed SQL test")
 
-	frontends := testCluster.GetFrontends()
-	if len(frontends) < 2 {
-		err = errors.New("expected at least 2 frontends in the group")
+	frontendGroups := testCluster.GetFrontendGroups()
+	if len(frontendGroups) < 2 {
+		err = errors.New("expected at least 2 frontend group")
 	}
 	if err != nil {
-		Expect(err).NotTo(HaveOccurred(), "Incorrect number of frontends")
+		Expect(err).NotTo(HaveOccurred(), "Incorrect number of frontend groups")
 	}
 	var (
-		readFrontendName  = frontends[0].GetName()
-		writeFrontendName = frontends[1].GetName()
+		readFrontendName  = frontendGroups[0].GetName()
+		writeFrontendName = frontendGroups[1].GetName()
 	)
 
 	frontendAddr, err := h.PortForward(ctx, testCluster.Namespace, common.AdditionalResourceName(testCluster.Name, writeFrontendName, greptimev1alpha1.FrontendComponentKind), int(testCluster.Spec.PostgreSQLPort))

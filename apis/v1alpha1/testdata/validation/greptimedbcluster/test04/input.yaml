@@ -9,7 +9,7 @@ spec:
       image: greptime/greptimedb:latest
   frontend:
     replicas: 1
-  frontends: # This is an error because must configure frontend with a name.
+  frontendGroups: # This is an error because must configure frontend with a name.
   - replicas: 1
   meta:
     etcdEndpoints:

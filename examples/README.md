@@ -18,9 +18,9 @@ The following examples suppose that you have installed the etcd cluster in the `
 - [Dedicated WAL](./cluster/standalone-wal/cluster.yaml): Create a GreptimeDB cluster with dedicated storage for WAL.
 - [Configure Logging](./cluster/configure-logging/cluster.yaml): Create a GreptimeDB cluster with custom logging configuration.
 - [Enable Monitoring Bootstrap](./cluster/enable-monitoring/cluster.yaml): Create a GreptimeDB cluster with monitoring enabled.
-- [Configure FrontendGroup](./cluster/configure-frontends/cluster.yaml): Create a GreptimeDB cluster with custom frontend group.
+- [Configure FrontendGroups](./cluster/configure-frontend-groups/cluster.yaml): Create a GreptimeDB cluster with custom frontend groups.
 - [Configure Frontend Ingress](./cluster/frontend-ingress/cluster.yaml): Create a GreptimeDB cluster with custom frontend ingress.
-- [Configure FrontendGroup Ingress](./cluster/frontends-ingress/cluster.yaml): Create a GreptimeDB cluster with custom frontend group ingress.
+- [Configure FrontendGroups Ingress](./cluster/frontend-groups-ingress/cluster.yaml): Create a GreptimeDB cluster with custom frontend groups ingress.
 
 ## Standalone
 

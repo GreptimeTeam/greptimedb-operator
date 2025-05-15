@@ -162,7 +162,7 @@ func (c *MetricsCollector) CollectClusterPodMetrics(ctx context.Context, cluster
 		}
 	}
 
-	if cluster.GetFrontends() != nil {
+	if cluster.GetFrontendGroups() != nil {
 		if err := c.collectPodMetricsByRole(ctx, cluster, greptimev1alpha1.FrontendComponentKind); err != nil {
 			return err
 		}
@@ -175,7 +175,7 @@ func (c *MetricsCollector) collectPodMetricsByRole(ctx context.Context, cluster 
 	var podList []corev1.Pod
 
 	if role == greptimev1alpha1.FrontendComponentKind {
-		for _, frontend := range cluster.GetFrontends() {
+		for _, frontend := range cluster.GetFrontendGroups() {
 			frontendPods, err := c.getPods(ctx, cluster, role, frontend.Name)
 			if err != nil {
 				return err

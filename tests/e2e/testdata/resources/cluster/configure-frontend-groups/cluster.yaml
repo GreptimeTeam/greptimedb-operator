@@ -1,7 +1,7 @@
 apiVersion: greptime.io/v1alpha1
 kind: GreptimeDBCluster
 metadata:
-  name: e2e-cluster-with-frontends
+  name: e2e-cluster-with-frontend-groups
   namespace: default
 spec:
   initializer:
@@ -9,7 +9,7 @@ spec:
   base:
     main:
       image: localhost:5001/greptime/greptimedb:latest
-  frontends:
+  frontendGroups:
   - name: read
     replicas: 1
   - name: write

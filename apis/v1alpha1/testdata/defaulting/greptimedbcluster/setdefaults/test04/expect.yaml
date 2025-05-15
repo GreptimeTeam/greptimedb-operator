@@ -38,7 +38,7 @@ spec:
           port: 4000
         periodSeconds: 5
         failureThreshold: 60
-  frontends:
+  frontendGroups:
   - name: read
     replicas: 1
     httpPort: 6000
