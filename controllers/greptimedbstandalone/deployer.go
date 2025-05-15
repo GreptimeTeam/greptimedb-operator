@@ -128,7 +128,7 @@ func (d *StandaloneDeployer) CheckAndUpdateStatus(ctx context.Context, crdObject
 
 		objectKey = client.ObjectKey{
 			Namespace: standalone.Namespace,
-			Name:      common.ResourceName(standalone.Name, v1alpha1.StandaloneKind),
+			Name:      common.ResourceName(standalone.Name, v1alpha1.StandaloneRoleKind),
 		}
 	)
 
@@ -154,7 +154,7 @@ func (d *StandaloneDeployer) getStandalone(crdObject client.Object) (*v1alpha1.G
 func (d *StandaloneDeployer) deleteStorage(ctx context.Context, namespace, name string, fsType common.FileStorageType) error {
 	klog.Infof("Deleting standalone storage...")
 
-	claims, err := common.GetPVCs(ctx, d.Client, namespace, name, v1alpha1.StandaloneKind, fsType)
+	claims, err := common.GetPVCs(ctx, d.Client, namespace, name, v1alpha1.StandaloneRoleKind, fsType)
 	if err != nil {
 		return err
 	}
@@ -188,16 +188,16 @@ func (b *standaloneBuilder) BuildService() deployer.Builder {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace:   b.standalone.Namespace,
-			Name:        common.ResourceName(b.standalone.Name, v1alpha1.StandaloneKind),
+			Name:        common.ResourceName(b.standalone.Name, v1alpha1.StandaloneRoleKind),
 			Annotations: b.standalone.Spec.Service.Annotations,
 			Labels: util.MergeStringMap(b.standalone.Spec.Service.Labels, map[string]string{
-				constant.GreptimeDBComponentName: common.ResourceName(b.standalone.Name, v1alpha1.StandaloneKind),
+				constant.GreptimeDBComponentName: common.ResourceName(b.standalone.Name, v1alpha1.StandaloneRoleKind),
 			}),
 		},
 		Spec: corev1.ServiceSpec{
 			Type: b.standalone.Spec.Service.Type,
 			Selector: map[string]string{
-				constant.GreptimeDBComponentName: common.ResourceName(b.standalone.Name, v1alpha1.StandaloneKind),
+				constant.GreptimeDBComponentName: common.ResourceName(b.standalone.Name, v1alpha1.StandaloneRoleKind),
 			},
 			Ports:             b.servicePorts(),
 			LoadBalancerClass: b.standalone.Spec.Service.LoadBalancerClass,
@@ -220,7 +220,7 @@ func (b *standaloneBuilder) BuildConfigMap() deployer.Builder {
 		return b
 	}
 
-	cm, err := common.GenerateConfigMap(b.standalone.Namespace, common.ResourceName(b.standalone.Name, v1alpha1.StandaloneKind), configData)
+	cm, err := common.GenerateConfigMap(b.standalone.Namespace, common.ResourceName(b.standalone.Name, v1alpha1.StandaloneRoleKind), configData)
 	if err != nil {
 		b.Err = err
 		return b
@@ -242,10 +242,10 @@ func (b *standaloneBuilder) BuildStatefulSet() deployer.Builder {
 			APIVersion: "apps/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      common.ResourceName(b.standalone.Name, v1alpha1.StandaloneKind),
+			Name:      common.ResourceName(b.standalone.Name, v1alpha1.StandaloneRoleKind),
 			Namespace: b.standalone.Namespace,
 			Labels: map[string]string{
-				constant.GreptimeDBComponentName: common.ResourceName(b.standalone.Name, v1alpha1.StandaloneKind),
+				constant.GreptimeDBComponentName: common.ResourceName(b.standalone.Name, v1alpha1.StandaloneRoleKind),
 			},
 		},
 		Spec: appsv1.StatefulSetSpec{
@@ -253,7 +253,7 @@ func (b *standaloneBuilder) BuildStatefulSet() deployer.Builder {
 			Replicas: ptr.To(int32(1)),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					constant.GreptimeDBComponentName: common.ResourceName(b.standalone.Name, v1alpha1.StandaloneKind),
+					constant.GreptimeDBComponentName: common.ResourceName(b.standalone.Name, v1alpha1.StandaloneRoleKind),
 				},
 			},
 			Template:             b.generatePodTemplateSpec(),
@@ -280,7 +280,7 @@ func (b *standaloneBuilder) BuildStatefulSet() deployer.Builder {
 }
 
 func (b *standaloneBuilder) generatePodTemplateSpec() corev1.PodTemplateSpec {
-	template := common.GeneratePodTemplateSpec(v1alpha1.StandaloneKind, b.standalone.Spec.Base)
+	template := common.GeneratePodTemplateSpec(v1alpha1.StandaloneRoleKind, b.standalone.Spec.Base)
 
 	if len(b.standalone.Spec.Base.MainContainer.Args) == 0 {
 		// Setup main container args.
@@ -291,10 +291,10 @@ func (b *standaloneBuilder) generatePodTemplateSpec() corev1.PodTemplateSpec {
 
 	template.Spec.Containers[constant.MainContainerIndex].Ports = b.containerPorts()
 	template.ObjectMeta.Labels = util.MergeStringMap(template.ObjectMeta.Labels, map[string]string{
-		constant.GreptimeDBComponentName: common.ResourceName(b.standalone.Name, v1alpha1.StandaloneKind),
+		constant.GreptimeDBComponentName: common.ResourceName(b.standalone.Name, v1alpha1.StandaloneRoleKind),
 	})
 
-	common.MountConfigDir(template, common.ResourceName(b.standalone.Name, v1alpha1.StandaloneKind))
+	common.MountConfigDir(template, common.ResourceName(b.standalone.Name, v1alpha1.StandaloneRoleKind))
 
 	if b.standalone.Spec.TLS != nil {
 		b.mountTLSSecret(template)
@@ -328,17 +328,17 @@ func (b *standaloneBuilder) generatePVCs() []corev1.PersistentVolumeClaim {
 
 	// It's always not nil because it's the default value.
 	if fs := b.standalone.GetDatanodeFileStorage(); fs != nil {
-		claims = append(claims, *common.FileStorageToPVC(b.standalone.Name, fs, common.FileStorageTypeDatanode, v1alpha1.StandaloneKind))
+		claims = append(claims, *common.FileStorageToPVC(b.standalone.Name, fs, common.FileStorageTypeDatanode, v1alpha1.StandaloneRoleKind))
 	}
 
 	// Allocate the standalone WAL storage for the raft-engine.
 	if fs := b.standalone.GetWALProvider().GetRaftEngineWAL().GetFileStorage(); fs != nil {
-		claims = append(claims, *common.FileStorageToPVC(b.standalone.Name, fs, common.FileStorageTypeWAL, v1alpha1.StandaloneKind))
+		claims = append(claims, *common.FileStorageToPVC(b.standalone.Name, fs, common.FileStorageTypeWAL, v1alpha1.StandaloneRoleKind))
 	}
 
 	// Allocate the standalone cache file storage for the datanode.
 	if fs := b.standalone.GetObjectStorageProvider().GetCacheFileStorage(); fs != nil {
-		claims = append(claims, *common.FileStorageToPVC(b.standalone.Name, fs, common.FileStorageTypeCache, v1alpha1.StandaloneKind))
+		claims = append(claims, *common.FileStorageToPVC(b.standalone.Name, fs, common.FileStorageTypeCache, v1alpha1.StandaloneRoleKind))
 	}
 
 	return claims

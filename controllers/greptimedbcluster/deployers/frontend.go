@@ -52,7 +52,7 @@ func NewFrontendDeployer(mgr ctrl.Manager) *FrontendDeployer {
 
 func (d *FrontendDeployer) NewBuilder(crdObject client.Object) deployer.Builder {
 	return &frontendBuilder{
-		CommonBuilder: d.NewCommonBuilder(crdObject, v1alpha1.FrontendComponentKind),
+		CommonBuilder: d.NewCommonBuilder(crdObject, v1alpha1.FrontendRoleKind),
 	}
 }
 
@@ -89,7 +89,7 @@ func (d *FrontendDeployer) CheckAndUpdateStatus(ctx context.Context, crdObject c
 	if cluster.GetFrontend() != nil {
 		objectKey := client.ObjectKey{
 			Namespace: cluster.Namespace,
-			Name:      common.ResourceName(cluster.Name, v1alpha1.FrontendComponentKind),
+			Name:      common.ResourceName(cluster.Name, v1alpha1.FrontendRoleKind),
 		}
 
 		err = d.Get(ctx, objectKey, deployment)
@@ -111,7 +111,7 @@ func (d *FrontendDeployer) CheckAndUpdateStatus(ctx context.Context, crdObject c
 		for _, frontend := range cluster.GetFrontendGroups() {
 			objectKey := client.ObjectKey{
 				Namespace: cluster.Namespace,
-				Name:      common.ResourceName(cluster.Name, v1alpha1.FrontendComponentKind, frontend.GetName()),
+				Name:      common.ResourceName(cluster.Name, v1alpha1.FrontendRoleKind, frontend.GetName()),
 			}
 
 			err = d.Get(ctx, objectKey, deployment)
@@ -146,9 +146,9 @@ type frontendBuilder struct {
 }
 
 func (b *frontendBuilder) generateService(frontend *v1alpha1.FrontendSpec) {
-	name := common.ResourceName(b.Cluster.Name, b.ComponentKind)
+	name := common.ResourceName(b.Cluster.Name, b.RoleKind)
 	if len(frontend.GetName()) != 0 {
-		name = common.ResourceName(b.Cluster.Name, b.ComponentKind, frontend.GetName())
+		name = common.ResourceName(b.Cluster.Name, b.RoleKind, frontend.GetName())
 	}
 
 	svc := &corev1.Service{
@@ -200,9 +200,9 @@ func (b *frontendBuilder) BuildService() deployer.Builder {
 }
 
 func (b *frontendBuilder) generateDeployment(frontend *v1alpha1.FrontendSpec) {
-	name := common.ResourceName(b.Cluster.Name, b.ComponentKind)
+	name := common.ResourceName(b.Cluster.Name, b.RoleKind)
 	if len(frontend.GetName()) != 0 {
-		name = common.ResourceName(b.Cluster.Name, b.ComponentKind, frontend.GetName())
+		name = common.ResourceName(b.Cluster.Name, b.RoleKind, frontend.GetName())
 	}
 
 	deployment := &appsv1.Deployment{
@@ -312,7 +312,7 @@ func (b *frontendBuilder) BuildPodMonitor() deployer.Builder {
 	}
 
 	if b.Cluster.GetFrontend() != nil {
-		pm, err := b.GeneratePodMonitor(b.Cluster.Namespace, common.ResourceName(b.Cluster.Name, b.ComponentKind))
+		pm, err := b.GeneratePodMonitor(b.Cluster.Namespace, common.ResourceName(b.Cluster.Name, b.RoleKind))
 		if err != nil {
 			b.Err = err
 			return b
@@ -323,7 +323,7 @@ func (b *frontendBuilder) BuildPodMonitor() deployer.Builder {
 
 	if len(b.Cluster.GetFrontendGroups()) != 0 {
 		for _, frontendSpec := range b.Cluster.GetFrontendGroups() {
-			pm, err := b.GeneratePodMonitor(b.Cluster.Namespace, common.ResourceName(b.Cluster.Name, b.ComponentKind, frontendSpec.GetName()))
+			pm, err := b.GeneratePodMonitor(b.Cluster.Namespace, common.ResourceName(b.Cluster.Name, b.RoleKind, frontendSpec.GetName()))
 			if err != nil {
 				b.Err = err
 				return b
@@ -349,7 +349,7 @@ func (b *frontendBuilder) generateIngress() {
 				PathType: backend.PathType,
 				Backend: networkingv1.IngressBackend{
 					Service: &networkingv1.IngressServiceBackend{
-						Name: common.ResourceName(b.Cluster.Name, b.ComponentKind, backend.Name),
+						Name: common.ResourceName(b.Cluster.Name, b.RoleKind, backend.Name),
 						Port: networkingv1.ServiceBackendPort{
 							Number: b.Cluster.Spec.HTTPPort,
 						},
@@ -412,7 +412,7 @@ func (b *frontendBuilder) generateMainContainerArgs(frontend *v1alpha1.FrontendS
 		"frontend", "start",
 		"--rpc-bind-addr", fmt.Sprintf("0.0.0.0:%d", frontend.RPCPort),
 		"--rpc-server-addr", fmt.Sprintf("$(%s):%d", deployer.EnvPodIP, frontend.RPCPort),
-		"--metasrv-addrs", fmt.Sprintf("%s.%s:%d", common.ResourceName(b.Cluster.Name, v1alpha1.MetaComponentKind),
+		"--metasrv-addrs", fmt.Sprintf("%s.%s:%d", common.ResourceName(b.Cluster.Name, v1alpha1.MetaRoleKind),
 			b.Cluster.Namespace, b.Cluster.Spec.Meta.RPCPort),
 		"--http-addr", fmt.Sprintf("0.0.0.0:%d", frontend.HTTPPort),
 		"--mysql-addr", fmt.Sprintf("0.0.0.0:%d", frontend.MySQLPort),
@@ -439,18 +439,18 @@ func (b *frontendBuilder) generatePodTemplateSpec(frontend *v1alpha1.FrontendSpe
 		podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Args = b.generateMainContainerArgs(frontend)
 	}
 
-	resourceName := common.ResourceName(b.Cluster.Name, b.ComponentKind)
+	resourceName := common.ResourceName(b.Cluster.Name, b.RoleKind)
 	if len(frontend.GetName()) != 0 {
-		resourceName = common.ResourceName(b.Cluster.Name, b.ComponentKind, frontend.GetName())
+		resourceName = common.ResourceName(b.Cluster.Name, b.RoleKind, frontend.GetName())
 	}
 	podTemplateSpec.ObjectMeta.Labels = util.MergeStringMap(podTemplateSpec.ObjectMeta.Labels, map[string]string{
 		constant.GreptimeDBComponentName: resourceName,
 	})
 
 	podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Ports = b.containerPorts(frontend)
-	podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Env = append(podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Env, b.env(v1alpha1.FrontendComponentKind)...)
+	podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Env = append(podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Env, b.env(v1alpha1.FrontendRoleKind)...)
 
-	b.MountConfigDir(podTemplateSpec, common.ResourceName(b.Cluster.Name, b.ComponentKind, frontend.GetName()))
+	b.MountConfigDir(podTemplateSpec, common.ResourceName(b.Cluster.Name, b.RoleKind, frontend.GetName()))
 
 	if logging := frontend.GetLogging(); logging != nil && !logging.IsOnlyLogToStdout() {
 		b.AddLogsVolume(podTemplateSpec, logging.GetLogsDir())
@@ -458,7 +458,7 @@ func (b *frontendBuilder) generatePodTemplateSpec(frontend *v1alpha1.FrontendSpe
 
 	if b.Cluster.GetMonitoring().IsEnabled() && b.Cluster.GetMonitoring().GetVector() != nil {
 		b.AddVectorConfigVolume(podTemplateSpec)
-		b.AddVectorSidecar(podTemplateSpec, v1alpha1.FrontendComponentKind)
+		b.AddVectorSidecar(podTemplateSpec, v1alpha1.FrontendRoleKind)
 	}
 
 	if frontend.TLS != nil {

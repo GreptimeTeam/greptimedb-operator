@@ -80,8 +80,8 @@ type MetaSpec struct {
 var _ RoleSpec = &MetaSpec{}
 
 // GetRoleKind returns the role kind.
-func (in *MetaSpec) GetRoleKind() ComponentKind {
-	return MetaComponentKind
+func (in *MetaSpec) GetRoleKind() RoleKind {
+	return MetaRoleKind
 }
 
 func (in *MetaSpec) GetName() string {
@@ -179,8 +179,8 @@ type FrontendSpec struct {
 var _ RoleSpec = &FrontendSpec{}
 
 // GetRoleKind returns the role kind.
-func (in *FrontendSpec) GetRoleKind() ComponentKind {
-	return FrontendComponentKind
+func (in *FrontendSpec) GetRoleKind() RoleKind {
+	return FrontendRoleKind
 }
 
 func (in *FrontendSpec) GetReplicas() *int32 {
@@ -253,8 +253,8 @@ type DatanodeSpec struct {
 var _ RoleSpec = &DatanodeSpec{}
 
 // GetRoleKind returns the role kind.
-func (in *DatanodeSpec) GetRoleKind() ComponentKind {
-	return DatanodeComponentKind
+func (in *DatanodeSpec) GetRoleKind() RoleKind {
+	return DatanodeRoleKind
 }
 
 func (in *DatanodeSpec) GetName() string {
@@ -320,8 +320,8 @@ type FlownodeSpec struct {
 var _ RoleSpec = &FlownodeSpec{}
 
 // GetRoleKind returns the role kind.
-func (in *FlownodeSpec) GetRoleKind() ComponentKind {
-	return FlownodeComponentKind
+func (in *FlownodeSpec) GetRoleKind() RoleKind {
+	return FlownodeRoleKind
 }
 
 func (in *FlownodeSpec) GetName() string {

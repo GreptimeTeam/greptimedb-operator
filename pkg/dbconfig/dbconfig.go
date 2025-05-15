@@ -35,7 +35,7 @@ const (
 // Config is the interface for the config of greptimedb.
 type Config interface {
 	// Kind returns the component kind of the config.
-	Kind() v1alpha1.ComponentKind
+	Kind() v1alpha1.RoleKind
 
 	// ConfigureByCluster configures the config by the given cluster.
 	ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster, roleSpec v1alpha1.RoleSpec) error
@@ -50,18 +50,18 @@ type Config interface {
 	SetInputConfig(input string) error
 }
 
-// NewFromComponentKind creates config from the component kind.
-func NewFromComponentKind(kind v1alpha1.ComponentKind) (Config, error) {
+// NewFromRoleKind creates config from the role kind.
+func NewFromRoleKind(kind v1alpha1.RoleKind) (Config, error) {
 	switch kind {
-	case v1alpha1.MetaComponentKind:
+	case v1alpha1.MetaRoleKind:
 		return &MetaConfig{}, nil
-	case v1alpha1.DatanodeComponentKind:
+	case v1alpha1.DatanodeRoleKind:
 		return &DatanodeConfig{}, nil
-	case v1alpha1.FrontendComponentKind:
+	case v1alpha1.FrontendRoleKind:
 		return &FrontendConfig{}, nil
-	case v1alpha1.FlownodeComponentKind:
+	case v1alpha1.FlownodeRoleKind:
 		return &FlownodeConfig{}, nil
-	case v1alpha1.StandaloneKind:
+	case v1alpha1.StandaloneRoleKind:
 		return &StandaloneConfig{}, nil
 	default:
 		return nil, fmt.Errorf("unknown component kind: %s", kind)
@@ -85,7 +85,7 @@ func Marshal(config Config) ([]byte, error) {
 
 // FromCluster creates config data from the cluster CRD.
 func FromCluster(cluster *v1alpha1.GreptimeDBCluster, roleSpec v1alpha1.RoleSpec) ([]byte, error) {
-	cfg, err := NewFromComponentKind(roleSpec.GetRoleKind())
+	cfg, err := NewFromRoleKind(roleSpec.GetRoleKind())
 	if err != nil {
 		return nil, err
 	}
@@ -99,7 +99,7 @@ func FromCluster(cluster *v1alpha1.GreptimeDBCluster, roleSpec v1alpha1.RoleSpec
 
 // FromStandalone creates config data from the standalone CRD.
 func FromStandalone(standalone *v1alpha1.GreptimeDBStandalone) ([]byte, error) {
-	cfg, err := NewFromComponentKind(v1alpha1.StandaloneKind)
+	cfg, err := NewFromRoleKind(v1alpha1.StandaloneRoleKind)
 	if err != nil {
 		return nil, err
 	}

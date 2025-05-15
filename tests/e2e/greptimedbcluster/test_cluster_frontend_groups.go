@@ -78,7 +78,7 @@ func TestClusterFrontendGroups(ctx context.Context, h *helper.Helper) {
 		writeFrontendName = frontendGroups[1].GetName()
 	)
 
-	frontendAddr, err := h.PortForward(ctx, testCluster.Namespace, common.ResourceName(testCluster.Name, greptimev1alpha1.FrontendComponentKind, writeFrontendName), int(testCluster.Spec.PostgreSQLPort))
+	frontendAddr, err := h.PortForward(ctx, testCluster.Namespace, common.ResourceName(testCluster.Name, greptimev1alpha1.FrontendRoleKind, writeFrontendName), int(testCluster.Spec.PostgreSQLPort))
 	Expect(err).NotTo(HaveOccurred(), "failed to port forward frontend service")
 	Eventually(func() error {
 		conn, err := net.Dial("tcp", frontendAddr)
@@ -92,7 +92,7 @@ func TestClusterFrontendGroups(ctx context.Context, h *helper.Helper) {
 	err = h.RunSQLTest(ctx, frontendAddr, testWriteSQLFile)
 	Expect(err).NotTo(HaveOccurred(), "failed to run sql test")
 
-	frontendAddr, err = h.PortForward(ctx, testCluster.Namespace, common.ResourceName(testCluster.Name, greptimev1alpha1.FrontendComponentKind, readFrontendName), int(testCluster.Spec.PostgreSQLPort))
+	frontendAddr, err = h.PortForward(ctx, testCluster.Namespace, common.ResourceName(testCluster.Name, greptimev1alpha1.FrontendRoleKind, readFrontendName), int(testCluster.Spec.PostgreSQLPort))
 	Expect(err).NotTo(HaveOccurred(), "failed to port forward frontend service")
 	Eventually(func() error {
 		conn, err := net.Dial("tcp", frontendAddr)
@@ -118,7 +118,7 @@ func TestClusterFrontendGroups(ctx context.Context, h *helper.Helper) {
 	}, helper.DefaultTimeout, time.Second).Should(HaveOccurred())
 
 	By("The PVC of the datanode should be retained")
-	datanodePVCs, err := h.GetPVCs(ctx, testCluster.Namespace, testCluster.Name, greptimev1alpha1.DatanodeComponentKind, common.FileStorageTypeDatanode)
+	datanodePVCs, err := h.GetPVCs(ctx, testCluster.Namespace, testCluster.Name, greptimev1alpha1.DatanodeRoleKind, common.FileStorageTypeDatanode)
 	Expect(err).NotTo(HaveOccurred(), "failed to get datanode PVCs")
 	Expect(int32(len(datanodePVCs))).To(Equal(*testCluster.Spec.Datanode.Replicas), "the number of datanode PVCs should be equal to the number of datanode replicas")
 

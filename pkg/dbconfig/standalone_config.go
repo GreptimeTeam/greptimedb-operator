@@ -76,8 +76,8 @@ func (c *StandaloneConfig) ConfigureByStandalone(standalone *v1alpha1.GreptimeDB
 }
 
 // Kind returns the component kind of the standalone.
-func (c *StandaloneConfig) Kind() v1alpha1.ComponentKind {
-	return v1alpha1.StandaloneKind
+func (c *StandaloneConfig) Kind() v1alpha1.RoleKind {
+	return v1alpha1.StandaloneRoleKind
 }
 
 // GetInputConfig returns the input config of the standalone.
