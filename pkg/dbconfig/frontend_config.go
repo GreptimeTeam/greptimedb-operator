@@ -15,6 +15,8 @@
 package dbconfig
 
 import (
+	"fmt"
+
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 )
 
@@ -29,21 +31,25 @@ type FrontendConfig struct {
 	InputConfig string
 }
 
-// ConfigureByFrontend configures the frontend configuration by the given cluster.
-func (c *FrontendConfig) ConfigureByFrontend(frontend *v1alpha1.FrontendSpec) error {
-	if cfg := frontend.GetConfig(); cfg != "" {
+// ConfigureByCluster is not need to implement in frontend components.
+func (c *FrontendConfig) ConfigureByCluster(_ *v1alpha1.GreptimeDBCluster, roleSpec v1alpha1.RoleSpec) error {
+	if roleSpec.GetRoleKind() != v1alpha1.FrontendComponentKind {
+		return fmt.Errorf("invalid role kind: %s", roleSpec.GetRoleKind())
+	}
+
+	frontendSpec, ok := roleSpec.(*v1alpha1.FrontendSpec)
+	if !ok {
+		return fmt.Errorf("invalid role spec type: %T", roleSpec)
+	}
+
+	if cfg := frontendSpec.GetConfig(); cfg != "" {
 		if err := c.SetInputConfig(cfg); err != nil {
 			return err
 		}
 	}
 
-	c.ConfigureLogging(frontend.GetLogging())
+	c.ConfigureLogging(frontendSpec.GetLogging())
 
-	return nil
-}
-
-// ConfigureByCluster is not need to implement in frontend components.
-func (c *FrontendConfig) ConfigureByCluster(_ *v1alpha1.GreptimeDBCluster) error {
 	return nil
 }
 

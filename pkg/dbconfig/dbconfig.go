@@ -38,13 +38,10 @@ type Config interface {
 	Kind() v1alpha1.ComponentKind
 
 	// ConfigureByCluster configures the config by the given cluster.
-	ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster) error
+	ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster, roleSpec v1alpha1.RoleSpec) error
 
 	// ConfigureByStandalone configures the config by the given standalone.
 	ConfigureByStandalone(standalone *v1alpha1.GreptimeDBStandalone) error
-
-	// ConfigureByFrontend configures the config by the given frontend.
-	ConfigureByFrontend(cluster *v1alpha1.FrontendSpec) error
 
 	// GetInputConfig returns the input config.
 	GetInputConfig() string
@@ -87,26 +84,13 @@ func Marshal(config Config) ([]byte, error) {
 }
 
 // FromCluster creates config data from the cluster CRD.
-func FromCluster(cluster *v1alpha1.GreptimeDBCluster, componentKind v1alpha1.ComponentKind) ([]byte, error) {
-	cfg, err := NewFromComponentKind(componentKind)
+func FromCluster(cluster *v1alpha1.GreptimeDBCluster, roleSpec v1alpha1.RoleSpec) ([]byte, error) {
+	cfg, err := NewFromComponentKind(roleSpec.GetRoleKind())
 	if err != nil {
 		return nil, err
 	}
 
-	if err := cfg.ConfigureByCluster(cluster); err != nil {
-		return nil, err
-	}
-
-	return Marshal(cfg)
-}
-
-func FromFrontend(frontend *v1alpha1.FrontendSpec, componentKind v1alpha1.ComponentKind) ([]byte, error) {
-	cfg, err := NewFromComponentKind(componentKind)
-	if err != nil {
-		return nil, err
-	}
-
-	if err := cfg.ConfigureByFrontend(frontend); err != nil {
+	if err := cfg.ConfigureByCluster(cluster, roleSpec); err != nil {
 		return nil, err
 	}
 

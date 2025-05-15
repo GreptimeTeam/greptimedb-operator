@@ -220,7 +220,7 @@ func (b *standaloneBuilder) BuildConfigMap() deployer.Builder {
 		return b
 	}
 
-	cm, err := common.GenerateConfigMap(b.standalone.Namespace, b.standalone.Name, v1alpha1.StandaloneKind, configData, "")
+	cm, err := common.GenerateConfigMap(b.standalone.Namespace, common.ResourceName(b.standalone.Name, v1alpha1.StandaloneKind), configData)
 	if err != nil {
 		b.Err = err
 		return b
@@ -294,7 +294,7 @@ func (b *standaloneBuilder) generatePodTemplateSpec() corev1.PodTemplateSpec {
 		constant.GreptimeDBComponentName: common.ResourceName(b.standalone.Name, v1alpha1.StandaloneKind),
 	})
 
-	common.MountConfigDir(b.standalone.Name, v1alpha1.StandaloneKind, template, "")
+	common.MountConfigDir(template, common.ResourceName(b.standalone.Name, v1alpha1.StandaloneKind))
 
 	if b.standalone.Spec.TLS != nil {
 		b.mountTLSSecret(template)

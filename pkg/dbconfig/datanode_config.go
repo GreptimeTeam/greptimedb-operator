@@ -15,6 +15,8 @@
 package dbconfig
 
 import (
+	"fmt"
+
 	"k8s.io/utils/ptr"
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
@@ -42,7 +44,16 @@ type DatanodeConfig struct {
 }
 
 // ConfigureByCluster configures the datanode config by the given cluster.
-func (c *DatanodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster) error {
+func (c *DatanodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster, roleSpec v1alpha1.RoleSpec) error {
+	if roleSpec.GetRoleKind() != v1alpha1.DatanodeComponentKind {
+		return fmt.Errorf("invalid role kind: %s", roleSpec.GetRoleKind())
+	}
+
+	datanodeSpec, ok := roleSpec.(*v1alpha1.DatanodeSpec)
+	if !ok {
+		return fmt.Errorf("invalid role spec type: %T", roleSpec)
+	}
+
 	if objectStorage := cluster.GetObjectStorageProvider(); objectStorage != nil {
 		if err := c.ConfigureObjectStorage(cluster.GetNamespace(), objectStorage); err != nil {
 			return err
@@ -54,11 +65,11 @@ func (c *DatanodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster)
 		c.WalDir = ptr.To(cluster.GetWALDir())
 	}
 
-	if dataHome := cluster.GetDatanode().GetDataHome(); dataHome != "" {
+	if dataHome := datanodeSpec.GetDataHome(); dataHome != "" {
 		c.StorageDataHome = ptr.To(dataHome)
 	}
 
-	if cfg := cluster.GetDatanode().GetConfig(); cfg != "" {
+	if cfg := datanodeSpec.GetConfig(); cfg != "" {
 		if err := c.SetInputConfig(cfg); err != nil {
 			return err
 		}
@@ -69,17 +80,13 @@ func (c *DatanodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster)
 		c.WalBrokerEndpoints = kafka.GetBrokerEndpoints()
 	}
 
-	c.ConfigureLogging(cluster.GetDatanode().GetLogging())
+	c.ConfigureLogging(datanodeSpec.GetLogging())
 
 	return nil
 }
 
 // ConfigureByStandalone is not need to implement in cluster mode.
 func (c *DatanodeConfig) ConfigureByStandalone(_ *v1alpha1.GreptimeDBStandalone) error {
-	return nil
-}
-
-func (c *DatanodeConfig) ConfigureByFrontend(_ *v1alpha1.FrontendSpec) error {
 	return nil
 }
 

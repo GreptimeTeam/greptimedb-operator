@@ -43,29 +43,27 @@ const (
 	FileStorageTypeCache    FileStorageType = "cache"
 )
 
-func ResourceName(name string, componentKind v1alpha1.ComponentKind) string {
-	return name + "-" + string(componentKind)
-}
-
-func AdditionalResourceName(name, additionalName string, componentKind v1alpha1.ComponentKind) string {
-	if len(additionalName) == 0 {
-		return name + "-" + string(componentKind)
-	}
-	return name + "-" + string(componentKind) + "-" + additionalName
-}
-
-func MountConfigDir(name string, kind v1alpha1.ComponentKind, template *corev1.PodTemplateSpec, additionalName string) {
-	resourceName := ResourceName(name, kind)
-	if len(additionalName) != 0 {
-		resourceName = AdditionalResourceName(name, additionalName, kind)
+// ResourceName returns the resource name for the given name and component kind.
+// If extraNames are provided, they will be appended to the resource name. For example,
+// - If the name is `my-cluster` and the component kind is `datanode`, the resource name will be `my-cluster-datanode`.
+// - If the name is `my-cluster` and the component kind is `datanode` and the extra names `read`, the resource name will be `my-cluster-datanode-read`.
+func ResourceName(name string, componentKind v1alpha1.ComponentKind, extraNames ...string) string {
+	for _, extraName := range extraNames {
+		if extraName != "" {
+			name = name + "-" + extraName
+		}
 	}
 
+	return strings.Join([]string{name, string(componentKind)}, "-")
+}
+
+func MountConfigDir(template *corev1.PodTemplateSpec, configMapName string) {
 	template.Spec.Volumes = append(template.Spec.Volumes, corev1.Volume{
 		Name: constant.ConfigVolumeName,
 		VolumeSource: corev1.VolumeSource{
 			ConfigMap: &corev1.ConfigMapVolumeSource{
 				LocalObjectReference: corev1.LocalObjectReference{
-					Name: resourceName,
+					Name: configMapName,
 				},
 			},
 		},
@@ -80,20 +78,15 @@ func MountConfigDir(name string, kind v1alpha1.ComponentKind, template *corev1.P
 		)
 }
 
-func GenerateConfigMap(namespace, name string, kind v1alpha1.ComponentKind, configData []byte, additionalName string) (*corev1.ConfigMap, error) {
-	resourceName := ResourceName(name, kind)
-	if len(additionalName) != 0 {
-		resourceName = AdditionalResourceName(name, additionalName, kind)
-	}
-
+func GenerateConfigMap(namespace, resourceName string, configData []byte) (*corev1.ConfigMap, error) {
 	configmap := &corev1.ConfigMap{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "ConfigMap",
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      resourceName,
 			Namespace: namespace,
+			Name:      resourceName,
 		},
 		Data: map[string]string{
 			constant.GreptimeDBConfigFileName: string(configData),
@@ -103,12 +96,7 @@ func GenerateConfigMap(namespace, name string, kind v1alpha1.ComponentKind, conf
 	return configmap, nil
 }
 
-func GeneratePodMonitor(namespace, name string, kind v1alpha1.ComponentKind, promSpec *v1alpha1.PrometheusMonitorSpec, additionalName string) (*monitoringv1.PodMonitor, error) {
-	resourceName := ResourceName(name, kind)
-	if len(additionalName) != 0 {
-		resourceName = AdditionalResourceName(name, additionalName, kind)
-	}
-
+func GeneratePodMonitor(namespace, resourceName string, promSpec *v1alpha1.PrometheusMonitorSpec) (*monitoringv1.PodMonitor, error) {
 	pm := &monitoringv1.PodMonitor{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       monitoringv1.PodMonitorsKind,
