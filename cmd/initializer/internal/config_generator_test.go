@@ -49,7 +49,7 @@ func TestDatanodeConfigGenerator(t *testing.T) {
 		ConfigPath:          file.Name(),
 		InitConfigPath:      "testdata/datanode-config.toml",
 		Namespace:           testClusterNamespace,
-		ComponentKind:       string(v1alpha1.DatanodeComponentKind),
+		RoleKind:            string(v1alpha1.DatanodeRoleKind),
 		DatanodeRPCPort:     testRPCPort,
 		DatanodeServiceName: testClusterService,
 	}
@@ -110,7 +110,7 @@ func TestFlownodeConfigGenerator(t *testing.T) {
 		ConfigPath:     file.Name(),
 		InitConfigPath: "testdata/flownode-config.toml",
 		Namespace:      testClusterNamespace,
-		ComponentKind:  string(v1alpha1.FlownodeComponentKind),
+		RoleKind:       string(v1alpha1.FlownodeRoleKind),
 		RPCPort:        testRPCPort,
 		ServiceName:    testClusterService,
 	}
