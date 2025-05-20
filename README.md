@@ -34,6 +34,13 @@ The GreptimeDB Operator includes, but is not limited to, the following features:
 
 The GreptimeDB Operator requires at least Kubernetes `1.18.0`.
 
+## Compatibility Matrix
+
+| GreptimeDB Operator | API group/version      | Supported GreptimeDB version |
+|---------------------|------------------------|------------------------------|
+| < v0.2.0            | `greptime.io/v1alpha1` | < v0.12.0                    |
+| ≥ v0.2.0            | `greptime.io/v1alpha1` | ≥ v0.12.0                    |
+
 ## Quick Start
 
 The fastest way to install the GreptimeDB Operator is to use `bundle.yaml`:
