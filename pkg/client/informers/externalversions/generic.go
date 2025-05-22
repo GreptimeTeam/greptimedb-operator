@@ -17,7 +17,7 @@
 package externalversions
 
 import (
-	"fmt"
+	fmt "fmt"
 
 	v1alpha1 "github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 	schema "k8s.io/apimachinery/pkg/runtime/schema"
