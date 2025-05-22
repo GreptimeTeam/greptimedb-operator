@@ -151,7 +151,7 @@ func (d *MonitoringDeployer) createPipeline(cluster *v1alpha1.GreptimeDBCluster,
 	if err != nil {
 		return err
 	}
-	w.Close()
+	_ = w.Close()
 
 	standaloneName := common.ResourceName(common.MonitoringServiceName(cluster.Name), v1alpha1.StandaloneKind)
 

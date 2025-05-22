@@ -70,7 +70,7 @@ func TestBasicCluster(ctx context.Context, h *helper.Helper) {
 		if err != nil {
 			return err
 		}
-		conn.Close()
+		_ = conn.Close()
 		return nil
 	}, helper.DefaultTimeout, time.Second).ShouldNot(HaveOccurred())
 

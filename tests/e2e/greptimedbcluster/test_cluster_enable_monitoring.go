@@ -75,7 +75,7 @@ func TestClusterEnableMonitoring(ctx context.Context, h *helper.Helper) {
 		if err != nil {
 			return err
 		}
-		conn.Close()
+		_ = conn.Close()
 		return nil
 	}, helper.DefaultTimeout, time.Second).ShouldNot(HaveOccurred())
 
@@ -89,7 +89,7 @@ func TestClusterEnableMonitoring(ctx context.Context, h *helper.Helper) {
 		if err != nil {
 			return err
 		}
-		conn.Close()
+		_ = conn.Close()
 		return nil
 	}, helper.DefaultTimeout, time.Second).ShouldNot(HaveOccurred())
 
@@ -150,7 +150,9 @@ func testMonitoringStandalone(ctx context.Context, addr string) error {
 	if err != nil {
 		return err
 	}
-	defer conn.Close(ctx)
+	defer func() {
+		_ = conn.Close(ctx)
+	}()
 
 	// Check metrics table.
 	if err := checkCollectedRoles(ctx, conn, "SELECT DISTINCT app FROM greptime_app_version", []string{"greptime-datanode", "greptime-frontend", "greptime-metasrv"}); err != nil {

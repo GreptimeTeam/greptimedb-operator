@@ -22,7 +22,6 @@ import (
 	"time"
 
 	clientv3 "go.etcd.io/etcd/client/v3"
-	"google.golang.org/grpc"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -163,7 +162,7 @@ func (d *MetaDeployer) checkEtcdService(ctx context.Context, crdObject client.Ob
 	defer func() {
 		etcdClient, ok := maintainer.(*clientv3.Client)
 		if ok {
-			etcdClient.Close()
+			_ = etcdClient.Close()
 		}
 	}()
 
@@ -174,7 +173,6 @@ func buildEtcdMaintenance(etcdEndpoints []string) (clientv3.Maintenance, error) 
 	etcdClient, err := clientv3.New(clientv3.Config{
 		Endpoints:   etcdEndpoints,
 		DialTimeout: defaultDialTimeout,
-		DialOptions: []grpc.DialOption{grpc.WithBlock()},
 	})
 	if err != nil {
 		return nil, err
@@ -344,7 +342,7 @@ func (b *metaBuilder) generatePodTemplateSpec() *corev1.PodTemplateSpec {
 		b.AddVectorSidecar(podTemplateSpec, v1alpha1.MetaComponentKind)
 	}
 
-	podTemplateSpec.ObjectMeta.Labels = util.MergeStringMap(podTemplateSpec.ObjectMeta.Labels, map[string]string{
+	podTemplateSpec.Labels = util.MergeStringMap(podTemplateSpec.Labels, map[string]string{
 		constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.ComponentKind),
 	})
 

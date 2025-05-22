@@ -100,7 +100,7 @@ func TestHTTPGetService(t *testing.T) {
 		if err != nil {
 			t.Errorf("[%d] failed to send a GET request to url '%s': '%v'", i, tt.url, err)
 		}
-		resp.Body.Close()
+		_ = resp.Body.Close()
 
 		if resp.StatusCode != tt.httpCode {
 			t.Errorf("[%d] expected status code %d, got %d, url: '%s'", i, tt.httpCode, resp.StatusCode, tt.url)

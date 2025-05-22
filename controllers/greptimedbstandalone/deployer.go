@@ -290,7 +290,7 @@ func (b *standaloneBuilder) generatePodTemplateSpec() corev1.PodTemplateSpec {
 	b.addVolumeMounts(template)
 
 	template.Spec.Containers[constant.MainContainerIndex].Ports = b.containerPorts()
-	template.ObjectMeta.Labels = util.MergeStringMap(template.ObjectMeta.Labels, map[string]string{
+	template.Labels = util.MergeStringMap(template.Labels, map[string]string{
 		constant.GreptimeDBComponentName: common.ResourceName(b.standalone.Name, v1alpha1.StandaloneKind),
 	})
 

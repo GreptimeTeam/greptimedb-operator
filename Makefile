@@ -28,7 +28,7 @@ endif
 MANIFESTS_DIR = ./manifests
 
 # Use the kubernetes version to run the tests.
-KUBERNETES_VERSION = 1.28.0
+KUBERNETES_VERSION = 1.32.0
 
 # Arguments for running the e2e.
 E2E_CLUSTER_NAME ?= greptimedb-operator-e2e
@@ -246,10 +246,10 @@ GOLANGCI_LINT ?= $(LOCALBIN)/golangci-lint
 CRD_REF_DOCS ?= $(LOCALBIN)/crd-ref-docs
 
 ## Tool Versions
-KUSTOMIZE_VERSION ?= v5.3.0
-CONTROLLER_TOOLS_VERSION ?= v0.14.0
+KUSTOMIZE_VERSION ?= v5.5.0
+CONTROLLER_TOOLS_VERSION ?= v0.17.3
 CRD_REF_DOCS_VERSION ?= v0.1.0
-GOLANGCI_LINT_VERSION ?= v1.60.0
+GOLANGCI_LINT_VERSION ?= v2.1.6
 
 .PHONY: kustomize
 kustomize: $(KUSTOMIZE) ## Download kustomize locally if necessary.
@@ -268,7 +268,7 @@ $(ENVTEST): $(LOCALBIN)
 
 .PHONY: golangci-lint
 golangci-lint: ## Install golangci-lint.
-	GOBIN=$(LOCALBIN) GO111MODULE=on go install github.com/golangci/golangci-lint/cmd/golangci-lint@${GOLANGCI_LINT_VERSION}
+	GOBIN=$(LOCALBIN) GO111MODULE=on go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@${GOLANGCI_LINT_VERSION}
 
 .PHONY: crd-ref-docs
 crd-ref-docs: ## Install crd-ref-docs.

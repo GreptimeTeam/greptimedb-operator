@@ -447,7 +447,7 @@ func (b *frontendBuilder) generatePodTemplateSpec(frontend *v1alpha1.FrontendSpe
 	if len(frontend.GetName()) != 0 {
 		resourceName = common.AdditionalResourceName(b.Cluster.Name, frontend.GetName(), b.ComponentKind)
 	}
-	podTemplateSpec.ObjectMeta.Labels = util.MergeStringMap(podTemplateSpec.ObjectMeta.Labels, map[string]string{
+	podTemplateSpec.Labels = util.MergeStringMap(podTemplateSpec.Labels, map[string]string{
 		constant.GreptimeDBComponentName: resourceName,
 	})
 

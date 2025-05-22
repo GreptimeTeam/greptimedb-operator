@@ -23,6 +23,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
@@ -123,8 +124,8 @@ func GeneratePodMonitor(namespace, name string, kind v1alpha1.ComponentKind, pro
 			PodMetricsEndpoints: []monitoringv1.PodMetricsEndpoint{
 				{
 					Path:        "/metrics",
-					Port:        "http",
-					Interval:    promSpec.Interval,
+					Port:        ptr.To("http"),
+					Interval:    monitoringv1.Duration(promSpec.Interval),
 					HonorLabels: true,
 				},
 			},
@@ -242,7 +243,7 @@ func FileStorageToPVC(name string, fs v1alpha1.FileStorageAccessor, fsType FileS
 			AccessModes: []corev1.PersistentVolumeAccessMode{
 				corev1.ReadWriteOnce,
 			},
-			Resources: corev1.ResourceRequirements{
+			Resources: corev1.VolumeResourceRequirements{
 				Requests: corev1.ResourceList{
 					corev1.ResourceStorage: resource.MustParse(fs.GetSize()),
 				},
