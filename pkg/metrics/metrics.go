@@ -239,7 +239,7 @@ func (c *MetricsCollector) collectPodMetrics(ctx context.Context, clusterName st
 	// Collect container startup and ready duration.
 	for _, container := range pod.Status.ContainerStatuses {
 		// The calculation is: pod.Status.ContainerStatuses[*].State.Running.StartedAt - pod.Status.Conditions[corev1.PodInitialized].LastTransitionTime.Time.
-		startupDuration := container.State.Running.StartedAt.Time.Sub(*initializedTime)
+		startupDuration := container.State.Running.StartedAt.Sub(*initializedTime)
 		podContainerStartupDuration.WithLabelValues(
 			pod.Namespace, clusterName, pod.Name, container.Name, pod.Spec.NodeName, string(role),
 		).Observe(startupDuration.Seconds())

@@ -15,10 +15,12 @@
 package v1alpha1
 
 import (
+	"context"
+	"fmt"
+
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
@@ -34,11 +36,16 @@ func (r *GreptimeDBStandalone) SetupWebhookWithManager(mgr ctrl.Manager) error {
 // TODO(liyang): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
 //+kubebuilder:webhook:path=/validate-greptime-io-v1alpha1-greptimedbstandalone,mutating=false,failurePolicy=fail,sideEffects=None,groups=greptime.io,resources=greptimedbstandalones,verbs=create;update,versions=v1alpha1,name=vgreptimedbstandalone.kb.io,admissionReviewVersions=v1
 
-var _ webhook.Validator = &GreptimeDBStandalone{}
+var _ admission.CustomValidator = &GreptimeDBStandalone{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *GreptimeDBStandalone) ValidateCreate() (admission.Warnings, error) {
+func (r *GreptimeDBStandalone) ValidateCreate(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
 	greptimedbstandalonelog.Info("validate create", "name", r.Name)
+
+	_, ok := obj.(*GreptimeDBStandalone)
+	if !ok {
+		return nil, fmt.Errorf("unexpected type: %T", obj)
+	}
 
 	if err := r.Validate(); err != nil {
 		return nil, err
@@ -48,8 +55,13 @@ func (r *GreptimeDBStandalone) ValidateCreate() (admission.Warnings, error) {
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *GreptimeDBStandalone) ValidateUpdate(_ runtime.Object) (admission.Warnings, error) {
+func (r *GreptimeDBStandalone) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
 	greptimedbstandalonelog.Info("validate update", "name", r.Name)
+
+	_, ok := newObj.(*GreptimeDBStandalone)
+	if !ok {
+		return nil, fmt.Errorf("unexpected type: %T", newObj)
+	}
 
 	if err := r.Validate(); err != nil {
 		return nil, err
@@ -59,7 +71,7 @@ func (r *GreptimeDBStandalone) ValidateUpdate(_ runtime.Object) (admission.Warni
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *GreptimeDBStandalone) ValidateDelete() (admission.Warnings, error) {
+func (r *GreptimeDBStandalone) ValidateDelete(_ context.Context, _ runtime.Object) (admission.Warnings, error) {
 	// FIXME(liyang): Unnecessary validation when object deletion.
 	return nil, nil
 }

@@ -1,6 +1,6 @@
-FROM golang:1.23 as builder
+FROM golang:1.24 as builder
 
-ENV LANG en_US.utf8
+ENV LANG=en_US.utf8
 WORKDIR /greptimedb-operator
 
 # Build the project.

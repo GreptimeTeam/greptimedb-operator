@@ -17,15 +17,14 @@
 package v1alpha1
 
 import (
-	"context"
-	"time"
+	context "context"
 
-	v1alpha1 "github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
+	apisv1alpha1 "github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 	scheme "github.com/GreptimeTeam/greptimedb-operator/pkg/client/clientset/versioned/scheme"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	types "k8s.io/apimachinery/pkg/types"
 	watch "k8s.io/apimachinery/pkg/watch"
-	rest "k8s.io/client-go/rest"
+	gentype "k8s.io/client-go/gentype"
 )
 
 // GreptimeDBStandalonesGetter has a method to return a GreptimeDBStandaloneInterface.
@@ -36,158 +35,34 @@ type GreptimeDBStandalonesGetter interface {
 
 // GreptimeDBStandaloneInterface has methods to work with GreptimeDBStandalone resources.
 type GreptimeDBStandaloneInterface interface {
-	Create(ctx context.Context, greptimeDBStandalone *v1alpha1.GreptimeDBStandalone, opts v1.CreateOptions) (*v1alpha1.GreptimeDBStandalone, error)
-	Update(ctx context.Context, greptimeDBStandalone *v1alpha1.GreptimeDBStandalone, opts v1.UpdateOptions) (*v1alpha1.GreptimeDBStandalone, error)
-	UpdateStatus(ctx context.Context, greptimeDBStandalone *v1alpha1.GreptimeDBStandalone, opts v1.UpdateOptions) (*v1alpha1.GreptimeDBStandalone, error)
+	Create(ctx context.Context, greptimeDBStandalone *apisv1alpha1.GreptimeDBStandalone, opts v1.CreateOptions) (*apisv1alpha1.GreptimeDBStandalone, error)
+	Update(ctx context.Context, greptimeDBStandalone *apisv1alpha1.GreptimeDBStandalone, opts v1.UpdateOptions) (*apisv1alpha1.GreptimeDBStandalone, error)
+	// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
+	UpdateStatus(ctx context.Context, greptimeDBStandalone *apisv1alpha1.GreptimeDBStandalone, opts v1.UpdateOptions) (*apisv1alpha1.GreptimeDBStandalone, error)
 	Delete(ctx context.Context, name string, opts v1.DeleteOptions) error
 	DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error
-	Get(ctx context.Context, name string, opts v1.GetOptions) (*v1alpha1.GreptimeDBStandalone, error)
-	List(ctx context.Context, opts v1.ListOptions) (*v1alpha1.GreptimeDBStandaloneList, error)
+	Get(ctx context.Context, name string, opts v1.GetOptions) (*apisv1alpha1.GreptimeDBStandalone, error)
+	List(ctx context.Context, opts v1.ListOptions) (*apisv1alpha1.GreptimeDBStandaloneList, error)
 	Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error)
-	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.GreptimeDBStandalone, err error)
+	Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *apisv1alpha1.GreptimeDBStandalone, err error)
 	GreptimeDBStandaloneExpansion
 }
 
 // greptimeDBStandalones implements GreptimeDBStandaloneInterface
 type greptimeDBStandalones struct {
-	client rest.Interface
-	ns     string
+	*gentype.ClientWithList[*apisv1alpha1.GreptimeDBStandalone, *apisv1alpha1.GreptimeDBStandaloneList]
 }
 
 // newGreptimeDBStandalones returns a GreptimeDBStandalones
 func newGreptimeDBStandalones(c *ApisV1alpha1Client, namespace string) *greptimeDBStandalones {
 	return &greptimeDBStandalones{
-		client: c.RESTClient(),
-		ns:     namespace,
+		gentype.NewClientWithList[*apisv1alpha1.GreptimeDBStandalone, *apisv1alpha1.GreptimeDBStandaloneList](
+			"greptimedbstandalones",
+			c.RESTClient(),
+			scheme.ParameterCodec,
+			namespace,
+			func() *apisv1alpha1.GreptimeDBStandalone { return &apisv1alpha1.GreptimeDBStandalone{} },
+			func() *apisv1alpha1.GreptimeDBStandaloneList { return &apisv1alpha1.GreptimeDBStandaloneList{} },
+		),
 	}
-}
-
-// Get takes name of the greptimeDBStandalone, and returns the corresponding greptimeDBStandalone object, and an error if there is any.
-func (c *greptimeDBStandalones) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.GreptimeDBStandalone, err error) {
-	result = &v1alpha1.GreptimeDBStandalone{}
-	err = c.client.Get().
-		Namespace(c.ns).
-		Resource("greptimedbstandalones").
-		Name(name).
-		VersionedParams(&options, scheme.ParameterCodec).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// List takes label and field selectors, and returns the list of GreptimeDBStandalones that match those selectors.
-func (c *greptimeDBStandalones) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.GreptimeDBStandaloneList, err error) {
-	var timeout time.Duration
-	if opts.TimeoutSeconds != nil {
-		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
-	}
-	result = &v1alpha1.GreptimeDBStandaloneList{}
-	err = c.client.Get().
-		Namespace(c.ns).
-		Resource("greptimedbstandalones").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Timeout(timeout).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// Watch returns a watch.Interface that watches the requested greptimeDBStandalones.
-func (c *greptimeDBStandalones) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
-	var timeout time.Duration
-	if opts.TimeoutSeconds != nil {
-		timeout = time.Duration(*opts.TimeoutSeconds) * time.Second
-	}
-	opts.Watch = true
-	return c.client.Get().
-		Namespace(c.ns).
-		Resource("greptimedbstandalones").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Timeout(timeout).
-		Watch(ctx)
-}
-
-// Create takes the representation of a greptimeDBStandalone and creates it.  Returns the server's representation of the greptimeDBStandalone, and an error, if there is any.
-func (c *greptimeDBStandalones) Create(ctx context.Context, greptimeDBStandalone *v1alpha1.GreptimeDBStandalone, opts v1.CreateOptions) (result *v1alpha1.GreptimeDBStandalone, err error) {
-	result = &v1alpha1.GreptimeDBStandalone{}
-	err = c.client.Post().
-		Namespace(c.ns).
-		Resource("greptimedbstandalones").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(greptimeDBStandalone).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// Update takes the representation of a greptimeDBStandalone and updates it. Returns the server's representation of the greptimeDBStandalone, and an error, if there is any.
-func (c *greptimeDBStandalones) Update(ctx context.Context, greptimeDBStandalone *v1alpha1.GreptimeDBStandalone, opts v1.UpdateOptions) (result *v1alpha1.GreptimeDBStandalone, err error) {
-	result = &v1alpha1.GreptimeDBStandalone{}
-	err = c.client.Put().
-		Namespace(c.ns).
-		Resource("greptimedbstandalones").
-		Name(greptimeDBStandalone.Name).
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(greptimeDBStandalone).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// UpdateStatus was generated because the type contains a Status member.
-// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *greptimeDBStandalones) UpdateStatus(ctx context.Context, greptimeDBStandalone *v1alpha1.GreptimeDBStandalone, opts v1.UpdateOptions) (result *v1alpha1.GreptimeDBStandalone, err error) {
-	result = &v1alpha1.GreptimeDBStandalone{}
-	err = c.client.Put().
-		Namespace(c.ns).
-		Resource("greptimedbstandalones").
-		Name(greptimeDBStandalone.Name).
-		SubResource("status").
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(greptimeDBStandalone).
-		Do(ctx).
-		Into(result)
-	return
-}
-
-// Delete takes name of the greptimeDBStandalone and deletes it. Returns an error if one occurs.
-func (c *greptimeDBStandalones) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
-	return c.client.Delete().
-		Namespace(c.ns).
-		Resource("greptimedbstandalones").
-		Name(name).
-		Body(&opts).
-		Do(ctx).
-		Error()
-}
-
-// DeleteCollection deletes a collection of objects.
-func (c *greptimeDBStandalones) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	var timeout time.Duration
-	if listOpts.TimeoutSeconds != nil {
-		timeout = time.Duration(*listOpts.TimeoutSeconds) * time.Second
-	}
-	return c.client.Delete().
-		Namespace(c.ns).
-		Resource("greptimedbstandalones").
-		VersionedParams(&listOpts, scheme.ParameterCodec).
-		Timeout(timeout).
-		Body(&opts).
-		Do(ctx).
-		Error()
-}
-
-// Patch applies the patch and returns the patched greptimeDBStandalone.
-func (c *greptimeDBStandalones) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.GreptimeDBStandalone, err error) {
-	result = &v1alpha1.GreptimeDBStandalone{}
-	err = c.client.Patch(pt).
-		Namespace(c.ns).
-		Resource("greptimedbstandalones").
-		Name(name).
-		SubResource(subresources...).
-		VersionedParams(&opts, scheme.ParameterCodec).
-		Body(data).
-		Do(ctx).
-		Into(result)
-	return
 }

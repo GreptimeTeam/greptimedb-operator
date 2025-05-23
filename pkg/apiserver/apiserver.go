@@ -21,7 +21,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog/v2"
@@ -260,7 +259,7 @@ func (s *Server) getCluster(c *gin.Context) {
 	var cluster greptimev1alpha1.GreptimeDBCluster
 	err := s.Get(c, client.ObjectKey{Namespace: namespace, Name: name}, &cluster)
 
-	if errors.IsNotFound(err) {
+	if apierrors.IsNotFound(err) {
 		c.JSON(http.StatusNotFound, Response{
 			Success: true,
 			Message: fmt.Sprintf("cluster '%s' is not found in namespace '%s'", name, namespace),

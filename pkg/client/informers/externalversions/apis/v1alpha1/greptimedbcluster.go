@@ -17,13 +17,13 @@
 package v1alpha1
 
 import (
-	"context"
+	context "context"
 	time "time"
 
-	apisv1alpha1 "github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
+	greptimedboperatorapisv1alpha1 "github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 	versioned "github.com/GreptimeTeam/greptimedb-operator/pkg/client/clientset/versioned"
 	internalinterfaces "github.com/GreptimeTeam/greptimedb-operator/pkg/client/informers/externalversions/internalinterfaces"
-	v1alpha1 "github.com/GreptimeTeam/greptimedb-operator/pkg/client/listers/apis/v1alpha1"
+	apisv1alpha1 "github.com/GreptimeTeam/greptimedb-operator/pkg/client/listers/apis/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -34,7 +34,7 @@ import (
 // GreptimeDBClusters.
 type GreptimeDBClusterInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1alpha1.GreptimeDBClusterLister
+	Lister() apisv1alpha1.GreptimeDBClusterLister
 }
 
 type greptimeDBClusterInformer struct {
@@ -69,7 +69,7 @@ func NewFilteredGreptimeDBClusterInformer(client versioned.Interface, namespace 
 				return client.ApisV1alpha1().GreptimeDBClusters(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&apisv1alpha1.GreptimeDBCluster{},
+		&greptimedboperatorapisv1alpha1.GreptimeDBCluster{},
 		resyncPeriod,
 		indexers,
 	)
@@ -80,9 +80,9 @@ func (f *greptimeDBClusterInformer) defaultInformer(client versioned.Interface, 
 }
 
 func (f *greptimeDBClusterInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&apisv1alpha1.GreptimeDBCluster{}, f.defaultInformer)
+	return f.factory.InformerFor(&greptimedboperatorapisv1alpha1.GreptimeDBCluster{}, f.defaultInformer)
 }
 
-func (f *greptimeDBClusterInformer) Lister() v1alpha1.GreptimeDBClusterLister {
-	return v1alpha1.NewGreptimeDBClusterLister(f.Informer().GetIndexer())
+func (f *greptimeDBClusterInformer) Lister() apisv1alpha1.GreptimeDBClusterLister {
+	return apisv1alpha1.NewGreptimeDBClusterLister(f.Informer().GetIndexer())
 }

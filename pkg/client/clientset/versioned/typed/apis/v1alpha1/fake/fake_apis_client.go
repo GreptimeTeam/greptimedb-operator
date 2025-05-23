@@ -27,11 +27,11 @@ type FakeApisV1alpha1 struct {
 }
 
 func (c *FakeApisV1alpha1) GreptimeDBClusters(namespace string) v1alpha1.GreptimeDBClusterInterface {
-	return &FakeGreptimeDBClusters{c, namespace}
+	return newFakeGreptimeDBClusters(c, namespace)
 }
 
 func (c *FakeApisV1alpha1) GreptimeDBStandalones(namespace string) v1alpha1.GreptimeDBStandaloneInterface {
-	return &FakeGreptimeDBStandalones{c, namespace}
+	return newFakeGreptimeDBStandalones(c, namespace)
 }
 
 // RESTClient returns a RESTClient that is used to communicate

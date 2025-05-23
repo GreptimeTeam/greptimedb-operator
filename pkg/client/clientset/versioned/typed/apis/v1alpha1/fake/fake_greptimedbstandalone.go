@@ -17,123 +17,34 @@
 package fake
 
 import (
-	"context"
-
 	v1alpha1 "github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	labels "k8s.io/apimachinery/pkg/labels"
-	types "k8s.io/apimachinery/pkg/types"
-	watch "k8s.io/apimachinery/pkg/watch"
-	testing "k8s.io/client-go/testing"
+	apisv1alpha1 "github.com/GreptimeTeam/greptimedb-operator/pkg/client/clientset/versioned/typed/apis/v1alpha1"
+	gentype "k8s.io/client-go/gentype"
 )
 
-// FakeGreptimeDBStandalones implements GreptimeDBStandaloneInterface
-type FakeGreptimeDBStandalones struct {
+// fakeGreptimeDBStandalones implements GreptimeDBStandaloneInterface
+type fakeGreptimeDBStandalones struct {
+	*gentype.FakeClientWithList[*v1alpha1.GreptimeDBStandalone, *v1alpha1.GreptimeDBStandaloneList]
 	Fake *FakeApisV1alpha1
-	ns   string
 }
 
-var greptimedbstandalonesResource = v1alpha1.SchemeGroupVersion.WithResource("greptimedbstandalones")
-
-var greptimedbstandalonesKind = v1alpha1.SchemeGroupVersion.WithKind("GreptimeDBStandalone")
-
-// Get takes name of the greptimeDBStandalone, and returns the corresponding greptimeDBStandalone object, and an error if there is any.
-func (c *FakeGreptimeDBStandalones) Get(ctx context.Context, name string, options v1.GetOptions) (result *v1alpha1.GreptimeDBStandalone, err error) {
-	obj, err := c.Fake.
-		Invokes(testing.NewGetAction(greptimedbstandalonesResource, c.ns, name), &v1alpha1.GreptimeDBStandalone{})
-
-	if obj == nil {
-		return nil, err
+func newFakeGreptimeDBStandalones(fake *FakeApisV1alpha1, namespace string) apisv1alpha1.GreptimeDBStandaloneInterface {
+	return &fakeGreptimeDBStandalones{
+		gentype.NewFakeClientWithList[*v1alpha1.GreptimeDBStandalone, *v1alpha1.GreptimeDBStandaloneList](
+			fake.Fake,
+			namespace,
+			v1alpha1.SchemeGroupVersion.WithResource("greptimedbstandalones"),
+			v1alpha1.SchemeGroupVersion.WithKind("GreptimeDBStandalone"),
+			func() *v1alpha1.GreptimeDBStandalone { return &v1alpha1.GreptimeDBStandalone{} },
+			func() *v1alpha1.GreptimeDBStandaloneList { return &v1alpha1.GreptimeDBStandaloneList{} },
+			func(dst, src *v1alpha1.GreptimeDBStandaloneList) { dst.ListMeta = src.ListMeta },
+			func(list *v1alpha1.GreptimeDBStandaloneList) []*v1alpha1.GreptimeDBStandalone {
+				return gentype.ToPointerSlice(list.Items)
+			},
+			func(list *v1alpha1.GreptimeDBStandaloneList, items []*v1alpha1.GreptimeDBStandalone) {
+				list.Items = gentype.FromPointerSlice(items)
+			},
+		),
+		fake,
 	}
-	return obj.(*v1alpha1.GreptimeDBStandalone), err
-}
-
-// List takes label and field selectors, and returns the list of GreptimeDBStandalones that match those selectors.
-func (c *FakeGreptimeDBStandalones) List(ctx context.Context, opts v1.ListOptions) (result *v1alpha1.GreptimeDBStandaloneList, err error) {
-	obj, err := c.Fake.
-		Invokes(testing.NewListAction(greptimedbstandalonesResource, greptimedbstandalonesKind, c.ns, opts), &v1alpha1.GreptimeDBStandaloneList{})
-
-	if obj == nil {
-		return nil, err
-	}
-
-	label, _, _ := testing.ExtractFromListOptions(opts)
-	if label == nil {
-		label = labels.Everything()
-	}
-	list := &v1alpha1.GreptimeDBStandaloneList{ListMeta: obj.(*v1alpha1.GreptimeDBStandaloneList).ListMeta}
-	for _, item := range obj.(*v1alpha1.GreptimeDBStandaloneList).Items {
-		if label.Matches(labels.Set(item.Labels)) {
-			list.Items = append(list.Items, item)
-		}
-	}
-	return list, err
-}
-
-// Watch returns a watch.Interface that watches the requested greptimeDBStandalones.
-func (c *FakeGreptimeDBStandalones) Watch(ctx context.Context, opts v1.ListOptions) (watch.Interface, error) {
-	return c.Fake.
-		InvokesWatch(testing.NewWatchAction(greptimedbstandalonesResource, c.ns, opts))
-
-}
-
-// Create takes the representation of a greptimeDBStandalone and creates it.  Returns the server's representation of the greptimeDBStandalone, and an error, if there is any.
-func (c *FakeGreptimeDBStandalones) Create(ctx context.Context, greptimeDBStandalone *v1alpha1.GreptimeDBStandalone, opts v1.CreateOptions) (result *v1alpha1.GreptimeDBStandalone, err error) {
-	obj, err := c.Fake.
-		Invokes(testing.NewCreateAction(greptimedbstandalonesResource, c.ns, greptimeDBStandalone), &v1alpha1.GreptimeDBStandalone{})
-
-	if obj == nil {
-		return nil, err
-	}
-	return obj.(*v1alpha1.GreptimeDBStandalone), err
-}
-
-// Update takes the representation of a greptimeDBStandalone and updates it. Returns the server's representation of the greptimeDBStandalone, and an error, if there is any.
-func (c *FakeGreptimeDBStandalones) Update(ctx context.Context, greptimeDBStandalone *v1alpha1.GreptimeDBStandalone, opts v1.UpdateOptions) (result *v1alpha1.GreptimeDBStandalone, err error) {
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateAction(greptimedbstandalonesResource, c.ns, greptimeDBStandalone), &v1alpha1.GreptimeDBStandalone{})
-
-	if obj == nil {
-		return nil, err
-	}
-	return obj.(*v1alpha1.GreptimeDBStandalone), err
-}
-
-// UpdateStatus was generated because the type contains a Status member.
-// Add a +genclient:noStatus comment above the type to avoid generating UpdateStatus().
-func (c *FakeGreptimeDBStandalones) UpdateStatus(ctx context.Context, greptimeDBStandalone *v1alpha1.GreptimeDBStandalone, opts v1.UpdateOptions) (*v1alpha1.GreptimeDBStandalone, error) {
-	obj, err := c.Fake.
-		Invokes(testing.NewUpdateSubresourceAction(greptimedbstandalonesResource, "status", c.ns, greptimeDBStandalone), &v1alpha1.GreptimeDBStandalone{})
-
-	if obj == nil {
-		return nil, err
-	}
-	return obj.(*v1alpha1.GreptimeDBStandalone), err
-}
-
-// Delete takes name of the greptimeDBStandalone and deletes it. Returns an error if one occurs.
-func (c *FakeGreptimeDBStandalones) Delete(ctx context.Context, name string, opts v1.DeleteOptions) error {
-	_, err := c.Fake.
-		Invokes(testing.NewDeleteActionWithOptions(greptimedbstandalonesResource, c.ns, name, opts), &v1alpha1.GreptimeDBStandalone{})
-
-	return err
-}
-
-// DeleteCollection deletes a collection of objects.
-func (c *FakeGreptimeDBStandalones) DeleteCollection(ctx context.Context, opts v1.DeleteOptions, listOpts v1.ListOptions) error {
-	action := testing.NewDeleteCollectionAction(greptimedbstandalonesResource, c.ns, listOpts)
-
-	_, err := c.Fake.Invokes(action, &v1alpha1.GreptimeDBStandaloneList{})
-	return err
-}
-
-// Patch applies the patch and returns the patched greptimeDBStandalone.
-func (c *FakeGreptimeDBStandalones) Patch(ctx context.Context, name string, pt types.PatchType, data []byte, opts v1.PatchOptions, subresources ...string) (result *v1alpha1.GreptimeDBStandalone, err error) {
-	obj, err := c.Fake.
-		Invokes(testing.NewPatchSubresourceAction(greptimedbstandalonesResource, c.ns, name, pt, data, subresources...), &v1alpha1.GreptimeDBStandalone{})
-
-	if obj == nil {
-		return nil, err
-	}
-	return obj.(*v1alpha1.GreptimeDBStandalone), err
 }
