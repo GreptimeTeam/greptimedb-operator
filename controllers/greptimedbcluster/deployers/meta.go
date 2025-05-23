@@ -162,7 +162,7 @@ func (d *MetaDeployer) checkEtcdService(ctx context.Context, crdObject client.Ob
 	defer func() {
 		etcdClient, ok := maintainer.(*clientv3.Client)
 		if ok {
-			_ = etcdClient.Close()
+			etcdClient.Close()
 		}
 	}()
 

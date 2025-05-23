@@ -77,9 +77,7 @@ func (h *Helper) RunSQLTest(ctx context.Context, addr string, sqlFile string) er
 	if err != nil {
 		return err
 	}
-	defer func() {
-		_ = conn.Close(ctx)
-	}()
+	defer conn.Close(ctx)
 
 	data, err := os.ReadFile(sqlFile)
 	if err != nil {
@@ -260,7 +258,7 @@ func (h *Helper) getRandomAvailablePort(minPort, maxPort, retryTimes int) (int, 
 		if err != nil {
 			continue
 		}
-		_ = listener.Close()
+		listener.Close()
 		return port, nil
 	}
 

@@ -8,46 +8,26 @@ run:
   # The default concurrency value is the number of available CPU.
   concurrency: 4
 
-  # Directories to skip during analysis.
-  skip-dirs:
-    - bin
-    - docs
-    - examples
-    - hack
-
-  # goimports formatter configuration
-  # local-prefixes: specifies local package prefixes that will be grouped after 3rd-party imports
-  goimports:
-    local-prefixes: github.com/GreptimeTeam/greptimedb-operator
-
-  # gci formatter configuration (Go imports grouping tool)
-  # local-prefixes: specifies local package prefixes for import grouping and ordering
-  gci:
-    local-prefixes: github.com/GreptimeTeam/greptimedb-operator
-
 # output configuration options.
 output:
-  # Format: colored-line-number|line-number|json|colored-tab|tab|checkstyle|code-climate|junit-xml|github-actions|teamcity
-  #
-  # Multiple can be specified by separating them by comma, output can be provided
-  # for each of them by separating format name and path by colon symbol.
-  # Output path can be either `stdout`, `stderr` or path to the file to write to.
-  # Example: "checkstyle:report.xml,json:stdout,colored-line-number"
-  #
-  # Default: colored-line-number
-  format: colored-line-number
-
-  # Print lines of code with issue.
-  # Default: true
-  print-issued-lines: true
-
-  # Print linter name in the end of issue text.
-  # Default: true
-  print-linter-name: true
+  formats:
+    text:
+      path: stdout
+      colors: true
+      print-issued-lines: true
+      print-linter-name: true
 
 linters:
   # Disable all linters.
   default: none
+
+  # Directories to skip during analysis.
+  exclusions:
+    paths:
+      - bin
+      - docs
+      - examples
+      - hack
 
   # Enable specific linter
   # https://golangci-lint.run/usage/linters/#enabled-by-default
@@ -92,12 +72,30 @@ linters:
       # List of functions to exclude from checking, where each entry is a single function to exclude.
       # See https://github.com/kisielk/errcheck#excluding-functions for details.
       exclude-functions:
+        # IO
         - (io.Closer).Close
         - (*os.File).Close
-        - (*net/http.Response).Body.Close
+
+        # Network
+        - (net.Conn).Close
+        - (net.Listener).Close
+
+        # Database
         - (*database/sql.DB).Close
         - (*database/sql.Rows).Close
         - (*database/sql.Conn).Close
+        - (*github.com/jackc/pgx/v5.Conn).Close
+
+        # HTTP
+        - (*net/http.Response).Body.Close
+        - (*mime/multipart.Writer).Close
+
+        # ThirdParty
+        - (*go.etcd.io/etcd/client/v3.Client).Close
+
+      # Display function signature instead of selector.
+      # Default: false
+      verbose: true
 
     staticcheck:
       # https://staticcheck.dev/docs/configuration/options/#dot_import_whitelist
@@ -132,25 +130,18 @@ linters:
         # https://staticcheck.dev/docs/checks/#ST1022
         - "-ST1022"
 
+    nakedret:
+      # Make an issue if func has more lines of code than this setting, and it has naked returns.
+      # Default: 30
+      max-func-lines: 50
+    goconst:
+      # Minimum number of occurrences to suggest converting to constant (default: 3)
+      min-occurrences: 3
+
 formatters:
   enable:
-    # Go imports grouping tool (alternative to goimports for grouping)
-    #- gci
-
     # Gofmt checks whether code was gofmt-ed. By default, this tool runs with -s option to check for code simplification.
     - gofmt
 
-    # Stricter gofmt variant with additional rules
-    #- gofumpt
-
     # Handles imports addition/removal (relies on gci for grouping)
     - goimports
-
-linters-settings:
-  nakedret:
-    # Make an issue if func has more lines of code than this setting, and it has naked returns.
-    # Default: 30
-    max-func-lines: 50
-  goconst:
-    # Minimum number of occurrences to suggest converting to constant (default: 3)
-    min-occurrences: 3
