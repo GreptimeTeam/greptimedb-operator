@@ -23,6 +23,3 @@ var VectorConfigTemplate embed.FS
 
 //go:embed logs-pipeline.yaml
 var DefaultLogsPipeline embed.FS
-
-//go:embed slow-queries-pipeline.yaml
-var DefaultSlowQueriesPipeline embed.FS
