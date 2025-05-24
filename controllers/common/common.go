@@ -49,8 +49,16 @@ const (
 // - If the name is `my-cluster` and the role kind is `datanode`, the resource name will be `my-cluster-datanode`.
 // - If the name is `my-cluster` and the role kind is `datanode` and the extra names `read`, the resource name will be `my-cluster-datanode-read`.
 func ResourceName(name string, roleKind v1alpha1.RoleKind, extraNames ...string) string {
-	parts := append([]string{name, string(roleKind)}, extraNames...)
-	return strings.Join(parts, "-")
+	const separator = "-"
+
+	baseName := strings.Join([]string{name, string(roleKind)}, separator)
+	for _, extraName := range extraNames {
+		if extraName != "" {
+			baseName = strings.Join([]string{baseName, extraName}, separator)
+		}
+	}
+
+	return baseName
 }
 
 func MountConfigDir(template *corev1.PodTemplateSpec, configMapName string) {
