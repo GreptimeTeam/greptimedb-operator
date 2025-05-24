@@ -525,28 +525,6 @@ type LoggingSpec struct {
 	// +optional
 	// +kubebuilder:validation:Enum:={"json", "text"}
 	Format LogFormat `json:"format,omitempty"`
-
-	// SlowQuery is the slow query configuration.
-	// +optional
-	SlowQuery *SlowQuery `json:"slowQuery,omitempty"`
-}
-
-// SlowQuery defines the slow query configuration. It only works for the datanode component.
-type SlowQuery struct {
-	// Enabled indicates whether the slow query is enabled.
-	// +required
-	Enabled bool `json:"enabled"`
-
-	// Threshold is the threshold of the slow query. Default to `10s`.
-	// +optional
-	// +kubebuilder:validation:Pattern="^([0-9]+(\\.[0-9]+)?(ns|us|µs|ms|s|m|h))+$"
-	Threshold string `json:"threshold,omitempty"`
-
-	// SampleRatio is the sampling ratio of slow query log. The value should be in the range of (0, 1]. Default to `1.0`.
-	// +optional
-	// +kubebuilder:validation:Pattern=`^(0?\.\d+|1(\.0+)?)$`
-	// +kubebuilder:validation:Type=string
-	SampleRatio string `json:"sampleRatio,omitempty"`
 }
 
 func (in *LoggingSpec) GetLevel() LoggingLevel {

@@ -173,13 +173,11 @@ func (c *CommonBuilder) GenerateVectorConfigMap() (*corev1.ConfigMap, error) {
 	standaloneName := common.ResourceName(c.Cluster.Name+"-monitor", v1alpha1.StandaloneRoleKind)
 	svc := fmt.Sprintf("%s.%s.svc.cluster.local", standaloneName, c.Cluster.Namespace)
 	vars := map[string]string{
-		"ClusterName":             c.Cluster.Name,
-		"LogsTableName":           constant.LogsTableName,
-		"SlowQueriesTableName":    constant.SlowQueriesTableName,
-		"LogsPipelineName":        common.LogsPipelineName(c.Cluster.Namespace, c.Cluster.Name),
-		"SlowQueriesPipelineName": common.SlowQueriesPipelineName(c.Cluster.Namespace, c.Cluster.Name),
-		"LoggingService":          fmt.Sprintf("http://%s:%d", svc, v1alpha1.DefaultHTTPPort),
-		"MetricService":           fmt.Sprintf("http://%s:%d/v1/prometheus/write?db=public", svc, v1alpha1.DefaultHTTPPort),
+		"ClusterName":      c.Cluster.Name,
+		"LogsTableName":    constant.LogsTableName,
+		"LogsPipelineName": common.LogsPipelineName(c.Cluster.Namespace, c.Cluster.Name),
+		"LoggingService":   fmt.Sprintf("http://%s:%d", svc, v1alpha1.DefaultHTTPPort),
+		"MetricService":    fmt.Sprintf("http://%s:%d/v1/prometheus/write?db=public", svc, v1alpha1.DefaultHTTPPort),
 	}
 
 	vectorConfigTemplate, err := c.vectorConfigTemplate()

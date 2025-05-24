@@ -606,7 +606,6 @@ _Appears in:_
 | `persistentWithData` _boolean_ | PersistentWithData indicates whether to persist the log with the datanode data storage. It **ONLY** works for the datanode component.<br />If false, the log will be stored in ephemeral storage. |  |  |
 | `onlyLogToStdout` _boolean_ | OnlyLogToStdout indicates whether to only log to stdout. If true, the log will not be stored in the storage even if the storage is configured. |  |  |
 | `format` _[LogFormat](#logformat)_ | Format is the format of the logging. |  | Enum: [json text] <br /> |
-| `slowQuery` _[SlowQuery](#slowquery)_ | SlowQuery is the slow query configuration. |  |  |
 
 
 #### LogsCollectionSpec
@@ -945,24 +944,6 @@ _Appears in:_
 | `additionalContainers` _[Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#container-v1-core) array_ | For most time, there is one main container in a pod(`frontend`/`meta`/`datanode`/`flownode`).<br />If specified, additional containers will be added to the pod as sidecar containers. |  |  |
 | `volumes` _[Volume](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#volume-v1-core) array_ | List of volumes that can be mounted by containers belonging to the pod. |  |  |
 | `securityContext` _[PodSecurityContext](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#podsecuritycontext-v1-core)_ | SecurityContext holds pod-level security attributes and common container settings. |  |  |
-
-
-#### SlowQuery
-
-
-
-SlowQuery defines the slow query configuration. It only works for the datanode component.
-
-
-
-_Appears in:_
-- [LoggingSpec](#loggingspec)
-
-| Field | Description | Default | Validation |
-| --- | --- | --- | --- |
-| `enabled` _boolean_ | Enabled indicates whether the slow query is enabled. |  |  |
-| `threshold` _string_ | Threshold is the threshold of the slow query. Default to `10s`. |  | Pattern: `^([0-9]+(\.[0-9]+)?(ns\|us\|µs\|ms\|s\|m\|h))+$` <br /> |
-| `sampleRatio` _string_ | SampleRatio is the sampling ratio of slow query log. The value should be in the range of (0, 1]. Default to `1.0`. |  | Pattern: `^(0?\.\d+\|1(\.0+)?)$` <br />Type: string <br /> |
 
 
 #### StorageRetainPolicyType

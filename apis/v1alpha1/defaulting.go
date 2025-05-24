@@ -162,13 +162,6 @@ func (in *GreptimeDBCluster) defaultSpec() *GreptimeDBClusterSpec {
 
 		// Set the default logging format to JSON if monitoring is enabled.
 		defaultSpec.Logging.Format = LogFormatJSON
-
-		// Turn on the slow query log by default if monitoring is enabled.
-		defaultSpec.Logging.SlowQuery = &SlowQuery{
-			Enabled:     true,
-			Threshold:   "10s",
-			SampleRatio: "1.0",
-		}
 	}
 
 	return defaultSpec
