@@ -102,4 +102,10 @@ const (
 
 	// AccountKey is the key for the account in the secret.
 	AccountKey = "account-key"
+
+	// MetaDatabaseUsernameKey is the key for the username in the secret when using MySQL or PostgreSQL as the backend storage.
+	MetaDatabaseUsernameKey = "username"
+
+	// MetaDatabasePasswordKey is the key for the password in the secret when using MySQL or PostgreSQL as the backend storage.
+	MetaDatabasePasswordKey = "password"
 )

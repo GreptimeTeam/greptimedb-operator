@@ -34,6 +34,24 @@ _Appears in:_
 | `endpoint` _string_ | The Blob Storage endpoint. |  |  |
 
 
+#### BackendStorage
+
+
+
+BackendStorage is the specification for the backend storage for meta.
+
+
+
+_Appears in:_
+- [MetaSpec](#metaspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `etcd` _[EtcdStorage](#etcdstorage)_ | EtcdStorage is the specification for etcd storage for meta. |  |  |
+| `mysql` _[MySQLStorage](#mysqlstorage)_ | MySQLStorage is the specification for MySQL storage for meta. |  |  |
+| `postgresql` _[PostgreSQLStorage](#postgresqlstorage)_ | PostgreSQLStorage is the specification for PostgreSQL storage for meta. |  |  |
+
+
 #### CacheStorage
 
 
@@ -49,8 +67,6 @@ _Appears in:_
 | --- | --- | --- | --- |
 | `fs` _[FileStorage](#filestorage)_ | Storage is the storage specification for the cache.<br />If the storage is not specified, the cache will use DatanodeStorageSpec. |  |  |
 | `cacheCapacity` _string_ | CacheCapacity is the capacity of the cache. |  |  |
-
-
 
 
 #### ComponentSpec
@@ -169,6 +185,24 @@ _Appears in:_
 | --- | --- | --- | --- |
 | `dataHome` _string_ | DataHome is the home directory of the data. |  |  |
 | `fs` _[FileStorage](#filestorage)_ | FileStorage is the file storage configuration. |  |  |
+
+
+#### EtcdStorage
+
+
+
+EtcdStorage is the specification for etcd storage for meta.
+
+
+
+_Appears in:_
+- [BackendStorage](#backendstorage)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `endpoints` _string array_ | The endpoints of the etcd cluster. |  |  |
+| `enableCheckEtcdService` _boolean_ | EnableCheckEtcdService indicates whether to check etcd cluster health when starting meta. |  |  |
+| `storeKeyPrefix` _string_ | StoreKeyPrefix is the prefix of the key in the etcd. We can use it to isolate the data of different clusters. |  |  |
 
 
 #### FileStorage
@@ -675,6 +709,7 @@ _Appears in:_
 | `logging` _[LoggingSpec](#loggingspec)_ | Logging defines the logging configuration for the component. |  |  |
 | `rpcPort` _integer_ | RPCPort is the gRPC port of the meta. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
 | `httpPort` _integer_ | HTTPPort is the HTTP port of the meta. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
+| `backendStorage` _[BackendStorage](#backendstorage)_ | BackendStorage is the specification for the backend storage for meta. |  |  |
 | `etcdEndpoints` _string array_ | EtcdEndpoints is the endpoints of the etcd cluster. |  |  |
 | `enableCheckEtcdService` _boolean_ | EnableCheckEtcdService indicates whether to check etcd cluster health when starting meta. |  |  |
 | `enableRegionFailover` _boolean_ | EnableRegionFailover indicates whether to enable region failover. |  |  |
@@ -733,6 +768,26 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `internalDNSName` _string_ | InternalDNSName is the internal DNS name of the monitoring service. For example, 'mycluster-standalone-monitor.default.svc.cluster.local'. |  |  |
+
+
+#### MySQLStorage
+
+
+
+MySQLStorage is the specification for MySQL storage for meta.
+
+
+
+_Appears in:_
+- [BackendStorage](#backendstorage)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `host` _string_ | Host is the host of the MySQL database. |  |  |
+| `port` _integer_ | Port is the port of the MySQL database. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
+| `credentialsSecretName` _string_ | CredentialsSecretName is the name of the secret that contains the credentials for the MySQL database.<br />The secret must be in the same namespace with the greptime resource.<br />The secret must contain keys named `username` and `password`. |  |  |
+| `database` _string_ | Database is the name of the MySQL database. |  |  |
+| `table` _string_ | Table is the name of the MySQL table. |  |  |
 
 
 #### OSSStorage
@@ -838,6 +893,26 @@ _Appears in:_
 | `securityContext` _[PodSecurityContext](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#podsecuritycontext-v1-core)_ | SecurityContext holds pod-level security attributes and common container settings. |  |  |
 
 
+#### PostgreSQLStorage
+
+
+
+PostgreSQLStorage is the specification for PostgreSQL storage for meta.
+
+
+
+_Appears in:_
+- [BackendStorage](#backendstorage)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `host` _string_ | Host is the host of the PostgreSQL database. |  |  |
+| `port` _integer_ | Port is the port of the PostgreSQL database. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
+| `credentialsSecretName` _string_ | CredentialsSecretName is the name of the secret that contains the credentials for the MySQL database.<br />The secret must be in the same namespace with the greptime resource.<br />The secret must contain keys named `username` and `password`. |  |  |
+| `database` _string_ | Database is the name of the MySQL database. |  |  |
+| `table` _string_ | Table is the name of the MySQL table. |  |  |
+
+
 #### PrometheusMonitorSpec
 
 
@@ -871,6 +946,10 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `fs` _[FileStorage](#filestorage)_ | FileStorage is the file storage configuration for the raft-engine WAL.<br />If the file storage is not specified, WAL will use DatanodeStorageSpec. |  |  |
+
+
+
+
 
 
 #### S3Storage

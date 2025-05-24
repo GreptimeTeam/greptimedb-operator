@@ -15434,6 +15434,62 @@ spec:
                 type: object
               meta:
                 properties:
+                  backendStorage:
+                    properties:
+                      etcd:
+                        properties:
+                          enableCheckEtcdService:
+                            type: boolean
+                          endpoints:
+                            items:
+                              type: string
+                            type: array
+                          storeKeyPrefix:
+                            type: string
+                        required:
+                        - endpoints
+                        type: object
+                      mysql:
+                        properties:
+                          credentialsSecretName:
+                            type: string
+                          database:
+                            type: string
+                          host:
+                            type: string
+                          port:
+                            format: int32
+                            maximum: 65535
+                            minimum: 0
+                            type: integer
+                          table:
+                            type: string
+                        required:
+                        - credentialsSecretName
+                        - host
+                        - port
+                        type: object
+                      postgresql:
+                        properties:
+                          credentialsSecretName:
+                            type: string
+                          database:
+                            type: string
+                          host:
+                            type: string
+                          port:
+                            format: int32
+                            maximum: 65535
+                            minimum: 0
+                            type: integer
+                          table:
+                            type: string
+                        required:
+                        - credentialsSecretName
+                        - host
+                        - port
+                        type: object
+                    type: object
                   config:
                     type: string
                   enableCheckEtcdService:
@@ -18494,8 +18550,6 @@ spec:
                           type: object
                         type: array
                     type: object
-                required:
-                - etcdEndpoints
                 type: object
               monitoring:
                 properties:

@@ -1,0 +1,21 @@
+apiVersion: greptime.io/v1alpha1
+kind: GreptimeDBCluster
+metadata:
+  name: mysql-meta-backend
+spec:
+  base:
+    main:
+      image: greptime/greptimedb:latest
+  frontend:
+    replicas: 1
+  meta:
+    replicas: 1
+    backendStorage:
+      mysql:
+        host: mysql.default.svc.cluster.local
+        port: 3306
+        credentialsSecretName: mysql-credentials
+        database: metasrv
+        table: greptime_metakv
+  datanode:
+    replicas: 1

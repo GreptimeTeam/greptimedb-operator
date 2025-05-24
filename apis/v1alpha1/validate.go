@@ -108,6 +108,18 @@ func (in *GreptimeDBCluster) Check(ctx context.Context, client client.Client) er
 		}
 	}
 
+	if secretName := in.GetMeta().GetBackendStorage().GetMySQLStorage().GetCredentialsSecretName(); secretName != "" {
+		if err := checkSecretData(ctx, client, in.GetNamespace(), secretName, []string{MetaDatabaseUsernameKey, MetaDatabasePasswordKey}); err != nil {
+			return err
+		}
+	}
+
+	if secretName := in.GetMeta().GetBackendStorage().GetPostgreSQLStorage().GetCredentialsSecretName(); secretName != "" {
+		if err := checkSecretData(ctx, client, in.GetNamespace(), secretName, []string{MetaDatabaseUsernameKey, MetaDatabasePasswordKey}); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -150,6 +162,20 @@ func (in *GreptimeDBCluster) validateFrontendGroups() error {
 func (in *GreptimeDBCluster) validateMeta() error {
 	if err := validateTomlConfig(in.GetMeta().GetConfig()); err != nil {
 		return fmt.Errorf("invalid meta toml config: '%v'", err)
+	}
+
+	return nil
+}
+
+func (in *GreptimeDBCluster) validateMetaBackendStorage() error {
+	backendStorage := in.GetMeta().GetBackendStorage()
+	if backendStorage == nil {
+		return nil
+	}
+
+	// Only one of the backend storage can be set.
+	if backendStorage.backendStorageCount() > 1 {
+		return fmt.Errorf("only one of the backend storage can be set")
 	}
 
 	return nil

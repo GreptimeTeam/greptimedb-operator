@@ -68,4 +68,12 @@ var _ = Describe("Test GreptimeDBCluster", func() {
 	It("Test a cluster with frontend groups ingress", func() {
 		greptimedbcluster.TestClusterFrontendGroupsIngress(ctx, h)
 	})
+
+	It("Test a cluster with mysql as the meta backend", func() {
+		greptimedbcluster.TestMySQLMetaBackend(ctx, h)
+	})
+
+	It("Test a cluster with postgresql as the meta backend", func() {
+		greptimedbcluster.TestPostgreSQLMetaBackend(ctx, h)
+	})
 })

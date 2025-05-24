@@ -178,7 +178,7 @@ func (h *Helper) GetPhase(ctx context.Context, namespace, name string, object cl
 }
 
 // GetPVCs returns the PVC list of the given component.
-func (h *Helper) GetPVCs(ctx context.Context, namespace, name string, kind greptimev1alpha1.ComponentKind, fsType common.FileStorageType) ([]corev1.PersistentVolumeClaim, error) {
+func (h *Helper) GetPVCs(ctx context.Context, namespace, name string, kind greptimev1alpha1.RoleKind, fsType common.FileStorageType) ([]corev1.PersistentVolumeClaim, error) {
 	return common.GetPVCs(ctx, h.Client, namespace, name, kind, fsType)
 }
 

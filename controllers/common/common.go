@@ -43,29 +43,31 @@ const (
 	FileStorageTypeCache    FileStorageType = "cache"
 )
 
-func ResourceName(name string, componentKind v1alpha1.ComponentKind) string {
-	return name + "-" + string(componentKind)
-}
+// ResourceName returns the resource name for the given name and role kind.
+// The format will be `${name}-${roleKind}-${extraNames[0]}-${extraNames[1]}...`.
+// If extraNames are provided, they will be appended to the resource name. For example,
+// - If the name is `my-cluster` and the role kind is `datanode`, the resource name will be `my-cluster-datanode`.
+// - If the name is `my-cluster` and the role kind is `datanode` and the extra names `read`, the resource name will be `my-cluster-datanode-read`.
+func ResourceName(name string, roleKind v1alpha1.RoleKind, extraNames ...string) string {
+	const separator = "-"
 
-func AdditionalResourceName(name, additionalName string, componentKind v1alpha1.ComponentKind) string {
-	if len(additionalName) == 0 {
-		return name + "-" + string(componentKind)
-	}
-	return name + "-" + string(componentKind) + "-" + additionalName
-}
-
-func MountConfigDir(name string, kind v1alpha1.ComponentKind, template *corev1.PodTemplateSpec, additionalName string) {
-	resourceName := ResourceName(name, kind)
-	if len(additionalName) != 0 {
-		resourceName = AdditionalResourceName(name, additionalName, kind)
+	baseName := strings.Join([]string{name, string(roleKind)}, separator)
+	for _, extraName := range extraNames {
+		if extraName != "" {
+			baseName = strings.Join([]string{baseName, extraName}, separator)
+		}
 	}
 
+	return baseName
+}
+
+func MountConfigDir(template *corev1.PodTemplateSpec, configMapName string) {
 	template.Spec.Volumes = append(template.Spec.Volumes, corev1.Volume{
 		Name: constant.ConfigVolumeName,
 		VolumeSource: corev1.VolumeSource{
 			ConfigMap: &corev1.ConfigMapVolumeSource{
 				LocalObjectReference: corev1.LocalObjectReference{
-					Name: resourceName,
+					Name: configMapName,
 				},
 			},
 		},
@@ -80,20 +82,15 @@ func MountConfigDir(name string, kind v1alpha1.ComponentKind, template *corev1.P
 		)
 }
 
-func GenerateConfigMap(namespace, name string, kind v1alpha1.ComponentKind, configData []byte, additionalName string) (*corev1.ConfigMap, error) {
-	resourceName := ResourceName(name, kind)
-	if len(additionalName) != 0 {
-		resourceName = AdditionalResourceName(name, additionalName, kind)
-	}
-
+func GenerateConfigMap(namespace, resourceName string, configData []byte) (*corev1.ConfigMap, error) {
 	configmap := &corev1.ConfigMap{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "ConfigMap",
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      resourceName,
 			Namespace: namespace,
+			Name:      resourceName,
 		},
 		Data: map[string]string{
 			constant.GreptimeDBConfigFileName: string(configData),
@@ -103,12 +100,7 @@ func GenerateConfigMap(namespace, name string, kind v1alpha1.ComponentKind, conf
 	return configmap, nil
 }
 
-func GeneratePodMonitor(namespace, name string, kind v1alpha1.ComponentKind, promSpec *v1alpha1.PrometheusMonitorSpec, additionalName string) (*monitoringv1.PodMonitor, error) {
-	resourceName := ResourceName(name, kind)
-	if len(additionalName) != 0 {
-		resourceName = AdditionalResourceName(name, additionalName, kind)
-	}
-
+func GeneratePodMonitor(namespace, resourceName string, promSpec *v1alpha1.PrometheusMonitorSpec) (*monitoringv1.PodMonitor, error) {
 	pm := &monitoringv1.PodMonitor{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       monitoringv1.PodMonitorsKind,
@@ -144,7 +136,7 @@ func GeneratePodMonitor(namespace, name string, kind v1alpha1.ComponentKind, pro
 	return pm, nil
 }
 
-func GeneratePodTemplateSpec(kind v1alpha1.ComponentKind, template *v1alpha1.PodTemplateSpec) *corev1.PodTemplateSpec {
+func GeneratePodTemplateSpec(kind v1alpha1.RoleKind, template *v1alpha1.PodTemplateSpec) *corev1.PodTemplateSpec {
 	if template == nil || template.MainContainer == nil {
 		return nil
 	}
@@ -199,7 +191,7 @@ func GeneratePodTemplateSpec(kind v1alpha1.ComponentKind, template *v1alpha1.Pod
 	return spec
 }
 
-func FileStorageToPVC(name string, fs v1alpha1.FileStorageAccessor, fsType FileStorageType, kind v1alpha1.ComponentKind) *corev1.PersistentVolumeClaim {
+func FileStorageToPVC(name string, fs v1alpha1.FileStorageAccessor, fsType FileStorageType, kind v1alpha1.RoleKind) *corev1.PersistentVolumeClaim {
 	var (
 		labels      map[string]string
 		annotations map[string]string
@@ -251,7 +243,7 @@ func FileStorageToPVC(name string, fs v1alpha1.FileStorageAccessor, fsType FileS
 	}
 }
 
-func GetPVCs(ctx context.Context, k8sClient client.Client, namespace, name string, kind v1alpha1.ComponentKind, fsType FileStorageType) ([]corev1.PersistentVolumeClaim, error) {
+func GetPVCs(ctx context.Context, k8sClient client.Client, namespace, name string, kind v1alpha1.RoleKind, fsType FileStorageType) ([]corev1.PersistentVolumeClaim, error) {
 	var labelSelector *metav1.LabelSelector
 	switch fsType {
 	case FileStorageTypeDatanode:
