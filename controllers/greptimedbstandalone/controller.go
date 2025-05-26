@@ -104,7 +104,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	}()
 
 	// The object is being deleted.
-	if !standalone.ObjectMeta.DeletionTimestamp.IsZero() {
+	if !standalone.DeletionTimestamp.IsZero() {
 		return r.delete(ctx, standalone)
 	}
 
