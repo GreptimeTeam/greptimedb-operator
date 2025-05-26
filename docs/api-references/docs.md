@@ -51,8 +51,6 @@ _Appears in:_
 | `cacheCapacity` _string_ | CacheCapacity is the capacity of the cache. |  |  |
 
 
-
-
 #### ComponentSpec
 
 
@@ -871,6 +869,10 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `fs` _[FileStorage](#filestorage)_ | FileStorage is the file storage configuration for the raft-engine WAL.<br />If the file storage is not specified, WAL will use DatanodeStorageSpec. |  |  |
+
+
+
+
 
 
 #### S3Storage

@@ -302,11 +302,11 @@ func (s *Server) getCluster(c *gin.Context) {
 func (s *Server) getTopology(ctx context.Context, cluster greptimev1alpha1.GreptimeDBCluster) (*GreptimeDBClusterTopology, error) {
 	topology := new(GreptimeDBClusterTopology)
 
-	for _, kind := range []greptimev1alpha1.ComponentKind{
-		greptimev1alpha1.MetaComponentKind,
-		greptimev1alpha1.DatanodeComponentKind,
-		greptimev1alpha1.FrontendComponentKind,
-		greptimev1alpha1.FlownodeComponentKind,
+	for _, kind := range []greptimev1alpha1.RoleKind{
+		greptimev1alpha1.MetaRoleKind,
+		greptimev1alpha1.DatanodeRoleKind,
+		greptimev1alpha1.FrontendRoleKind,
+		greptimev1alpha1.FlownodeRoleKind,
 	} {
 		if err := s.getPods(ctx, cluster, kind, topology); err != nil {
 			return nil, err
@@ -316,7 +316,7 @@ func (s *Server) getTopology(ctx context.Context, cluster greptimev1alpha1.Grept
 	return topology, nil
 }
 
-func (s *Server) getPods(ctx context.Context, cluster greptimev1alpha1.GreptimeDBCluster, kind greptimev1alpha1.ComponentKind, topology *GreptimeDBClusterTopology) error {
+func (s *Server) getPods(ctx context.Context, cluster greptimev1alpha1.GreptimeDBCluster, kind greptimev1alpha1.RoleKind, topology *GreptimeDBClusterTopology) error {
 	var internalPods corev1.PodList
 	if err := s.List(ctx, &internalPods, client.InNamespace(cluster.Namespace),
 		client.MatchingLabels{constant.GreptimeDBComponentName: common.ResourceName(cluster.Name, kind)}); err != nil {
@@ -327,7 +327,7 @@ func (s *Server) getPods(ctx context.Context, cluster greptimev1alpha1.GreptimeD
 	var frontendGroupsPod corev1.PodList
 	for _, frontend := range cluster.GetFrontendGroups() {
 		if err := s.List(ctx, &frontendGroupsPod, client.InNamespace(cluster.Namespace),
-			client.MatchingLabels{constant.GreptimeDBComponentName: common.AdditionalResourceName(cluster.Name, frontend.Name, kind)}); err != nil {
+			client.MatchingLabels{constant.GreptimeDBComponentName: common.ResourceName(cluster.Name, kind, frontend.Name)}); err != nil {
 			return err
 		}
 		internalPods.Items = append(internalPods.Items, frontendGroupsPod.Items...)
@@ -356,13 +356,13 @@ func (s *Server) getPods(ctx context.Context, cluster greptimev1alpha1.GreptimeD
 	}
 
 	switch kind {
-	case greptimev1alpha1.MetaComponentKind:
+	case greptimev1alpha1.MetaRoleKind:
 		topology.Meta = pods
-	case greptimev1alpha1.DatanodeComponentKind:
+	case greptimev1alpha1.DatanodeRoleKind:
 		topology.Datanode = pods
-	case greptimev1alpha1.FrontendComponentKind:
+	case greptimev1alpha1.FrontendRoleKind:
 		topology.Frontend = pods
-	case greptimev1alpha1.FlownodeComponentKind:
+	case greptimev1alpha1.FlownodeRoleKind:
 		topology.Flownode = pods
 	}
 

@@ -38,11 +38,7 @@ type StandaloneConfig struct {
 }
 
 // ConfigureByCluster is not need to implement in standalone mode.
-func (c *StandaloneConfig) ConfigureByCluster(_ *v1alpha1.GreptimeDBCluster) error {
-	return nil
-}
-
-func (c *StandaloneConfig) ConfigureByFrontend(_ *v1alpha1.FrontendSpec) error {
+func (c *StandaloneConfig) ConfigureByCluster(_ *v1alpha1.GreptimeDBCluster, _ v1alpha1.RoleSpec) error {
 	return nil
 }
 
@@ -80,8 +76,8 @@ func (c *StandaloneConfig) ConfigureByStandalone(standalone *v1alpha1.GreptimeDB
 }
 
 // Kind returns the component kind of the standalone.
-func (c *StandaloneConfig) Kind() v1alpha1.ComponentKind {
-	return v1alpha1.StandaloneKind
+func (c *StandaloneConfig) Kind() v1alpha1.RoleKind {
+	return v1alpha1.StandaloneRoleKind
 }
 
 // GetInputConfig returns the input config of the standalone.

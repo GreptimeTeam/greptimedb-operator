@@ -77,7 +77,7 @@ func WithEtcdMaintenanceBuilder(builder EtcdMaintenanceBuilder) func(*MetaDeploy
 
 func (d *MetaDeployer) NewBuilder(crdObject client.Object) deployer.Builder {
 	return &metaBuilder{
-		CommonBuilder: d.NewCommonBuilder(crdObject, v1alpha1.MetaComponentKind),
+		CommonBuilder: d.NewCommonBuilder(crdObject, v1alpha1.MetaRoleKind),
 	}
 }
 
@@ -114,7 +114,7 @@ func (d *MetaDeployer) CheckAndUpdateStatus(ctx context.Context, highLevelObject
 
 		objectKey = client.ObjectKey{
 			Namespace: cluster.Namespace,
-			Name:      common.ResourceName(cluster.Name, v1alpha1.MetaComponentKind),
+			Name:      common.ResourceName(cluster.Name, v1alpha1.MetaRoleKind),
 		}
 	)
 
@@ -205,15 +205,15 @@ func (b *metaBuilder) BuildService() deployer.Builder {
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: b.Cluster.Namespace,
-			Name:      common.ResourceName(b.Cluster.Name, b.ComponentKind),
+			Name:      common.ResourceName(b.Cluster.Name, b.RoleKind),
 			Labels: map[string]string{
-				constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.ComponentKind),
+				constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.RoleKind),
 			},
 		},
 		Spec: corev1.ServiceSpec{
 			Type: corev1.ServiceTypeClusterIP,
 			Selector: map[string]string{
-				constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.ComponentKind),
+				constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.RoleKind),
 			},
 			Ports: b.servicePorts(),
 		},
@@ -239,17 +239,17 @@ func (b *metaBuilder) BuildDeployment() deployer.Builder {
 			APIVersion: "apps/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      common.ResourceName(b.Cluster.Name, b.ComponentKind),
+			Name:      common.ResourceName(b.Cluster.Name, b.RoleKind),
 			Namespace: b.Cluster.Namespace,
 			Labels: map[string]string{
-				constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.ComponentKind),
+				constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.RoleKind),
 			},
 		},
 		Spec: appsv1.DeploymentSpec{
 			Replicas: b.Cluster.Spec.Meta.Replicas,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
-					constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.ComponentKind),
+					constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.RoleKind),
 				},
 			},
 			Template: *b.generatePodTemplateSpec(),
@@ -260,7 +260,7 @@ func (b *metaBuilder) BuildDeployment() deployer.Builder {
 		},
 	}
 
-	configData, err := dbconfig.FromCluster(b.Cluster, b.ComponentKind)
+	configData, err := dbconfig.FromCluster(b.Cluster, b.Cluster.GetMeta())
 	if err != nil {
 		b.Err = err
 		return b
@@ -279,11 +279,11 @@ func (b *metaBuilder) BuildConfigMap() deployer.Builder {
 		return b
 	}
 
-	if b.Cluster.Spec.Meta == nil {
+	if b.Cluster.GetMeta() == nil {
 		return b
 	}
 
-	cm, err := b.GenerateConfigMap()
+	cm, err := b.GenerateConfigMap(b.Cluster.GetMeta())
 	if err != nil {
 		b.Err = err
 		return b
@@ -307,7 +307,7 @@ func (b *metaBuilder) BuildPodMonitor() deployer.Builder {
 		return b
 	}
 
-	pm, err := b.GeneratePodMonitor()
+	pm, err := b.GeneratePodMonitor(b.Cluster.Namespace, common.ResourceName(b.Cluster.Name, b.RoleKind))
 	if err != nil {
 		b.Err = err
 		return b
@@ -331,9 +331,9 @@ func (b *metaBuilder) generatePodTemplateSpec() *corev1.PodTemplateSpec {
 	}
 
 	podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Ports = b.containerPorts()
-	podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Env = append(podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Env, b.env(v1alpha1.MetaComponentKind)...)
+	podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Env = append(podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Env, b.env(v1alpha1.MetaRoleKind)...)
 
-	b.MountConfigDir(podTemplateSpec)
+	b.MountConfigDir(podTemplateSpec, common.ResourceName(b.Cluster.Name, b.RoleKind))
 
 	if logging := b.Cluster.GetMeta().GetLogging(); logging != nil && !logging.IsOnlyLogToStdout() {
 		b.AddLogsVolume(podTemplateSpec, logging.GetLogsDir())
@@ -341,11 +341,11 @@ func (b *metaBuilder) generatePodTemplateSpec() *corev1.PodTemplateSpec {
 
 	if b.Cluster.GetMonitoring().IsEnabled() && b.Cluster.GetMonitoring().GetVector() != nil {
 		b.AddVectorConfigVolume(podTemplateSpec)
-		b.AddVectorSidecar(podTemplateSpec, v1alpha1.MetaComponentKind)
+		b.AddVectorSidecar(podTemplateSpec, v1alpha1.MetaRoleKind)
 	}
 
 	podTemplateSpec.ObjectMeta.Labels = util.MergeStringMap(podTemplateSpec.ObjectMeta.Labels, map[string]string{
-		constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.ComponentKind),
+		constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.RoleKind),
 	})
 
 	return podTemplateSpec

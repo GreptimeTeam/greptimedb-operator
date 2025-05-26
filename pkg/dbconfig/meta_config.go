@@ -15,6 +15,8 @@
 package dbconfig
 
 import (
+	"fmt"
+
 	"k8s.io/utils/ptr"
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
@@ -44,14 +46,23 @@ type MetaConfig struct {
 }
 
 // ConfigureByCluster configures the meta config by the given cluster.
-func (c *MetaConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster) error {
-	c.EnableRegionFailover = ptr.To(cluster.GetMeta().IsEnableRegionFailover())
+func (c *MetaConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster, roleSpec v1alpha1.RoleSpec) error {
+	if roleSpec.GetRoleKind() != v1alpha1.MetaRoleKind {
+		return fmt.Errorf("invalid role kind: %s", roleSpec.GetRoleKind())
+	}
 
-	if prefix := cluster.GetMeta().GetStoreKeyPrefix(); prefix != "" {
+	metaSpec, ok := roleSpec.(*v1alpha1.MetaSpec)
+	if !ok {
+		return fmt.Errorf("invalid role spec type: %T", roleSpec)
+	}
+
+	c.EnableRegionFailover = ptr.To(metaSpec.IsEnableRegionFailover())
+
+	if prefix := metaSpec.GetStoreKeyPrefix(); prefix != "" {
 		c.StoreKeyPrefix = ptr.To(prefix)
 	}
 
-	if cfg := cluster.GetMeta().GetConfig(); cfg != "" {
+	if cfg := metaSpec.GetConfig(); cfg != "" {
 		if err := c.SetInputConfig(cfg); err != nil {
 			return err
 		}
@@ -62,7 +73,7 @@ func (c *MetaConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster) err
 		c.WalBrokerEndpoints = kafka.GetBrokerEndpoints()
 	}
 
-	c.ConfigureLogging(cluster.GetMeta().GetLogging())
+	c.ConfigureLogging(metaSpec.GetLogging())
 
 	return nil
 }
@@ -72,13 +83,9 @@ func (c *MetaConfig) ConfigureByStandalone(_ *v1alpha1.GreptimeDBStandalone) err
 	return nil
 }
 
-func (c *MetaConfig) ConfigureByFrontend(_ *v1alpha1.FrontendSpec) error {
-	return nil
-}
-
 // Kind returns the component kind of the meta.
-func (c *MetaConfig) Kind() v1alpha1.ComponentKind {
-	return v1alpha1.MetaComponentKind
+func (c *MetaConfig) Kind() v1alpha1.RoleKind {
+	return v1alpha1.MetaRoleKind
 }
 
 // GetInputConfig returns the input config of the meta.
