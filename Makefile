@@ -28,7 +28,7 @@ endif
 MANIFESTS_DIR = ./manifests
 
 # Use the kubernetes version to run the tests.
-KUBERNETES_VERSION = 1.28.0
+KUBERNETES_VERSION = 1.32.3
 
 # Arguments for running the e2e.
 E2E_CLUSTER_NAME ?= greptimedb-operator-e2e
