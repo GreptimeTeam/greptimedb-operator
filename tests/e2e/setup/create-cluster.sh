@@ -18,7 +18,7 @@ set -o nounset
 set -o pipefail
 
 CLUSTER_NAME=${1:-"greptimedb-operator-e2e"}
-KUBERNETES_VERSION=${2:-"v1.28.0"}
+KUBERNETES_VERSION=${2:-"v1.32.3"}
 
 # The argument for deploying local registry.
 REGISTRY_NAME=kind-registry

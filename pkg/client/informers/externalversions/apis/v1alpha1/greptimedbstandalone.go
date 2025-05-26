@@ -17,13 +17,13 @@
 package v1alpha1
 
 import (
-	"context"
+	context "context"
 	time "time"
 
-	apisv1alpha1 "github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
+	greptimedboperatorapisv1alpha1 "github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 	versioned "github.com/GreptimeTeam/greptimedb-operator/pkg/client/clientset/versioned"
 	internalinterfaces "github.com/GreptimeTeam/greptimedb-operator/pkg/client/informers/externalversions/internalinterfaces"
-	v1alpha1 "github.com/GreptimeTeam/greptimedb-operator/pkg/client/listers/apis/v1alpha1"
+	apisv1alpha1 "github.com/GreptimeTeam/greptimedb-operator/pkg/client/listers/apis/v1alpha1"
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	watch "k8s.io/apimachinery/pkg/watch"
@@ -34,7 +34,7 @@ import (
 // GreptimeDBStandalones.
 type GreptimeDBStandaloneInformer interface {
 	Informer() cache.SharedIndexInformer
-	Lister() v1alpha1.GreptimeDBStandaloneLister
+	Lister() apisv1alpha1.GreptimeDBStandaloneLister
 }
 
 type greptimeDBStandaloneInformer struct {
@@ -69,7 +69,7 @@ func NewFilteredGreptimeDBStandaloneInformer(client versioned.Interface, namespa
 				return client.ApisV1alpha1().GreptimeDBStandalones(namespace).Watch(context.TODO(), options)
 			},
 		},
-		&apisv1alpha1.GreptimeDBStandalone{},
+		&greptimedboperatorapisv1alpha1.GreptimeDBStandalone{},
 		resyncPeriod,
 		indexers,
 	)
@@ -80,9 +80,9 @@ func (f *greptimeDBStandaloneInformer) defaultInformer(client versioned.Interfac
 }
 
 func (f *greptimeDBStandaloneInformer) Informer() cache.SharedIndexInformer {
-	return f.factory.InformerFor(&apisv1alpha1.GreptimeDBStandalone{}, f.defaultInformer)
+	return f.factory.InformerFor(&greptimedboperatorapisv1alpha1.GreptimeDBStandalone{}, f.defaultInformer)
 }
 
-func (f *greptimeDBStandaloneInformer) Lister() v1alpha1.GreptimeDBStandaloneLister {
-	return v1alpha1.NewGreptimeDBStandaloneLister(f.Informer().GetIndexer())
+func (f *greptimeDBStandaloneInformer) Lister() apisv1alpha1.GreptimeDBStandaloneLister {
+	return apisv1alpha1.NewGreptimeDBStandaloneLister(f.Informer().GetIndexer())
 }

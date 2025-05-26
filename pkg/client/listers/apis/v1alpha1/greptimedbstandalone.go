@@ -17,10 +17,10 @@
 package v1alpha1
 
 import (
-	v1alpha1 "github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
-	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/tools/cache"
+	apisv1alpha1 "github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
+	labels "k8s.io/apimachinery/pkg/labels"
+	listers "k8s.io/client-go/listers"
+	cache "k8s.io/client-go/tools/cache"
 )
 
 // GreptimeDBStandaloneLister helps list GreptimeDBStandalones.
@@ -28,7 +28,7 @@ import (
 type GreptimeDBStandaloneLister interface {
 	// List lists all GreptimeDBStandalones in the indexer.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1alpha1.GreptimeDBStandalone, err error)
+	List(selector labels.Selector) (ret []*apisv1alpha1.GreptimeDBStandalone, err error)
 	// GreptimeDBStandalones returns an object that can list and get GreptimeDBStandalones.
 	GreptimeDBStandalones(namespace string) GreptimeDBStandaloneNamespaceLister
 	GreptimeDBStandaloneListerExpansion
@@ -36,25 +36,17 @@ type GreptimeDBStandaloneLister interface {
 
 // greptimeDBStandaloneLister implements the GreptimeDBStandaloneLister interface.
 type greptimeDBStandaloneLister struct {
-	indexer cache.Indexer
+	listers.ResourceIndexer[*apisv1alpha1.GreptimeDBStandalone]
 }
 
 // NewGreptimeDBStandaloneLister returns a new GreptimeDBStandaloneLister.
 func NewGreptimeDBStandaloneLister(indexer cache.Indexer) GreptimeDBStandaloneLister {
-	return &greptimeDBStandaloneLister{indexer: indexer}
-}
-
-// List lists all GreptimeDBStandalones in the indexer.
-func (s *greptimeDBStandaloneLister) List(selector labels.Selector) (ret []*v1alpha1.GreptimeDBStandalone, err error) {
-	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha1.GreptimeDBStandalone))
-	})
-	return ret, err
+	return &greptimeDBStandaloneLister{listers.New[*apisv1alpha1.GreptimeDBStandalone](indexer, apisv1alpha1.Resource("greptimedbstandalone"))}
 }
 
 // GreptimeDBStandalones returns an object that can list and get GreptimeDBStandalones.
 func (s *greptimeDBStandaloneLister) GreptimeDBStandalones(namespace string) GreptimeDBStandaloneNamespaceLister {
-	return greptimeDBStandaloneNamespaceLister{indexer: s.indexer, namespace: namespace}
+	return greptimeDBStandaloneNamespaceLister{listers.NewNamespaced[*apisv1alpha1.GreptimeDBStandalone](s.ResourceIndexer, namespace)}
 }
 
 // GreptimeDBStandaloneNamespaceLister helps list and get GreptimeDBStandalones.
@@ -62,36 +54,15 @@ func (s *greptimeDBStandaloneLister) GreptimeDBStandalones(namespace string) Gre
 type GreptimeDBStandaloneNamespaceLister interface {
 	// List lists all GreptimeDBStandalones in the indexer for a given namespace.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1alpha1.GreptimeDBStandalone, err error)
+	List(selector labels.Selector) (ret []*apisv1alpha1.GreptimeDBStandalone, err error)
 	// Get retrieves the GreptimeDBStandalone from the indexer for a given namespace and name.
 	// Objects returned here must be treated as read-only.
-	Get(name string) (*v1alpha1.GreptimeDBStandalone, error)
+	Get(name string) (*apisv1alpha1.GreptimeDBStandalone, error)
 	GreptimeDBStandaloneNamespaceListerExpansion
 }
 
 // greptimeDBStandaloneNamespaceLister implements the GreptimeDBStandaloneNamespaceLister
 // interface.
 type greptimeDBStandaloneNamespaceLister struct {
-	indexer   cache.Indexer
-	namespace string
-}
-
-// List lists all GreptimeDBStandalones in the indexer for a given namespace.
-func (s greptimeDBStandaloneNamespaceLister) List(selector labels.Selector) (ret []*v1alpha1.GreptimeDBStandalone, err error) {
-	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha1.GreptimeDBStandalone))
-	})
-	return ret, err
-}
-
-// Get retrieves the GreptimeDBStandalone from the indexer for a given namespace and name.
-func (s greptimeDBStandaloneNamespaceLister) Get(name string) (*v1alpha1.GreptimeDBStandalone, error) {
-	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.NewNotFound(v1alpha1.Resource("greptimedbstandalone"), name)
-	}
-	return obj.(*v1alpha1.GreptimeDBStandalone), nil
+	listers.ResourceIndexer[*apisv1alpha1.GreptimeDBStandalone]
 }
