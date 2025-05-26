@@ -19,6 +19,7 @@ set -o pipefail
 
 CLUSTER_NAME=${1:-"greptimedb-operator-e2e"}
 KUBERNETES_VERSION=${2:-"v1.28.0"}
+TEST_NAMESPACE=default
 
 # The argument for deploying local registry.
 REGISTRY_NAME=kind-registry
@@ -35,6 +36,20 @@ INGRESS_NGINX_CONTROLLER_CHART_VERSION=4.12.0
 # The argument for deploying Kafka cluster.
 KAFKA_NAMESPACE=kafka
 KAFKA_CLUSTER_NAME=kafka-wal
+
+# The argument for deploying postgresql.
+POSTGRESQL_NAMESPACE=postgresql
+POSTGRESQL_CHART_VERSION=16.7.4
+# The password for the default admin user `postgres`.
+POSTGRESQL_ADMIN_PASSWORD=gt-operator-e2e
+POSTGRESQL_DATABASE=metasrv
+
+# The argument for deploying mysql.
+MYSQL_NAMESPACE=mysql
+MYSQL_CHART_VERSION=13.0.0
+# The password for the default root user `root`.
+MYSQL_ROOT_PASSWORD=gt-operator-e2e
+MYSQL_DATABASE=metasrv
 
 # The default timeout for waiting for resources to be ready.
 DEFAULT_TIMEOUT=300s
@@ -188,6 +203,40 @@ function deploy_etcd_cluster() {
   echo -e "${GREEN}<= etcd cluster is deployed.${RESET}"
 }
 
+# Deploy postgresql that used for meta backend testing.
+function deploy_postgresql() {
+  echo -e "${GREEN}=> Deploy postgresql...${RESET}"
+  helm upgrade --install pg oci://registry-1.docker.io/bitnamicharts/postgresql \
+    --set auth.postgresPassword="$POSTGRESQL_ADMIN_PASSWORD" \
+    --set auth.database="$POSTGRESQL_DATABASE" \
+    --namespace "$POSTGRESQL_NAMESPACE" \
+    --create-namespace \
+    --version "$POSTGRESQL_CHART_VERSION"
+
+  # Create postgres-credentials secret.
+  kubectl create secret generic postgresql-credentials \
+    --namespace "$TEST_NAMESPACE" \
+    --from-literal=username=postgres \
+    --from-literal=password="$POSTGRESQL_ADMIN_PASSWORD"
+}
+
+# Deploy mysql that used for meta backend testing.
+function deploy_mysql() {
+  echo -e "${GREEN}=> Deploy mysql...${RESET}"
+  helm upgrade --install mysql oci://registry-1.docker.io/bitnamicharts/mysql \
+    --set auth.rootPassword="$MYSQL_ROOT_PASSWORD" \
+    --set auth.database="$MYSQL_DATABASE" \
+    --namespace "$MYSQL_NAMESPACE" \
+    --create-namespace \
+    --version "$MYSQL_CHART_VERSION"
+
+  # Create mysql-credentials secret.
+  kubectl create secret generic mysql-credentials \
+    --namespace "$TEST_NAMESPACE" \
+    --from-literal=username=root \
+    --from-literal=password="$MYSQL_ROOT_PASSWORD"
+}
+
 # Deploy ingress nginx controller that used for frontend ingress testing.
 function deploy_ingress_nginx_controller() {
   echo -e "${GREEN}=> Deploy ingress nginx controller...${RESET}"
@@ -290,6 +339,20 @@ function wait_all_service_ready() {
     -n "$ETCD_NAMESPACE" \
     --timeout="$DEFAULT_TIMEOUT"
 
+  # Wait for postgresql to be ready.
+  kubectl wait \
+    --for=condition=Ready \
+    pod -l app.kubernetes.io/instance=pg \
+    -n "$POSTGRESQL_NAMESPACE" \
+    --timeout="$DEFAULT_TIMEOUT"
+
+  # Wait for mysql to be ready.
+  kubectl wait \
+    --for=condition=Ready \
+    pod -l app.kubernetes.io/instance=mysql \
+    -n "$MYSQL_NAMESPACE" \
+    --timeout="$DEFAULT_TIMEOUT"
+
   # Wait for ingress nginx controller to be ready.
   kubectl wait \
     --for=condition=Ready \
@@ -325,6 +388,8 @@ function main() {
   deploy_cloud_provider_kind
   deploy_greptimedb_operator
   deploy_etcd_cluster
+  deploy_postgresql
+  deploy_mysql
   deploy_ingress_nginx_controller
   deploy_kafka_cluster
   wait_all_service_ready

@@ -1,0 +1,24 @@
+apiVersion: greptime.io/v1alpha1
+kind: GreptimeDBCluster
+metadata:
+  name: e2e-cluster-postgresql-meta-backend
+  namespace: default
+spec:
+  initializer:
+    image: localhost:5001/greptime/greptimedb-initializer:latest
+  base:
+    main:
+      image: localhost:5001/greptime/greptimedb:latest
+  frontend:
+    replicas: 1
+  meta:
+    replicas: 1
+    backendStorage:
+      postgresql:
+        host: pg-postgresql.postgresql.svc.cluster.local
+        port: 5432
+        credentialsSecretName: postgresql-credentials
+        database: metasrv
+        table: greptime_metakv
+  datanode:
+    replicas: 3
