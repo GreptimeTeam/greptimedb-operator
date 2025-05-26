@@ -9221,6 +9221,22 @@ spec:
                       type:
                         type: string
                     type: object
+                  slowQuery:
+                    properties:
+                      enabled:
+                        type: boolean
+                      recordType:
+                        type: string
+                      sampleRatio:
+                        pattern: ^(0?\.\d+|1(\.0+)?)$
+                        type: string
+                      threshold:
+                        pattern: ^([0-9]+(\.[0-9]+)?(ns|us|µs|ms|s|m|h))+$
+                        type: string
+                      ttl:
+                        pattern: ^([0-9]+(\.[0-9]+)?(ns|us|µs|ms|s|m|h|d))+$
+                        type: string
+                    type: object
                   template:
                     properties:
                       activeDeadlineSeconds:
@@ -12294,6 +12310,22 @@ spec:
                         loadBalancerClass:
                           type: string
                         type:
+                          type: string
+                      type: object
+                    slowQuery:
+                      properties:
+                        enabled:
+                          type: boolean
+                        recordType:
+                          type: string
+                        sampleRatio:
+                          pattern: ^(0?\.\d+|1(\.0+)?)$
+                          type: string
+                        threshold:
+                          pattern: ^([0-9]+(\.[0-9]+)?(ns|us|µs|ms|s|m|h))+$
+                          type: string
+                        ttl:
+                          pattern: ^([0-9]+(\.[0-9]+)?(ns|us|µs|ms|s|m|h|d))+$
                           type: string
                       type: object
                     template:
@@ -21635,6 +21667,22 @@ spec:
                           type:
                             type: string
                         type: object
+                      slowQuery:
+                        properties:
+                          enabled:
+                            type: boolean
+                          recordType:
+                            type: string
+                          sampleRatio:
+                            pattern: ^(0?\.\d+|1(\.0+)?)$
+                            type: string
+                          threshold:
+                            pattern: ^([0-9]+(\.[0-9]+)?(ns|us|µs|ms|s|m|h))+$
+                            type: string
+                          ttl:
+                            pattern: ^([0-9]+(\.[0-9]+)?(ns|us|µs|ms|s|m|h|d))+$
+                            type: string
+                        type: object
                       tls:
                         properties:
                           secretName:
@@ -25229,6 +25277,22 @@ spec:
                   loadBalancerClass:
                     type: string
                   type:
+                    type: string
+                type: object
+              slowQuery:
+                properties:
+                  enabled:
+                    type: boolean
+                  recordType:
+                    type: string
+                  sampleRatio:
+                    pattern: ^(0?\.\d+|1(\.0+)?)$
+                    type: string
+                  threshold:
+                    pattern: ^([0-9]+(\.[0-9]+)?(ns|us|µs|ms|s|m|h))+$
+                    type: string
+                  ttl:
+                    pattern: ^([0-9]+(\.[0-9]+)?(ns|us|µs|ms|s|m|h|d))+$
                     type: string
                 type: object
               tls:

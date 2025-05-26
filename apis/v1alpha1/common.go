@@ -927,6 +927,47 @@ func (in *PrometheusMonitorSpec) IsEnablePrometheusMonitor() bool {
 	return in != nil && in.Enabled
 }
 
+type SlowQueryRecordType string
+
+const (
+	// SlowQueryRecordTypeSystemTable is the type of the slow query record.
+	SlowQueryRecordTypeSystemTable SlowQueryRecordType = "system_table"
+
+	// SlowQueryRecordTypeLog is the type of the slow query record.
+	SlowQueryRecordTypeLog SlowQueryRecordType = "log"
+)
+
+// SlowQuery defines the slow query configuration.
+type SlowQuery struct {
+	// Enabled indicates whether the slow query is enabled.
+	// +optional
+	Enabled bool `json:"enabled,omitempty"`
+
+	// RecordType is the type of the slow query record. Default to `system_table`.
+	// +optional
+	RecordType SlowQueryRecordType `json:"recordType,omitempty"`
+
+	// Threshold is the threshold of the slow query. Default to `30s`.
+	// +optional
+	// +kubebuilder:validation:Pattern="^([0-9]+(\\.[0-9]+)?(ns|us|µs|ms|s|m|h))+$"
+	Threshold string `json:"threshold,omitempty"`
+
+	// SampleRatio is the sampling ratio of slow query log. The value should be in the range of (0, 1]. Default to `1.0`.
+	// +optional
+	// +kubebuilder:validation:Pattern=`^(0?\.\d+|1(\.0+)?)$`
+	// +kubebuilder:validation:Type=string
+	SampleRatio string `json:"sampleRatio,omitempty"`
+
+	// TTL is the TTL of the slow query log. Default to `30d`.
+	// +optional
+	// +kubebuilder:validation:Pattern="^([0-9]+(\\.[0-9]+)?(ns|us|µs|ms|s|m|h|d))+$"
+	TTL string `json:"ttl,omitempty"`
+}
+
+func (in *SlowQuery) IsEnabled() bool {
+	return in != nil && in.Enabled
+}
+
 // ConditionType is the type of the condition.
 type ConditionType string
 

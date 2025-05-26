@@ -17,8 +17,10 @@ package dbconfig
 import (
 	"encoding/base64"
 	"fmt"
+	"strconv"
 	"strings"
 
+	"k8s.io/klog/v2"
 	"k8s.io/utils/ptr"
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
@@ -213,4 +215,40 @@ func (c *LoggingConfig) levelWithFilters(level string, filters []string) string 
 		return fmt.Sprintf("%s,%s", level, strings.Join(filters, ","))
 	}
 	return level
+}
+
+// SlowQueryConfig is the configuration for the slow query.
+type SlowQueryConfig struct {
+	// The slow query enabled.
+	Enabled *bool `tomlmapping:"slow_query.enable"`
+
+	// The slow query record type.
+	RecordType *string `tomlmapping:"slow_query.record_type"`
+
+	// The slow query threshold.
+	Threshold *string `tomlmapping:"slow_query.threshold"`
+
+	// The slow query sample ratio.
+	SampleRatio *float64 `tomlmapping:"slow_query.sample_ratio"`
+
+	// The TTL of the `slow_queries` system table.
+	TTL *string `tomlmapping:"slow_query.ttl"`
+}
+
+func (c *SlowQueryConfig) ConfigureSlowQuery(spec *v1alpha1.SlowQuery) {
+	if spec == nil {
+		return
+	}
+
+	c.Enabled = ptr.To(spec.IsEnabled())
+	c.RecordType = ptr.To(string(spec.RecordType))
+	c.Threshold = ptr.To(spec.Threshold)
+	// Turn string to float64
+	sampleRatio, err := strconv.ParseFloat(spec.SampleRatio, 64)
+	if err != nil {
+		klog.Warningf("Failed to parse slow query sample ratio '%s', use the default value 1.0", spec.SampleRatio)
+		sampleRatio = 1.0
+	}
+	c.SampleRatio = ptr.To(sampleRatio)
+	c.TTL = ptr.To(spec.TTL)
 }

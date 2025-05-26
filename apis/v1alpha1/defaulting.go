@@ -181,6 +181,7 @@ func (in *GreptimeDBCluster) defaultFrontend() *FrontendSpec {
 			Type: corev1.ServiceTypeClusterIP,
 		},
 		RollingUpdate: defaultRollingUpdateForDeployment(),
+		SlowQuery:     defaultSlowQuery(),
 	}
 
 	if in.GetFrontend().GetReplicas() == nil {
@@ -446,6 +447,7 @@ func (in *GreptimeDBStandalone) defaultSpec() *GreptimeDBStandaloneSpec {
 		},
 		DatanodeStorage: defaultDatanodeStorage(),
 		RollingUpdate:   defaultRollingUpdateForStatefulSet(),
+		SlowQuery:       defaultSlowQuery(),
 	}
 
 	return defaultSpec
@@ -470,6 +472,16 @@ func defaultLogging() *LoggingSpec {
 		Format:             LogFormatText,
 		PersistentWithData: ptr.To(false),
 		OnlyLogToStdout:    ptr.To(false),
+	}
+}
+
+func defaultSlowQuery() *SlowQuery {
+	return &SlowQuery{
+		Enabled:     true,
+		Threshold:   "30s",
+		SampleRatio: "1.0",
+		TTL:         "30d",
+		RecordType:  SlowQueryRecordTypeSystemTable,
 	}
 }
 

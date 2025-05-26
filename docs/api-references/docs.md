@@ -259,6 +259,7 @@ _Appears in:_
 | `service` _[ServiceSpec](#servicespec)_ | Service is the service configuration of the frontend. |  |  |
 | `tls` _[TLSSpec](#tlsspec)_ | TLS is the TLS configuration of the frontend. |  |  |
 | `rollingUpdate` _[RollingUpdateDeployment](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#rollingupdatedeployment-v1-apps)_ | RollingUpdate is the rolling update configuration. We always use `RollingUpdate` strategyt. |  |  |
+| `slowQuery` _[SlowQuery](#slowquery)_ | SlowQuery is the slow query configuration. |  |  |
 
 
 #### FrontendStatus
@@ -437,6 +438,7 @@ _Appears in:_
 | `config` _string_ | The content of the configuration file of the component in TOML format. |  |  |
 | `logging` _[LoggingSpec](#loggingspec)_ | Logging defines the logging configuration for the component. |  |  |
 | `rollingUpdate` _[RollingUpdateStatefulSetStrategy](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#rollingupdatestatefulsetstrategy-v1-apps)_ | RollingUpdate is the rolling update configuration. We always use `RollingUpdate` strategy. |  |  |
+| `slowQuery` _[SlowQuery](#slowquery)_ | SlowQuery is the slow query configuration. |  |  |
 
 
 
@@ -944,6 +946,44 @@ _Appears in:_
 | `additionalContainers` _[Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#container-v1-core) array_ | For most time, there is one main container in a pod(`frontend`/`meta`/`datanode`/`flownode`).<br />If specified, additional containers will be added to the pod as sidecar containers. |  |  |
 | `volumes` _[Volume](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#volume-v1-core) array_ | List of volumes that can be mounted by containers belonging to the pod. |  |  |
 | `securityContext` _[PodSecurityContext](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#podsecuritycontext-v1-core)_ | SecurityContext holds pod-level security attributes and common container settings. |  |  |
+
+
+#### SlowQuery
+
+
+
+SlowQuery defines the slow query configuration.
+
+
+
+_Appears in:_
+- [FrontendSpec](#frontendspec)
+- [GreptimeDBStandaloneSpec](#greptimedbstandalonespec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `enabled` _boolean_ | Enabled indicates whether the slow query is enabled. |  |  |
+| `recordType` _[SlowQueryRecordType](#slowqueryrecordtype)_ | RecordType is the type of the slow query record. Default to `system_table`. |  |  |
+| `threshold` _string_ | Threshold is the threshold of the slow query. Default to `30s`. |  | Pattern: `^([0-9]+(\.[0-9]+)?(ns\|us\|µs\|ms\|s\|m\|h))+$` <br /> |
+| `sampleRatio` _string_ | SampleRatio is the sampling ratio of slow query log. The value should be in the range of (0, 1]. Default to `1.0`. |  | Pattern: `^(0?\.\d+\|1(\.0+)?)$` <br />Type: string <br /> |
+| `ttl` _string_ | TTL is the TTL of the slow query log. Default to `30d`. |  | Pattern: `^([0-9]+(\.[0-9]+)?(ns\|us\|µs\|ms\|s\|m\|h\|d))+$` <br /> |
+
+
+#### SlowQueryRecordType
+
+_Underlying type:_ _string_
+
+
+
+
+
+_Appears in:_
+- [SlowQuery](#slowquery)
+
+| Field | Description |
+| --- | --- |
+| `system_table` | SlowQueryRecordTypeSystemTable is the type of the slow query record.<br /> |
+| `log` | SlowQueryRecordTypeLog is the type of the slow query record.<br /> |
 
 
 #### StorageRetainPolicyType

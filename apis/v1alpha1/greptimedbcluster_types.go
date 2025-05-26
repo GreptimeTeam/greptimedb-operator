@@ -174,6 +174,10 @@ type FrontendSpec struct {
 	// RollingUpdate is the rolling update configuration. We always use `RollingUpdate` strategyt.
 	// +optional
 	RollingUpdate *appsv1.RollingUpdateDeployment `json:"rollingUpdate,omitempty"`
+
+	// SlowQuery is the slow query configuration.
+	// +optional
+	SlowQuery *SlowQuery `json:"slowQuery,omitempty"`
 }
 
 var _ RoleSpec = &FrontendSpec{}
@@ -221,6 +225,13 @@ func (in *FrontendSpec) GetName() string {
 func (in *FrontendSpec) GetLogging() *LoggingSpec {
 	if in != nil {
 		return in.Logging
+	}
+	return nil
+}
+
+func (in *FrontendSpec) GetSlowQuery() *SlowQuery {
+	if in != nil {
+		return in.SlowQuery
 	}
 	return nil
 }
