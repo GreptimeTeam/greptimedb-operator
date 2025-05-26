@@ -71,7 +71,6 @@ func (c *MetaConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster, rol
 	if err := c.configureBackendStorage(metaSpec, cluster.GetNamespace()); err != nil {
 		return err
 	}
-
 	if cfg := metaSpec.GetConfig(); cfg != "" {
 		if err := c.SetInputConfig(cfg); err != nil {
 			return err
