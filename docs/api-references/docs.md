@@ -295,6 +295,7 @@ _Appears in:_
 | `service` _[ServiceSpec](#servicespec)_ | Service is the service configuration of the frontend. |  |  |
 | `tls` _[TLSSpec](#tlsspec)_ | TLS is the TLS configuration of the frontend. |  |  |
 | `rollingUpdate` _[RollingUpdateDeployment](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#rollingupdatedeployment-v1-apps)_ | RollingUpdate is the rolling update configuration. We always use `RollingUpdate` strategyt. |  |  |
+| `slowQuery` _[SlowQuery](#slowquery)_ | SlowQuery is the slow query configuration. |  |  |
 
 
 #### FrontendStatus
@@ -473,6 +474,7 @@ _Appears in:_
 | `config` _string_ | The content of the configuration file of the component in TOML format. |  |  |
 | `logging` _[LoggingSpec](#loggingspec)_ | Logging defines the logging configuration for the component. |  |  |
 | `rollingUpdate` _[RollingUpdateStatefulSetStrategy](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#rollingupdatestatefulsetstrategy-v1-apps)_ | RollingUpdate is the rolling update configuration. We always use `RollingUpdate` strategy. |  |  |
+| `slowQuery` _[SlowQuery](#slowquery)_ | SlowQuery is the slow query configuration. |  |  |
 
 
 
@@ -642,7 +644,6 @@ _Appears in:_
 | `persistentWithData` _boolean_ | PersistentWithData indicates whether to persist the log with the datanode data storage. It **ONLY** works for the datanode component.<br />If false, the log will be stored in ephemeral storage. |  |  |
 | `onlyLogToStdout` _boolean_ | OnlyLogToStdout indicates whether to only log to stdout. If true, the log will not be stored in the storage even if the storage is configured. |  |  |
 | `format` _[LogFormat](#logformat)_ | Format is the format of the logging. |  | Enum: [json text] <br /> |
-| `slowQuery` _[SlowQuery](#slowquery)_ | SlowQuery is the slow query configuration. |  |  |
 
 
 #### LogsCollectionSpec
@@ -1028,18 +1029,38 @@ _Appears in:_
 
 
 
-SlowQuery defines the slow query configuration. It only works for the datanode component.
+SlowQuery defines the slow query configuration.
 
 
 
 _Appears in:_
-- [LoggingSpec](#loggingspec)
+- [FrontendSpec](#frontendspec)
+- [GreptimeDBStandaloneSpec](#greptimedbstandalonespec)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `enabled` _boolean_ | Enabled indicates whether the slow query is enabled. |  |  |
-| `threshold` _string_ | Threshold is the threshold of the slow query. Default to `10s`. |  | Pattern: `^([0-9]+(\.[0-9]+)?(ns\|us\|µs\|ms\|s\|m\|h))+$` <br /> |
+| `recordType` _[SlowQueryRecordType](#slowqueryrecordtype)_ | RecordType is the type of the slow query record. Default to `system_table`. |  |  |
+| `threshold` _string_ | Threshold is the threshold of the slow query. Default to `30s`. |  | Pattern: `^([0-9]+(\.[0-9]+)?(ns\|us\|µs\|ms\|s\|m\|h))+$` <br /> |
 | `sampleRatio` _string_ | SampleRatio is the sampling ratio of slow query log. The value should be in the range of (0, 1]. Default to `1.0`. |  | Pattern: `^(0?\.\d+\|1(\.0+)?)$` <br />Type: string <br /> |
+| `ttl` _string_ | TTL is the TTL of the slow query log. Default to `30d`. |  | Pattern: `^([0-9]+(\.[0-9]+)?(ns\|us\|µs\|ms\|s\|m\|h\|d))+$` <br /> |
+
+
+#### SlowQueryRecordType
+
+_Underlying type:_ _string_
+
+
+
+
+
+_Appears in:_
+- [SlowQuery](#slowquery)
+
+| Field | Description |
+| --- | --- |
+| `system_table` | SlowQueryRecordTypeSystemTable is the type of the slow query record.<br /> |
+| `log` | SlowQueryRecordTypeLog is the type of the slow query record.<br /> |
 
 
 #### StorageRetainPolicyType

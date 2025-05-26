@@ -303,7 +303,3 @@ func MonitoringServiceName(name string) string {
 func LogsPipelineName(namespace, name string) string {
 	return strings.Join([]string{namespace, name, "logs"}, "-")
 }
-
-func SlowQueriesPipelineName(namespace, name string) string {
-	return strings.Join([]string{namespace, name, "slow-queries"}, "-")
-}

@@ -45,10 +45,6 @@ spec:
     logsDir: /data/greptimedb/logs
     onlyLogToStdout: false
     persistentWithData: false
-    slowQuery:
-      enabled: true
-      sampleRatio: "1.0"
-      threshold: 10s
   frontend:
     replicas: 1
     httpPort: 4000
@@ -62,6 +58,12 @@ spec:
     rollingUpdate:
       maxSurge: 25%
       maxUnavailable: 25%
+    slowQuery:
+      enabled: true
+      recordType: system_table
+      sampleRatio: "1.0"
+      threshold: 30s
+      ttl: 30d
   meta:
     etcdEndpoints:
       - etcd.etcd-cluster.svc.cluster.local:2379
@@ -138,6 +140,12 @@ spec:
       rollingUpdate:
         maxUnavailable: 1
         partition: 0
+      slowQuery:
+        enabled: true
+        recordType: system_table
+        sampleRatio: "1.0"
+        threshold: 30s
+        ttl: 30d
     vector:
       image: timberio/vector:nightly-alpine
       resources:
