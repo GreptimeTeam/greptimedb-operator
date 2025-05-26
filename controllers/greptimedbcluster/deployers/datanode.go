@@ -164,7 +164,7 @@ func (d *DatanodeDeployer) Apply(ctx context.Context, crdObject client.Object, o
 						return err
 					}
 				}
-				if err := d.Client.Patch(ctx, newObject, client.MergeFrom(oldObject)); err != nil {
+				if err := d.Patch(ctx, newObject, client.MergeFrom(oldObject)); err != nil {
 					return err
 				}
 				updateObject = true
@@ -474,7 +474,7 @@ func (b *datanodeBuilder) generatePodTemplateSpec() corev1.PodTemplateSpec {
 	}
 
 	podTemplateSpec.Spec.InitContainers = append(podTemplateSpec.Spec.InitContainers, *b.generateInitializer())
-	podTemplateSpec.ObjectMeta.Labels = util.MergeStringMap(podTemplateSpec.ObjectMeta.Labels, map[string]string{
+	podTemplateSpec.Labels = util.MergeStringMap(podTemplateSpec.Labels, map[string]string{
 		constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.RoleKind),
 	})
 

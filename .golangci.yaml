@@ -1,56 +1,39 @@
+version: "2"
+
 # Options for analysis running.
 run:
-  # Timeout for analysis, e.g. 30s, 5m.
-  # Default: 1m
+  # Timeout for running analysis (default: 1m, set to 10m here)
   timeout: 10m
 
   # The default concurrency value is the number of available CPU.
   concurrency: 4
 
-  # Which dirs to skip: issues from them won't be reported.
-  # Can use regexp here: `generated.*`, regexp is applied on full path,
-  # including the path prefix if one is set.
-  # Default value is empty list,
-  # but default dirs are skipped independently of this option's value (see skip-dirs-use-default).
-  # "/" will be replaced by current OS file path separator to properly work on Windows.
-  skip-dirs:
-    - bin
-    - docs
-    - examples
-    - hack
-
 # output configuration options.
 output:
-  # Format: colored-line-number|line-number|json|colored-tab|tab|checkstyle|code-climate|junit-xml|github-actions|teamcity
-  #
-  # Multiple can be specified by separating them by comma, output can be provided
-  # for each of them by separating format name and path by colon symbol.
-  # Output path can be either `stdout`, `stderr` or path to the file to write to.
-  # Example: "checkstyle:report.xml,json:stdout,colored-line-number"
-  #
-  # Default: colored-line-number
-  format: colored-line-number
-
-  # Print lines of code with issue.
-  # Default: true
-  print-issued-lines: true
-
-  # Print linter name in the end of issue text.
-  # Default: true
-  print-linter-lines: true
+  formats:
+    text:
+      path: stdout
+      colors: true
+      print-issued-lines: true
+      print-linter-name: true
 
 linters:
   # Disable all linters.
-  disable-all: true
+  default: none
+
+  # Directories to skip during analysis.
+  exclusions:
+    paths:
+      - bin
+      - docs
+      - examples
+      - hack
 
   # Enable specific linter
   # https://golangci-lint.run/usage/linters/#enabled-by-default
   enable:
     # Errcheck is a program for checking for unchecked errors in Go code. These unchecked errors can be critical bugs in some cases.
     - errcheck
-
-    # Linter for Go source code that specializes in simplifying code.
-    - gosimple
 
     # Vet examines Go source code and reports suspicious constructs, such as Printf calls whose arguments do not align with the format string.
     - govet
@@ -62,9 +45,6 @@ linters:
     # The author of staticcheck doesn't support or approve the use of staticcheck as a library inside golangci-lint.
     - staticcheck
 
-    # Check import statements are formatted according to the 'goimport' command. Reformat imports in autofix mode.
-    - goimports
-
     # Checks whether HTTP response body is closed successfully.
     - bodyclose
 
@@ -72,9 +52,6 @@ linters:
     # Extensible without recompilation through dynamic rules.
     # Dynamic rules are written declaratively with AST patterns, filters, report message and optional suggestion.
     - gocritic
-
-    # Gofmt checks whether code was gofmt-ed. By default, this tool runs with -s option to check for code simplification.
-    - gofmt
 
     # Finds repeated strings that could be replaced by a constant.
     - goconst
@@ -85,15 +62,86 @@ linters:
     # Finds naked returns in functions greater than a specified function length.
     - nakedret
 
-linters-settings:
-  nakedret:
-    # Make an issue if func has more lines of code than this setting, and it has naked returns.
-    # Default: 30
-    max-func-lines: 50
-  goimports:
-    # A comma-separated list of prefixes, which, if set, checks import paths
-    # with the given prefixes are grouped after 3rd-party packages.
-    # Default: ""
-    local-prefixes: github.com/GreptimeTeam/greptimedb-operator
-  linters-settings:
-    min-occurrences: 3
+  settings:
+    errcheck:
+      # Report about not checking of errors in type assertions: `a := b.(MyStruct)`.
+      # Such cases aren't reported by default.
+      # Default: false
+      check-type-assertions: false
+
+      # List of functions to exclude from checking, where each entry is a single function to exclude.
+      # See https://github.com/kisielk/errcheck#excluding-functions for details.
+      exclude-functions:
+        # IO
+        - (io.Closer).Close
+        - (*os.File).Close
+
+        # Network
+        - (net.Conn).Close
+        - (net.Listener).Close
+
+        # Database
+        - (*database/sql.DB).Close
+        - (*database/sql.Rows).Close
+        - (*database/sql.Conn).Close
+        - (*github.com/jackc/pgx/v5.Conn).Close
+
+        # HTTP
+        - (*net/http.Response).Body.Close
+        - (*mime/multipart.Writer).Close
+
+        # ThirdParty
+        - (*go.etcd.io/etcd/client/v3.Client).Close
+
+      # Display function signature instead of selector.
+      # Default: false
+      verbose: true
+
+    staticcheck:
+      # https://staticcheck.dev/docs/configuration/options/#dot_import_whitelist
+      # Default: ["github.com/mmcloughlin/avo/build", "github.com/mmcloughlin/avo/operand", "github.com/mmcloughlin/avo/reg"]
+      dot-import-whitelist:
+        - github.com/onsi/gomega
+        - github.com/onsi/ginkgo/v2
+      # SAxxxx checks in https://staticcheck.dev/docs/configuration/options/#checks
+      # Example (to disable some checks): [ "all", "-SA1000", "-SA1001"]
+      # Default: ["all", "-ST1000", "-ST1003", "-ST1016", "-ST1020", "-ST1021", "-ST1022"]
+      checks:
+        - "all"
+        # Incorrect or missing package comment.
+        # https://staticcheck.dev/docs/checks/#ST1000
+        - "-ST1000"
+        # Poorly chosen identifier.
+        # https://staticcheck.dev/docs/checks/#ST1003
+        - "-ST1003"
+        # Poorly chosen receiver name.
+        # https://staticcheck.dev/docs/checks/#ST1006
+        - "-ST1006"
+        # Use consistent method receiver names.
+        # https://staticcheck.dev/docs/checks/#ST1016
+        - "-ST1016"
+        # The documentation of an exported function should start with the function's name.
+        # https://staticcheck.dev/docs/checks/#ST1020
+        - "-ST1020"
+        # The documentation of an exported type should start with type's name.
+        # https://staticcheck.dev/docs/checks/#ST1021
+        - "-ST1021"
+        # The documentation of an exported variable or constant should start with variable's name.
+        # https://staticcheck.dev/docs/checks/#ST1022
+        - "-ST1022"
+
+    nakedret:
+      # Make an issue if func has more lines of code than this setting, and it has naked returns.
+      # Default: 30
+      max-func-lines: 50
+    goconst:
+      # Minimum number of occurrences to suggest converting to constant (default: 3)
+      min-occurrences: 3
+
+formatters:
+  enable:
+    # Gofmt checks whether code was gofmt-ed. By default, this tool runs with -s option to check for code simplification.
+    - gofmt
+
+    # Handles imports addition/removal (relies on gci for grouping)
+    - goimports
