@@ -232,6 +232,15 @@ func (r *Reconciler) sync(ctx context.Context, cluster *v1alpha1.GreptimeDBClust
 	if cluster.Status.ClusterPhase == v1alpha1.PhaseStarting ||
 		cluster.Status.ClusterPhase == v1alpha1.PhaseUpdating {
 		cluster.Status.SetCondition(*v1alpha1.NewCondition(v1alpha1.ConditionTypeReady, corev1.ConditionTrue, "ClusterReady", "the cluster is ready"))
+
+		// Turn off maintenance mode for metasrv.
+		if cluster.Status.Meta.MaintenanceMode {
+			if err := common.SetMaintenanceMode(common.GetMetaHTTPServiceURL(cluster), false); err != nil {
+				return ctrl.Result{}, err
+			}
+			cluster.Status.Meta.MaintenanceMode = false
+		}
+
 		if err := r.updateClusterStatus(ctx, cluster, v1alpha1.PhaseRunning); err != nil {
 			return ctrl.Result{}, err
 		}

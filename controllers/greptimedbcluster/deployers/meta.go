@@ -129,11 +129,22 @@ func (d *MetaDeployer) CheckAndUpdateStatus(ctx context.Context, highLevelObject
 	cluster.Status.Meta.Replicas = *deployment.Spec.Replicas
 	cluster.Status.Meta.ReadyReplicas = deployment.Status.ReadyReplicas
 	cluster.Status.Meta.EtcdEndpoints = cluster.Spec.Meta.EtcdEndpoints
+
+	ready := k8sutil.IsDeploymentReady(deployment)
+
+	if cluster.Status.ClusterPhase == v1alpha1.PhaseStarting && ready && !cluster.Status.Meta.MaintenanceMode {
+		// Turn on maintenance mode for metasrv.
+		if err := common.SetMaintenanceMode(common.GetMetaHTTPServiceURL(cluster), true); err != nil {
+			return false, err
+		}
+		cluster.Status.Meta.MaintenanceMode = true
+	}
+
 	if err := UpdateStatus(ctx, cluster, d.Client); err != nil {
 		klog.Errorf("Failed to update status: %s", err)
 	}
 
-	return k8sutil.IsDeploymentReady(deployment), nil
+	return ready, nil
 }
 
 func (d *MetaDeployer) checkEtcdService(ctx context.Context, crdObject client.Object) error {
