@@ -861,6 +861,9 @@ type MetaStatus struct {
 	// EtcdEndpoints is the endpoints of the etcd cluster.
 	// +optional
 	EtcdEndpoints []string `json:"etcdEndpoints,omitempty"`
+
+	// MaintenanceMode is the maintenance mode of the meta.
+	MaintenanceMode bool `json:"maintenanceMode"`
 }
 
 // DatanodeStatus is the status of datanode node.

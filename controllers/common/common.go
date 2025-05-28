@@ -16,6 +16,8 @@ package common
 
 import (
 	"context"
+	"fmt"
+	"net/http"
 	"strings"
 
 	monitoringv1 "github.com/prometheus-operator/prometheus-operator/pkg/apis/monitoring/v1"
@@ -23,6 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/klog/v2"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
@@ -302,4 +305,26 @@ func MonitoringServiceName(name string) string {
 
 func LogsPipelineName(namespace, name string) string {
 	return strings.Join([]string{namespace, name, "logs"}, "-")
+}
+
+func GetMetaHTTPServiceURL(cluster *v1alpha1.GreptimeDBCluster) string {
+	return fmt.Sprintf("http://%s.%s:%d", ResourceName(cluster.GetName(), v1alpha1.MetaRoleKind), cluster.GetNamespace(), cluster.Spec.Meta.RPCPort)
+}
+
+// SetMaintenanceMode requests the metasrv to set the maintenance mode.
+func SetMaintenanceMode(metaHTTPServiceURL string, enabled bool) error {
+	requestURL := fmt.Sprintf("%s/admin/maintenance?enable=%v", metaHTTPServiceURL, enabled)
+	rsp, err := http.Get(requestURL)
+	if err != nil {
+		return err
+	}
+	defer rsp.Body.Close()
+
+	if rsp.StatusCode != http.StatusOK {
+		return fmt.Errorf("failed to request metasrv '%s' for set maintenance mode '%v', status code: %d", metaHTTPServiceURL, enabled, rsp.StatusCode)
+	}
+
+	klog.Infof("Set maintenance mode to '%v' by requesting metasrv '%s'", enabled, metaHTTPServiceURL)
+
+	return nil
 }
