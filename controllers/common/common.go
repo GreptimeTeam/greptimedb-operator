@@ -43,18 +43,22 @@ const (
 	FileStorageTypeCache    FileStorageType = "cache"
 )
 
-// ResourceName returns the resource name for the given name and component kind.
+// ResourceName returns the resource name for the given name and role kind.
+// The format will be `${name}-${roleKind}-${extraNames[0]}-${extraNames[1]}...`.
 // If extraNames are provided, they will be appended to the resource name. For example,
-// - If the name is `my-cluster` and the component kind is `datanode`, the resource name will be `my-cluster-datanode`.
-// - If the name is `my-cluster` and the component kind is `datanode` and the extra names `read`, the resource name will be `my-cluster-datanode-read`.
-func ResourceName(name string, componentKind v1alpha1.RoleKind, extraNames ...string) string {
+// - If the name is `my-cluster` and the role kind is `datanode`, the resource name will be `my-cluster-datanode`.
+// - If the name is `my-cluster` and the role kind is `datanode` and the extra names `read`, the resource name will be `my-cluster-datanode-read`.
+func ResourceName(name string, roleKind v1alpha1.RoleKind, extraNames ...string) string {
+	const separator = "-"
+
+	baseName := strings.Join([]string{name, string(roleKind)}, separator)
 	for _, extraName := range extraNames {
 		if extraName != "" {
-			name = name + "-" + extraName
+			baseName = strings.Join([]string{baseName, extraName}, separator)
 		}
 	}
 
-	return strings.Join([]string{name, string(componentKind)}, "-")
+	return baseName
 }
 
 func MountConfigDir(template *corev1.PodTemplateSpec, configMapName string) {
@@ -298,8 +302,4 @@ func MonitoringServiceName(name string) string {
 
 func LogsPipelineName(namespace, name string) string {
 	return strings.Join([]string{namespace, name, "logs"}, "-")
-}
-
-func SlowQueriesPipelineName(namespace, name string) string {
-	return strings.Join([]string{namespace, name, "slow-queries"}, "-")
 }

@@ -92,6 +92,10 @@ type GreptimeDBStandaloneSpec struct {
 	// RollingUpdate is the rolling update configuration. We always use `RollingUpdate` strategy.
 	// +optional
 	RollingUpdate *appsv1.RollingUpdateStatefulSetStrategy `json:"rollingUpdate,omitempty"`
+
+	// SlowQuery is the slow query configuration.
+	// +optional
+	SlowQuery *SlowQuery `json:"slowQuery,omitempty"`
 }
 
 // GreptimeDBStandaloneStatus defines the observed state of GreptimeDBStandalone
@@ -214,6 +218,13 @@ func (in *GreptimeDBStandalone) GetDataHome() string {
 func (in *GreptimeDBStandalone) GetLogging() *LoggingSpec {
 	if in != nil {
 		return in.Spec.Logging
+	}
+	return nil
+}
+
+func (in *GreptimeDBStandalone) GetSlowQuery() *SlowQuery {
+	if in != nil {
+		return in.Spec.SlowQuery
 	}
 	return nil
 }

@@ -185,13 +185,6 @@ func (in *GreptimeDBCluster) defaultSpec() *GreptimeDBClusterSpec {
 
 		// Set the default logging format to JSON if monitoring is enabled.
 		defaultSpec.Logging.Format = LogFormatJSON
-
-		// Turn on the slow query log by default if monitoring is enabled.
-		defaultSpec.Logging.SlowQuery = &SlowQuery{
-			Enabled:     true,
-			Threshold:   "10s",
-			SampleRatio: "1.0",
-		}
 	}
 
 	return defaultSpec
@@ -211,6 +204,7 @@ func (in *GreptimeDBCluster) defaultFrontend() *FrontendSpec {
 			Type: corev1.ServiceTypeClusterIP,
 		},
 		RollingUpdate: defaultRollingUpdateForDeployment(),
+		SlowQuery:     defaultSlowQuery(),
 	}
 
 	if in.GetFrontend().GetReplicas() == nil {
@@ -493,6 +487,7 @@ func (in *GreptimeDBStandalone) defaultSpec() *GreptimeDBStandaloneSpec {
 		},
 		DatanodeStorage: defaultDatanodeStorage(),
 		RollingUpdate:   defaultRollingUpdateForStatefulSet(),
+		SlowQuery:       defaultSlowQuery(),
 	}
 
 	return defaultSpec
@@ -517,6 +512,16 @@ func defaultLogging() *LoggingSpec {
 		Format:             LogFormatText,
 		PersistentWithData: ptr.To(false),
 		OnlyLogToStdout:    ptr.To(false),
+	}
+}
+
+func defaultSlowQuery() *SlowQuery {
+	return &SlowQuery{
+		Enabled:     true,
+		Threshold:   "30s",
+		SampleRatio: "1.0",
+		TTL:         "30d",
+		RecordType:  SlowQueryRecordTypeSystemTable,
 	}
 }
 

@@ -63,6 +63,12 @@ spec:
     rollingUpdate:
       maxUnavailable: 25%
       maxSurge: 25%
+    slowQuery:
+      enabled: true
+      recordType: system_table
+      sampleRatio: "1.0"
+      threshold: 30s
+      ttl: 30d
   meta:
     etcdEndpoints:
       - etcd.etcd-cluster.svc.cluster.local:2379

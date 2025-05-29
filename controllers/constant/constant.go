@@ -32,9 +32,6 @@ const (
 	// LogsTableName is the table name of storing greptimedb logs.
 	LogsTableName = "_gt_logs"
 
-	// SlowQueriesTableName is the table name of storing slow queries.
-	SlowQueriesTableName = "_gt_slow_queries"
-
 	// DefaultVectorConfigName is the default name of vector config.
 	DefaultVectorConfigName = "vector-config"
 

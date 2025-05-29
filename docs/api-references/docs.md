@@ -34,6 +34,24 @@ _Appears in:_
 | `endpoint` _string_ | The Blob Storage endpoint. |  |  |
 
 
+#### BackendStorage
+
+
+
+BackendStorage is the specification for the backend storage for meta.
+
+
+
+_Appears in:_
+- [MetaSpec](#metaspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `etcd` _[EtcdStorage](#etcdstorage)_ | EtcdStorage is the specification for etcd storage for meta. |  |  |
+| `mysql` _[MySQLStorage](#mysqlstorage)_ | MySQLStorage is the specification for MySQL storage for meta. |  |  |
+| `postgresql` _[PostgreSQLStorage](#postgresqlstorage)_ | PostgreSQLStorage is the specification for PostgreSQL storage for meta. |  |  |
+
+
 #### CacheStorage
 
 
@@ -170,6 +188,24 @@ _Appears in:_
 | `fs` _[FileStorage](#filestorage)_ | FileStorage is the file storage configuration. |  |  |
 
 
+#### EtcdStorage
+
+
+
+EtcdStorage is the specification for etcd storage for meta.
+
+
+
+_Appears in:_
+- [BackendStorage](#backendstorage)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `endpoints` _string array_ | The endpoints of the etcd cluster. |  |  |
+| `enableCheckEtcdService` _boolean_ | EnableCheckEtcdService indicates whether to check etcd cluster health when starting meta. |  |  |
+| `storeKeyPrefix` _string_ | StoreKeyPrefix is the prefix of the key in the etcd. We can use it to isolate the data of different clusters. |  |  |
+
+
 #### FileStorage
 
 
@@ -260,6 +296,7 @@ _Appears in:_
 | `service` _[ServiceSpec](#servicespec)_ | Service is the service configuration of the frontend. |  |  |
 | `tls` _[TLSSpec](#tlsspec)_ | TLS is the TLS configuration of the frontend. |  |  |
 | `rollingUpdate` _[RollingUpdateDeployment](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#rollingupdatedeployment-v1-apps)_ | RollingUpdate is the rolling update configuration. We always use `RollingUpdate` strategyt. |  |  |
+| `slowQuery` _[SlowQuery](#slowquery)_ | SlowQuery is the slow query configuration. |  |  |
 
 
 #### FrontendStatus
@@ -439,6 +476,7 @@ _Appears in:_
 | `config` _string_ | The content of the configuration file of the component in TOML format. |  |  |
 | `logging` _[LoggingSpec](#loggingspec)_ | Logging defines the logging configuration for the component. |  |  |
 | `rollingUpdate` _[RollingUpdateStatefulSetStrategy](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#rollingupdatestatefulsetstrategy-v1-apps)_ | RollingUpdate is the rolling update configuration. We always use `RollingUpdate` strategy. |  |  |
+| `slowQuery` _[SlowQuery](#slowquery)_ | SlowQuery is the slow query configuration. |  |  |
 
 
 
@@ -608,7 +646,6 @@ _Appears in:_
 | `persistentWithData` _boolean_ | PersistentWithData indicates whether to persist the log with the datanode data storage. It **ONLY** works for the datanode component.<br />If false, the log will be stored in ephemeral storage. |  |  |
 | `onlyLogToStdout` _boolean_ | OnlyLogToStdout indicates whether to only log to stdout. If true, the log will not be stored in the storage even if the storage is configured. |  |  |
 | `format` _[LogFormat](#logformat)_ | Format is the format of the logging. |  | Enum: [json text] <br /> |
-| `slowQuery` _[SlowQuery](#slowquery)_ | SlowQuery is the slow query configuration. |  |  |
 
 
 #### LogsCollectionSpec
@@ -675,6 +712,7 @@ _Appears in:_
 | `logging` _[LoggingSpec](#loggingspec)_ | Logging defines the logging configuration for the component. |  |  |
 | `rpcPort` _integer_ | RPCPort is the gRPC port of the meta. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
 | `httpPort` _integer_ | HTTPPort is the HTTP port of the meta. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
+| `backendStorage` _[BackendStorage](#backendstorage)_ | BackendStorage is the specification for the backend storage for meta. |  |  |
 | `etcdEndpoints` _string array_ | EtcdEndpoints is the endpoints of the etcd cluster. |  |  |
 | `enableCheckEtcdService` _boolean_ | EnableCheckEtcdService indicates whether to check etcd cluster health when starting meta. |  |  |
 | `enableRegionFailover` _boolean_ | EnableRegionFailover indicates whether to enable region failover. |  |  |
@@ -733,6 +771,26 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `internalDNSName` _string_ | InternalDNSName is the internal DNS name of the monitoring service. For example, 'mycluster-standalone-monitor.default.svc.cluster.local'. |  |  |
+
+
+#### MySQLStorage
+
+
+
+MySQLStorage is the specification for MySQL storage for meta.
+
+
+
+_Appears in:_
+- [BackendStorage](#backendstorage)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `host` _string_ | Host is the host of the MySQL database. |  |  |
+| `port` _integer_ | Port is the port of the MySQL database. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
+| `credentialsSecretName` _string_ | CredentialsSecretName is the name of the secret that contains the credentials for the MySQL database.<br />The secret must be in the same namespace with the greptime resource.<br />The secret must contain keys named `username` and `password`. |  |  |
+| `database` _string_ | Database is the name of the MySQL database. |  |  |
+| `table` _string_ | Table is the name of the MySQL table. |  |  |
 
 
 #### OSSStorage
@@ -836,6 +894,26 @@ _Appears in:_
 | `additionalContainers` _[Container](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#container-v1-core) array_ | For most time, there is one main container in a pod(`frontend`/`meta`/`datanode`/`flownode`).<br />If specified, additional containers will be added to the pod as sidecar containers. |  |  |
 | `volumes` _[Volume](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#volume-v1-core) array_ | List of volumes that can be mounted by containers belonging to the pod. |  |  |
 | `securityContext` _[PodSecurityContext](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#podsecuritycontext-v1-core)_ | SecurityContext holds pod-level security attributes and common container settings. |  |  |
+
+
+#### PostgreSQLStorage
+
+
+
+PostgreSQLStorage is the specification for PostgreSQL storage for meta.
+
+
+
+_Appears in:_
+- [BackendStorage](#backendstorage)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `host` _string_ | Host is the host of the PostgreSQL database. |  |  |
+| `port` _integer_ | Port is the port of the PostgreSQL database. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
+| `credentialsSecretName` _string_ | CredentialsSecretName is the name of the secret that contains the credentials for the MySQL database.<br />The secret must be in the same namespace with the greptime resource.<br />The secret must contain keys named `username` and `password`. |  |  |
+| `database` _string_ | Database is the name of the MySQL database. |  |  |
+| `table` _string_ | Table is the name of the MySQL table. |  |  |
 
 
 #### PrometheusMonitorSpec
@@ -953,18 +1031,38 @@ _Appears in:_
 
 
 
-SlowQuery defines the slow query configuration. It only works for the datanode component.
+SlowQuery defines the slow query configuration.
 
 
 
 _Appears in:_
-- [LoggingSpec](#loggingspec)
+- [FrontendSpec](#frontendspec)
+- [GreptimeDBStandaloneSpec](#greptimedbstandalonespec)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `enabled` _boolean_ | Enabled indicates whether the slow query is enabled. |  |  |
-| `threshold` _string_ | Threshold is the threshold of the slow query. Default to `10s`. |  | Pattern: `^([0-9]+(\.[0-9]+)?(ns\|us\|µs\|ms\|s\|m\|h))+$` <br /> |
+| `recordType` _[SlowQueryRecordType](#slowqueryrecordtype)_ | RecordType is the type of the slow query record. Default to `system_table`. |  |  |
+| `threshold` _string_ | Threshold is the threshold of the slow query. Default to `30s`. |  | Pattern: `^([0-9]+(\.[0-9]+)?(ns\|us\|µs\|ms\|s\|m\|h))+$` <br /> |
 | `sampleRatio` _string_ | SampleRatio is the sampling ratio of slow query log. The value should be in the range of (0, 1]. Default to `1.0`. |  | Pattern: `^(0?\.\d+\|1(\.0+)?)$` <br />Type: string <br /> |
+| `ttl` _string_ | TTL is the TTL of the slow query log. Default to `30d`. |  | Pattern: `^([0-9]+(\.[0-9]+)?(ns\|us\|µs\|ms\|s\|m\|h\|d))+$` <br /> |
+
+
+#### SlowQueryRecordType
+
+_Underlying type:_ _string_
+
+
+
+
+
+_Appears in:_
+- [SlowQuery](#slowquery)
+
+| Field | Description |
+| --- | --- |
+| `system_table` | SlowQueryRecordTypeSystemTable is the type of the slow query record.<br /> |
+| `log` | SlowQueryRecordTypeLog is the type of the slow query record.<br /> |
 
 
 #### StorageRetainPolicyType

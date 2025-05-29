@@ -206,19 +206,10 @@ func (d *MonitoringDeployer) pipelines(cluster *v1alpha1.GreptimeDBCluster) ([]*
 		return nil, err
 	}
 
-	slowQueriesPipeline, err := d.defaultSlowQueriesPipeline()
-	if err != nil {
-		return nil, err
-	}
-
 	return []*pipeline{
 		{
 			name: common.LogsPipelineName(cluster.Namespace, cluster.Name),
 			data: logsPipeline,
-		},
-		{
-			name: common.SlowQueriesPipelineName(cluster.Namespace, cluster.Name),
-			data: slowQueriesPipeline,
 		},
 	}, nil
 }
@@ -226,15 +217,6 @@ func (d *MonitoringDeployer) pipelines(cluster *v1alpha1.GreptimeDBCluster) ([]*
 // defaultLogsPipeline returns the default pipeline that will be used by the standalone greptimedb instance to collect greptimedb logs.
 func (d *MonitoringDeployer) defaultLogsPipeline() (string, error) {
 	data, err := fs.ReadFile(config.DefaultLogsPipeline, "logs-pipeline.yaml")
-	if err != nil {
-		return "", err
-	}
-	return string(data), nil
-}
-
-// defaultSlowQueriesPipeline returns the default pipeline that will be used by the standalone greptimedb instance to collect slow queries.
-func (d *MonitoringDeployer) defaultSlowQueriesPipeline() (string, error) {
-	data, err := fs.ReadFile(config.DefaultSlowQueriesPipeline, "slow-queries-pipeline.yaml")
 	if err != nil {
 		return "", err
 	}
