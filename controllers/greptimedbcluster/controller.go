@@ -78,7 +78,7 @@ func Setup(mgr ctrl.Manager, o *options.Options) error {
 	// sync will execute the sync logic of multiple deployers in order.
 	reconciler.Deployers = []deployer.Deployer{
 		deployers.NewMonitoringDeployer(mgr),
-		deployers.NewMetaDeployer(mgr),
+		deployers.NewMetaDeployer(mgr, deployers.WithMaintenanceModeWhenCreateCluster(true)),
 		deployers.NewDatanodeDeployer(mgr),
 		deployers.NewFrontendDeployer(mgr),
 		deployers.NewFlownodeDeployer(mgr),
