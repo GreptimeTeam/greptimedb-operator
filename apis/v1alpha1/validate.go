@@ -143,7 +143,7 @@ func (in *GreptimeDBCluster) validateFrontendGroups() error {
 		}
 	}
 
-	// FIXME(liyang): When using frontendGroups, must set the frontend name.
+	// FIXME(liyang): The frontend name must be set when using frontendGroups.
 	if count != len(in.GetFrontendGroups()) {
 		return fmt.Errorf("the frontend name must be specified")
 	}
