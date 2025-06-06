@@ -65,8 +65,10 @@ spec:
       threshold: 30s
       ttl: 30d
   meta:
-    etcdEndpoints:
-      - etcd.etcd-cluster.svc.cluster.local:2379
+    backendStorage:
+      etcd:
+        endpoints:
+          - etcd.etcd-cluster.svc.cluster.local:2379
     enableRegionFailover: true
     httpPort: 4000
     rpcPort: 3002
