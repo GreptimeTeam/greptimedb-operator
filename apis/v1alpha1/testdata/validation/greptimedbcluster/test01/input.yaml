@@ -13,8 +13,10 @@ spec:
     config: |
       It's not a valid toml config----
   meta:
-    etcdEndpoints:
-      - etcd.etcd-cluster.svc.cluster.local:2379
+    backendStorage:
+      etcd:
+        endpoints:
+          - etcd.etcd-cluster.svc.cluster.local:2379
     replicas: 1
   datanode:
     replicas: 3
