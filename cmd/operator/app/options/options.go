@@ -24,7 +24,7 @@ const (
 	defaultAPIServerPort           = 8081
 	defaultAdmissionWebhookPort    = 8082
 	defaultAdmissionWebhookCertDir = "/etc/webhook-tls"
-	defaultProfilePort             = 8083
+	defaultProfilingPort           = 8083
 )
 
 type Options struct {
@@ -53,7 +53,7 @@ func NewDefaultOptions() *Options {
 		AdmissionWebhookPort:    defaultAdmissionWebhookPort,
 		AdmissionWebhookCertDir: defaultAdmissionWebhookCertDir,
 		EnableProfiling:         false,
-		ProfilingPort:           defaultProfilePort,
+		ProfilingPort:           defaultProfilingPort,
 	}
 }
 
