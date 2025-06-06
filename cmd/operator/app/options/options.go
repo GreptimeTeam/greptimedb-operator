@@ -37,8 +37,8 @@ type Options struct {
 	EnableAdmissionWebhook  bool
 	AdmissionWebhookPort    int
 	AdmissionWebhookCertDir string
-	EnableProfile           bool
-	ProfilePort             int32
+	EnableProfiling          bool
+	ProfilingPort             int32
 }
 
 func NewDefaultOptions() *Options {
