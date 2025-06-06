@@ -132,20 +132,15 @@ func (in *GreptimeDBCluster) validateFrontend() error {
 }
 
 func (in *GreptimeDBCluster) validateFrontendGroups() error {
-	count := 0
 	for _, frontend := range in.GetFrontendGroups() {
-		if len(frontend.GetName()) != 0 {
-			count++
+		// FIXME(liyang): The frontend name must be set when using frontendGroups.
+		if len(frontend.GetName()) == 0 {
+			return fmt.Errorf("the frontend name must be specified")
 		}
 
 		if err := validateTomlConfig(frontend.GetConfig()); err != nil {
 			return fmt.Errorf("invalid frontend toml config: '%v'", err)
 		}
-	}
-
-	// FIXME(liyang): The frontend name must be set when using frontendGroups.
-	if count != len(in.GetFrontendGroups()) {
-		return fmt.Errorf("the frontend name must be specified")
 	}
 
 	return nil
