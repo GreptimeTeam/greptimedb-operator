@@ -157,7 +157,7 @@ func NewOperatorCommand() *cobra.Command {
 				}()
 			}
 
-			if o.EnableProfile {
+			if o.EnableProfiling {
 				mux := http.NewServeMux()
 				mux.HandleFunc("/debug/pprof/", pprof.Index)
 				mux.HandleFunc("/debug/pprof/cmdline", pprof.Cmdline)
@@ -166,7 +166,7 @@ func NewOperatorCommand() *cobra.Command {
 				mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
 
 				go func() {
-					addr := fmt.Sprintf("0.0.0.0:%d", o.ProfilePort)
+					addr := fmt.Sprintf("0.0.0.0:%d", o.ProfilingPort)
 					klog.Infof("Start pprof at %s", addr)
 					if err := http.ListenAndServe(addr, mux); err != nil {
 						klog.Fatalf("Failed to start pprof: %v", err)
