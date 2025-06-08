@@ -324,12 +324,7 @@ func (r *Reconciler) recordNormalEventByPhase(cluster *v1alpha1.GreptimeDBCluste
 }
 
 func (r *Reconciler) setObservedGeneration(cluster *v1alpha1.GreptimeDBCluster) {
-	generation := cluster.Generation
-	if cluster.Status.ObservedGeneration == nil {
-		cluster.Status.ObservedGeneration = &generation
-	} else if *cluster.Status.ObservedGeneration != generation {
-		cluster.Status.ObservedGeneration = &generation
-	}
+	cluster.Status.ObservedGeneration = cluster.Generation
 }
 
 func (r *Reconciler) removeMonitoringDB(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster) error {

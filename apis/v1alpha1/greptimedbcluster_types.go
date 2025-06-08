@@ -838,7 +838,7 @@ type GreptimeDBClusterStatus struct {
 
 	// ObservedGeneration is the last observed generation.
 	// +optional
-	ObservedGeneration *int64 `json:"observedGeneration,omitempty"`
+	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 }
 
 // FrontendStatus is the status of frontend node.
