@@ -16,6 +16,7 @@ spec:
         port: 5432
         credentialsSecretName: postgresql-credentials
         database: metasrv
+        electionLockID: 1
         table: greptime_metakv
   datanode:
     replicas: 1
