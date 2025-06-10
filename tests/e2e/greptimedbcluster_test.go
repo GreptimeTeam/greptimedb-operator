@@ -76,4 +76,8 @@ var _ = Describe("Test GreptimeDBCluster", func() {
 	It("Test a cluster with postgresql as the meta backend", func() {
 		greptimedbcluster.TestPostgreSQLMetaBackend(ctx, h)
 	})
+
+	It("Test a cluster with read write groups", func() {
+		greptimedbcluster.TestClusterReadWriteGroups(ctx, h)
+	})
 })
