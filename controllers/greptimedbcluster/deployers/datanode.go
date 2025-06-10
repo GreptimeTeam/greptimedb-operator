@@ -566,7 +566,7 @@ func (b *datanodeBuilder) generatePodTemplateSpec(spec *v1alpha1.DatanodeSpec, g
 	}
 
 	podTemplateSpec.Spec.InitContainers = append(podTemplateSpec.Spec.InitContainers, *b.generateInitializer(spec, groupID))
-	podTemplateSpec.ObjectMeta.Labels = util.MergeStringMap(podTemplateSpec.ObjectMeta.Labels, map[string]string{
+	podTemplateSpec.Labels = util.MergeStringMap(podTemplateSpec.Labels, map[string]string{
 		constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.RoleKind, spec.GetName()),
 	})
 

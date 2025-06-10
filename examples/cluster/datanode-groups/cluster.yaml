@@ -4,10 +4,10 @@ metadata:
   name: datanode-groups-cluster
 spec:
   initializer:
-    image: localhost:5001/greptime/greptimedb-initializer:latest
+    image: greptime/greptimedb-initializer:latest
   base:
     main:
-      image: localhost:5001/greptime/greptimedb:latest
+      image: greptime/greptimedb:latest
   frontend:
     replicas: 1
   meta:
@@ -31,4 +31,3 @@ spec:
         [region_engine.mito]
         # Number of region workers
         num_workers = 4
-  

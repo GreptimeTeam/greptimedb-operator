@@ -71,14 +71,9 @@ func (c *MetaConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster, rol
 
 	c.EnableRegionFailover = ptr.To(metaSpec.IsEnableRegionFailover())
 
-	if prefix := metaSpec.GetStoreKeyPrefix(); prefix != "" {
-		c.StoreKeyPrefix = ptr.To(prefix)
-	}
-
 	if err := c.configureBackendStorage(metaSpec, cluster.GetNamespace()); err != nil {
 		return err
 	}
-
 	if cfg := metaSpec.GetConfig(); cfg != "" {
 		if err := c.SetInputConfig(cfg); err != nil {
 			return err
