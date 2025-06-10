@@ -235,11 +235,11 @@ type PostgreSQLStorage struct {
 	// +required
 	CredentialsSecretName string `json:"credentialsSecretName"`
 
-	// Database is the name of the MySQL database.
+	// Database is the name of the PostgreSQL database.
 	// +optional
 	Database string `json:"database,omitempty"`
 
-	// Table is the name of the MySQL table.
+	// Table is the name of the PostgreSQL table.
 	// +optional
 	Table string `json:"table,omitempty"`
 }
