@@ -344,7 +344,7 @@ func (b *metaBuilder) generatePodTemplateSpec() *corev1.PodTemplateSpec {
 		b.AddVectorSidecar(podTemplateSpec, v1alpha1.MetaRoleKind)
 	}
 
-	podTemplateSpec.ObjectMeta.Labels = util.MergeStringMap(podTemplateSpec.ObjectMeta.Labels, map[string]string{
+	podTemplateSpec.Labels = util.MergeStringMap(podTemplateSpec.Labels, map[string]string{
 		constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.RoleKind),
 	})
 
@@ -357,7 +357,6 @@ func (b *metaBuilder) generateMainContainerArgs() []string {
 		"--rpc-bind-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.Meta.RPCPort),
 		"--http-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.Meta.HTTPPort),
 		"--rpc-server-addr", fmt.Sprintf("$(%s):%d", deployer.EnvPodIP, b.Cluster.Spec.Meta.RPCPort),
-		"--store-addr", b.Cluster.Spec.Meta.EtcdEndpoints[0],
 		"--config-file", path.Join(constant.GreptimeDBConfigDir, constant.GreptimeDBConfigFileName),
 	}
 }

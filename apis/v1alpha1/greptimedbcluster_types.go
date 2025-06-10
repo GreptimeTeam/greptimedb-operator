@@ -56,12 +56,18 @@ type MetaSpec struct {
 	// +optional
 	HTTPPort int32 `json:"httpPort,omitempty"`
 
+	// BackendStorage is the specification for the backend storage for meta.
+	// +optional
+	BackendStorage *BackendStorage `json:"backendStorage,omitempty"`
+
 	// EtcdEndpoints is the endpoints of the etcd cluster.
-	// +required
-	EtcdEndpoints []string `json:"etcdEndpoints"`
+	// +optional
+	// +kubebuilder:deprecatedversion:warning="EtcdEndpoints is deprecated and will be removed in a future version. Please use BackendStorage instead."
+	EtcdEndpoints []string `json:"etcdEndpoints,omitempty"`
 
 	// EnableCheckEtcdService indicates whether to check etcd cluster health when starting meta.
 	// +optional
+	// +kubebuilder:deprecatedversion:warning="EnableCheckEtcdService is deprecated and will be removed in a future version. Please use BackendStorage instead."
 	EnableCheckEtcdService bool `json:"enableCheckEtcdService,omitempty"`
 
 	// EnableRegionFailover indicates whether to enable region failover.
@@ -70,6 +76,7 @@ type MetaSpec struct {
 
 	// StoreKeyPrefix is the prefix of the key in the etcd. We can use it to isolate the data of different clusters.
 	// +optional
+	// +kubebuilder:deprecatedversion:warning="StoreKeyPrefix is deprecated and will be removed in a future version. Please use BackendStorage instead."
 	StoreKeyPrefix string `json:"storeKeyPrefix,omitempty"`
 
 	// RollingUpdate is the rolling update configuration. We always use `RollingUpdate` strategyt.
@@ -85,6 +92,162 @@ func (in *MetaSpec) GetRoleKind() RoleKind {
 }
 
 func (in *MetaSpec) GetName() string {
+	return ""
+}
+
+func (in *MetaSpec) GetBackendStorage() *BackendStorage {
+	if in != nil {
+		return in.BackendStorage
+	}
+	return nil
+}
+
+// BackendStorage is the specification for the backend storage for meta.
+type BackendStorage struct {
+	// EtcdStorage is the specification for etcd storage for meta.
+	// +optional
+	EtcdStorage *EtcdStorage `json:"etcd,omitempty"`
+
+	// MySQLStorage is the specification for MySQL storage for meta.
+	// +optional
+	MySQLStorage *MySQLStorage `json:"mysql,omitempty"`
+
+	// PostgreSQLStorage is the specification for PostgreSQL storage for meta.
+	// +optional
+	PostgreSQLStorage *PostgreSQLStorage `json:"postgresql,omitempty"`
+}
+
+func (in *BackendStorage) backendStorageCount() int {
+	count := 0
+	if in.EtcdStorage != nil {
+		count++
+	}
+	if in.MySQLStorage != nil {
+		count++
+	}
+	if in.PostgreSQLStorage != nil {
+		count++
+	}
+	return count
+}
+
+func (in *BackendStorage) GetEtcdStorage() *EtcdStorage {
+	if in != nil {
+		return in.EtcdStorage
+	}
+	return nil
+}
+
+func (in *BackendStorage) GetMySQLStorage() *MySQLStorage {
+	if in != nil {
+		return in.MySQLStorage
+	}
+	return nil
+}
+
+func (in *BackendStorage) GetPostgreSQLStorage() *PostgreSQLStorage {
+	if in != nil {
+		return in.PostgreSQLStorage
+	}
+	return nil
+}
+
+// EtcdStorage is the specification for etcd storage for meta.
+type EtcdStorage struct {
+	// The endpoints of the etcd cluster.
+	// +required
+	Endpoints []string `json:"endpoints"`
+
+	// EnableCheckEtcdService indicates whether to check etcd cluster health when starting meta.
+	// +optional
+	EnableCheckEtcdService bool `json:"enableCheckEtcdService,omitempty"`
+
+	// StoreKeyPrefix is the prefix of the key in the etcd. We can use it to isolate the data of different clusters.
+	// +optional
+	StoreKeyPrefix string `json:"storeKeyPrefix,omitempty"`
+}
+
+func (in *EtcdStorage) GetEndpoints() []string {
+	if in != nil {
+		return in.Endpoints
+	}
+	return nil
+}
+
+func (in *EtcdStorage) IsEnableCheckEtcdService() bool {
+	return in != nil && in.EnableCheckEtcdService
+}
+
+func (in *EtcdStorage) GetStoreKeyPrefix() string {
+	if in != nil {
+		return in.StoreKeyPrefix
+	}
+	return ""
+}
+
+// MySQLStorage is the specification for MySQL storage for meta.
+type MySQLStorage struct {
+	// Host is the host of the MySQL database.
+	// +required
+	Host string `json:"host"`
+
+	// Port is the port of the MySQL database.
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=65535
+	Port int32 `json:"port"`
+
+	// CredentialsSecretName is the name of the secret that contains the credentials for the MySQL database.
+	// The secret must be in the same namespace with the greptime resource.
+	// The secret must contain keys named `username` and `password`.
+	// +required
+	CredentialsSecretName string `json:"credentialsSecretName"`
+
+	// Database is the name of the MySQL database.
+	// +optional
+	Database string `json:"database,omitempty"`
+
+	// Table is the name of the MySQL table.
+	// +optional
+	Table string `json:"table,omitempty"`
+}
+
+func (in *MySQLStorage) GetCredentialsSecretName() string {
+	if in != nil {
+		return in.CredentialsSecretName
+	}
+	return ""
+}
+
+// PostgreSQLStorage is the specification for PostgreSQL storage for meta.
+type PostgreSQLStorage struct {
+	// Host is the host of the PostgreSQL database.
+	// +required
+	Host string `json:"host"`
+
+	// Port is the port of the PostgreSQL database.
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=65535
+	Port int32 `json:"port"`
+
+	// CredentialsSecretName is the name of the secret that contains the credentials for the MySQL database.
+	// The secret must be in the same namespace with the greptime resource.
+	// The secret must contain keys named `username` and `password`.
+	// +required
+	CredentialsSecretName string `json:"credentialsSecretName"`
+
+	// Database is the name of the MySQL database.
+	// +optional
+	Database string `json:"database,omitempty"`
+
+	// Table is the name of the MySQL table.
+	// +optional
+	Table string `json:"table,omitempty"`
+}
+
+func (in *PostgreSQLStorage) GetCredentialsSecretName() string {
+	if in != nil {
+		return in.CredentialsSecretName
+	}
 	return ""
 }
 
@@ -174,6 +337,10 @@ type FrontendSpec struct {
 	// RollingUpdate is the rolling update configuration. We always use `RollingUpdate` strategyt.
 	// +optional
 	RollingUpdate *appsv1.RollingUpdateDeployment `json:"rollingUpdate,omitempty"`
+
+	// SlowQuery is the slow query configuration.
+	// +optional
+	SlowQuery *SlowQuery `json:"slowQuery,omitempty"`
 }
 
 var _ RoleSpec = &FrontendSpec{}
@@ -221,6 +388,13 @@ func (in *FrontendSpec) GetName() string {
 func (in *FrontendSpec) GetLogging() *LoggingSpec {
 	if in != nil {
 		return in.Logging
+	}
+	return nil
+}
+
+func (in *FrontendSpec) GetSlowQuery() *SlowQuery {
+	if in != nil {
+		return in.SlowQuery
 	}
 	return nil
 }

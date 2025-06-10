@@ -24,6 +24,7 @@ const (
 	defaultAPIServerPort           = 8081
 	defaultAdmissionWebhookPort    = 8082
 	defaultAdmissionWebhookCertDir = "/etc/webhook-tls"
+	defaultProfilingPort           = 8083
 )
 
 type Options struct {
@@ -36,6 +37,8 @@ type Options struct {
 	EnableAdmissionWebhook  bool
 	AdmissionWebhookPort    int
 	AdmissionWebhookCertDir string
+	EnableProfiling         bool
+	ProfilingPort           int32
 }
 
 func NewDefaultOptions() *Options {
@@ -49,6 +52,8 @@ func NewDefaultOptions() *Options {
 		EnableAdmissionWebhook:  false,
 		AdmissionWebhookPort:    defaultAdmissionWebhookPort,
 		AdmissionWebhookCertDir: defaultAdmissionWebhookCertDir,
+		EnableProfiling:         false,
+		ProfilingPort:           defaultProfilingPort,
 	}
 }
 
@@ -62,4 +67,6 @@ func (o *Options) AddFlags(fs *pflag.FlagSet) {
 	fs.BoolVar(&o.EnableAdmissionWebhook, "enable-admission-webhook", o.EnableAdmissionWebhook, "Enable admission webhook for GreptimeDB operator.")
 	fs.IntVar(&o.AdmissionWebhookPort, "admission-webhook-port", o.AdmissionWebhookPort, "The port the admission webhook binds to.")
 	fs.StringVar(&o.AdmissionWebhookCertDir, "admission-webhook-cert-dir", o.AdmissionWebhookCertDir, "The directory that contains the server key and certificate.")
+	fs.BoolVar(&o.EnableProfiling, "enable-profiling", o.EnableProfiling, "Enable pprof performance profiling (exposes /debug/pprof endpoints).")
+	fs.Int32Var(&o.ProfilingPort, "profiling-port", o.ProfilingPort, "The port that pprof profiling HTTP server binds to (e.g., for accessing /debug/pprof).")
 }

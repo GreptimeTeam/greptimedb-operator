@@ -3087,19 +3087,6 @@ spec:
                     type: boolean
                   persistentWithData:
                     type: boolean
-                  slowQuery:
-                    properties:
-                      enabled:
-                        type: boolean
-                      sampleRatio:
-                        pattern: ^(0?\.\d+|1(\.0+)?)$
-                        type: string
-                      threshold:
-                        pattern: ^([0-9]+(\.[0-9]+)?(ns|us|µs|ms|s|m|h))+$
-                        type: string
-                    required:
-                    - enabled
-                    type: object
                 type: object
               mysqlPort:
                 format: int32
@@ -3252,6 +3239,22 @@ spec:
                   loadBalancerClass:
                     type: string
                   type:
+                    type: string
+                type: object
+              slowQuery:
+                properties:
+                  enabled:
+                    type: boolean
+                  recordType:
+                    type: string
+                  sampleRatio:
+                    pattern: ^(0?\.\d+|1(\.0+)?)$
+                    type: string
+                  threshold:
+                    pattern: ^([0-9]+(\.[0-9]+)?(ns|us|µs|ms|s|m|h))+$
+                    type: string
+                  ttl:
+                    pattern: ^([0-9]+(\.[0-9]+)?(ns|us|µs|ms|s|m|h|d))+$
                     type: string
                 type: object
               tls:

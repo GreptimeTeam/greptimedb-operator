@@ -12,8 +12,10 @@ spec:
   frontendGroups: # This is an error because must configure frontend with a name.
   - replicas: 1
   meta:
-    etcdEndpoints:
-      - etcd.etcd-cluster.svc.cluster.local:2379
+    backendStorage:
+      etcd:
+        endpoints:
+          - etcd.etcd-cluster.svc.cluster.local:2379
     replicas: 1
   datanode:
     replicas: 3

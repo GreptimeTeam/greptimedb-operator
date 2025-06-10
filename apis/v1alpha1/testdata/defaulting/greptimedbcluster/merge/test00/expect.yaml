@@ -62,6 +62,12 @@ spec:
     rollingUpdate:
       maxUnavailable: 1
       maxSurge: 2
+    slowQuery:
+      enabled: true
+      recordType: system_table
+      sampleRatio: "1.0"
+      threshold: 30s
+      ttl: 30d
     template:
       main:
         image: greptime/greptimedb:test
@@ -91,8 +97,10 @@ spec:
             cpu: 100m
             memory: 128Mi
   meta:
-    etcdEndpoints:
-      - etcd.etcd-cluster.svc.cluster.local:2379
+    backendStorage:
+      etcd:
+        endpoints:
+          - etcd.etcd-cluster.svc.cluster.local:2379
     enableRegionFailover: false
     httpPort: 4000
     rpcPort: 3002

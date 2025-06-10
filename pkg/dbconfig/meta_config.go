@@ -20,6 +20,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
+	k8sutil "github.com/GreptimeTeam/greptimedb-operator/pkg/util/k8s"
 )
 
 var _ Config = &MetaConfig{}
@@ -31,6 +32,15 @@ type MetaConfig struct {
 
 	// If it's not empty, the meta will store all data with this key prefix.
 	StoreKeyPrefix *string `tomlmapping:"store_key_prefix"`
+
+	// The store addrs.
+	StoreAddrs []string `tomlmapping:"store_addrs"`
+
+	// The meta table name.
+	MetaTableName *string `tomlmapping:"meta_table_name"`
+
+	// The backend storage type.
+	Backend *string `tomlmapping:"backend"`
 
 	// The wal provider.
 	WalProvider *string `tomlmapping:"wal.provider"`
@@ -58,10 +68,9 @@ func (c *MetaConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster, rol
 
 	c.EnableRegionFailover = ptr.To(metaSpec.IsEnableRegionFailover())
 
-	if prefix := metaSpec.GetStoreKeyPrefix(); prefix != "" {
-		c.StoreKeyPrefix = ptr.To(prefix)
+	if err := c.configureBackendStorage(metaSpec, cluster.GetNamespace()); err != nil {
+		return err
 	}
-
 	if cfg := metaSpec.GetConfig(); cfg != "" {
 		if err := c.SetInputConfig(cfg); err != nil {
 			return err
@@ -97,4 +106,78 @@ func (c *MetaConfig) GetInputConfig() string {
 func (c *MetaConfig) SetInputConfig(inputConfig string) error {
 	c.InputConfig = inputConfig
 	return nil
+}
+
+func (c *MetaConfig) configureBackendStorage(spec *v1alpha1.MetaSpec, namespace string) error {
+	if etcd := spec.GetBackendStorage().GetEtcdStorage(); etcd != nil {
+		c.Backend = ptr.To("etcd_store")
+		c.StoreAddrs = etcd.GetEndpoints()
+		if prefix := etcd.GetStoreKeyPrefix(); prefix != "" {
+			c.StoreKeyPrefix = ptr.To(prefix)
+		}
+	}
+
+	if mysql := spec.GetBackendStorage().GetMySQLStorage(); mysql != nil {
+		c.Backend = ptr.To("mysql_store")
+		conn, err := c.generateMySQLConnectionString(mysql, namespace)
+		if err != nil {
+			return err
+		}
+		c.StoreAddrs = []string{conn}
+		c.MetaTableName = ptr.To(mysql.Table)
+	}
+
+	if postgresql := spec.GetBackendStorage().GetPostgreSQLStorage(); postgresql != nil {
+		c.Backend = ptr.To("postgres_store")
+		conn, err := c.generatePostgreSQLConnectionString(postgresql, namespace)
+		if err != nil {
+			return err
+		}
+		c.StoreAddrs = []string{conn}
+	}
+
+	// Compatibility with the old api version.
+	if len(spec.EtcdEndpoints) > 0 {
+		c.Backend = ptr.To("etcd_store")
+		c.StoreAddrs = spec.EtcdEndpoints
+		if prefix := spec.GetStoreKeyPrefix(); prefix != "" {
+			c.StoreKeyPrefix = ptr.To(prefix)
+		}
+	}
+
+	return nil
+}
+
+// generateMySQLConnectionString generates the connection string for the MySQL database.
+// For example, the connection string looks like:
+//
+//	mysql://root:greptimedb-meta@mysql.default.svc.cluster.local:3306/metasrv
+func (c *MetaConfig) generateMySQLConnectionString(mysql *v1alpha1.MySQLStorage, namespace string) (string, error) {
+	data, err := k8sutil.GetSecretsData(namespace, mysql.CredentialsSecretName, []string{v1alpha1.MetaDatabaseUsernameKey, v1alpha1.MetaDatabasePasswordKey})
+	if err != nil {
+		return "", err
+	}
+	username := string(data[0])
+	password := string(data[1])
+
+	conn := fmt.Sprintf("mysql://%s:%s@%s:%d/%s", username, password, mysql.Host, mysql.Port, mysql.Database)
+
+	return conn, nil
+}
+
+// generatePostgreSQLConnectionString generates the connection string for the PostgreSQL database.
+// For example, the connection string looks like:
+//
+//	postgres://root:greptimedb-meta@postgresql.default.svc.cluster.local:5432/metasrv
+func (c *MetaConfig) generatePostgreSQLConnectionString(postgresql *v1alpha1.PostgreSQLStorage, namespace string) (string, error) {
+	data, err := k8sutil.GetSecretsData(namespace, postgresql.CredentialsSecretName, []string{v1alpha1.MetaDatabaseUsernameKey, v1alpha1.MetaDatabasePasswordKey})
+	if err != nil {
+		return "", err
+	}
+	username := string(data[0])
+	password := string(data[1])
+
+	conn := fmt.Sprintf("postgres://%s:%s@%s:%d/%s", username, password, postgresql.Host, postgresql.Port, postgresql.Database)
+
+	return conn, nil
 }
