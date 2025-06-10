@@ -18,6 +18,7 @@ spec:
         host: pg-postgresql.postgresql.svc.cluster.local
         port: 5432
         credentialsSecretName: postgresql-credentials
+        electionLockID: 1
         database: metasrv
         table: greptime_metakv
   datanode:

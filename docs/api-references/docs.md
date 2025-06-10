@@ -915,6 +915,7 @@ _Appears in:_
 | `credentialsSecretName` _string_ | CredentialsSecretName is the name of the secret that contains the credentials for the MySQL database.<br />The secret must be in the same namespace with the greptime resource.<br />The secret must contain keys named `username` and `password`. |  |  |
 | `database` _string_ | Database is the name of the PostgreSQL database. |  |  |
 | `table` _string_ | Table is the name of the PostgreSQL table. |  |  |
+| `electionLockID` _integer_ | ElectionLockID it the lock id in PostgreSQL for election. |  |  |
 
 
 #### PrometheusMonitorSpec

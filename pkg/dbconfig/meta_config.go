@@ -39,6 +39,9 @@ type MetaConfig struct {
 	// The meta table name.
 	MetaTableName *string `tomlmapping:"meta_table_name"`
 
+	// The meta election lock id.
+	MetaElectionLockID *uint64 `tomlmapping:"meta_election_lock_id"`
+
 	// The backend storage type.
 	Backend *string `tomlmapping:"backend"`
 
@@ -140,6 +143,7 @@ func (c *MetaConfig) configureBackendStorage(spec *v1alpha1.MetaSpec, namespace 
 		}
 		c.StoreAddrs = []string{conn}
 		c.MetaTableName = ptr.To(postgresql.Table)
+		c.MetaElectionLockID = ptr.To(postgresql.ElectionLockID)
 	}
 
 	// Compatibility with the old api version.
