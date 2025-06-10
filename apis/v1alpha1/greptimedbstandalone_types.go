@@ -114,7 +114,7 @@ type GreptimeDBStandaloneStatus struct {
 
 	// ObservedGeneration is the most recent generation observed for this GreptimeDBStandalone.
 	// +optional
-	ObservedGeneration *int64 `json:"observedGeneration,omitempty"`
+	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 }
 
 // +genclient
