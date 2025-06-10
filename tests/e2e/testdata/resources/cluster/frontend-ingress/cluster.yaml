@@ -5,10 +5,10 @@ metadata:
   namespace: default
 spec:
   initializer:
-    image: greptime-registry.cn-hangzhou.cr.aliyuncs.com/greptime/greptimedb-initializer:latest
+    image: localhost:5001/greptime/greptimedb-initializer:latest
   base:
     main:
-      image: greptime-registry.cn-hangzhou.cr.aliyuncs.com/greptime/greptimedb:latest
+      image: localhost:5001/greptime/greptimedb:latest
   frontend:
     replicas: 1
   meta:

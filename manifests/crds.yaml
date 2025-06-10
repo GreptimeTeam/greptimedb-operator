@@ -22064,6 +22064,8 @@ spec:
                     items:
                       type: string
                     type: array
+                  maintenanceMode:
+                    type: boolean
                   readyReplicas:
                     format: int32
                     type: integer
@@ -22071,6 +22073,7 @@ spec:
                     format: int32
                     type: integer
                 required:
+                - maintenanceMode
                 - readyReplicas
                 - replicas
                 type: object

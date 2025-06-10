@@ -78,7 +78,7 @@ func Setup(mgr ctrl.Manager, o *options.Options) error {
 	// sync will execute the sync logic of multiple deployers in order.
 	reconciler.Deployers = []deployer.Deployer{
 		deployers.NewMonitoringDeployer(mgr),
-		deployers.NewMetaDeployer(mgr),
+		deployers.NewMetaDeployer(mgr, deployers.WithMaintenanceModeWhenCreateCluster(true)),
 		deployers.NewDatanodeDeployer(mgr),
 		deployers.NewFrontendDeployer(mgr),
 		deployers.NewFlownodeDeployer(mgr),
@@ -232,6 +232,15 @@ func (r *Reconciler) sync(ctx context.Context, cluster *v1alpha1.GreptimeDBClust
 	if cluster.Status.ClusterPhase == v1alpha1.PhaseStarting ||
 		cluster.Status.ClusterPhase == v1alpha1.PhaseUpdating {
 		cluster.Status.SetCondition(*v1alpha1.NewCondition(v1alpha1.ConditionTypeReady, corev1.ConditionTrue, "ClusterReady", "the cluster is ready"))
+
+		// Turn off maintenance mode for metasrv.
+		if cluster.Status.Meta.MaintenanceMode {
+			if err := common.SetMaintenanceMode(common.GetMetaHTTPServiceURL(cluster), false); err != nil {
+				return ctrl.Result{}, err
+			}
+			cluster.Status.Meta.MaintenanceMode = false
+		}
+
 		if err := r.updateClusterStatus(ctx, cluster, v1alpha1.PhaseRunning); err != nil {
 			return ctrl.Result{}, err
 		}
