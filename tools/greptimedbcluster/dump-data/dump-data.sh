@@ -69,7 +69,7 @@ check_prerequisites() {
     echo -e "${GREEN}=> Check prerequisites...${RESET}"
 
     # Check if kubectl is available
-    if command -v kubectls &> /dev/null; then
+    if command -v kubectl &> /dev/null; then
         KUBECTL="kubectl"
     # Check if docker is available
     elif command -v docker &> /dev/null; then
