@@ -318,7 +318,7 @@ func SetMaintenanceMode(metaHTTPServiceURL string, enabled bool) error {
 	requestURL := fmt.Sprintf("%s/admin/maintenance?enable=%v", metaHTTPServiceURL, enabled)
 
 	operation := func() error {
-		rsp, err := http.Get(requestURL)
+		rsp, err := http.Post(requestURL, "", nil)
 		if err != nil {
 			return err
 		}
