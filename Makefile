@@ -159,7 +159,7 @@ initializer: ## Build greptimedb-initializer binary.
 
 .PHONY: run
 run: manifests generate fmt vet ## Run a controller from your host.
-	GO111MODULE=on CGO_ENABLED=0 go run -ldflags '${LDFLAGS}' ./cmd/operator/main.go --enable-leader-election=false
+	GO111MODULE=on CGO_ENABLED=0 go run -ldflags '${LDFLAGS}' ./cmd/operator/main.go
 
 .PHONY: docker-build-operator
 docker-build-operator: ## Build docker image with the greptimedb-operator.
