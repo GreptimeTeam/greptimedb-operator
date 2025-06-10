@@ -78,7 +78,7 @@ func Setup(mgr ctrl.Manager, o *options.Options) error {
 	// sync will execute the sync logic of multiple deployers in order.
 	reconciler.Deployers = []deployer.Deployer{
 		deployers.NewMonitoringDeployer(mgr),
-		deployers.NewMetaDeployer(mgr),
+		deployers.NewMetaDeployer(mgr, deployers.WithMaintenanceModeWhenCreateCluster(true)),
 		deployers.NewDatanodeDeployer(mgr),
 		deployers.NewFrontendDeployer(mgr),
 		deployers.NewFlownodeDeployer(mgr),
@@ -137,7 +137,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	}()
 
 	// The object is being deleted.
-	if !cluster.ObjectMeta.DeletionTimestamp.IsZero() {
+	if !cluster.DeletionTimestamp.IsZero() {
 		return r.delete(ctx, cluster)
 	}
 
@@ -232,6 +232,15 @@ func (r *Reconciler) sync(ctx context.Context, cluster *v1alpha1.GreptimeDBClust
 	if cluster.Status.ClusterPhase == v1alpha1.PhaseStarting ||
 		cluster.Status.ClusterPhase == v1alpha1.PhaseUpdating {
 		cluster.Status.SetCondition(*v1alpha1.NewCondition(v1alpha1.ConditionTypeReady, corev1.ConditionTrue, "ClusterReady", "the cluster is ready"))
+
+		// Turn off maintenance mode for metasrv.
+		if cluster.Status.Meta.MaintenanceMode {
+			if err := common.SetMaintenanceMode(common.GetMetaHTTPServiceURL(cluster), false); err != nil {
+				return ctrl.Result{}, err
+			}
+			cluster.Status.Meta.MaintenanceMode = false
+		}
+
 		if err := r.updateClusterStatus(ctx, cluster, v1alpha1.PhaseRunning); err != nil {
 			return ctrl.Result{}, err
 		}
@@ -324,12 +333,7 @@ func (r *Reconciler) recordNormalEventByPhase(cluster *v1alpha1.GreptimeDBCluste
 }
 
 func (r *Reconciler) setObservedGeneration(cluster *v1alpha1.GreptimeDBCluster) {
-	generation := cluster.Generation
-	if cluster.Status.ObservedGeneration == nil {
-		cluster.Status.ObservedGeneration = &generation
-	} else if *cluster.Status.ObservedGeneration != generation {
-		cluster.Status.ObservedGeneration = &generation
-	}
+	cluster.Status.ObservedGeneration = cluster.Generation
 }
 
 func (r *Reconciler) removeMonitoringDB(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster) error {

@@ -104,7 +104,7 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 	}()
 
 	// The object is being deleted.
-	if !standalone.ObjectMeta.DeletionTimestamp.IsZero() {
+	if !standalone.DeletionTimestamp.IsZero() {
 		return r.delete(ctx, standalone)
 	}
 
@@ -264,12 +264,7 @@ func (r *Reconciler) recordNormalEventByPhase(standalone *v1alpha1.GreptimeDBSta
 }
 
 func (r *Reconciler) setObservedGeneration(standalone *v1alpha1.GreptimeDBStandalone) {
-	generation := standalone.Generation
-	if standalone.Status.ObservedGeneration == nil {
-		standalone.Status.ObservedGeneration = &generation
-	} else if *standalone.Status.ObservedGeneration != generation {
-		standalone.Status.ObservedGeneration = &generation
-	}
+	standalone.Status.ObservedGeneration = standalone.Generation
 }
 
 func UpdateStatus(ctx context.Context, input *v1alpha1.GreptimeDBStandalone, kc client.Client, opts ...client.SubResourceUpdateOption) error {

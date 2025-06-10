@@ -5,16 +5,18 @@ metadata:
   namespace: default
 spec:
   initializer:
-    image: greptime-registry.cn-hangzhou.cr.aliyuncs.com/greptime/greptimedb-initializer:latest
+    image: localhost:5001/greptime/greptimedb-initializer:latest
   base:
     main:
-      image: greptime-registry.cn-hangzhou.cr.aliyuncs.com/greptime/greptimedb:latest
+      image: localhost:5001/greptime/greptimedb:latest
   frontend:
     replicas: 1
   meta:
     replicas: 1
-    etcdEndpoints:
-      - "etcd.etcd-cluster.svc.cluster.local:2379"
+    backendStorage:
+      etcd:
+        endpoints:
+          - "etcd.etcd-cluster.svc.cluster.local:2379"
   datanode:
     replicas: 1
   ingress:

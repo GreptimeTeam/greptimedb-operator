@@ -139,6 +139,7 @@ func (c *MetaConfig) configureBackendStorage(spec *v1alpha1.MetaSpec, namespace 
 			return err
 		}
 		c.StoreAddrs = []string{conn}
+		c.MetaTableName = ptr.To(postgresql.Table)
 	}
 
 	// Compatibility with the old api version.

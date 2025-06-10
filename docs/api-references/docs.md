@@ -736,6 +736,7 @@ _Appears in:_
 | `replicas` _integer_ | Replicas is the number of replicas of the meta. |  |  |
 | `readyReplicas` _integer_ | ReadyReplicas is the number of ready replicas of the meta. |  |  |
 | `etcdEndpoints` _string array_ | EtcdEndpoints is the endpoints of the etcd cluster. |  |  |
+| `maintenanceMode` _boolean_ | MaintenanceMode is the maintenance mode of the meta. |  |  |
 
 
 #### MonitoringSpec
@@ -912,8 +913,8 @@ _Appears in:_
 | `host` _string_ | Host is the host of the PostgreSQL database. |  |  |
 | `port` _integer_ | Port is the port of the PostgreSQL database. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
 | `credentialsSecretName` _string_ | CredentialsSecretName is the name of the secret that contains the credentials for the MySQL database.<br />The secret must be in the same namespace with the greptime resource.<br />The secret must contain keys named `username` and `password`. |  |  |
-| `database` _string_ | Database is the name of the MySQL database. |  |  |
-| `table` _string_ | Table is the name of the MySQL table. |  |  |
+| `database` _string_ | Database is the name of the PostgreSQL database. |  |  |
+| `table` _string_ | Table is the name of the PostgreSQL table. |  |  |
 
 
 #### PrometheusMonitorSpec

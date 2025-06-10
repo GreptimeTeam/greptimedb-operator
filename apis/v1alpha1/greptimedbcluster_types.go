@@ -235,11 +235,11 @@ type PostgreSQLStorage struct {
 	// +required
 	CredentialsSecretName string `json:"credentialsSecretName"`
 
-	// Database is the name of the MySQL database.
+	// Database is the name of the PostgreSQL database.
 	// +optional
 	Database string `json:"database,omitempty"`
 
-	// Table is the name of the MySQL table.
+	// Table is the name of the PostgreSQL table.
 	// +optional
 	Table string `json:"table,omitempty"`
 }
@@ -856,7 +856,7 @@ type GreptimeDBClusterStatus struct {
 
 	// ObservedGeneration is the last observed generation.
 	// +optional
-	ObservedGeneration *int64 `json:"observedGeneration,omitempty"`
+	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 }
 
 // FrontendStatus is the status of frontend node.
@@ -879,6 +879,9 @@ type MetaStatus struct {
 	// EtcdEndpoints is the endpoints of the etcd cluster.
 	// +optional
 	EtcdEndpoints []string `json:"etcdEndpoints,omitempty"`
+
+	// MaintenanceMode is the maintenance mode of the meta.
+	MaintenanceMode bool `json:"maintenanceMode"`
 }
 
 // DatanodeStatus is the status of datanode node.

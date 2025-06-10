@@ -17,7 +17,6 @@ package deployers
 import (
 	"context"
 	"fmt"
-	"net/http"
 	"path"
 	"reflect"
 
@@ -149,7 +148,7 @@ func (d *DatanodeDeployer) Apply(ctx context.Context, crdObject client.Object, o
 						return err
 					}
 				}
-				if err := d.Client.Patch(ctx, newObject, client.MergeFrom(oldObject)); err != nil {
+				if err := d.Patch(ctx, newObject, client.MergeFrom(oldObject)); err != nil {
 					return err
 				}
 				updateObject = true
@@ -233,7 +232,8 @@ func (d *DatanodeDeployer) turnOnMaintenanceMode(ctx context.Context, newSts *ap
 
 	if !d.maintenanceMode && d.isOldPodRestart(*newSts, *oldSts) {
 		klog.Infof("Turn on maintenance mode for datanode, statefulset: %s", newSts.Name)
-		if err := d.requestMetasrvForMaintenance(cluster, true); err != nil {
+		// FIXME(zyy17): Should record the maintenance mode in the status.
+		if err := common.SetMaintenanceMode(common.GetMetaHTTPServiceURL(cluster), true); err != nil {
 			return err
 		}
 		d.maintenanceMode = true
@@ -250,26 +250,13 @@ func (d *DatanodeDeployer) turnOffMaintenanceMode(ctx context.Context, crdObject
 
 	if d.maintenanceMode && d.shouldUseMaintenanceMode(cluster) {
 		klog.Infof("Turn off maintenance mode for datanode, cluster: %s", cluster.Name)
-		if err := d.requestMetasrvForMaintenance(cluster, false); err != nil {
+		// FIXME(zyy17): Should record the maintenance mode in the status.
+		if err := common.SetMaintenanceMode(common.GetMetaHTTPServiceURL(cluster), false); err != nil {
 			return err
 		}
 		d.maintenanceMode = false
 	}
 
-	return nil
-}
-
-func (d *DatanodeDeployer) requestMetasrvForMaintenance(cluster *v1alpha1.GreptimeDBCluster, enabled bool) error {
-	requestURL := fmt.Sprintf("http://%s.%s:%d/admin/maintenance?enable=%v", common.ResourceName(cluster.GetName(), v1alpha1.MetaRoleKind), cluster.GetNamespace(), cluster.Spec.Meta.RPCPort, enabled)
-	rsp, err := http.Get(requestURL)
-	if err != nil {
-		return err
-	}
-	defer rsp.Body.Close()
-
-	if rsp.StatusCode != http.StatusOK {
-		return fmt.Errorf("failed to turn off maintenance mode for datanode, status code: %d", rsp.StatusCode)
-	}
 	return nil
 }
 

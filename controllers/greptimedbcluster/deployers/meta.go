@@ -50,6 +50,9 @@ type MetaDeployer struct {
 	*CommonDeployer
 
 	etcdMaintenanceBuilder func(etcdEndpoints []string) (clientv3.Maintenance, error)
+
+	// If true, the meta will be in maintenance mode when creating cluster.
+	maintenanceModeWhenCreateCluster bool
 }
 
 type MetaDeployerOption func(*MetaDeployer)
@@ -72,6 +75,12 @@ func NewMetaDeployer(mgr ctrl.Manager, opts ...MetaDeployerOption) *MetaDeployer
 func WithEtcdMaintenanceBuilder(builder EtcdMaintenanceBuilder) func(*MetaDeployer) {
 	return func(d *MetaDeployer) {
 		d.etcdMaintenanceBuilder = builder
+	}
+}
+
+func WithMaintenanceModeWhenCreateCluster(maintenanceModeWhenCreateCluster bool) func(*MetaDeployer) {
+	return func(d *MetaDeployer) {
+		d.maintenanceModeWhenCreateCluster = maintenanceModeWhenCreateCluster
 	}
 }
 
@@ -129,11 +138,28 @@ func (d *MetaDeployer) CheckAndUpdateStatus(ctx context.Context, highLevelObject
 	cluster.Status.Meta.Replicas = *deployment.Spec.Replicas
 	cluster.Status.Meta.ReadyReplicas = deployment.Status.ReadyReplicas
 	cluster.Status.Meta.EtcdEndpoints = cluster.Spec.Meta.EtcdEndpoints
+
+	ready := k8sutil.IsDeploymentReady(deployment)
+
+	// It should meet the following conditions to turn on maintenance mode:
+	// 1. The cluster is in starting phase that means the cluster is in the process of being created.
+	// 2. The meta deployment is ready and the maintenance mode is not enabled.
+	// 3. The `maintenanceModeWhenCreateCluster` is true in meta deployer options.
+	if d.maintenanceModeWhenCreateCluster &&
+		cluster.Status.ClusterPhase == v1alpha1.PhaseStarting &&
+		ready && !cluster.Status.Meta.MaintenanceMode {
+		// Turn on maintenance mode for metasrv.
+		if err := common.SetMaintenanceMode(common.GetMetaHTTPServiceURL(cluster), true); err != nil {
+			return false, err
+		}
+		cluster.Status.Meta.MaintenanceMode = true
+	}
+
 	if err := UpdateStatus(ctx, cluster, d.Client); err != nil {
 		klog.Errorf("Failed to update status: %s", err)
 	}
 
-	return k8sutil.IsDeploymentReady(deployment), nil
+	return ready, nil
 }
 
 func (d *MetaDeployer) checkEtcdService(ctx context.Context, crdObject client.Object) error {
@@ -344,7 +370,7 @@ func (b *metaBuilder) generatePodTemplateSpec() *corev1.PodTemplateSpec {
 		b.AddVectorSidecar(podTemplateSpec, v1alpha1.MetaRoleKind)
 	}
 
-	podTemplateSpec.ObjectMeta.Labels = util.MergeStringMap(podTemplateSpec.ObjectMeta.Labels, map[string]string{
+	podTemplateSpec.Labels = util.MergeStringMap(podTemplateSpec.Labels, map[string]string{
 		constant.GreptimeDBComponentName: common.ResourceName(b.Cluster.Name, b.RoleKind),
 	})
 
