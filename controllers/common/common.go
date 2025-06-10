@@ -318,14 +318,14 @@ func SetMaintenanceMode(metaHTTPServiceURL string, enabled bool) error {
 	requestURL := fmt.Sprintf("%s/admin/maintenance?enable=%v", metaHTTPServiceURL, enabled)
 
 	operation := func() error {
-		rsp, err := http.Post(requestURL, "", nil)
+		rsp, err := http.Get(requestURL)
 		if err != nil {
 			return err
 		}
 		defer rsp.Body.Close()
 
 		if rsp.StatusCode != http.StatusOK {
-			return fmt.Errorf("failed to request metasrv '%s' for set maintenance mode '%v', status code: %d", metaHTTPServiceURL, enabled, rsp.StatusCode)
+			return fmt.Errorf("failed to request metasrv '%s' for set maintenance mode '%v', status code: %d", requestURL, enabled, rsp.StatusCode)
 		}
 
 		return nil
