@@ -15442,6 +15442,9 @@ spec:
                             type: string
                           database:
                             type: string
+                          electionLockID:
+                            format: int64
+                            type: integer
                           host:
                             type: string
                           port:

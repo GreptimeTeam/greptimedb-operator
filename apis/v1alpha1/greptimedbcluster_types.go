@@ -242,6 +242,9 @@ type PostgreSQLStorage struct {
 	// Table is the name of the PostgreSQL table.
 	// +optional
 	Table string `json:"table,omitempty"`
+
+	// ElectionLockID it the lock id in PostgreSQL for election.
+	ElectionLockID uint64 `json:"electionLockID,omitempty"`
 }
 
 func (in *PostgreSQLStorage) GetCredentialsSecretName() string {
