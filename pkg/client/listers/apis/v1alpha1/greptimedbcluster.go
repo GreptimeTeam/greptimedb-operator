@@ -17,10 +17,10 @@
 package v1alpha1
 
 import (
-	v1alpha1 "github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
-	"k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/labels"
-	"k8s.io/client-go/tools/cache"
+	apisv1alpha1 "github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
+	labels "k8s.io/apimachinery/pkg/labels"
+	listers "k8s.io/client-go/listers"
+	cache "k8s.io/client-go/tools/cache"
 )
 
 // GreptimeDBClusterLister helps list GreptimeDBClusters.
@@ -28,7 +28,7 @@ import (
 type GreptimeDBClusterLister interface {
 	// List lists all GreptimeDBClusters in the indexer.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1alpha1.GreptimeDBCluster, err error)
+	List(selector labels.Selector) (ret []*apisv1alpha1.GreptimeDBCluster, err error)
 	// GreptimeDBClusters returns an object that can list and get GreptimeDBClusters.
 	GreptimeDBClusters(namespace string) GreptimeDBClusterNamespaceLister
 	GreptimeDBClusterListerExpansion
@@ -36,25 +36,17 @@ type GreptimeDBClusterLister interface {
 
 // greptimeDBClusterLister implements the GreptimeDBClusterLister interface.
 type greptimeDBClusterLister struct {
-	indexer cache.Indexer
+	listers.ResourceIndexer[*apisv1alpha1.GreptimeDBCluster]
 }
 
 // NewGreptimeDBClusterLister returns a new GreptimeDBClusterLister.
 func NewGreptimeDBClusterLister(indexer cache.Indexer) GreptimeDBClusterLister {
-	return &greptimeDBClusterLister{indexer: indexer}
-}
-
-// List lists all GreptimeDBClusters in the indexer.
-func (s *greptimeDBClusterLister) List(selector labels.Selector) (ret []*v1alpha1.GreptimeDBCluster, err error) {
-	err = cache.ListAll(s.indexer, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha1.GreptimeDBCluster))
-	})
-	return ret, err
+	return &greptimeDBClusterLister{listers.New[*apisv1alpha1.GreptimeDBCluster](indexer, apisv1alpha1.Resource("greptimedbcluster"))}
 }
 
 // GreptimeDBClusters returns an object that can list and get GreptimeDBClusters.
 func (s *greptimeDBClusterLister) GreptimeDBClusters(namespace string) GreptimeDBClusterNamespaceLister {
-	return greptimeDBClusterNamespaceLister{indexer: s.indexer, namespace: namespace}
+	return greptimeDBClusterNamespaceLister{listers.NewNamespaced[*apisv1alpha1.GreptimeDBCluster](s.ResourceIndexer, namespace)}
 }
 
 // GreptimeDBClusterNamespaceLister helps list and get GreptimeDBClusters.
@@ -62,36 +54,15 @@ func (s *greptimeDBClusterLister) GreptimeDBClusters(namespace string) GreptimeD
 type GreptimeDBClusterNamespaceLister interface {
 	// List lists all GreptimeDBClusters in the indexer for a given namespace.
 	// Objects returned here must be treated as read-only.
-	List(selector labels.Selector) (ret []*v1alpha1.GreptimeDBCluster, err error)
+	List(selector labels.Selector) (ret []*apisv1alpha1.GreptimeDBCluster, err error)
 	// Get retrieves the GreptimeDBCluster from the indexer for a given namespace and name.
 	// Objects returned here must be treated as read-only.
-	Get(name string) (*v1alpha1.GreptimeDBCluster, error)
+	Get(name string) (*apisv1alpha1.GreptimeDBCluster, error)
 	GreptimeDBClusterNamespaceListerExpansion
 }
 
 // greptimeDBClusterNamespaceLister implements the GreptimeDBClusterNamespaceLister
 // interface.
 type greptimeDBClusterNamespaceLister struct {
-	indexer   cache.Indexer
-	namespace string
-}
-
-// List lists all GreptimeDBClusters in the indexer for a given namespace.
-func (s greptimeDBClusterNamespaceLister) List(selector labels.Selector) (ret []*v1alpha1.GreptimeDBCluster, err error) {
-	err = cache.ListAllByNamespace(s.indexer, s.namespace, selector, func(m interface{}) {
-		ret = append(ret, m.(*v1alpha1.GreptimeDBCluster))
-	})
-	return ret, err
-}
-
-// Get retrieves the GreptimeDBCluster from the indexer for a given namespace and name.
-func (s greptimeDBClusterNamespaceLister) Get(name string) (*v1alpha1.GreptimeDBCluster, error) {
-	obj, exists, err := s.indexer.GetByKey(s.namespace + "/" + name)
-	if err != nil {
-		return nil, err
-	}
-	if !exists {
-		return nil, errors.NewNotFound(v1alpha1.Resource("greptimedbcluster"), name)
-	}
-	return obj.(*v1alpha1.GreptimeDBCluster), nil
+	listers.ResourceIndexer[*apisv1alpha1.GreptimeDBCluster]
 }
