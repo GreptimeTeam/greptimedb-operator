@@ -17,6 +17,7 @@ require (
 	github.com/sergi/go-diff v1.3.1
 	github.com/spf13/cobra v1.8.1
 	github.com/spf13/pflag v1.0.5
+	github.com/spf13/pflag v1.0.5
 	go.etcd.io/etcd/client/v3 v3.5.16
 	google.golang.org/grpc v1.65.0
 	k8s.io/api v0.32.3
