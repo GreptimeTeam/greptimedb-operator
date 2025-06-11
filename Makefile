@@ -250,7 +250,7 @@ KUSTOMIZE_VERSION ?= v5.5.0
 CONTROLLER_TOOLS_VERSION ?= v0.17.2
 CRD_REF_DOCS_VERSION ?= v0.1.0
 GOLANGCI_LINT_VERSION ?= v2.1.6
-SETUP_ENVTEST_VERSION ?= v0.20.4
+SETUP_ENVTEST_VERSION ?= latest
 
 .PHONY: kustomize
 kustomize: $(KUSTOMIZE) ## Download kustomize locally if necessary.
