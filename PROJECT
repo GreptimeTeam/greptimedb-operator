@@ -4,7 +4,7 @@
 # More info: https://book.kubebuilder.io/reference/project-config.html
 domain: greptime.io
 layout:
-- go.kubebuilder.io/v4
+- go.kubebuilder.io/v3
 projectName: greptimedb-operator
 repo: github.com/GreptimeTeam/greptimedb-operator
 resources:
