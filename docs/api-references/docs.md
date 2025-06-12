@@ -644,6 +644,9 @@ _Appears in:_
 | `persistentWithData` _boolean_ | PersistentWithData indicates whether to persist the log with the datanode data storage. It **ONLY** works for the datanode component.<br />If false, the log will be stored in ephemeral storage. |  |  |
 | `onlyLogToStdout` _boolean_ | OnlyLogToStdout indicates whether to only log to stdout. If true, the log will not be stored in the storage even if the storage is configured. |  |  |
 | `format` _[LogFormat](#logformat)_ | Format is the format of the logging. |  | Enum: [json text] <br /> |
+| `enableOTLPTracing` _boolean_ | EnableOTLPTracing indicates whether to enable OTLP tracing. |  |  |
+| `otlpEndpoint` _string_ | OTLPEndpoint it the OTLP tracing endpoint. |  |  |
+| `tracingSampleRatio` _string_ | TracingSampleRatio is the percentage of tracing will be sampled and exported.<br />Valid range `[0, 1]`, 1 means all traces are sampled, 0 means all traces are not sampled, the default value is 1. |  |  |
 
 
 #### LogsCollectionSpec

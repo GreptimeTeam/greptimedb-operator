@@ -9,7 +9,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.17.2
+    controller-gen.kubebuilder.io/version: v0.14.0
   name: greptimedbclusters.greptime.io
 spec:
   group: greptime.io
@@ -284,7 +284,6 @@ spec:
                                   format: int32
                                   type: integer
                                 service:
-                                  default: ""
                                   type: string
                               required:
                               - port
@@ -389,7 +388,6 @@ spec:
                                   format: int32
                                   type: integer
                                 service:
-                                  default: ""
                                   type: string
                               required:
                               - port
@@ -575,7 +573,6 @@ spec:
                                   format: int32
                                   type: integer
                                 service:
-                                  default: ""
                                   type: string
                               required:
                               - port
@@ -1304,7 +1301,6 @@ spec:
                                   format: int32
                                   type: integer
                                 service:
-                                  default: ""
                                   type: string
                               required:
                               - port
@@ -1409,7 +1405,6 @@ spec:
                                   format: int32
                                   type: integer
                                 service:
-                                  default: ""
                                   type: string
                               required:
                               - port
@@ -1595,7 +1590,6 @@ spec:
                                   format: int32
                                   type: integer
                                 service:
-                                  default: ""
                                   type: string
                               required:
                               - port
@@ -1907,7 +1901,6 @@ spec:
                                 format: int32
                                 type: integer
                               service:
-                                default: ""
                                 type: string
                             required:
                             - port
@@ -1986,7 +1979,6 @@ spec:
                                 format: int32
                                 type: integer
                               service:
-                                default: ""
                                 type: string
                             required:
                             - port
@@ -2157,7 +2149,6 @@ spec:
                                 format: int32
                                 type: integer
                               service:
-                                default: ""
                                 type: string
                             required:
                             - port
@@ -2240,8 +2231,6 @@ spec:
                         type: array
                       workingDir:
                         type: string
-                    required:
-                    - image
                     type: object
                   nodeSelector:
                     additionalProperties:
@@ -3368,7 +3357,6 @@ spec:
                                       format: int32
                                       type: integer
                                     service:
-                                      default: ""
                                       type: string
                                   required:
                                   - port
@@ -3473,7 +3461,6 @@ spec:
                                       format: int32
                                       type: integer
                                     service:
-                                      default: ""
                                       type: string
                                   required:
                                   - port
@@ -3659,7 +3646,6 @@ spec:
                                       format: int32
                                       type: integer
                                     service:
-                                      default: ""
                                       type: string
                                   required:
                                   - port
@@ -4388,7 +4374,6 @@ spec:
                                       format: int32
                                       type: integer
                                     service:
-                                      default: ""
                                       type: string
                                   required:
                                   - port
@@ -4493,7 +4478,6 @@ spec:
                                       format: int32
                                       type: integer
                                     service:
-                                      default: ""
                                       type: string
                                   required:
                                   - port
@@ -4679,7 +4663,6 @@ spec:
                                       format: int32
                                       type: integer
                                     service:
-                                      default: ""
                                       type: string
                                   required:
                                   - port
@@ -4991,7 +4974,6 @@ spec:
                                     format: int32
                                     type: integer
                                   service:
-                                    default: ""
                                     type: string
                                 required:
                                 - port
@@ -5070,7 +5052,6 @@ spec:
                                     format: int32
                                     type: integer
                                   service:
-                                    default: ""
                                     type: string
                                 required:
                                 - port
@@ -5241,7 +5222,6 @@ spec:
                                     format: int32
                                     type: integer
                                   service:
-                                    default: ""
                                     type: string
                                 required:
                                 - port
@@ -5324,8 +5304,6 @@ spec:
                             type: array
                           workingDir:
                             type: string
-                        required:
-                        - image
                         type: object
                       nodeSelector:
                         additionalProperties:
@@ -6423,7 +6401,6 @@ spec:
                                       format: int32
                                       type: integer
                                     service:
-                                      default: ""
                                       type: string
                                   required:
                                   - port
@@ -6528,7 +6505,6 @@ spec:
                                       format: int32
                                       type: integer
                                     service:
-                                      default: ""
                                       type: string
                                   required:
                                   - port
@@ -6714,7 +6690,6 @@ spec:
                                       format: int32
                                       type: integer
                                     service:
-                                      default: ""
                                       type: string
                                   required:
                                   - port
@@ -7443,7 +7418,6 @@ spec:
                                       format: int32
                                       type: integer
                                     service:
-                                      default: ""
                                       type: string
                                   required:
                                   - port
@@ -7548,7 +7522,6 @@ spec:
                                       format: int32
                                       type: integer
                                     service:
-                                      default: ""
                                       type: string
                                   required:
                                   - port
@@ -7734,7 +7707,6 @@ spec:
                                       format: int32
                                       type: integer
                                     service:
-                                      default: ""
                                       type: string
                                   required:
                                   - port
@@ -8046,7 +8018,6 @@ spec:
                                     format: int32
                                     type: integer
                                   service:
-                                    default: ""
                                     type: string
                                 required:
                                 - port
@@ -8125,7 +8096,6 @@ spec:
                                     format: int32
                                     type: integer
                                   service:
-                                    default: ""
                                     type: string
                                 required:
                                 - port
@@ -8296,7 +8266,6 @@ spec:
                                     format: int32
                                     type: integer
                                   service:
-                                    default: ""
                                     type: string
                                 required:
                                 - port
@@ -8379,8 +8348,6 @@ spec:
                             type: array
                           workingDir:
                             type: string
-                        required:
-                        - image
                         type: object
                       nodeSelector:
                         additionalProperties:
@@ -9523,7 +9490,6 @@ spec:
                                       format: int32
                                       type: integer
                                     service:
-                                      default: ""
                                       type: string
                                   required:
                                   - port
@@ -9628,7 +9594,6 @@ spec:
                                       format: int32
                                       type: integer
                                     service:
-                                      default: ""
                                       type: string
                                   required:
                                   - port
@@ -9814,7 +9779,6 @@ spec:
                                       format: int32
                                       type: integer
                                     service:
-                                      default: ""
                                       type: string
                                   required:
                                   - port
@@ -10543,7 +10507,6 @@ spec:
                                       format: int32
                                       type: integer
                                     service:
-                                      default: ""
                                       type: string
                                   required:
                                   - port
@@ -10648,7 +10611,6 @@ spec:
                                       format: int32
                                       type: integer
                                     service:
-                                      default: ""
                                       type: string
                                   required:
                                   - port
@@ -10834,7 +10796,6 @@ spec:
                                       format: int32
                                       type: integer
                                     service:
-                                      default: ""
                                       type: string
                                   required:
                                   - port
@@ -11146,7 +11107,6 @@ spec:
                                     format: int32
                                     type: integer
                                   service:
-                                    default: ""
                                     type: string
                                 required:
                                 - port
@@ -11225,7 +11185,6 @@ spec:
                                     format: int32
                                     type: integer
                                   service:
-                                    default: ""
                                     type: string
                                 required:
                                 - port
@@ -11396,7 +11355,6 @@ spec:
                                     format: int32
                                     type: integer
                                   service:
-                                    default: ""
                                     type: string
                                 required:
                                 - port
@@ -11479,8 +11437,6 @@ spec:
                             type: array
                           workingDir:
                             type: string
-                        required:
-                        - image
                         type: object
                       nodeSelector:
                         additionalProperties:
@@ -12631,7 +12587,6 @@ spec:
                                         format: int32
                                         type: integer
                                       service:
-                                        default: ""
                                         type: string
                                     required:
                                     - port
@@ -12736,7 +12691,6 @@ spec:
                                         format: int32
                                         type: integer
                                       service:
-                                        default: ""
                                         type: string
                                     required:
                                     - port
@@ -12922,7 +12876,6 @@ spec:
                                         format: int32
                                         type: integer
                                       service:
-                                        default: ""
                                         type: string
                                     required:
                                     - port
@@ -13651,7 +13604,6 @@ spec:
                                         format: int32
                                         type: integer
                                       service:
-                                        default: ""
                                         type: string
                                     required:
                                     - port
@@ -13756,7 +13708,6 @@ spec:
                                         format: int32
                                         type: integer
                                       service:
-                                        default: ""
                                         type: string
                                     required:
                                     - port
@@ -13942,7 +13893,6 @@ spec:
                                         format: int32
                                         type: integer
                                       service:
-                                        default: ""
                                         type: string
                                     required:
                                     - port
@@ -14254,7 +14204,6 @@ spec:
                                       format: int32
                                       type: integer
                                     service:
-                                      default: ""
                                       type: string
                                   required:
                                   - port
@@ -14333,7 +14282,6 @@ spec:
                                       format: int32
                                       type: integer
                                     service:
-                                      default: ""
                                       type: string
                                   required:
                                   - port
@@ -14504,7 +14452,6 @@ spec:
                                       format: int32
                                       type: integer
                                     service:
-                                      default: ""
                                       type: string
                                   required:
                                   - port
@@ -14587,8 +14534,6 @@ spec:
                               type: array
                             workingDir:
                               type: string
-                          required:
-                          - image
                           type: object
                         nodeSelector:
                           additionalProperties:
@@ -15849,7 +15794,6 @@ spec:
                                       format: int32
                                       type: integer
                                     service:
-                                      default: ""
                                       type: string
                                   required:
                                   - port
@@ -15954,7 +15898,6 @@ spec:
                                       format: int32
                                       type: integer
                                     service:
-                                      default: ""
                                       type: string
                                   required:
                                   - port
@@ -16140,7 +16083,6 @@ spec:
                                       format: int32
                                       type: integer
                                     service:
-                                      default: ""
                                       type: string
                                   required:
                                   - port
@@ -16869,7 +16811,6 @@ spec:
                                       format: int32
                                       type: integer
                                     service:
-                                      default: ""
                                       type: string
                                   required:
                                   - port
@@ -16974,7 +16915,6 @@ spec:
                                       format: int32
                                       type: integer
                                     service:
-                                      default: ""
                                       type: string
                                   required:
                                   - port
@@ -17160,7 +17100,6 @@ spec:
                                       format: int32
                                       type: integer
                                     service:
-                                      default: ""
                                       type: string
                                   required:
                                   - port
@@ -17472,7 +17411,6 @@ spec:
                                     format: int32
                                     type: integer
                                   service:
-                                    default: ""
                                     type: string
                                 required:
                                 - port
@@ -17551,7 +17489,6 @@ spec:
                                     format: int32
                                     type: integer
                                   service:
-                                    default: ""
                                     type: string
                                 required:
                                 - port
@@ -17722,7 +17659,6 @@ spec:
                                     format: int32
                                     type: integer
                                   service:
-                                    default: ""
                                     type: string
                                 required:
                                 - port
@@ -17805,8 +17741,6 @@ spec:
                             type: array
                           workingDir:
                             type: string
-                        required:
-                        - image
                         type: object
                       nodeSelector:
                         additionalProperties:
@@ -18858,7 +18792,6 @@ spec:
                                           format: int32
                                           type: integer
                                         service:
-                                          default: ""
                                           type: string
                                       required:
                                       - port
@@ -18963,7 +18896,6 @@ spec:
                                           format: int32
                                           type: integer
                                         service:
-                                          default: ""
                                           type: string
                                       required:
                                       - port
@@ -19149,7 +19081,6 @@ spec:
                                           format: int32
                                           type: integer
                                         service:
-                                          default: ""
                                           type: string
                                       required:
                                       - port
@@ -19878,7 +19809,6 @@ spec:
                                           format: int32
                                           type: integer
                                         service:
-                                          default: ""
                                           type: string
                                       required:
                                       - port
@@ -19983,7 +19913,6 @@ spec:
                                           format: int32
                                           type: integer
                                         service:
-                                          default: ""
                                           type: string
                                       required:
                                       - port
@@ -20169,7 +20098,6 @@ spec:
                                           format: int32
                                           type: integer
                                         service:
-                                          default: ""
                                           type: string
                                       required:
                                       - port
@@ -20481,7 +20409,6 @@ spec:
                                         format: int32
                                         type: integer
                                       service:
-                                        default: ""
                                         type: string
                                     required:
                                     - port
@@ -20560,7 +20487,6 @@ spec:
                                         format: int32
                                         type: integer
                                       service:
-                                        default: ""
                                         type: string
                                     required:
                                     - port
@@ -20731,7 +20657,6 @@ spec:
                                         format: int32
                                         type: integer
                                       service:
-                                        default: ""
                                         type: string
                                     required:
                                     - port
@@ -20814,8 +20739,6 @@ spec:
                                 type: array
                               workingDir:
                                 type: string
-                            required:
-                            - image
                             type: object
                           nodeSelector:
                             additionalProperties:
@@ -22227,7 +22150,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.17.2
+    controller-gen.kubebuilder.io/version: v0.14.0
   name: greptimedbstandalones.greptime.io
 spec:
   group: greptime.io
@@ -22490,7 +22413,6 @@ spec:
                                   format: int32
                                   type: integer
                                 service:
-                                  default: ""
                                   type: string
                               required:
                               - port
@@ -22595,7 +22517,6 @@ spec:
                                   format: int32
                                   type: integer
                                 service:
-                                  default: ""
                                   type: string
                               required:
                               - port
@@ -22781,7 +22702,6 @@ spec:
                                   format: int32
                                   type: integer
                                 service:
-                                  default: ""
                                   type: string
                               required:
                               - port
@@ -23510,7 +23430,6 @@ spec:
                                   format: int32
                                   type: integer
                                 service:
-                                  default: ""
                                   type: string
                               required:
                               - port
@@ -23615,7 +23534,6 @@ spec:
                                   format: int32
                                   type: integer
                                 service:
-                                  default: ""
                                   type: string
                               required:
                               - port
@@ -23801,7 +23719,6 @@ spec:
                                   format: int32
                                   type: integer
                                 service:
-                                  default: ""
                                   type: string
                               required:
                               - port
@@ -24113,7 +24030,6 @@ spec:
                                 format: int32
                                 type: integer
                               service:
-                                default: ""
                                 type: string
                             required:
                             - port
@@ -24192,7 +24108,6 @@ spec:
                                 format: int32
                                 type: integer
                               service:
-                                default: ""
                                 type: string
                             required:
                             - port
@@ -24363,7 +24278,6 @@ spec:
                                 format: int32
                                 type: integer
                               service:
-                                default: ""
                                 type: string
                             required:
                             - port
@@ -24446,8 +24360,6 @@ spec:
                         type: array
                       workingDir:
                         type: string
-                    required:
-                    - image
                     type: object
                   nodeSelector:
                     additionalProperties:
@@ -25636,11 +25548,41 @@ metadata:
   name: greptimedb-operator-role
 rules:
 - apiGroups:
+  - apiextensions.k8s.io
+  resources:
+  - customresourcedefinitions
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - apps
+  resources:
+  - statefulsets
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
   - ""
   resources:
   - configmaps
-  - persistentvolumeclaims
-  - services
   verbs:
   - create
   - delete
@@ -25653,6 +25595,27 @@ rules:
   - ""
   resources:
   - events
+  verbs:
+  - create
+  - get
+  - list
+  - patch
+  - watch
+- apiGroups:
+  - ""
+  resources:
+  - persistentvolumeclaims
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - ""
+  resources:
   - pods
   verbs:
   - create
@@ -25670,18 +25633,9 @@ rules:
   - patch
   - watch
 - apiGroups:
-  - apiextensions.k8s.io
+  - ""
   resources:
-  - customresourcedefinitions
-  verbs:
-  - get
-  - list
-  - watch
-- apiGroups:
-  - apps
-  resources:
-  - deployments
-  - statefulsets
+  - services
   verbs:
   - create
   - delete
@@ -25694,7 +25648,6 @@ rules:
   - greptime.io
   resources:
   - greptimedbclusters
-  - greptimedbstandalones
   verbs:
   - create
   - delete
@@ -25707,13 +25660,37 @@ rules:
   - greptime.io
   resources:
   - greptimedbclusters/finalizers
-  - greptimedbstandalones/finalizers
   verbs:
   - update
 - apiGroups:
   - greptime.io
   resources:
   - greptimedbclusters/status
+  verbs:
+  - get
+  - patch
+  - update
+- apiGroups:
+  - greptime.io
+  resources:
+  - greptimedbstandalones
+  verbs:
+  - create
+  - delete
+  - get
+  - list
+  - patch
+  - update
+  - watch
+- apiGroups:
+  - greptime.io
+  resources:
+  - greptimedbstandalones/finalizers
+  verbs:
+  - update
+- apiGroups:
+  - greptime.io
+  resources:
   - greptimedbstandalones/status
   verbs:
   - get
