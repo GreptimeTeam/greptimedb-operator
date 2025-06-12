@@ -47,6 +47,10 @@ func (in *GreptimeDBCluster) Validate() error {
 		return err
 	}
 
+	if err := in.validateDatanodeGroups(); err != nil {
+		return err
+	}
+
 	if in.GetFlownode() != nil {
 		if err := in.validateFlownode(); err != nil {
 			return err
@@ -139,6 +143,20 @@ func (in *GreptimeDBCluster) validateFrontendGroups() error {
 
 		if err := validateTomlConfig(frontend.GetConfig()); err != nil {
 			return fmt.Errorf("invalid frontend toml config: '%v'", err)
+		}
+	}
+
+	return nil
+}
+
+func (in *GreptimeDBCluster) validateDatanodeGroups() error {
+	for _, datanode := range in.GetDatanodeGroups() {
+		if len(datanode.GetName()) == 0 {
+			return fmt.Errorf("the datanode group name must be specified")
+		}
+
+		if err := validateTomlConfig(datanode.GetConfig()); err != nil {
+			return fmt.Errorf("invalid datanode toml config: '%v'", err)
 		}
 	}
 
