@@ -90,7 +90,7 @@ func TestBasicStandalone(ctx context.Context, h *helper.Helper) {
 	}, helper.DefaultTimeout, time.Second).Should(HaveOccurred())
 
 	By("The PVC of the database should be retained")
-	dataPVCs, err := h.GetPVCs(ctx, testStandalone.Namespace, testStandalone.Name, greptimev1alpha1.StandaloneRoleKind, common.FileStorageTypeDatanode)
+	dataPVCs, err := h.GetPVCs(ctx, testStandalone.Namespace, common.ResourceName(testStandalone.Name, greptimev1alpha1.StandaloneRoleKind), common.FileStorageTypeDatanode)
 	Expect(err).NotTo(HaveOccurred(), "failed to get data PVCs")
 	Expect(len(dataPVCs)).To(Equal(1), "the number of datanode PVCs should be equal to 1")
 

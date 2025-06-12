@@ -97,19 +97,19 @@ func (d *StandaloneDeployer) CleanUp(ctx context.Context, crdObject client.Objec
 	}
 
 	if standalone.GetDatanodeFileStorage().GetPolicy() == v1alpha1.StorageRetainPolicyTypeDelete {
-		if err := d.deleteStorage(ctx, standalone.Namespace, standalone.Name, common.FileStorageTypeDatanode); err != nil {
+		if err := d.deleteStorage(ctx, standalone.Namespace, common.ResourceName(standalone.Name, v1alpha1.StandaloneRoleKind), common.FileStorageTypeDatanode); err != nil {
 			return err
 		}
 	}
 
 	if standalone.GetWALProvider().GetRaftEngineWAL().GetFileStorage().GetPolicy() == v1alpha1.StorageRetainPolicyTypeDelete {
-		if err := d.deleteStorage(ctx, standalone.Namespace, standalone.Name, common.FileStorageTypeWAL); err != nil {
+		if err := d.deleteStorage(ctx, standalone.Namespace, common.ResourceName(standalone.Name, v1alpha1.StandaloneRoleKind), common.FileStorageTypeWAL); err != nil {
 			return err
 		}
 	}
 
 	if standalone.GetObjectStorageProvider().GetCacheFileStorage().GetPolicy() == v1alpha1.StorageRetainPolicyTypeDelete {
-		if err := d.deleteStorage(ctx, standalone.Namespace, standalone.Name, common.FileStorageTypeCache); err != nil {
+		if err := d.deleteStorage(ctx, standalone.Namespace, common.ResourceName(standalone.Name, v1alpha1.StandaloneRoleKind), common.FileStorageTypeCache); err != nil {
 			return err
 		}
 	}
@@ -151,10 +151,10 @@ func (d *StandaloneDeployer) getStandalone(crdObject client.Object) (*v1alpha1.G
 	return standalone, nil
 }
 
-func (d *StandaloneDeployer) deleteStorage(ctx context.Context, namespace, name string, fsType common.FileStorageType) error {
+func (d *StandaloneDeployer) deleteStorage(ctx context.Context, namespace, resourceName string, fsType common.FileStorageType) error {
 	klog.Infof("Deleting standalone storage...")
 
-	claims, err := common.GetPVCs(ctx, d.Client, namespace, name, v1alpha1.StandaloneRoleKind, fsType)
+	claims, err := common.GetPVCs(ctx, d.Client, namespace, resourceName, fsType)
 	if err != nil {
 		return err
 	}

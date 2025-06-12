@@ -81,19 +81,27 @@ func (d *DatanodeDeployer) CleanUp(ctx context.Context, crdObject client.Object)
 	}
 
 	if cluster.GetDatanode().GetFileStorage().GetPolicy() == v1alpha1.StorageRetainPolicyTypeDelete {
-		if err := d.deleteStorage(ctx, cluster.Namespace, cluster.Name, common.FileStorageTypeDatanode); err != nil {
+		if err := d.deleteStorage(ctx, cluster.Namespace, common.ResourceName(cluster.Name, v1alpha1.DatanodeRoleKind), common.FileStorageTypeDatanode); err != nil {
 			return err
 		}
 	}
 
+	for _, datanodeGroup := range cluster.GetDatanodeGroups() {
+		if datanodeGroup.GetFileStorage().GetPolicy() == v1alpha1.StorageRetainPolicyTypeDelete {
+			if err := d.deleteStorage(ctx, cluster.Namespace, common.ResourceName(cluster.Name, v1alpha1.DatanodeRoleKind, datanodeGroup.GetName()), common.FileStorageTypeDatanode); err != nil {
+				return err
+			}
+		}
+	}
+
 	if cluster.GetWALProvider().GetRaftEngineWAL().GetFileStorage().GetPolicy() == v1alpha1.StorageRetainPolicyTypeDelete {
-		if err := d.deleteStorage(ctx, cluster.Namespace, cluster.Name, common.FileStorageTypeWAL); err != nil {
+		if err := d.deleteStorage(ctx, cluster.Namespace, common.ResourceName(cluster.Name, v1alpha1.DatanodeRoleKind), common.FileStorageTypeWAL); err != nil {
 			return err
 		}
 	}
 
 	if cluster.GetObjectStorageProvider().GetCacheFileStorage().GetPolicy() == v1alpha1.StorageRetainPolicyTypeDelete {
-		if err := d.deleteStorage(ctx, cluster.Namespace, cluster.Name, common.FileStorageTypeCache); err != nil {
+		if err := d.deleteStorage(ctx, cluster.Namespace, common.ResourceName(cluster.Name, v1alpha1.DatanodeRoleKind), common.FileStorageTypeCache); err != nil {
 			return err
 		}
 	}
@@ -260,10 +268,10 @@ func (d *DatanodeDeployer) turnOffMaintenanceMode(ctx context.Context, crdObject
 	return nil
 }
 
-func (d *DatanodeDeployer) deleteStorage(ctx context.Context, namespace, name string, fsType common.FileStorageType) error {
+func (d *DatanodeDeployer) deleteStorage(ctx context.Context, namespace, resourceName string, fsType common.FileStorageType) error {
 	klog.Infof("Deleting datanode storage...")
 
-	claims, err := common.GetPVCs(ctx, d.Client, namespace, name, v1alpha1.DatanodeRoleKind, fsType)
+	claims, err := common.GetPVCs(ctx, d.Client, namespace, resourceName, fsType)
 	if err != nil {
 		return err
 	}
@@ -577,7 +585,7 @@ func (b *datanodeBuilder) generatePVCs(spec *v1alpha1.DatanodeSpec) []corev1.Per
 	var claims []corev1.PersistentVolumeClaim
 
 	// It's always not nil because it's the default value.
-	if fs := b.Cluster.GetDatanode().GetFileStorage(); fs != nil {
+	if fs := spec.GetFileStorage(); fs != nil {
 		claims = append(claims, *common.FileStorageToPVC(b.Cluster.Name, spec.GetName(), fs, common.FileStorageTypeDatanode, v1alpha1.DatanodeRoleKind))
 	}
 
@@ -650,7 +658,7 @@ func (b *datanodeBuilder) mountConfigDir(template *corev1.PodTemplateSpec) {
 }
 
 func (b *datanodeBuilder) addVolumeMounts(template *corev1.PodTemplateSpec, spec *v1alpha1.DatanodeSpec) {
-	if fs := b.Cluster.GetDatanode().GetFileStorage(); fs != nil {
+	if fs := spec.GetFileStorage(); fs != nil {
 		template.Spec.Containers[constant.MainContainerIndex].VolumeMounts =
 			append(template.Spec.Containers[constant.MainContainerIndex].VolumeMounts,
 				corev1.VolumeMount{

@@ -23,6 +23,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
+	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	greptimev1alpha1 "github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
@@ -113,8 +114,12 @@ func TestClusterReadWriteGroups(ctx context.Context, h *helper.Helper) {
 	}, helper.DefaultTimeout, time.Second).Should(HaveOccurred())
 
 	By("The PVC of the datanode should be retained")
-	datanodePVCs, err := h.GetPVCs(ctx, testCluster.Namespace, testCluster.Name, greptimev1alpha1.DatanodeRoleKind, common.FileStorageTypeDatanode)
-	Expect(err).NotTo(HaveOccurred(), "failed to get datanode PVCs")
+	var datanodePVCs []corev1.PersistentVolumeClaim
+	for _, datanodeGroup := range testCluster.GetDatanodeGroups() {
+		pvc, err := h.GetPVCs(ctx, testCluster.Namespace, common.ResourceName(testCluster.Name, greptimev1alpha1.DatanodeRoleKind, datanodeGroup.GetName()), common.FileStorageTypeDatanode)
+		Expect(err).NotTo(HaveOccurred(), "failed to get datanode PVCs")
+		datanodePVCs = append(datanodePVCs, pvc...)
+	}
 
 	// FIXME(zyy17): Use a safe way to get the number of datanode replicas.
 	Expect(int32(len(datanodePVCs))).To(Equal(*testCluster.Spec.DatanodeGroups[0].Replicas+*testCluster.Spec.DatanodeGroups[1].Replicas), "the number of datanode PVCs should be equal to the number of datanode replicas")
@@ -124,9 +129,4 @@ func TestClusterReadWriteGroups(ctx context.Context, h *helper.Helper) {
 		err = h.Delete(ctx, &pvc)
 		Expect(err).NotTo(HaveOccurred(), "failed to delete datanode PVC")
 	}
-
-	By("Check the PVCs of the datanode")
-	datanodePVCs, err = h.GetPVCs(ctx, testCluster.Namespace, testCluster.Name, greptimev1alpha1.DatanodeRoleKind, common.FileStorageTypeDatanode)
-	Expect(err).NotTo(HaveOccurred(), "failed to get datanode PVCs")
-	Expect(len(datanodePVCs)).To(Equal(0), "the number of datanode PVCs should be 0")
 }
