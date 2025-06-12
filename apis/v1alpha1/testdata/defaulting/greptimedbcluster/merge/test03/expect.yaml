@@ -1,0 +1,281 @@
+apiVersion: greptime.io/v1alpha1
+kind: GreptimeDBCluster
+metadata:
+  name: test03
+  namespace: default
+spec:
+  base:
+    main:
+      image: greptime/greptimedb:latest
+      livenessProbe:
+        failureThreshold: 10
+        httpGet:
+          path: /health
+          port: 4000
+        periodSeconds: 5
+      readinessProbe:
+        failureThreshold: 10
+        httpGet:
+          path: /health
+          port: 4000
+        periodSeconds: 5
+      resources:
+        limits:
+          cpu: 100m
+          memory: 128Mi
+        requests:
+          cpu: 100m
+          memory: 128Mi
+      startupProbe:
+        failureThreshold: 60
+        httpGet:
+          path: /health
+          port: 4000
+        periodSeconds: 5
+  datanodeGroups:
+  - name: read
+    httpPort: 4000
+    logging:
+      format: text
+      level: info
+      logsDir: /data/greptimedb/logs
+      onlyLogToStdout: false
+      persistentWithData: false
+    replicas: 3
+    rollingUpdate:
+      maxUnavailable: 1
+      partition: 0
+    rpcPort: 4001
+    storage:
+      dataHome: /data/greptimedb
+      fs:
+        mountPath: /data/greptimedb
+        name: datanode
+        storageRetainPolicy: Retain
+        storageSize: 10Gi
+    template:
+      main:
+        image: greptime/greptimedb:latest
+        livenessProbe:
+          failureThreshold: 10
+          httpGet:
+            path: /health
+            port: 4000
+          periodSeconds: 5
+        readinessProbe:
+          failureThreshold: 10
+          httpGet:
+            path: /health
+            port: 4000
+          periodSeconds: 5
+        resources:
+          limits:
+            cpu: 100m
+            memory: 128Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+        startupProbe:
+          failureThreshold: 60
+          httpGet:
+            path: /health
+            port: 4000
+          periodSeconds: 5
+  - name: write
+    httpPort: 4000
+    logging:
+      format: text
+      level: info
+      logsDir: /data/greptimedb/logs
+      onlyLogToStdout: false
+      persistentWithData: false
+    replicas: 3
+    rollingUpdate:
+      maxUnavailable: 1
+      partition: 0
+    rpcPort: 4001
+    storage:
+      dataHome: /data/greptimedb
+      fs:
+        mountPath: /data/greptimedb
+        name: datanode
+        storageRetainPolicy: Retain
+        storageSize: 10Gi
+    template:
+      main:
+        image: greptime/greptimedb:latest
+        livenessProbe:
+          failureThreshold: 10
+          httpGet:
+            path: /health
+            port: 4000
+          periodSeconds: 5
+        readinessProbe:
+          failureThreshold: 10
+          httpGet:
+            path: /health
+            port: 4000
+          periodSeconds: 5
+        resources:
+          limits:
+            cpu: 100m
+            memory: 128Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+        startupProbe:
+          failureThreshold: 60
+          httpGet:
+            path: /health
+            port: 4000
+          periodSeconds: 5
+  frontendGroups:
+  - name: read
+    httpPort: 4000
+    logging:
+      format: text
+      level: info
+      logsDir: /data/greptimedb/logs
+      onlyLogToStdout: false
+      persistentWithData: false
+    mysqlPort: 4002
+    postgreSQLPort: 4003
+    replicas: 2
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    rpcPort: 4001
+    service:
+      type: ClusterIP
+    template:
+      main:
+        image: greptime/greptimedb:latest
+        livenessProbe:
+          failureThreshold: 10
+          httpGet:
+            path: /health
+            port: 4000
+          periodSeconds: 5
+        readinessProbe:
+          failureThreshold: 10
+          httpGet:
+            path: /health
+            port: 4000
+          periodSeconds: 5
+        resources:
+          limits:
+            cpu: 100m
+            memory: 128Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+        startupProbe:
+          failureThreshold: 60
+          httpGet:
+            path: /health
+            port: 4000
+          periodSeconds: 5
+  - name: write
+    httpPort: 4000
+    logging:
+      format: text
+      level: info
+      logsDir: /data/greptimedb/logs
+      onlyLogToStdout: false
+      persistentWithData: false
+    mysqlPort: 4002
+    postgreSQLPort: 4003
+    replicas: 2
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    rpcPort: 4001
+    service:
+      type: ClusterIP
+    template:
+      main:
+        image: greptime/greptimedb:latest
+        livenessProbe:
+          failureThreshold: 10
+          httpGet:
+            path: /health
+            port: 4000
+          periodSeconds: 5
+        readinessProbe:
+          failureThreshold: 10
+          httpGet:
+            path: /health
+            port: 4000
+          periodSeconds: 5
+        resources:
+          limits:
+            cpu: 100m
+            memory: 128Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+        startupProbe:
+          failureThreshold: 60
+          httpGet:
+            path: /health
+            port: 4000
+          periodSeconds: 5
+  httpPort: 4000
+  initializer:
+    image: greptime/greptimedb-initializer:latest
+  logging:
+    format: text
+    level: info
+    logsDir: /data/greptimedb/logs
+    onlyLogToStdout: false
+    persistentWithData: false
+  meta:
+    backendStorage:
+      etcd:
+        endpoints:
+        - etcd.etcd-cluster.svc.cluster.local:2379
+    enableRegionFailover: false
+    httpPort: 4000
+    logging:
+      format: text
+      level: info
+      logsDir: /data/greptimedb/logs
+      onlyLogToStdout: false
+      persistentWithData: false
+    replicas: 1
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
+    rpcPort: 3002
+    template:
+      main:
+        image: greptime/greptimedb:latest
+        livenessProbe:
+          failureThreshold: 10
+          httpGet:
+            path: /health
+            port: 4000
+          periodSeconds: 5
+        readinessProbe:
+          failureThreshold: 10
+          httpGet:
+            path: /health
+            port: 4000
+          periodSeconds: 5
+        resources:
+          limits:
+            cpu: 100m
+            memory: 128Mi
+          requests:
+            cpu: 100m
+            memory: 128Mi
+        startupProbe:
+          failureThreshold: 60
+          httpGet:
+            path: /health
+            port: 4000
+          periodSeconds: 5
+  mysqlPort: 4002
+  postgreSQLPort: 4003
+  rpcPort: 4001
+  version: latest
