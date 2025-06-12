@@ -184,6 +184,15 @@ type LoggingConfig struct {
 
 	// The log format. Can be `text`/`json`.
 	LogFormat *string `tomlmapping:"logging.log_format"`
+
+	// Enable OTLP tracing.
+	EnableOTLPTracing *bool `tomlmapping:"logging.enable_otlp_tracing"`
+
+	// The OTLP tracing endpoint.
+	OTLPEndpoint *string `tomlmapping:"logging.otlp_endpoint"`
+
+	// The percentage of tracing will be sampled and exported.
+	TracingSampleRatio *float64 `tomlmapping:"logging.tracing_sample_ratio.default_ratio"`
 }
 
 // ConfigureLogging configures the logging config with the given logging spec.
@@ -207,6 +216,17 @@ func (c *LoggingConfig) ConfigureLogging(spec *v1alpha1.LoggingSpec) {
 
 	c.Level = ptr.To(c.levelWithFilters(string(spec.Level), spec.Filters))
 	c.LogFormat = ptr.To(string(spec.Format))
+
+	if spec.EnableOTLPTracing != nil && *spec.EnableOTLPTracing {
+		c.EnableOTLPTracing = spec.EnableOTLPTracing
+		c.OTLPEndpoint = ptr.To(spec.OTLPEndpoint)
+		TracingSampleRatio, err := strconv.ParseFloat(spec.TracingSampleRatio, 64)
+		if err != nil {
+			klog.Warningf("Failed to parse OTLP tracing sample ratio '%s', use the default value 1.0", spec.TracingSampleRatio)
+			TracingSampleRatio = 1.0
+		}
+		c.TracingSampleRatio = ptr.To(TracingSampleRatio)
+	}
 }
 
 // levelWithFilters returns the level with filters. For example, it will output "info,mito2=debug" if the level is "info" and the filters are ["mito2=debug"].

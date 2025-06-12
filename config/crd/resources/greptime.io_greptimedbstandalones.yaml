@@ -3,7 +3,7 @@ apiVersion: apiextensions.k8s.io/v1
 kind: CustomResourceDefinition
 metadata:
   annotations:
-    controller-gen.kubebuilder.io/version: v0.14.0
+    controller-gen.kubebuilder.io/version: v0.17.2
   name: greptimedbstandalones.greptime.io
 spec:
   group: greptime.io
@@ -266,6 +266,7 @@ spec:
                                   format: int32
                                   type: integer
                                 service:
+                                  default: ""
                                   type: string
                               required:
                               - port
@@ -370,6 +371,7 @@ spec:
                                   format: int32
                                   type: integer
                                 service:
+                                  default: ""
                                   type: string
                               required:
                               - port
@@ -555,6 +557,7 @@ spec:
                                   format: int32
                                   type: integer
                                 service:
+                                  default: ""
                                   type: string
                               required:
                               - port
@@ -1283,6 +1286,7 @@ spec:
                                   format: int32
                                   type: integer
                                 service:
+                                  default: ""
                                   type: string
                               required:
                               - port
@@ -1387,6 +1391,7 @@ spec:
                                   format: int32
                                   type: integer
                                 service:
+                                  default: ""
                                   type: string
                               required:
                               - port
@@ -1572,6 +1577,7 @@ spec:
                                   format: int32
                                   type: integer
                                 service:
+                                  default: ""
                                   type: string
                               required:
                               - port
@@ -1883,6 +1889,7 @@ spec:
                                 format: int32
                                 type: integer
                               service:
+                                default: ""
                                 type: string
                             required:
                             - port
@@ -1961,6 +1968,7 @@ spec:
                                 format: int32
                                 type: integer
                               service:
+                                default: ""
                                 type: string
                             required:
                             - port
@@ -2131,6 +2139,7 @@ spec:
                                 format: int32
                                 type: integer
                               service:
+                                default: ""
                                 type: string
                             required:
                             - port
@@ -2213,6 +2222,8 @@ spec:
                         type: array
                       workingDir:
                         type: string
+                    required:
+                    - image
                     type: object
                   nodeSelector:
                     additionalProperties:
@@ -3065,6 +3076,8 @@ spec:
                 type: object
               logging:
                 properties:
+                  enableOTLPTracing:
+                    type: boolean
                   filters:
                     items:
                       type: string
@@ -3085,8 +3098,12 @@ spec:
                     type: string
                   onlyLogToStdout:
                     type: boolean
+                  otlpEndpoint:
+                    type: string
                   persistentWithData:
                     type: boolean
+                  tracingSampleRatio:
+                    type: string
                 type: object
               mysqlPort:
                 format: int32
