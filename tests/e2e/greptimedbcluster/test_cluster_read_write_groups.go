@@ -121,8 +121,7 @@ func TestClusterReadWriteGroups(ctx context.Context, h *helper.Helper) {
 		datanodePVCs = append(datanodePVCs, pvc...)
 	}
 
-	// FIXME(zyy17): Use a safe way to get the number of datanode replicas.
-	Expect(int32(len(datanodePVCs))).To(Equal(*testCluster.Spec.DatanodeGroups[0].Replicas+*testCluster.Spec.DatanodeGroups[1].Replicas), "the number of datanode PVCs should be equal to the number of datanode replicas")
+	Expect(int32(len(datanodePVCs))).To(Equal(testCluster.GetDatanodeReplicas()), "the number of datanode PVCs should be equal to the number of datanode replicas")
 
 	By("Remove the PVC of the datanode")
 	for _, pvc := range datanodePVCs {

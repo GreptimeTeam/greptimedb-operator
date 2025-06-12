@@ -944,6 +944,22 @@ type GreptimeDBCluster struct {
 	Status GreptimeDBClusterStatus `json:"status,omitempty"`
 }
 
+func (in *GreptimeDBCluster) GetDatanodeReplicas() int32 {
+	var count int32
+
+	if replicas := in.GetDatanode().GetReplicas(); replicas != nil {
+		return *replicas
+	}
+
+	for _, datanodeGroup := range in.GetDatanodeGroups() {
+		if replicas := datanodeGroup.GetReplicas(); replicas != nil {
+			count += *replicas
+		}
+	}
+
+	return count
+}
+
 // +kubebuilder:object:root=true
 
 // GreptimeDBClusterList contains a list of GreptimeDBCluster

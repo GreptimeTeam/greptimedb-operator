@@ -180,21 +180,35 @@ func (d *DatanodeDeployer) PostSyncHooks() []deployer.Hook {
 }
 
 func (d *DatanodeDeployer) checkDatanodeGroupStatus(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster) (bool, error) {
-	readyCount := 0
+	var (
+		readyCount         int32
+		totalReadyReplicas int32
+	)
+
 	for _, spec := range cluster.GetDatanodeGroups() {
 		resourceName := common.ResourceName(cluster.Name, v1alpha1.DatanodeRoleKind, spec.GetName())
 
-		// TODO(zyy17): Update datanode status.
-		ready, err := d.checkDatanodeStatus(ctx, cluster.Namespace, resourceName, nil)
+		ready, readyReplicas, err := d.getStatefulSetStatus(ctx, cluster.Namespace, resourceName)
 		if err != nil {
 			return false, err
 		}
+
+		totalReadyReplicas += readyReplicas
 		if ready {
 			readyCount++
 		}
 	}
 
-	if readyCount == len(cluster.GetDatanodeGroups()) {
+	// Update the status if the cluster is not nil.
+	if cluster != nil {
+		cluster.Status.Datanode.Replicas = cluster.GetDatanodeReplicas()
+		cluster.Status.Datanode.ReadyReplicas = totalReadyReplicas
+		if err := UpdateStatus(ctx, cluster, d.Client); err != nil {
+			klog.Errorf("Failed to update status: %s", err)
+		}
+	}
+
+	if readyCount == int32(len(cluster.GetDatanodeGroups())) {
 		return true, nil
 	}
 
@@ -202,6 +216,24 @@ func (d *DatanodeDeployer) checkDatanodeGroupStatus(ctx context.Context, cluster
 }
 
 func (d *DatanodeDeployer) checkDatanodeStatus(ctx context.Context, namespace, resourceName string, cluster *v1alpha1.GreptimeDBCluster) (bool, error) {
+	ready, readyReplicas, err := d.getStatefulSetStatus(ctx, namespace, resourceName)
+	if err != nil {
+		return false, err
+	}
+
+	// Update the status if the cluster is not nil.
+	if cluster != nil {
+		cluster.Status.Datanode.Replicas = cluster.GetDatanodeReplicas()
+		cluster.Status.Datanode.ReadyReplicas = readyReplicas
+		if err := UpdateStatus(ctx, cluster, d.Client); err != nil {
+			klog.Errorf("Failed to update status: %s", err)
+		}
+	}
+
+	return ready, nil
+}
+
+func (d *DatanodeDeployer) getStatefulSetStatus(ctx context.Context, namespace, resourceName string) (bool, int32, error) {
 	var (
 		sts = new(appsv1.StatefulSet)
 
@@ -213,22 +245,13 @@ func (d *DatanodeDeployer) checkDatanodeStatus(ctx context.Context, namespace, r
 
 	err := d.Get(ctx, objectKey, sts)
 	if errors.IsNotFound(err) {
-		return false, nil
+		return false, 0, nil
 	}
 	if err != nil {
-		return false, err
+		return false, 0, err
 	}
 
-	// Update the status if the cluster is not nil.
-	if cluster != nil {
-		cluster.Status.Datanode.Replicas = *sts.Spec.Replicas
-		cluster.Status.Datanode.ReadyReplicas = sts.Status.ReadyReplicas
-		if err := UpdateStatus(ctx, cluster, d.Client); err != nil {
-			klog.Errorf("Failed to update status: %s", err)
-		}
-	}
-
-	return k8sutils.IsStatefulSetReady(sts), nil
+	return k8sutils.IsStatefulSetReady(sts), sts.Status.ReadyReplicas, nil
 }
 
 func (d *DatanodeDeployer) turnOnMaintenanceMode(ctx context.Context, newSts *appsv1.StatefulSet, cluster *v1alpha1.GreptimeDBCluster) error {
