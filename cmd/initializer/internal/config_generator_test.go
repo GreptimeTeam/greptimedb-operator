@@ -160,6 +160,55 @@ func TestFlownodeConfigGenerator(t *testing.T) {
 	}
 }
 
+func TestDatanodeConfigGeneratorWithDatanodeGroupID(t *testing.T) {
+	var testDatanodeGroupID int32 = 42
+
+	tmpConfigFile, err := os.CreateTemp("", "config-*.toml")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer tmpConfigFile.Close()
+
+	opts := &Options{
+		ConfigPath:          tmpConfigFile.Name(),
+		InitConfigPath:      "testdata/datanode-config.toml",
+		Namespace:           testClusterNamespace,
+		RoleKind:            string(v1alpha1.DatanodeRoleKind),
+		DatanodeRPCPort:     testRPCPort,
+		DatanodeServiceName: testClusterService,
+		DatanodeGroupID:     testDatanodeGroupID,
+	}
+
+	t.Setenv(deployer.EnvPodIP, testPodIP)
+	t.Setenv(deployer.EnvPodName, testDatanodePodName)
+
+	cg := NewConfigGenerator(opts, datanodeHostname)
+	if err = cg.Generate(); err != nil {
+		t.Fatal(err)
+	}
+
+	tomlData, err := os.ReadFile(opts.ConfigPath)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tree, err := toml.Load(string(tomlData))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	nodeID, ok := tree.Get("node_id").(int64)
+	if !ok {
+		t.Fatalf("node_id is not int64")
+	}
+
+	expectedNodeID := uint64(testDatanodeGroupID)<<32 | uint64(testPodIndex)
+
+	if !reflect.DeepEqual(expectedNodeID, uint64(nodeID)) {
+		t.Fatalf("nodeID is not equal, want: '%d', got: '%d'", expectedNodeID, nodeID)
+	}
+}
+
 func datanodeHostname() (name string, err error) {
 	return testDatanodePodName, nil
 }
