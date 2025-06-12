@@ -25,5 +25,3 @@ spec:
       etcd:
         endpoints:
           - "etcd.etcd-cluster.svc.cluster.local:2379"
-  datanode:
-    replicas: 3

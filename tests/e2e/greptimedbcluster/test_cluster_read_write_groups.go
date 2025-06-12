@@ -124,4 +124,9 @@ func TestClusterReadWriteGroups(ctx context.Context, h *helper.Helper) {
 		err = h.Delete(ctx, &pvc)
 		Expect(err).NotTo(HaveOccurred(), "failed to delete datanode PVC")
 	}
+
+	By("Check the PVCs of the datanode")
+	datanodePVCs, err = h.GetPVCs(ctx, testCluster.Namespace, testCluster.Name, greptimev1alpha1.DatanodeRoleKind, common.FileStorageTypeDatanode)
+	Expect(err).NotTo(HaveOccurred(), "failed to get datanode PVCs")
+	Expect(len(datanodePVCs)).To(Equal(0), "the number of datanode PVCs should be 0")
 }
