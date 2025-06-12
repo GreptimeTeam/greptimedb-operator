@@ -102,7 +102,7 @@ For production use, we recommend deploying the GreptimeDB Operator with the Grep
 
 For more information, please refer to the following documentation:
 
-- [User Guide](https://docs.greptime.com/user-guide/deployments/deploy-on-kubernetes/overview)
+- [User Guide](https://docs.greptime.com/user-guide/deployments-administration/deploy-on-kubernetes/overview)
 
 - [API References](./docs/api-references/docs.md)
 
