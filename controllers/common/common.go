@@ -196,7 +196,7 @@ func GeneratePodTemplateSpec(kind v1alpha1.RoleKind, template *v1alpha1.PodTempl
 	return spec
 }
 
-func FileStorageToPVC(name string, fs v1alpha1.FileStorageAccessor, fsType FileStorageType, kind v1alpha1.RoleKind) *corev1.PersistentVolumeClaim {
+func FileStorageToPVC(clusterName string, datanodeGroupName string, fs v1alpha1.FileStorageAccessor, fsType FileStorageType, kind v1alpha1.RoleKind) *corev1.PersistentVolumeClaim {
 	var (
 		labels      map[string]string
 		annotations map[string]string
@@ -206,17 +206,17 @@ func FileStorageToPVC(name string, fs v1alpha1.FileStorageAccessor, fsType FileS
 	case FileStorageTypeWAL:
 		labels = map[string]string{
 			FileStorageTypeLabelKey:          string(FileStorageTypeWAL),
-			constant.GreptimeDBComponentName: ResourceName(name, kind),
+			constant.GreptimeDBComponentName: ResourceName(clusterName, kind, datanodeGroupName),
 		}
 	case FileStorageTypeCache:
 		labels = map[string]string{
 			FileStorageTypeLabelKey:          string(FileStorageTypeCache),
-			constant.GreptimeDBComponentName: ResourceName(name, kind),
+			constant.GreptimeDBComponentName: ResourceName(clusterName, kind, datanodeGroupName),
 		}
 	default:
 		// Add common label: 'app.greptime.io/component: ${CLUSTER_NAME}-${COMPONENT_KIND}'.
 		labels = map[string]string{
-			constant.GreptimeDBComponentName: ResourceName(name, kind),
+			constant.GreptimeDBComponentName: ResourceName(clusterName, kind, datanodeGroupName),
 		}
 	}
 
@@ -239,7 +239,7 @@ func FileStorageToPVC(name string, fs v1alpha1.FileStorageAccessor, fsType FileS
 			AccessModes: []corev1.PersistentVolumeAccessMode{
 				corev1.ReadWriteOnce,
 			},
-			Resources: corev1.ResourceRequirements{
+			Resources: corev1.VolumeResourceRequirements{
 				Requests: corev1.ResourceList{
 					corev1.ResourceStorage: resource.MustParse(fs.GetSize()),
 				},
@@ -248,7 +248,7 @@ func FileStorageToPVC(name string, fs v1alpha1.FileStorageAccessor, fsType FileS
 	}
 }
 
-func GetPVCs(ctx context.Context, k8sClient client.Client, namespace, name string, kind v1alpha1.RoleKind, fsType FileStorageType) ([]corev1.PersistentVolumeClaim, error) {
+func GetPVCs(ctx context.Context, k8sClient client.Client, namespace, resourceName string, fsType FileStorageType) ([]corev1.PersistentVolumeClaim, error) {
 	var labelSelector *metav1.LabelSelector
 	switch fsType {
 	case FileStorageTypeDatanode:
@@ -264,7 +264,7 @@ func GetPVCs(ctx context.Context, k8sClient client.Client, namespace, name strin
 				{
 					Key:      constant.GreptimeDBComponentName,
 					Operator: metav1.LabelSelectorOpIn,
-					Values:   []string{ResourceName(name, kind)},
+					Values:   []string{resourceName},
 				},
 			},
 		}
@@ -272,14 +272,14 @@ func GetPVCs(ctx context.Context, k8sClient client.Client, namespace, name strin
 		labelSelector = &metav1.LabelSelector{
 			MatchLabels: map[string]string{
 				FileStorageTypeLabelKey:          string(FileStorageTypeWAL),
-				constant.GreptimeDBComponentName: ResourceName(name, kind),
+				constant.GreptimeDBComponentName: resourceName,
 			},
 		}
 	case FileStorageTypeCache:
 		labelSelector = &metav1.LabelSelector{
 			MatchLabels: map[string]string{
 				FileStorageTypeLabelKey:          string(FileStorageTypeCache),
-				constant.GreptimeDBComponentName: ResourceName(name, kind),
+				constant.GreptimeDBComponentName: resourceName,
 			},
 		}
 	}
@@ -301,6 +301,7 @@ func GetPVCs(ctx context.Context, k8sClient client.Client, namespace, name strin
 
 	return claims.Items, nil
 }
+
 func MonitoringServiceName(name string) string {
 	return name + "-monitor"
 }

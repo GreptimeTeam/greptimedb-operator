@@ -90,13 +90,13 @@ func TestClusterDedicatedWAL(ctx context.Context, h *helper.Helper) {
 	}, helper.DefaultTimeout, time.Second).Should(HaveOccurred())
 
 	By("The PVC of the datanode should be retained")
-	datanodePVCs, err := h.GetPVCs(ctx, testCluster.Namespace, testCluster.Name, greptimev1alpha1.DatanodeRoleKind, common.FileStorageTypeDatanode)
+	datanodePVCs, err := h.GetPVCs(ctx, testCluster.Namespace, common.ResourceName(testCluster.Name, greptimev1alpha1.DatanodeRoleKind), common.FileStorageTypeDatanode)
 	Expect(err).NotTo(HaveOccurred(), "failed to get datanode PVCs")
 	Expect(int32(len(datanodePVCs))).To(Equal(*testCluster.Spec.Datanode.Replicas), "the number of datanode PVCs should be equal to the number of datanode replicas")
 
 	By("The PVC of the WAL should be deleted")
 	Eventually(func() error {
-		walPVCs, err := h.GetPVCs(ctx, testCluster.Namespace, testCluster.Name, greptimev1alpha1.DatanodeRoleKind, common.FileStorageTypeWAL)
+		walPVCs, err := h.GetPVCs(ctx, testCluster.Namespace, common.ResourceName(testCluster.Name, greptimev1alpha1.DatanodeRoleKind), common.FileStorageTypeWAL)
 		if err != nil {
 			return err
 		}

@@ -23,6 +23,7 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
+	corev1 "k8s.io/api/core/v1"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	greptimev1alpha1 "github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
@@ -30,14 +31,15 @@ import (
 	"github.com/GreptimeTeam/greptimedb-operator/tests/e2e/helper"
 )
 
-// TestPostgreSQLMetaBackend tests a cluster with postgresql as the meta backend.
-func TestPostgreSQLMetaBackend(ctx context.Context, h *helper.Helper) {
+// TestClusterReadWriteGroups tests a read write groups cluster.
+func TestClusterReadWriteGroups(ctx context.Context, h *helper.Helper) {
 	const (
-		testCRFile  = "./testdata/resources/cluster/postgresql-meta-backend/cluster.yaml"
-		testSQLFile = "./testdata/sql/cluster/partition.sql"
+		testCRFile       = "./testdata/resources/cluster/read-write-groups/cluster.yaml"
+		testReadSQLFile  = "./testdata/sql/cluster/read.sql"
+		testWriteSQLFile = "./testdata/sql/cluster/write.sql"
 	)
 
-	By(fmt.Sprintf("greptimecluster test with CR file %s and SQL file %s", testCRFile, testSQLFile))
+	By(fmt.Sprintf("greptimecluster test with CR file %s and read SQL file %s, write SQL file %s", testCRFile, testReadSQLFile, testWriteSQLFile))
 
 	testCluster := new(greptimev1alpha1.GreptimeDBCluster)
 	err := h.LoadCR(testCRFile, testCluster)
@@ -63,7 +65,16 @@ func TestPostgreSQLMetaBackend(ctx context.Context, h *helper.Helper) {
 	err = h.Get(ctx, client.ObjectKey{Name: testCluster.Name, Namespace: testCluster.Namespace}, testCluster)
 	Expect(err).NotTo(HaveOccurred(), "failed to get cluster")
 	By("Execute distributed SQL test")
-	frontendAddr, err := h.PortForward(ctx, testCluster.Namespace, common.ResourceName(testCluster.Name, greptimev1alpha1.FrontendRoleKind), int(testCluster.Spec.PostgreSQLPort))
+
+	frontendGroups := testCluster.GetFrontendGroups()
+	Expect(frontendGroups).To(HaveLen(2), "expected exactly 2 frontend groups")
+
+	var (
+		readFrontendName  = frontendGroups[0].GetName()
+		writeFrontendName = frontendGroups[1].GetName()
+	)
+
+	frontendAddr, err := h.PortForward(ctx, testCluster.Namespace, common.ResourceName(testCluster.Name, greptimev1alpha1.FrontendRoleKind, writeFrontendName), int(testCluster.Spec.PostgreSQLPort))
 	Expect(err).NotTo(HaveOccurred(), "failed to port forward frontend service")
 	Eventually(func() error {
 		conn, err := net.Dial("tcp", frontendAddr)
@@ -74,7 +85,21 @@ func TestPostgreSQLMetaBackend(ctx context.Context, h *helper.Helper) {
 		return nil
 	}, helper.DefaultTimeout, time.Second).ShouldNot(HaveOccurred())
 
-	err = h.RunSQLTest(ctx, frontendAddr, testSQLFile)
+	err = h.RunSQLTest(ctx, frontendAddr, testWriteSQLFile)
+	Expect(err).NotTo(HaveOccurred(), "failed to run sql test")
+
+	frontendAddr, err = h.PortForward(ctx, testCluster.Namespace, common.ResourceName(testCluster.Name, greptimev1alpha1.FrontendRoleKind, readFrontendName), int(testCluster.Spec.PostgreSQLPort))
+	Expect(err).NotTo(HaveOccurred(), "failed to port forward frontend service")
+	Eventually(func() error {
+		conn, err := net.Dial("tcp", frontendAddr)
+		if err != nil {
+			return err
+		}
+		conn.Close()
+		return nil
+	}, helper.DefaultTimeout, time.Second).ShouldNot(HaveOccurred())
+
+	err = h.RunSQLTest(ctx, frontendAddr, testReadSQLFile)
 	Expect(err).NotTo(HaveOccurred(), "failed to run sql test")
 
 	By("Kill the port forwarding process")
@@ -89,9 +114,14 @@ func TestPostgreSQLMetaBackend(ctx context.Context, h *helper.Helper) {
 	}, helper.DefaultTimeout, time.Second).Should(HaveOccurred())
 
 	By("The PVC of the datanode should be retained")
-	datanodePVCs, err := h.GetPVCs(ctx, testCluster.Namespace, common.ResourceName(testCluster.Name, greptimev1alpha1.DatanodeRoleKind), common.FileStorageTypeDatanode)
-	Expect(err).NotTo(HaveOccurred(), "failed to get datanode PVCs")
-	Expect(int32(len(datanodePVCs))).To(Equal(*testCluster.Spec.Datanode.Replicas), "the number of datanode PVCs should be equal to the number of datanode replicas")
+	var datanodePVCs []corev1.PersistentVolumeClaim
+	for _, datanodeGroup := range testCluster.GetDatanodeGroups() {
+		pvc, err := h.GetPVCs(ctx, testCluster.Namespace, common.ResourceName(testCluster.Name, greptimev1alpha1.DatanodeRoleKind, datanodeGroup.GetName()), common.FileStorageTypeDatanode)
+		Expect(err).NotTo(HaveOccurred(), "failed to get datanode PVCs")
+		datanodePVCs = append(datanodePVCs, pvc...)
+	}
+
+	Expect(int32(len(datanodePVCs))).To(Equal(testCluster.GetDatanodeReplicas()), "the number of datanode PVCs should be equal to the number of datanode replicas")
 
 	By("Remove the PVC of the datanode")
 	for _, pvc := range datanodePVCs {

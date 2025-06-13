@@ -44,6 +44,7 @@ type StorageConfig struct {
 	AccountName            *string `tomlmapping:"storage.account_name"`
 	AccountKey             *string `tomlmapping:"storage.account_key"`
 	CacheCapacity          *string `tomlmapping:"storage.cache_capacity"`
+	CachePath              *string `tomlmapping:"storage.cache_path"`
 	EnableVirtualHostStyle *bool   `tomlmapping:"storage.enable_virtual_host_style"`
 }
 
@@ -77,6 +78,10 @@ func (c *StorageConfig) ConfigureObjectStorage(namespace string, accessor v1alph
 func (c *StorageConfig) configureCacheStorage(cacheStorage *v1alpha1.CacheStorage) {
 	if len(cacheStorage.CacheCapacity) != 0 {
 		c.CacheCapacity = ptr.To(cacheStorage.CacheCapacity)
+	}
+
+	if mountPath := cacheStorage.GetFileStorage().GetMountPath(); len(mountPath) > 0 {
+		c.CachePath = ptr.To(mountPath)
 	}
 }
 

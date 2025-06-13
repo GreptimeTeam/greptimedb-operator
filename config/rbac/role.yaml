@@ -5,41 +5,11 @@ metadata:
   name: greptimedb-operator-role
 rules:
 - apiGroups:
-  - apiextensions.k8s.io
-  resources:
-  - customresourcedefinitions
-  verbs:
-  - get
-  - list
-  - watch
-- apiGroups:
-  - apps
-  resources:
-  - deployments
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - apps
-  resources:
-  - statefulsets
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
   - ""
   resources:
   - configmaps
+  - persistentvolumeclaims
+  - services
   verbs:
   - create
   - delete
@@ -52,27 +22,6 @@ rules:
   - ""
   resources:
   - events
-  verbs:
-  - create
-  - get
-  - list
-  - patch
-  - watch
-- apiGroups:
-  - ""
-  resources:
-  - persistentvolumeclaims
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - ""
-  resources:
   - pods
   verbs:
   - create
@@ -90,9 +39,18 @@ rules:
   - patch
   - watch
 - apiGroups:
-  - ""
+  - apiextensions.k8s.io
   resources:
-  - services
+  - customresourcedefinitions
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - apps
+  resources:
+  - deployments
+  - statefulsets
   verbs:
   - create
   - delete
@@ -105,31 +63,6 @@ rules:
   - greptime.io
   resources:
   - greptimedbclusters
-  verbs:
-  - create
-  - delete
-  - get
-  - list
-  - patch
-  - update
-  - watch
-- apiGroups:
-  - greptime.io
-  resources:
-  - greptimedbclusters/finalizers
-  verbs:
-  - update
-- apiGroups:
-  - greptime.io
-  resources:
-  - greptimedbclusters/status
-  verbs:
-  - get
-  - patch
-  - update
-- apiGroups:
-  - greptime.io
-  resources:
   - greptimedbstandalones
   verbs:
   - create
@@ -142,12 +75,14 @@ rules:
 - apiGroups:
   - greptime.io
   resources:
+  - greptimedbclusters/finalizers
   - greptimedbstandalones/finalizers
   verbs:
   - update
 - apiGroups:
   - greptime.io
   resources:
+  - greptimedbclusters/status
   - greptimedbstandalones/status
   verbs:
   - get

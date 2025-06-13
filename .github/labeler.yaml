@@ -1,0 +1,23 @@
+docker:
+  - changed-files:
+      - any-glob-to-any-file: docker/**
+
+documentation:
+  - changed-files:
+      - any-glob-to-any-file: docs/**
+
+e2e:
+  - changed-files:
+      - any-glob-to-any-file: tests/**
+
+ci:
+  - changed-files:
+      - any-glob-to-any-file: .github/**
+
+tool:
+  - changed-files:
+      - any-glob-to-any-file: tools/**
+
+manifest:
+  - changed-files:
+      - any-glob-to-any-file: [manifests/**, config/**]

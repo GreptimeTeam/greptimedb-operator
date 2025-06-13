@@ -713,6 +713,13 @@ type CacheStorage struct {
 	CacheCapacity string `json:"cacheCapacity,omitempty"`
 }
 
+func (in *CacheStorage) GetFileStorage() *FileStorage {
+	if in != nil {
+		return in.FileStorage
+	}
+	return nil
+}
+
 // S3Storage defines the S3 storage specification.
 type S3Storage struct {
 	// The data will be stored in the bucket.

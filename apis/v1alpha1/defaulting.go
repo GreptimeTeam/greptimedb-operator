@@ -40,6 +40,13 @@ func (in *GreptimeDBCluster) SetDefaults() error {
 		return err
 	}
 
+	// FIXME(zyy17): This is a temporary solution to merge the default settings into the datanode groups.
+	for _, datanodeGroup := range in.GetDatanodeGroups() {
+		if err := mergo.Merge(datanodeGroup, in.defaultDatanode()); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -65,7 +72,6 @@ func (in *GreptimeDBCluster) MergeTemplate() error {
 func (in *GreptimeDBCluster) MergeLogging() error {
 	loggingSpecs := []*LoggingSpec{
 		in.GetMeta().GetLogging(),
-		in.GetDatanode().GetLogging(),
 		in.GetFlownode().GetLogging(),
 	}
 
@@ -76,6 +82,16 @@ func (in *GreptimeDBCluster) MergeLogging() error {
 	if len(in.GetFrontendGroups()) != 0 {
 		for _, frontend := range in.GetFrontendGroups() {
 			loggingSpecs = append(loggingSpecs, frontend.GetLogging())
+		}
+	}
+
+	if in.GetDatanode() != nil {
+		loggingSpecs = append(loggingSpecs, in.GetDatanode().GetLogging())
+	}
+
+	if len(in.GetDatanodeGroups()) != 0 {
+		for _, datanodeGroup := range in.GetDatanodeGroups() {
+			loggingSpecs = append(loggingSpecs, datanodeGroup.GetLogging())
 		}
 	}
 
@@ -124,7 +140,6 @@ func (in *GreptimeDBCluster) defaultSpec() *GreptimeDBClusterSpec {
 		PostgreSQLPort: DefaultPostgreSQLPort,
 		Version:        DefaultVersion,
 		Meta:           in.defaultMeta(),
-		Datanode:       in.defaultDatanode(),
 	}
 
 	if in.GetFrontend() != nil {
@@ -137,6 +152,14 @@ func (in *GreptimeDBCluster) defaultSpec() *GreptimeDBClusterSpec {
 
 	if in.GetFlownode() != nil {
 		defaultSpec.Flownode = in.defaultFlownodeSpec()
+	}
+
+	if in.GetDatanode() != nil {
+		defaultSpec.Datanode = in.defaultDatanode()
+	}
+
+	for range in.GetDatanodeGroups() {
+		defaultSpec.DatanodeGroups = append(defaultSpec.DatanodeGroups, in.defaultDatanode())
 	}
 
 	defaultSpec.Logging = defaultLogging()
@@ -376,9 +399,26 @@ func (in *GreptimeDBCluster) mergeMetaTemplate() error {
 }
 
 func (in *GreptimeDBCluster) mergeDatanodeTemplate() error {
-	if in.Spec.Datanode != nil {
+	if len(in.GetDatanodeGroups()) != 0 {
+		for _, datanodeGroup := range in.GetDatanodeGroups() {
+			if datanodeGroup.Template == nil {
+				datanodeGroup.Template = &PodTemplateSpec{}
+			}
+
+			if err := mergo.Merge(datanodeGroup.Template, in.DeepCopy().Spec.Base); err != nil {
+				return err
+			}
+
+			// Reconfigure the probe settings based on the HTTP port.
+			datanodeGroup.Template.MainContainer.StartupProbe.HTTPGet.Port = intstr.FromInt32(datanodeGroup.HTTPPort)
+			datanodeGroup.Template.MainContainer.LivenessProbe.HTTPGet.Port = intstr.FromInt32(datanodeGroup.HTTPPort)
+			datanodeGroup.Template.MainContainer.ReadinessProbe.HTTPGet.Port = intstr.FromInt32(datanodeGroup.HTTPPort)
+		}
+	}
+
+	if in.GetDatanode() != nil {
 		// Use DeepCopy to avoid the same pointer.
-		if err := mergo.Merge(in.Spec.Datanode.Template, in.DeepCopy().Spec.Base); err != nil {
+		if err := mergo.Merge(in.GetDatanode().Template, in.DeepCopy().Spec.Base); err != nil {
 			return err
 		}
 
@@ -438,13 +478,7 @@ func (in *GreptimeDBStandalone) defaultSpec() *GreptimeDBStandaloneSpec {
 		Service: &ServiceSpec{
 			Type: corev1.ServiceTypeClusterIP,
 		},
-		Logging: &LoggingSpec{
-			Level:              DefaultLoggingLevel,
-			LogsDir:            DefaultLogsDir,
-			Format:             LogFormatText,
-			PersistentWithData: ptr.To(false),
-			OnlyLogToStdout:    ptr.To(false),
-		},
+		Logging:         defaultLogging(),
 		DatanodeStorage: defaultDatanodeStorage(),
 		RollingUpdate:   defaultRollingUpdateForStatefulSet(),
 		SlowQuery:       defaultSlowQuery(),

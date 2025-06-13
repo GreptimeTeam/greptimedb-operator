@@ -28,11 +28,11 @@ endif
 MANIFESTS_DIR = ./manifests
 
 # Use the kubernetes version to run the tests.
-KUBERNETES_VERSION = 1.28.0
+KUBERNETES_VERSION = 1.32.0
 
 # Arguments for running the e2e.
 E2E_CLUSTER_NAME ?= greptimedb-operator-e2e
-E2E_TIMEOUT ?= 10m
+E2E_TIMEOUT ?= 20m
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
@@ -246,10 +246,11 @@ GOLANGCI_LINT ?= $(LOCALBIN)/golangci-lint
 CRD_REF_DOCS ?= $(LOCALBIN)/crd-ref-docs
 
 ## Tool Versions
-KUSTOMIZE_VERSION ?= v5.3.0
-CONTROLLER_TOOLS_VERSION ?= v0.14.0
+KUSTOMIZE_VERSION ?= v5.5.0
+CONTROLLER_TOOLS_VERSION ?= v0.17.2
 CRD_REF_DOCS_VERSION ?= v0.1.0
 GOLANGCI_LINT_VERSION ?= v2.1.6
+SETUP_ENVTEST_VERSION ?= latest
 
 .PHONY: kustomize
 kustomize: $(KUSTOMIZE) ## Download kustomize locally if necessary.
@@ -264,7 +265,7 @@ $(CONTROLLER_GEN): $(LOCALBIN)
 .PHONY: envtest
 envtest: $(ENVTEST) ## Download envtest-setup locally if necessary.
 $(ENVTEST): $(LOCALBIN)
-	GOBIN=$(LOCALBIN) GO111MODULE=on go install sigs.k8s.io/controller-runtime/tools/setup-envtest@latest
+	GOBIN=$(LOCALBIN) GO111MODULE=on go install sigs.k8s.io/controller-runtime/tools/setup-envtest@$(SETUP_ENVTEST_VERSION)
 
 .PHONY: golangci-lint
 golangci-lint: ## Install golangci-lint.
