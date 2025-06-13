@@ -1,0 +1,33 @@
+apiVersion: greptime.io/v1alpha1
+kind: GreptimeDBCluster
+metadata:
+  name: dedicated-cache-volume-cluster
+spec:
+  initializer:
+    image: greptime/greptimedb-initializer:latest
+  base:
+    main:
+      image: greptime/greptimedb:latest
+  frontend:
+    replicas: 1
+  meta:
+    replicas: 1
+    backendStorage:
+      etcd:
+        endpoints:
+          - "etcd.etcd-cluster.svc.cluster.local:2379"
+  datanode:
+    replicas: 1
+  objectStorage:
+    s3:
+      bucket: greptimedb
+      region: ap-southeast-1
+      secretName: s3-credentials
+      root: cluster-with-s3-data
+    # Cache storage only works with object storage.
+    cache:
+      fs:
+        storageClassName: standard
+        name: cache
+        storageSize: 5Gi
+        mountPath: /cache
