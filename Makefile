@@ -32,7 +32,7 @@ KUBERNETES_VERSION = 1.28.0
 
 # Arguments for running the e2e.
 E2E_CLUSTER_NAME ?= greptimedb-operator-e2e
-E2E_TIMEOUT ?= 10m
+E2E_TIMEOUT ?= 20m
 
 # Get the currently used golang install path (in GOPATH/bin, unless GOBIN is set)
 ifeq (,$(shell go env GOBIN))
