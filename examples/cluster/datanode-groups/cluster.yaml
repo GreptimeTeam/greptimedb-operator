@@ -1,0 +1,35 @@
+apiVersion: greptime.io/v1alpha1
+kind: GreptimeDBCluster
+metadata:
+  name: datanode-groups-cluster
+spec:
+  initializer:
+    image: greptime/greptimedb-initializer:latest
+  base:
+    main:
+      image: greptime/greptimedb:latest
+  frontend:
+    replicas: 1
+  meta:
+    replicas: 1
+    backendStorage:
+      etcd:
+        endpoints:
+          - "etcd.etcd-cluster.svc.cluster.local:2379"
+  datanodeGroups:
+    - name: write
+      replicas: 1
+      
+      config: |
+        [[region_engine]]
+        [region_engine.mito]
+        # Number of region workers
+        num_workers = 2
+      
+    - name: read
+      replicas: 2
+      config: |
+        [[region_engine]]
+        [region_engine.mito]
+        # Number of region workers
+        num_workers = 4

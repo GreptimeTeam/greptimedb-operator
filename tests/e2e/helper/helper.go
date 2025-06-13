@@ -178,8 +178,8 @@ func (h *Helper) GetPhase(ctx context.Context, namespace, name string, object cl
 }
 
 // GetPVCs returns the PVC list of the given component.
-func (h *Helper) GetPVCs(ctx context.Context, namespace, name string, kind greptimev1alpha1.RoleKind, fsType common.FileStorageType) ([]corev1.PersistentVolumeClaim, error) {
-	return common.GetPVCs(ctx, h.Client, namespace, name, kind, fsType)
+func (h *Helper) GetPVCs(ctx context.Context, namespace, resourceName string, fsType common.FileStorageType) ([]corev1.PersistentVolumeClaim, error) {
+	return common.GetPVCs(ctx, h.Client, namespace, resourceName, fsType)
 }
 
 // CleanEtcdData cleans up all data in etcd by executing the etcdctl command in the given pod.

@@ -23,6 +23,7 @@ The following examples suppose that you have installed the etcd cluster in the `
 - [Configure FrontendGroups Ingress](./cluster/frontend-groups-ingress/cluster.yaml): Create a GreptimeDB cluster with custom frontend groups ingress.
 - [MySQL Meta Backend](./cluster/mysql-meta-backend/cluster.yaml): Create a GreptimeDB cluster with MySQL as the meta backend.
 - [PostgreSQL Meta Backend](./cluster/postgresql-meta-backend/cluster.yaml): Create a GreptimeDB cluster with PostgreSQL as the meta backend.
+- [Datanode Groups](./cluster/datanode-groups/cluster.yaml): Create a GreptimeDB cluster with datanode groups.
 
 ## Standalone
 

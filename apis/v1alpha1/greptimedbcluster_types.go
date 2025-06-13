@@ -406,6 +406,10 @@ func (in *FrontendSpec) GetSlowQuery() *SlowQuery {
 type DatanodeSpec struct {
 	ComponentSpec `json:",inline"`
 
+	// Name is the name of the datanode.
+	// +optional
+	Name string `json:"name,omitempty"`
+
 	// RPCPort is the gRPC port of the datanode.
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=65535
@@ -435,6 +439,9 @@ func (in *DatanodeSpec) GetRoleKind() RoleKind {
 }
 
 func (in *DatanodeSpec) GetName() string {
+	if in != nil {
+		return in.Name
+	}
 	return ""
 }
 
@@ -550,6 +557,10 @@ type GreptimeDBClusterSpec struct {
 	// Datanode is the specification of datanode node.
 	// +optional
 	Datanode *DatanodeSpec `json:"datanode,omitempty"`
+
+	// DatanodeGroups is a group of datanode statefulsets.
+	// +optional
+	DatanodeGroups []*DatanodeSpec `json:"datanodeGroups,omitempty"`
 
 	// Flownode is the specification of flownode node.
 	// +optional
@@ -748,6 +759,13 @@ func (in *GreptimeDBCluster) GetDatanode() *DatanodeSpec {
 	return nil
 }
 
+func (in *GreptimeDBCluster) GetDatanodeGroups() []*DatanodeSpec {
+	if in != nil {
+		return in.Spec.DatanodeGroups
+	}
+	return nil
+}
+
 func (in *GreptimeDBCluster) GetFlownode() *FlownodeSpec {
 	return in.Spec.Flownode
 }
@@ -924,6 +942,22 @@ type GreptimeDBCluster struct {
 
 	// Status is the most recently observed status of the GreptimeDBCluster.
 	Status GreptimeDBClusterStatus `json:"status,omitempty"`
+}
+
+func (in *GreptimeDBCluster) GetDatanodeReplicas() int32 {
+	var count int32
+
+	if replicas := in.GetDatanode().GetReplicas(); replicas != nil {
+		return *replicas
+	}
+
+	for _, datanodeGroup := range in.GetDatanodeGroups() {
+		if replicas := datanodeGroup.GetReplicas(); replicas != nil {
+			count += *replicas
+		}
+	}
+
+	return count
 }
 
 // +kubebuilder:object:root=true
