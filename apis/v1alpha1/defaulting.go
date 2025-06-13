@@ -438,13 +438,7 @@ func (in *GreptimeDBStandalone) defaultSpec() *GreptimeDBStandaloneSpec {
 		Service: &ServiceSpec{
 			Type: corev1.ServiceTypeClusterIP,
 		},
-		Logging: &LoggingSpec{
-			Level:              DefaultLoggingLevel,
-			LogsDir:            DefaultLogsDir,
-			Format:             LogFormatText,
-			PersistentWithData: ptr.To(false),
-			OnlyLogToStdout:    ptr.To(false),
-		},
+		Logging:         defaultLogging(),
 		DatanodeStorage: defaultDatanodeStorage(),
 		RollingUpdate:   defaultRollingUpdateForStatefulSet(),
 		SlowQuery:       defaultSlowQuery(),
