@@ -37,6 +37,7 @@ jobs:
         with:
           configuration-path: ".github/labeler.yaml"
           repo-token: "${{ secrets.GITHUB_TOKEN }}"
+          sync-labels: true
 
   size-label:
     runs-on: ubuntu-latest
