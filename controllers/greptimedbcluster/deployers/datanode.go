@@ -120,7 +120,7 @@ func (d *DatanodeDeployer) CheckAndUpdateStatus(ctx context.Context, crdObject c
 	}
 
 	if len(cluster.GetDatanodeGroups()) > 0 {
-		return d.checkDatanodeGroupStatus(ctx, cluster)
+		return d.checkDatanodeGroupsStatus(ctx, cluster)
 	}
 
 	return true, nil
@@ -179,7 +179,7 @@ func (d *DatanodeDeployer) PostSyncHooks() []deployer.Hook {
 	}
 }
 
-func (d *DatanodeDeployer) checkDatanodeGroupStatus(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster) (bool, error) {
+func (d *DatanodeDeployer) checkDatanodeGroupsStatus(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster) (bool, error) {
 	var (
 		readyCount         int32
 		totalReadyReplicas int32
