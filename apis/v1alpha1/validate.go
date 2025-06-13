@@ -43,6 +43,10 @@ func (in *GreptimeDBCluster) Validate() error {
 		return err
 	}
 
+	if in.GetDatanode() != nil && len(in.GetDatanodeGroups()) > 0 {
+		return fmt.Errorf("datanode and datanodeGroups cannot be set at the same time")
+	}
+
 	if err := in.validateDatanode(); err != nil {
 		return err
 	}
