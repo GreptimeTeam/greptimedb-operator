@@ -28,6 +28,9 @@ jobs:
       contents: read
       pull-requests: write
     steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
       - uses: actions/labeler@v5
         with:
           configuration-path: ".github/labeler.yaml"
@@ -40,6 +43,9 @@ jobs:
       contents: read
       pull-requests: write
     steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+
       - uses: pascalgn/size-label-action@v0.5.5
         env:
           GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
