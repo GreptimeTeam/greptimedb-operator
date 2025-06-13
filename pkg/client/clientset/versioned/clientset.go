@@ -17,8 +17,8 @@
 package versioned
 
 import (
-	"fmt"
-	"net/http"
+	fmt "fmt"
+	http "net/http"
 
 	apisv1alpha1 "github.com/GreptimeTeam/greptimedb-operator/pkg/client/clientset/versioned/typed/apis/v1alpha1"
 	discovery "k8s.io/client-go/discovery"

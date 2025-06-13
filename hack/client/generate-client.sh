@@ -15,7 +15,7 @@ BOILERPLATE_FILE=hack/boilerplate.go.txt
 GOBIN=$(pwd)/bin
 
 # The code generator version.
-CODE_GENERATOR_VERSION=v0.30.0
+CODE_GENERATOR_VERSION=v0.32.5
 
 # The local path of the kube_codegen.sh.
 KUBE_CODEGEN_SCRIPT="${GOBIN}/kube_codegen.sh"

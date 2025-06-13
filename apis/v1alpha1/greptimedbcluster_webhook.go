@@ -15,10 +15,12 @@
 package v1alpha1
 
 import (
+	"context"
+	"fmt"
+
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
-	"sigs.k8s.io/controller-runtime/pkg/webhook"
 	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
@@ -34,11 +36,16 @@ func (r *GreptimeDBCluster) SetupWebhookWithManager(mgr ctrl.Manager) error {
 // TODO(liyang): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
 //+kubebuilder:webhook:path=/validate-greptime-io-v1alpha1-greptimedbcluster,mutating=false,failurePolicy=fail,sideEffects=None,groups=greptime.io,resources=greptimedbclusters,verbs=create;update,versions=v1alpha1,name=vgreptimedbcluster.kb.io,admissionReviewVersions=v1
 
-var _ webhook.Validator = &GreptimeDBCluster{}
+var _ admission.CustomValidator = &GreptimeDBCluster{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *GreptimeDBCluster) ValidateCreate() (admission.Warnings, error) {
+func (r *GreptimeDBCluster) ValidateCreate(_ context.Context, obj runtime.Object) (admission.Warnings, error) {
 	greptimedbclusterlog.Info("validate create", "name", r.Name)
+
+	_, ok := obj.(*GreptimeDBCluster)
+	if !ok {
+		return nil, fmt.Errorf("BUG: unexpected type: %T", obj)
+	}
 
 	if err := r.Validate(); err != nil {
 		return nil, err
@@ -48,8 +55,13 @@ func (r *GreptimeDBCluster) ValidateCreate() (admission.Warnings, error) {
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *GreptimeDBCluster) ValidateUpdate(_ runtime.Object) (admission.Warnings, error) {
+func (r *GreptimeDBCluster) ValidateUpdate(_ context.Context, oldObj, newObj runtime.Object) (admission.Warnings, error) {
 	greptimedbclusterlog.Info("validate update", "name", r.Name)
+
+	_, ok := newObj.(*GreptimeDBCluster)
+	if !ok {
+		return nil, fmt.Errorf("BUG: unexpected type: %T", newObj)
+	}
 
 	if err := r.Validate(); err != nil {
 		return nil, err
@@ -59,7 +71,7 @@ func (r *GreptimeDBCluster) ValidateUpdate(_ runtime.Object) (admission.Warnings
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *GreptimeDBCluster) ValidateDelete() (admission.Warnings, error) {
+func (r *GreptimeDBCluster) ValidateDelete(_ context.Context, _ runtime.Object) (admission.Warnings, error) {
 	// FIXME(liyang): Unnecessary validation when object deletion.
 	return nil, nil
 }
