@@ -3353,6 +3353,8 @@ spec:
                     type: integer
                   logging:
                     properties:
+                      enableOTLPTracing:
+                        type: boolean
                       filters:
                         items:
                           type: string
@@ -3373,8 +3375,12 @@ spec:
                         type: string
                       onlyLogToStdout:
                         type: boolean
+                      otlpEndpoint:
+                        type: string
                       persistentWithData:
                         type: boolean
+                      tracingSampleRatio:
+                        type: string
                     type: object
                   name:
                     type: string
@@ -6734,6 +6740,8 @@ spec:
                       type: integer
                     logging:
                       properties:
+                        enableOTLPTracing:
+                          type: boolean
                         filters:
                           items:
                             type: string
@@ -6754,8 +6762,12 @@ spec:
                           type: string
                         onlyLogToStdout:
                           type: boolean
+                        otlpEndpoint:
+                          type: string
                         persistentWithData:
                           type: boolean
+                        tracingSampleRatio:
+                          type: string
                       type: object
                     name:
                       type: string
@@ -10115,6 +10127,8 @@ spec:
                     type: integer
                   logging:
                     properties:
+                      enableOTLPTracing:
+                        type: boolean
                       filters:
                         items:
                           type: string
@@ -10135,8 +10149,12 @@ spec:
                         type: string
                       onlyLogToStdout:
                         type: boolean
+                      otlpEndpoint:
+                        type: string
                       persistentWithData:
                         type: boolean
+                      tracingSampleRatio:
+                        type: string
                     type: object
                   replicas:
                     format: int32
@@ -13463,6 +13481,8 @@ spec:
                     type: integer
                   logging:
                     properties:
+                      enableOTLPTracing:
+                        type: boolean
                       filters:
                         items:
                           type: string
@@ -13483,8 +13503,12 @@ spec:
                         type: string
                       onlyLogToStdout:
                         type: boolean
+                      otlpEndpoint:
+                        type: string
                       persistentWithData:
                         type: boolean
+                      tracingSampleRatio:
+                        type: string
                     type: object
                   mysqlPort:
                     format: int32
@@ -16864,6 +16888,8 @@ spec:
                       type: integer
                     logging:
                       properties:
+                        enableOTLPTracing:
+                          type: boolean
                         filters:
                           items:
                             type: string
@@ -16884,8 +16910,12 @@ spec:
                           type: string
                         onlyLogToStdout:
                           type: boolean
+                        otlpEndpoint:
+                          type: string
                         persistentWithData:
                           type: boolean
+                        tracingSampleRatio:
+                          type: string
                       type: object
                     mysqlPort:
                       format: int32
@@ -20309,6 +20339,8 @@ spec:
                 type: object
               logging:
                 properties:
+                  enableOTLPTracing:
+                    type: boolean
                   filters:
                     items:
                       type: string
@@ -20329,8 +20361,12 @@ spec:
                     type: string
                   onlyLogToStdout:
                     type: boolean
+                  otlpEndpoint:
+                    type: string
                   persistentWithData:
                     type: boolean
+                  tracingSampleRatio:
+                    type: string
                 type: object
               meta:
                 properties:
@@ -20410,6 +20446,8 @@ spec:
                     type: integer
                   logging:
                     properties:
+                      enableOTLPTracing:
+                        type: boolean
                       filters:
                         items:
                           type: string
@@ -20430,8 +20468,12 @@ spec:
                         type: string
                       onlyLogToStdout:
                         type: boolean
+                      otlpEndpoint:
+                        type: string
                       persistentWithData:
                         type: boolean
+                      tracingSampleRatio:
+                        type: string
                     type: object
                   replicas:
                     format: int32
@@ -27102,6 +27144,8 @@ spec:
                         type: object
                       logging:
                         properties:
+                          enableOTLPTracing:
+                            type: boolean
                           filters:
                             items:
                               type: string
@@ -27122,8 +27166,12 @@ spec:
                             type: string
                           onlyLogToStdout:
                             type: boolean
+                          otlpEndpoint:
+                            type: string
                           persistentWithData:
                             type: boolean
+                          tracingSampleRatio:
+                            type: string
                         type: object
                       mysqlPort:
                         format: int32
@@ -31029,6 +31077,8 @@ spec:
                 type: object
               logging:
                 properties:
+                  enableOTLPTracing:
+                    type: boolean
                   filters:
                     items:
                       type: string
@@ -31049,8 +31099,12 @@ spec:
                     type: string
                   onlyLogToStdout:
                     type: boolean
+                  otlpEndpoint:
+                    type: string
                   persistentWithData:
                     type: boolean
+                  tracingSampleRatio:
+                    type: string
                 type: object
               mysqlPort:
                 format: int32
