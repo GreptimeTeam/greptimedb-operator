@@ -34,4 +34,4 @@ The following examples suppose that you have installed the etcd cluster in the `
 - [GCS](./standalone/gcs/standalone.yaml): Create a GreptimeDB standalone with Google GCS storage.
 - [OSS](./standalone/oss/standalone.yaml): Create a GreptimeDB standalone with Aliyun OSS storage.
 - [AZBlob](./standalone/azblob/standalone.yaml): Create a GreptimeDB standalone with Azure Blob storage.
-- [Configure Tracing](./standalone/configure-tracing/cluster.yaml): Create a GreptimeDB standalone with custom tracing configuration.
+- [Configure Tracing](./standalone/configure-tracing/standalone.yaml): Create a GreptimeDB standalone with custom tracing configuration.
