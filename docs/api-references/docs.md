@@ -89,6 +89,7 @@ _Appears in:_
 | `config` _string_ | The content of the configuration file of the component in TOML format. |  |  |
 | `template` _[PodTemplateSpec](#podtemplatespec)_ | Template defines the pod template for the component, if not specified, the pod template will use the default value. |  |  |
 | `logging` _[LoggingSpec](#loggingspec)_ | Logging defines the logging configuration for the component. |  |  |
+| `tracing` _[TracingSpec](#tracingspec)_ | Tracing defines the tracing configuration for the component. |  |  |
 
 
 #### Condition
@@ -146,6 +147,7 @@ _Appears in:_
 | `config` _string_ | The content of the configuration file of the component in TOML format. |  |  |
 | `template` _[PodTemplateSpec](#podtemplatespec)_ | Template defines the pod template for the component, if not specified, the pod template will use the default value. |  |  |
 | `logging` _[LoggingSpec](#loggingspec)_ | Logging defines the logging configuration for the component. |  |  |
+| `tracing` _[TracingSpec](#tracingspec)_ | Tracing defines the tracing configuration for the component. |  |  |
 | `name` _string_ | Name is the name of the datanode. |  |  |
 | `rpcPort` _integer_ | RPCPort is the gRPC port of the datanode. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
 | `httpPort` _integer_ | HTTPPort is the HTTP port of the datanode. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
@@ -249,6 +251,7 @@ _Appears in:_
 | `config` _string_ | The content of the configuration file of the component in TOML format. |  |  |
 | `template` _[PodTemplateSpec](#podtemplatespec)_ | Template defines the pod template for the component, if not specified, the pod template will use the default value. |  |  |
 | `logging` _[LoggingSpec](#loggingspec)_ | Logging defines the logging configuration for the component. |  |  |
+| `tracing` _[TracingSpec](#tracingspec)_ | Tracing defines the tracing configuration for the component. |  |  |
 | `rpcPort` _integer_ | The gRPC port of the flownode. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
 | `httpPort` _integer_ | The HTTP port of the flownode. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
 | `rollingUpdate` _[RollingUpdateStatefulSetStrategy](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#rollingupdatestatefulsetstrategy-v1-apps)_ | RollingUpdate is the rolling update configuration. We always use `RollingUpdate` strategy. |  |  |
@@ -288,6 +291,7 @@ _Appears in:_
 | `config` _string_ | The content of the configuration file of the component in TOML format. |  |  |
 | `template` _[PodTemplateSpec](#podtemplatespec)_ | Template defines the pod template for the component, if not specified, the pod template will use the default value. |  |  |
 | `logging` _[LoggingSpec](#loggingspec)_ | Logging defines the logging configuration for the component. |  |  |
+| `tracing` _[TracingSpec](#tracingspec)_ | Tracing defines the tracing configuration for the component. |  |  |
 | `name` _string_ | Name is the name of the frontend. |  |  |
 | `rpcPort` _integer_ | RPCPort is the gRPC port of the frontend. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
 | `httpPort` _integer_ | HTTPPort is the HTTP port of the frontend. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
@@ -478,6 +482,7 @@ _Appears in:_
 | `logging` _[LoggingSpec](#loggingspec)_ | Logging defines the logging configuration for the component. |  |  |
 | `rollingUpdate` _[RollingUpdateStatefulSetStrategy](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#rollingupdatestatefulsetstrategy-v1-apps)_ | RollingUpdate is the rolling update configuration. We always use `RollingUpdate` strategy. |  |  |
 | `slowQuery` _[SlowQuery](#slowquery)_ | SlowQuery is the slow query configuration. |  |  |
+| `tracing` _[TracingSpec](#tracingspec)_ | Logging defines the logging configuration for the component. |  |  |
 
 
 
@@ -711,6 +716,7 @@ _Appears in:_
 | `config` _string_ | The content of the configuration file of the component in TOML format. |  |  |
 | `template` _[PodTemplateSpec](#podtemplatespec)_ | Template defines the pod template for the component, if not specified, the pod template will use the default value. |  |  |
 | `logging` _[LoggingSpec](#loggingspec)_ | Logging defines the logging configuration for the component. |  |  |
+| `tracing` _[TracingSpec](#tracingspec)_ | Tracing defines the tracing configuration for the component. |  |  |
 | `rpcPort` _integer_ | RPCPort is the gRPC port of the meta. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
 | `httpPort` _integer_ | HTTPPort is the HTTP port of the meta. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
 | `backendStorage` _[BackendStorage](#backendstorage)_ | BackendStorage is the specification for the backend storage for meta. |  |  |
@@ -1111,7 +1117,13 @@ TracingSpec defines the tracing configuration for the component.
 
 
 _Appears in:_
+- [ComponentSpec](#componentspec)
+- [DatanodeSpec](#datanodespec)
+- [FlownodeSpec](#flownodespec)
+- [FrontendSpec](#frontendspec)
 - [GreptimeDBClusterSpec](#greptimedbclusterspec)
+- [GreptimeDBStandaloneSpec](#greptimedbstandalonespec)
+- [MetaSpec](#metaspec)
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
