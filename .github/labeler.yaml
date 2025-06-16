@@ -21,3 +21,7 @@ tool:
 manifest:
   - changed-files:
       - any-glob-to-any-file: [manifests/**, config/**]
+
+example:
+  - changed-files:
+      - any-glob-to-any-file: examples/**
