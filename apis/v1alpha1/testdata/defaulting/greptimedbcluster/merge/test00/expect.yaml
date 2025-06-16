@@ -59,6 +59,7 @@ spec:
       logsDir: /data/greptimedb/logs
       onlyLogToStdout: false
       persistentWithData: false
+    tracing: {}
     rollingUpdate:
       maxUnavailable: 1
       maxSurge: 2
@@ -111,6 +112,7 @@ spec:
       logsDir: /data/greptimedb/logs
       onlyLogToStdout: false
       persistentWithData: false
+    tracing: {}
     rollingUpdate:
       maxSurge: 25%
       maxUnavailable: 25%
@@ -159,6 +161,7 @@ spec:
       logsDir: /data/greptimedb/logs
       onlyLogToStdout: false
       persistentWithData: false
+    tracing: {}
     rollingUpdate:
       maxUnavailable: 25%
       partition: 1

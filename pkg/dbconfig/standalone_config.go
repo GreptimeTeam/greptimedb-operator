@@ -36,6 +36,9 @@ type StandaloneConfig struct {
 	// SlowQueryConfig is the configuration for the slow query.
 	SlowQueryConfig `tomlmapping:",inline"`
 
+	// TracingConfig is the configuration for the tracing.
+	TracingConfig `tomlmapping:",inline"`
+
 	// InputConfig is from config field of cluster spec.
 	InputConfig string
 }
@@ -75,6 +78,7 @@ func (c *StandaloneConfig) ConfigureByStandalone(standalone *v1alpha1.GreptimeDB
 
 	c.ConfigureLogging(standalone.GetLogging())
 	c.ConfigureSlowQuery(standalone.GetSlowQuery())
+	c.ConfigureTracing(standalone.GetTracing())
 
 	return nil
 }

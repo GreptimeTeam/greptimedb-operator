@@ -96,6 +96,10 @@ type GreptimeDBStandaloneSpec struct {
 	// SlowQuery is the slow query configuration.
 	// +optional
 	SlowQuery *SlowQuery `json:"slowQuery,omitempty"`
+
+	// Logging defines the logging configuration for the component.
+	// +optional
+	Tracing *TracingSpec `json:"tracing,omitempty"`
 }
 
 // GreptimeDBStandaloneStatus defines the observed state of GreptimeDBStandalone
@@ -218,6 +222,13 @@ func (in *GreptimeDBStandalone) GetDataHome() string {
 func (in *GreptimeDBStandalone) GetLogging() *LoggingSpec {
 	if in != nil {
 		return in.Spec.Logging
+	}
+	return nil
+}
+
+func (in *GreptimeDBStandalone) GetTracing() *TracingSpec {
+	if in != nil {
+		return in.Spec.Tracing
 	}
 	return nil
 }

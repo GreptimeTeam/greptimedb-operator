@@ -38,6 +38,10 @@ type ComponentSpec struct {
 	// Logging defines the logging configuration for the component.
 	// +optional
 	Logging *LoggingSpec `json:"logging,omitempty"`
+
+	// Tracing defines the tracing configuration for the component.
+	// +optional
+	Tracing *TracingSpec `json:"tracing,omitempty"`
 }
 
 // MetaSpec is the specification for meta component.
@@ -275,6 +279,13 @@ func (in *MetaSpec) GetLogging() *LoggingSpec {
 	return nil
 }
 
+func (in *MetaSpec) GetTracing() *TracingSpec {
+	if in != nil {
+		return in.Tracing
+	}
+	return nil
+}
+
 func (in *MetaSpec) IsEnableRegionFailover() bool {
 	return in != nil && in.EnableRegionFailover != nil && *in.EnableRegionFailover
 }
@@ -395,6 +406,13 @@ func (in *FrontendSpec) GetLogging() *LoggingSpec {
 	return nil
 }
 
+func (in *FrontendSpec) GetTracing() *TracingSpec {
+	if in != nil {
+		return in.Tracing
+	}
+	return nil
+}
+
 func (in *FrontendSpec) GetSlowQuery() *SlowQuery {
 	if in != nil {
 		return in.SlowQuery
@@ -466,6 +484,13 @@ func (in *DatanodeSpec) GetLogging() *LoggingSpec {
 	return nil
 }
 
+func (in *DatanodeSpec) GetTracing() *TracingSpec {
+	if in != nil {
+		return in.Tracing
+	}
+	return nil
+}
+
 func (in *DatanodeSpec) GetFileStorage() *FileStorage {
 	if in != nil && in.Storage != nil {
 		return in.Storage.FileStorage
@@ -529,6 +554,13 @@ func (in *FlownodeSpec) GetConfig() string {
 func (in *FlownodeSpec) GetLogging() *LoggingSpec {
 	if in != nil {
 		return in.Logging
+	}
+	return nil
+}
+
+func (in *FlownodeSpec) GetTracing() *TracingSpec {
+	if in != nil {
+		return in.Tracing
 	}
 	return nil
 }
@@ -625,6 +657,10 @@ type GreptimeDBClusterSpec struct {
 	// Ingress is the Ingress configuration of the frontend.
 	// +optional
 	Ingress *IngressSpec `json:"ingress,omitempty"`
+
+	// The global tracing configuration for all components. It can be overridden by the tracing configuration of individual component.
+	// +optional
+	Tracing *TracingSpec `json:"tracing,omitempty"`
 }
 
 // MonitoringSpec is the specification for monitor bootstrapping. It will create a standalone greptimedb instance to monitor the cluster.
@@ -727,6 +763,13 @@ func (in *GreptimeDBCluster) GetVersion() string {
 func (in *GreptimeDBCluster) GetLogging() *LoggingSpec {
 	if in != nil {
 		return in.Spec.Logging
+	}
+	return nil
+}
+
+func (in *GreptimeDBCluster) GetTracing() *TracingSpec {
+	if in != nil {
+		return in.Spec.Tracing
 	}
 	return nil
 }

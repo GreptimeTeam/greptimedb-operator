@@ -1,0 +1,26 @@
+apiVersion: greptime.io/v1alpha1
+kind: GreptimeDBCluster
+metadata:
+  name: configure-tracing
+spec:
+  tracing:
+    enabled: true
+    endpoint: "http://basic-monitor-standalone.default:4000/v1/otlp"
+    sampleRatio: "1.0"
+  base:
+    main:
+      image: greptime/greptimedb:latest
+  frontend:
+    replicas: 1
+    tracing:
+      enabled: true
+      endpoint: "http://basic-monitor-standalone.default:4000/v1/otlp"
+      sampleRatio: "0.5"
+  meta:
+    replicas: 1
+    backendStorage:
+      etcd:
+        endpoints:
+          - "etcd.etcd-cluster.svc.cluster.local:2379"
+  datanode:
+    replicas: 1

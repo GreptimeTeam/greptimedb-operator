@@ -58,6 +58,7 @@ spec:
     service:
       type: ClusterIP
     logging: {}
+    tracing: {}
     template: {}
     rollingUpdate:
       maxUnavailable: 25%
@@ -75,6 +76,7 @@ spec:
           - etcd.etcd-cluster.svc.cluster.local:2379
     enableRegionFailover: false
     logging: {}
+    tracing: {}
     httpPort: 4000
     rpcPort: 3002
     replicas: 1
@@ -87,6 +89,7 @@ spec:
     rpcPort: 4001
     replicas: 1
     logging: {}
+    tracing: {}
     storage:
       dataHome: /data/greptimedb
       fs:

@@ -54,6 +54,7 @@ spec:
     service:
       type: ClusterIP
     logging: {}
+    tracing: {}
     template: {}
     rollingUpdate:
       maxSurge: 25%
@@ -74,6 +75,7 @@ spec:
     rpcPort: 3002
     replicas: 1
     logging: {}
+    tracing: {}
     template: {}
     rollingUpdate:
       maxSurge: 25%
@@ -90,6 +92,7 @@ spec:
         storageRetainPolicy: Retain
         storageSize: 10Gi
     logging: {}
+    tracing: {}
     template: {}
     rollingUpdate:
       maxUnavailable: 1

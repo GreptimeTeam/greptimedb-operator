@@ -25,6 +25,7 @@ The following examples suppose that you have installed the etcd cluster in the `
 - [PostgreSQL Meta Backend](./cluster/postgresql-meta-backend/cluster.yaml): Create a GreptimeDB cluster with PostgreSQL as the meta backend.
 - [Datanode Groups](./cluster/datanode-groups/cluster.yaml): Create a GreptimeDB cluster with datanode groups.
 - [Dedicated Cache Volume](./cluster/dedicated-cache-volume/cluster.yaml): Create a GreptimeDB cluster with dedicated cache volume.
+- [Configure Tracing](./cluster/configure-tracing/cluster.yaml): Create a GreptimeDB cluster with custom tracing configuration.
 
 ## Standalone
 
@@ -33,3 +34,4 @@ The following examples suppose that you have installed the etcd cluster in the `
 - [GCS](./standalone/gcs/standalone.yaml): Create a GreptimeDB standalone with Google GCS storage.
 - [OSS](./standalone/oss/standalone.yaml): Create a GreptimeDB standalone with Aliyun OSS storage.
 - [AZBlob](./standalone/azblob/standalone.yaml): Create a GreptimeDB standalone with Azure Blob storage.
+- [Configure Tracing](./standalone/configure-tracing/cluster.yaml): Create a GreptimeDB standalone with custom tracing configuration.

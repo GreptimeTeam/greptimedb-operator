@@ -525,18 +525,6 @@ type LoggingSpec struct {
 	// +optional
 	// +kubebuilder:validation:Enum:={"json", "text"}
 	Format LogFormat `json:"format,omitempty"`
-
-	// EnableOTLPTracing indicates whether to enable OTLP tracing.
-	// +optional
-	EnableOTLPTracing *bool `json:"enableOTLPTracing,omitempty"`
-
-	// OTLPEndpoint it the OTLP tracing endpoint.
-	// +optional
-	OTLPEndpoint string `json:"otlpEndpoint,omitempty"`
-
-	// TracingSampleRatio is the percentage of tracing will be sampled and exported.
-	// Valid range `[0, 1]`, 1 means all traces are sampled, 0 means all traces are not sampled, the default value is 1.
-	TracingSampleRatio string `json:"tracingSampleRatio,omitempty"`
 }
 
 func (in *LoggingSpec) GetLevel() LoggingLevel {
@@ -559,6 +547,21 @@ func (in *LoggingSpec) IsPersistentWithData() bool {
 
 func (in *LoggingSpec) IsOnlyLogToStdout() bool {
 	return in != nil && in.OnlyLogToStdout != nil && *in.OnlyLogToStdout
+}
+
+// TracingSpec defines the tracing configuration for the component.
+type TracingSpec struct {
+	// Enabled indicates whether to enable OTLP tracing.
+	// +optional
+	Enabled *bool `json:"enabled,omitempty"`
+
+	// Endpoint it the OTLP tracing endpoint.
+	// +optional
+	Endpoint string `json:"endpoint,omitempty"`
+
+	// SampleRatio is the percentage of tracing will be sampled and exported.
+	// Valid range `[0, 1]`, 1 means all traces are sampled, 0 means all traces are not sampled, the default value is 1.
+	SampleRatio string `json:"sampleRatio,omitempty"`
 }
 
 // ServiceSpec defines the service configuration for the component.

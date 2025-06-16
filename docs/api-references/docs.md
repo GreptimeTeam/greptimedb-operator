@@ -405,6 +405,7 @@ _Appears in:_
 | `logging` _[LoggingSpec](#loggingspec)_ | The global logging configuration for all components. It can be overridden by the logging configuration of individual component. |  |  |
 | `monitoring` _[MonitoringSpec](#monitoringspec)_ | Monitoring is the specification for monitor bootstrapping. It will create a standalone greptimedb instance to monitor the cluster. |  |  |
 | `ingress` _[IngressSpec](#ingressspec)_ | Ingress is the Ingress configuration of the frontend. |  |  |
+| `tracing` _[TracingSpec](#tracingspec)_ | The global tracing configuration for all components. It can be overridden by the tracing configuration of individual component. |  |  |
 
 
 
@@ -646,9 +647,6 @@ _Appears in:_
 | `persistentWithData` _boolean_ | PersistentWithData indicates whether to persist the log with the datanode data storage. It **ONLY** works for the datanode component.<br />If false, the log will be stored in ephemeral storage. |  |  |
 | `onlyLogToStdout` _boolean_ | OnlyLogToStdout indicates whether to only log to stdout. If true, the log will not be stored in the storage even if the storage is configured. |  |  |
 | `format` _[LogFormat](#logformat)_ | Format is the format of the logging. |  | Enum: [json text] <br /> |
-| `enableOTLPTracing` _boolean_ | EnableOTLPTracing indicates whether to enable OTLP tracing. |  |  |
-| `otlpEndpoint` _string_ | OTLPEndpoint it the OTLP tracing endpoint. |  |  |
-| `tracingSampleRatio` _string_ | TracingSampleRatio is the percentage of tracing will be sampled and exported.<br />Valid range `[0, 1]`, 1 means all traces are sampled, 0 means all traces are not sampled, the default value is 1. |  |  |
 
 
 #### LogsCollectionSpec
@@ -1102,6 +1100,24 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `secretName` _string_ | SecretName is the name of the secret that contains the TLS certificates.<br />The secret must be in the same namespace with the greptime resource.<br />The secret must contain keys named `tls.crt` and `tls.key`. |  |  |
+
+
+#### TracingSpec
+
+
+
+TracingSpec defines the tracing configuration for the component.
+
+
+
+_Appears in:_
+- [GreptimeDBClusterSpec](#greptimedbclusterspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `enabled` _boolean_ | Enabled indicates whether to enable OTLP tracing. |  |  |
+| `endpoint` _string_ | Endpoint it the OTLP tracing endpoint. |  |  |
+| `sampleRatio` _string_ | SampleRatio is the percentage of tracing will be sampled and exported.<br />Valid range `[0, 1]`, 1 means all traces are sampled, 0 means all traces are not sampled, the default value is 1. |  |  |
 
 
 #### VectorSpec

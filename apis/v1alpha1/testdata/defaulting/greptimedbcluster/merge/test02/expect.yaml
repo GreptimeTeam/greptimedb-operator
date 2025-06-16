@@ -1,7 +1,7 @@
 apiVersion: greptime.io/v1alpha1
 kind: GreptimeDBCluster
 metadata:
-  name: test03
+  name: test02
   namespace: default
 spec:
   base:
@@ -41,10 +41,7 @@ spec:
       logsDir: /data/greptimedb/logs
       onlyLogToStdout: false
       persistentWithData: false
-    tracing:
-      enabled: true
-      endpoint: "trace-endpoint"
-      sampleRatio: "0.3"
+    tracing: {}
     replicas: 3
     rollingUpdate:
       maxUnavailable: 1
@@ -93,10 +90,7 @@ spec:
       logsDir: /data/greptimedb/logs
       onlyLogToStdout: false
       persistentWithData: false
-    tracing:
-      enabled: true
-      endpoint: "trace-endpoint"
-      sampleRatio: "0.2"
+    tracing: {}
     replicas: 3
     rollingUpdate:
       maxUnavailable: 1
@@ -146,10 +140,7 @@ spec:
       logsDir: /data/greptimedb/logs
       onlyLogToStdout: false
       persistentWithData: false
-    tracing:
-      enabled: true
-      endpoint: "trace-endpoint"
-      sampleRatio: "0.6"
+    tracing: {}
     mysqlPort: 4002
     postgreSQLPort: 4003
     replicas: 2
@@ -195,10 +186,7 @@ spec:
       logsDir: /data/greptimedb/logs
       onlyLogToStdout: false
       persistentWithData: false
-    tracing:
-      enabled: true
-      endpoint: "trace-endpoint"
-      sampleRatio: "0.7"
+    tracing: {}
     mysqlPort: 4002
     postgreSQLPort: 4003
     replicas: 2
@@ -294,9 +282,5 @@ spec:
           periodSeconds: 5
   mysqlPort: 4002
   postgreSQLPort: 4003
-  tracing:
-    enabled: true
-    endpoint: "trace-endpoint"
-    sampleRatio: "0.9"
   rpcPort: 4001
   version: latest

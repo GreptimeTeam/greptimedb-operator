@@ -188,6 +188,10 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		return ctrl.Result{}, err
 	}
 
+	if err := cluster.MergeTracing(); err != nil {
+		return ctrl.Result{}, err
+	}
+
 	// FIXME(zyy17): The following code should be elegant to move to the deployers.
 	if !cluster.Spec.Monitoring.IsEnabled() {
 		if err := r.removeMonitoringDB(ctx, cluster); err != nil {
