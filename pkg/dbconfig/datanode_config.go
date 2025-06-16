@@ -86,8 +86,6 @@ func (c *DatanodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster,
 	c.ConfigureLogging(datanodeSpec.GetLogging())
 	c.ConfigureTracing(datanodeSpec.GetTracing())
 
-	fmt.Println("wwwwwwwww", datanodeSpec.GetTracing())
-
 	return nil
 }
 

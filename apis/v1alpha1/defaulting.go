@@ -15,7 +15,6 @@
 package v1alpha1
 
 import (
-	"fmt"
 	"reflect"
 	"strings"
 
@@ -159,7 +158,6 @@ func (in *GreptimeDBCluster) MergeTracing() error {
 		if err := in.doMergeTracing(tracing, in.GetTracing()); err != nil {
 			return err
 		}
-		fmt.Println("aaaaaaaaa", tracing)
 	}
 
 	return nil
