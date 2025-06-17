@@ -233,7 +233,7 @@ type PostgreSQLStorage struct {
 	// +kubebuilder:validation:Maximum=65535
 	Port int32 `json:"port"`
 
-	// CredentialsSecretName is the name of the secret that contains the credentials for the MySQL database.
+	// CredentialsSecretName is the name of the secret that contains the credentials for the PostgreSQL database.
 	// The secret must be in the same namespace with the greptime resource.
 	// The secret must contain keys named `username` and `password`.
 	// +required
