@@ -2438,8 +2438,6 @@ spec:
                         type: array
                       workingDir:
                         type: string
-                    required:
-                    - image
                     type: object
                   nodeSelector:
                     additionalProperties:

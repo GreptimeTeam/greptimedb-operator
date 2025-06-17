@@ -199,7 +199,7 @@ type SlimPodSpec struct {
 // Most of the fields of MainContainerSpec are from 'corev1.Container'.
 type MainContainerSpec struct {
 	// The main container image name of the component.
-	// +required
+	// +optional
 	Image string `json:"image,omitempty"`
 
 	// The resource requirements of the main container.
