@@ -139,15 +139,20 @@ delete_cluster() {
 }
 
 # Delete the datanode PVCs
-delete_pvc() {
+delete_datanode_pvc() {
   if [[ -z "$NAME" || -z "$NAMESPACE" ]]; then
       return 0
   fi
 
-  PVC_LABEL="app.greptime.io/component=${NAME}-datanode"
-
   # Find and delete PVCs with the specified label
-  PVCs=$($KUBECTL get pvc -n "$NAMESPACE" -l "$PVC_LABEL" -o jsonpath='{.items[*].metadata.name}' 2>/dev/null)
+  PVCs=$(kubectl get pvc -n "$NAMESPACE" -o json | \
+      jq -r --arg exact "${NAME}-datanode" --arg prefix "${NAME}-datanode-" '
+        .items[] |
+        select(
+          (.metadata.labels["app.greptime.io/component"] == $exact) or
+          (.metadata.labels["app.greptime.io/component"] | startswith($prefix))
+        ) | .metadata.name'
+  )
 
   if [ -z "$PVCs" ]; then
       echo -e "${RED}No datanode PVCs found.${RESET}"
@@ -155,7 +160,7 @@ delete_pvc() {
   fi
 
   for PVC in $PVCs; do
-      echo -e "${BLUE}Deleting PVC: ${PVC}${RESET}"
+      echo -e "${BLUE}Deleting datanode PVC: ${PVC}${RESET}"
 
       TIMEOUT=30
       COMMAND="$KUBECTL delete pvc \"$PVC\" -n \"$NAMESPACE\""
@@ -163,9 +168,36 @@ delete_pvc() {
       if ! wait_for "$COMMAND" "$TIMEOUT"; then
           echo -e "${RED}PVC '$PVC' was not deleted in $TIMEOUT seconds.${RESET}"
       else
-          echo -e "${GREEN}Successfully deleted PVC '$PVC'.${RESET}"
+          echo -e "${GREEN}Successfully deleted datanode PVC '$PVC'.${RESET}"
       fi
   done
+}
+
+# Delete the monitor standalone PVCs
+delete_monitor_standalone_pvc() {
+  if [[ -z "$NAME" || -z "$NAMESPACE" ]]; then
+      return 0
+  fi
+
+  PVC_LABEL="app.greptime.io/component=${NAME}-monitor-standalone"
+
+  # Find and delete monitor PVC with the specified label
+  PVC=$($KUBECTL get pvc -n "$NAMESPACE" -l "$PVC_LABEL" -o jsonpath='{.items[*].metadata.name}' 2>/dev/null)
+
+  if [ -z "$PVC" ]; then
+      echo -e "${RED}No monitor PVC found.${RESET}"
+      return
+  fi
+
+  echo -e "${BLUE}Deleting monitor PVC: ${PVC}${RESET}"
+  TIMEOUT=30
+  COMMAND="$KUBECTL delete pvc \"$PVC\" -n \"$NAMESPACE\""
+
+  if ! wait_for "$COMMAND" "$TIMEOUT"; then
+      echo -e "${RED}PVC '$PVC' was not deleted in $TIMEOUT seconds.${RESET}"
+  else
+      echo -e "${GREEN}Successfully deleted monitor PVC '$PVC'.${RESET}"
+  fi
 }
 
 detect_etcd_leader() {
@@ -280,7 +312,8 @@ main() {
 
     # Execute deletions
     delete_cluster
-    delete_pvc
+    delete_datanode_pvc
+    delete_monitor_standalone_pvc
     delete_etcd_data
 
     echo -e "${GREEN}Cleanup completed successfully.${RESET}"
