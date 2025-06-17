@@ -97,7 +97,7 @@ type GreptimeDBStandaloneSpec struct {
 	// +optional
 	SlowQuery *SlowQuery `json:"slowQuery,omitempty"`
 
-	// Logging defines the logging configuration for the component.
+	// Tracing defines the tracing configuration for the component.
 	// +optional
 	Tracing *TracingSpec `json:"tracing,omitempty"`
 }

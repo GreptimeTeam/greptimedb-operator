@@ -482,7 +482,7 @@ _Appears in:_
 | `logging` _[LoggingSpec](#loggingspec)_ | Logging defines the logging configuration for the component. |  |  |
 | `rollingUpdate` _[RollingUpdateStatefulSetStrategy](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#rollingupdatestatefulsetstrategy-v1-apps)_ | RollingUpdate is the rolling update configuration. We always use `RollingUpdate` strategy. |  |  |
 | `slowQuery` _[SlowQuery](#slowquery)_ | SlowQuery is the slow query configuration. |  |  |
-| `tracing` _[TracingSpec](#tracingspec)_ | Logging defines the logging configuration for the component. |  |  |
+| `tracing` _[TracingSpec](#tracingspec)_ | Tracing defines the tracing configuration for the component. |  |  |
 
 
 
