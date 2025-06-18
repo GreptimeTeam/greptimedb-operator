@@ -146,10 +146,7 @@ type frontendBuilder struct {
 }
 
 func (b *frontendBuilder) generateService(frontend *v1alpha1.FrontendSpec) {
-	name := common.ResourceName(b.Cluster.Name, b.RoleKind)
-	if len(frontend.GetName()) != 0 {
-		name = common.ResourceName(b.Cluster.Name, b.RoleKind, frontend.GetName())
-	}
+	name := common.ResourceName(b.Cluster.Name, b.RoleKind, frontend.GetName())
 
 	svc := &corev1.Service{
 		TypeMeta: metav1.TypeMeta{
@@ -200,10 +197,7 @@ func (b *frontendBuilder) BuildService() deployer.Builder {
 }
 
 func (b *frontendBuilder) generateDeployment(frontend *v1alpha1.FrontendSpec) {
-	name := common.ResourceName(b.Cluster.Name, b.RoleKind)
-	if len(frontend.GetName()) != 0 {
-		name = common.ResourceName(b.Cluster.Name, b.RoleKind, frontend.GetName())
-	}
+	name := common.ResourceName(b.Cluster.Name, b.RoleKind, frontend.GetName())
 
 	deployment := &appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
@@ -439,10 +433,8 @@ func (b *frontendBuilder) generatePodTemplateSpec(frontend *v1alpha1.FrontendSpe
 		podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Args = b.generateMainContainerArgs(frontend)
 	}
 
-	resourceName := common.ResourceName(b.Cluster.Name, b.RoleKind)
-	if len(frontend.GetName()) != 0 {
-		resourceName = common.ResourceName(b.Cluster.Name, b.RoleKind, frontend.GetName())
-	}
+	resourceName := common.ResourceName(b.Cluster.Name, b.RoleKind, frontend.GetName())
+
 	podTemplateSpec.Labels = util.MergeStringMap(podTemplateSpec.Labels, map[string]string{
 		constant.GreptimeDBComponentName: resourceName,
 	})
