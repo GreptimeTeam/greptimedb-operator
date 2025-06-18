@@ -77,7 +77,7 @@ const (
 	DefaultVectorMemoryRequest = "64Mi"
 
 	// DefaultVectorCPULimit is the default CPU limit for the vector.
-	DefaultVectorCPULimit = "250m"
+	DefaultVectorCPULimit = "200m"
 
 	// DefaultVectorMemoryLimit is the default memory limit for the vector.
 	DefaultVectorMemoryLimit = "256Mi"
