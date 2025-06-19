@@ -75,6 +75,12 @@ const (
 
 	// DefaultVectorMemoryRequest is the default memory request for the vector.
 	DefaultVectorMemoryRequest = "64Mi"
+
+	// DefaultVectorCPULimit is the default CPU limit for the vector.
+	DefaultVectorCPULimit = "200m"
+
+	// DefaultVectorMemoryLimit is the default memory limit for the vector.
+	DefaultVectorMemoryLimit = "256Mi"
 )
 
 // The following constants are the constant configuration for the GreptimeDBCluster and GreptimeDBStandalone.

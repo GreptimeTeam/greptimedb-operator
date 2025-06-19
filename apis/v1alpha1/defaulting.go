@@ -227,8 +227,8 @@ func (in *GreptimeDBCluster) defaultSpec() *GreptimeDBClusterSpec {
 						corev1.ResourceMemory: resource.MustParse(DefaultVectorMemoryRequest),
 					},
 					Limits: corev1.ResourceList{
-						corev1.ResourceCPU:    resource.MustParse(DefaultVectorCPURequest),
-						corev1.ResourceMemory: resource.MustParse(DefaultVectorMemoryRequest),
+						corev1.ResourceCPU:    resource.MustParse(DefaultVectorCPULimit),
+						corev1.ResourceMemory: resource.MustParse(DefaultVectorMemoryLimit),
 					},
 				},
 			},
