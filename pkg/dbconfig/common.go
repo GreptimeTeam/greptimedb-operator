@@ -222,6 +222,36 @@ func (c *LoggingConfig) levelWithFilters(level string, filters []string) string 
 	return level
 }
 
+// TracingConfig is the configuration for the tracing.
+type TracingConfig struct {
+	// Enable OTLP tracing.
+	Enabled *bool `tomlmapping:"logging.enable_otlp_tracing"`
+
+	// The OTLP tracing endpoint.
+	Endpoint *string `tomlmapping:"logging.otlp_endpoint"`
+
+	// The percentage of tracing will be sampled and exported.
+	SampleRatio *float64 `tomlmapping:"logging.tracing_sample_ratio.default_ratio"`
+}
+
+// ConfigureTracing configures the tracing config with the given tracing spec.
+func (c *TracingConfig) ConfigureTracing(spec *v1alpha1.TracingSpec) {
+	if spec == nil {
+		return
+	}
+
+	if spec.Enabled != nil && *spec.Enabled {
+		c.Enabled = spec.Enabled
+		c.Endpoint = ptr.To(spec.Endpoint)
+		sampleRatio, err := strconv.ParseFloat(spec.SampleRatio, 64)
+		if err != nil {
+			klog.Warningf("Failed to parse OTLP tracing sample ratio '%s', use the default value 1.0", spec.SampleRatio)
+			sampleRatio = 1.0
+		}
+		c.SampleRatio = ptr.To(sampleRatio)
+	}
+}
+
 // SlowQueryConfig is the configuration for the slow query.
 type SlowQueryConfig struct {
 	// The slow query enabled.

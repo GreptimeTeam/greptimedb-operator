@@ -54,6 +54,9 @@ type MetaConfig struct {
 	// LoggingConfig is the configuration for the logging.
 	LoggingConfig `tomlmapping:",inline"`
 
+	// TracingConfig is the configuration for the tracing.
+	TracingConfig `tomlmapping:",inline"`
+
 	// InputConfig is from config field of cluster spec.
 	InputConfig string
 }
@@ -86,6 +89,7 @@ func (c *MetaConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster, rol
 	}
 
 	c.ConfigureLogging(metaSpec.GetLogging())
+	c.ConfigureTracing(metaSpec.GetTracing())
 
 	return nil
 }

@@ -1,7 +1,7 @@
 apiVersion: greptime.io/v1alpha1
 kind: GreptimeDBCluster
 metadata:
-  name: test03
+  name: test02
   namespace: default
 spec:
   base:
@@ -14,23 +14,11 @@ spec:
         limits:
           cpu: 100m
           memory: 128Mi
-  tracing:
-    enabled: true
-    endpoint: "trace-endpoint"
-    sampleRatio: "0.9"
   frontendGroups:
   - name: read
     replicas: 2
-    tracing:
-      enabled: true
-      endpoint: "trace-endpoint"
-      sampleRatio: "0.6"
   - name: write
     replicas: 2
-    tracing:
-      enabled: true
-      endpoint: "trace-endpoint"
-      sampleRatio: "0.7"
   meta:
     backendStorage:
       etcd:
@@ -40,13 +28,5 @@ spec:
   datanodeGroups:
   - name: read
     replicas: 3
-    tracing:
-      enabled: true
-      endpoint: "trace-endpoint"
-      sampleRatio: "0.3"
   - name: write
     replicas: 3
-    tracing:
-      enabled: true
-      endpoint: "trace-endpoint"
-      sampleRatio: "0.2"

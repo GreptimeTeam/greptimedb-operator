@@ -89,6 +89,7 @@ _Appears in:_
 | `config` _string_ | The content of the configuration file of the component in TOML format. |  |  |
 | `template` _[PodTemplateSpec](#podtemplatespec)_ | Template defines the pod template for the component, if not specified, the pod template will use the default value. |  |  |
 | `logging` _[LoggingSpec](#loggingspec)_ | Logging defines the logging configuration for the component. |  |  |
+| `tracing` _[TracingSpec](#tracingspec)_ | Tracing defines the tracing configuration for the component. |  |  |
 
 
 #### Condition
@@ -146,6 +147,7 @@ _Appears in:_
 | `config` _string_ | The content of the configuration file of the component in TOML format. |  |  |
 | `template` _[PodTemplateSpec](#podtemplatespec)_ | Template defines the pod template for the component, if not specified, the pod template will use the default value. |  |  |
 | `logging` _[LoggingSpec](#loggingspec)_ | Logging defines the logging configuration for the component. |  |  |
+| `tracing` _[TracingSpec](#tracingspec)_ | Tracing defines the tracing configuration for the component. |  |  |
 | `name` _string_ | Name is the name of the datanode. |  |  |
 | `rpcPort` _integer_ | RPCPort is the gRPC port of the datanode. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
 | `httpPort` _integer_ | HTTPPort is the HTTP port of the datanode. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
@@ -249,6 +251,7 @@ _Appears in:_
 | `config` _string_ | The content of the configuration file of the component in TOML format. |  |  |
 | `template` _[PodTemplateSpec](#podtemplatespec)_ | Template defines the pod template for the component, if not specified, the pod template will use the default value. |  |  |
 | `logging` _[LoggingSpec](#loggingspec)_ | Logging defines the logging configuration for the component. |  |  |
+| `tracing` _[TracingSpec](#tracingspec)_ | Tracing defines the tracing configuration for the component. |  |  |
 | `rpcPort` _integer_ | The gRPC port of the flownode. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
 | `httpPort` _integer_ | The HTTP port of the flownode. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
 | `rollingUpdate` _[RollingUpdateStatefulSetStrategy](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#rollingupdatestatefulsetstrategy-v1-apps)_ | RollingUpdate is the rolling update configuration. We always use `RollingUpdate` strategy. |  |  |
@@ -288,6 +291,7 @@ _Appears in:_
 | `config` _string_ | The content of the configuration file of the component in TOML format. |  |  |
 | `template` _[PodTemplateSpec](#podtemplatespec)_ | Template defines the pod template for the component, if not specified, the pod template will use the default value. |  |  |
 | `logging` _[LoggingSpec](#loggingspec)_ | Logging defines the logging configuration for the component. |  |  |
+| `tracing` _[TracingSpec](#tracingspec)_ | Tracing defines the tracing configuration for the component. |  |  |
 | `name` _string_ | Name is the name of the frontend. |  |  |
 | `rpcPort` _integer_ | RPCPort is the gRPC port of the frontend. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
 | `httpPort` _integer_ | HTTPPort is the HTTP port of the frontend. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
@@ -405,6 +409,7 @@ _Appears in:_
 | `logging` _[LoggingSpec](#loggingspec)_ | The global logging configuration for all components. It can be overridden by the logging configuration of individual component. |  |  |
 | `monitoring` _[MonitoringSpec](#monitoringspec)_ | Monitoring is the specification for monitor bootstrapping. It will create a standalone greptimedb instance to monitor the cluster. |  |  |
 | `ingress` _[IngressSpec](#ingressspec)_ | Ingress is the Ingress configuration of the frontend. |  |  |
+| `tracing` _[TracingSpec](#tracingspec)_ | The global tracing configuration for all components. It can be overridden by the tracing configuration of individual component. |  |  |
 
 
 
@@ -477,6 +482,7 @@ _Appears in:_
 | `logging` _[LoggingSpec](#loggingspec)_ | Logging defines the logging configuration for the component. |  |  |
 | `rollingUpdate` _[RollingUpdateStatefulSetStrategy](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#rollingupdatestatefulsetstrategy-v1-apps)_ | RollingUpdate is the rolling update configuration. We always use `RollingUpdate` strategy. |  |  |
 | `slowQuery` _[SlowQuery](#slowquery)_ | SlowQuery is the slow query configuration. |  |  |
+| `tracing` _[TracingSpec](#tracingspec)_ | Tracing defines the tracing configuration for the component. |  |  |
 
 
 
@@ -710,6 +716,7 @@ _Appears in:_
 | `config` _string_ | The content of the configuration file of the component in TOML format. |  |  |
 | `template` _[PodTemplateSpec](#podtemplatespec)_ | Template defines the pod template for the component, if not specified, the pod template will use the default value. |  |  |
 | `logging` _[LoggingSpec](#loggingspec)_ | Logging defines the logging configuration for the component. |  |  |
+| `tracing` _[TracingSpec](#tracingspec)_ | Tracing defines the tracing configuration for the component. |  |  |
 | `rpcPort` _integer_ | RPCPort is the gRPC port of the meta. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
 | `httpPort` _integer_ | HTTPPort is the HTTP port of the meta. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
 | `backendStorage` _[BackendStorage](#backendstorage)_ | BackendStorage is the specification for the backend storage for meta. |  |  |
@@ -1099,6 +1106,30 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `secretName` _string_ | SecretName is the name of the secret that contains the TLS certificates.<br />The secret must be in the same namespace with the greptime resource.<br />The secret must contain keys named `tls.crt` and `tls.key`. |  |  |
+
+
+#### TracingSpec
+
+
+
+TracingSpec defines the tracing configuration for the component.
+
+
+
+_Appears in:_
+- [ComponentSpec](#componentspec)
+- [DatanodeSpec](#datanodespec)
+- [FlownodeSpec](#flownodespec)
+- [FrontendSpec](#frontendspec)
+- [GreptimeDBClusterSpec](#greptimedbclusterspec)
+- [GreptimeDBStandaloneSpec](#greptimedbstandalonespec)
+- [MetaSpec](#metaspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `enabled` _boolean_ | Enabled indicates whether to enable OTLP tracing. |  |  |
+| `endpoint` _string_ | Endpoint it the OTLP tracing endpoint. |  |  |
+| `sampleRatio` _string_ | SampleRatio is the percentage of tracing will be sampled and exported.<br />Valid range `[0, 1]`, 1 means all traces are sampled, 0 means all traces are not sampled, the default value is 1. |  |  |
 
 
 #### VectorSpec

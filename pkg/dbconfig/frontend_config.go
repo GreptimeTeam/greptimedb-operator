@@ -30,6 +30,9 @@ type FrontendConfig struct {
 	// SlowQueryConfig is the configuration for the slow query.
 	SlowQueryConfig `tomlmapping:",inline"`
 
+	// TracingConfig is the configuration for the tracing.
+	TracingConfig `tomlmapping:",inline"`
+
 	// InputConfig is from config field of cluster spec.
 	InputConfig string
 }
@@ -53,6 +56,7 @@ func (c *FrontendConfig) ConfigureByCluster(_ *v1alpha1.GreptimeDBCluster, roleS
 
 	c.ConfigureLogging(frontendSpec.GetLogging())
 	c.ConfigureSlowQuery(frontendSpec.GetSlowQuery())
+	c.ConfigureTracing(frontendSpec.GetTracing())
 
 	return nil
 }

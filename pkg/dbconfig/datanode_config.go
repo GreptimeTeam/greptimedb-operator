@@ -39,6 +39,9 @@ type DatanodeConfig struct {
 	// LoggingConfig is the configuration for the logging.
 	LoggingConfig `tomlmapping:",inline"`
 
+	// TracingConfig is the configuration for the tracing.
+	TracingConfig `tomlmapping:",inline"`
+
 	// InputConfig is from config field of cluster spec.
 	InputConfig string
 }
@@ -81,6 +84,7 @@ func (c *DatanodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster,
 	}
 
 	c.ConfigureLogging(datanodeSpec.GetLogging())
+	c.ConfigureTracing(datanodeSpec.GetTracing())
 
 	return nil
 }

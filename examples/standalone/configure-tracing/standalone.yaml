@@ -1,0 +1,12 @@
+apiVersion: greptime.io/v1alpha1
+kind: GreptimeDBStandalone
+metadata:
+  name: configure-tracing
+spec:
+  base:
+    main:
+      image: greptime/greptimedb:latest
+  tracing:
+    enabled: true
+    endpoint: "http://basic-monitor-standalone.default:4000/v1/otlp"
+    sampleRatio: "1.0"

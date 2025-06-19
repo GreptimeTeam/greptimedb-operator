@@ -31,6 +31,9 @@ type FlownodeConfig struct {
 	// LoggingConfig is the configuration for the logging.
 	LoggingConfig `tomlmapping:",inline"`
 
+	// TracingConfig is the configuration for the tracing.
+	TracingConfig `tomlmapping:",inline"`
+
 	// InputConfig is from config field of cluster spec.
 	InputConfig string
 }
@@ -53,6 +56,7 @@ func (c *FlownodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster,
 	}
 
 	c.ConfigureLogging(cluster.GetFlownode().GetLogging())
+	c.ConfigureTracing(cluster.GetFlownode().GetTracing())
 
 	return nil
 }

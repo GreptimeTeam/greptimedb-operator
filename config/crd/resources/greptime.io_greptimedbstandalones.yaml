@@ -3572,6 +3572,15 @@ spec:
                 required:
                 - secretName
                 type: object
+              tracing:
+                properties:
+                  enabled:
+                    type: boolean
+                  endpoint:
+                    type: string
+                  sampleRatio:
+                    type: string
+                type: object
               version:
                 type: string
               wal:

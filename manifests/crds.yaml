@@ -6717,6 +6717,15 @@ spec:
                           type: object
                         type: array
                     type: object
+                  tracing:
+                    properties:
+                      enabled:
+                        type: boolean
+                      endpoint:
+                        type: string
+                      sampleRatio:
+                        type: string
+                    type: object
                 type: object
               datanodeGroups:
                 items:
@@ -10096,6 +10105,15 @@ spec:
                             type: object
                           type: array
                       type: object
+                    tracing:
+                      properties:
+                        enabled:
+                          type: boolean
+                        endpoint:
+                          type: string
+                        sampleRatio:
+                          type: string
+                      type: object
                   type: object
                 type: array
               flownode:
@@ -13442,6 +13460,15 @@ spec:
                           - name
                           type: object
                         type: array
+                    type: object
+                  tracing:
+                    properties:
+                      enabled:
+                        type: boolean
+                      endpoint:
+                        type: string
+                      sampleRatio:
+                        type: string
                     type: object
                 type: object
               frontend:
@@ -16841,6 +16868,15 @@ spec:
                     required:
                     - secretName
                     type: object
+                  tracing:
+                    properties:
+                      enabled:
+                        type: boolean
+                      endpoint:
+                        type: string
+                      sampleRatio:
+                        type: string
+                    type: object
                 type: object
               frontendGroups:
                 items:
@@ -20239,6 +20275,15 @@ spec:
                           type: string
                       required:
                       - secretName
+                      type: object
+                    tracing:
+                      properties:
+                        enabled:
+                          type: boolean
+                        endpoint:
+                          type: string
+                        sampleRatio:
+                          type: string
                       type: object
                   type: object
                 type: array
@@ -23735,6 +23780,15 @@ spec:
                           - name
                           type: object
                         type: array
+                    type: object
+                  tracing:
+                    properties:
+                      enabled:
+                        type: boolean
+                      endpoint:
+                        type: string
+                      sampleRatio:
+                        type: string
                     type: object
                 type: object
               monitoring:
@@ -27285,6 +27339,15 @@ spec:
                         required:
                         - secretName
                         type: object
+                      tracing:
+                        properties:
+                          enabled:
+                            type: boolean
+                          endpoint:
+                            type: string
+                          sampleRatio:
+                            type: string
+                        type: object
                       version:
                         type: string
                       wal:
@@ -27496,6 +27559,15 @@ spec:
                 maximum: 65535
                 minimum: 0
                 type: integer
+              tracing:
+                properties:
+                  enabled:
+                    type: boolean
+                  endpoint:
+                    type: string
+                  sampleRatio:
+                    type: string
+                type: object
               version:
                 type: string
               wal:
@@ -31209,6 +31281,15 @@ spec:
                     type: string
                 required:
                 - secretName
+                type: object
+              tracing:
+                properties:
+                  enabled:
+                    type: boolean
+                  endpoint:
+                    type: string
+                  sampleRatio:
+                    type: string
                 type: object
               version:
                 type: string

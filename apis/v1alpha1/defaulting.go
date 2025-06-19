@@ -124,6 +124,57 @@ func (in *GreptimeDBCluster) doMergeLogging(input, global *LoggingSpec, isEnable
 	return nil
 }
 
+// MergeTracing merges the tracing settings into the component's tracing settings.
+func (in *GreptimeDBCluster) MergeTracing() error {
+	tracingSpecs := []*TracingSpec{
+		in.GetMeta().GetTracing(),
+		in.GetFlownode().GetTracing(),
+	}
+
+	if in.GetFrontend() != nil {
+		tracingSpecs = append(tracingSpecs, in.GetFrontend().GetTracing())
+	}
+
+	if len(in.GetFrontendGroups()) != 0 {
+		for _, frontend := range in.GetFrontendGroups() {
+			tracingSpecs = append(tracingSpecs, frontend.GetTracing())
+		}
+	}
+
+	if in.GetDatanode() != nil {
+		tracingSpecs = append(tracingSpecs, in.GetDatanode().GetTracing())
+	}
+
+	if len(in.GetDatanodeGroups()) != 0 {
+		for _, datanodeGroup := range in.GetDatanodeGroups() {
+			tracingSpecs = append(tracingSpecs, datanodeGroup.GetTracing())
+		}
+	}
+
+	for _, tracing := range tracingSpecs {
+		if tracing == nil {
+			continue
+		}
+		if err := in.doMergeTracing(tracing, in.GetTracing()); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (in *GreptimeDBCluster) doMergeTracing(input, global *TracingSpec) error {
+	if input == nil || global == nil {
+		return nil
+	}
+
+	if err := mergo.Merge(input, global.DeepCopy()); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (in *GreptimeDBCluster) defaultSpec() *GreptimeDBClusterSpec {
 	var defaultSpec = &GreptimeDBClusterSpec{
 		Base: &PodTemplateSpec{
@@ -195,6 +246,7 @@ func (in *GreptimeDBCluster) defaultFrontend() *FrontendSpec {
 		ComponentSpec: ComponentSpec{
 			Template: &PodTemplateSpec{},
 			Logging:  &LoggingSpec{},
+			Tracing:  &TracingSpec{},
 		},
 		RPCPort:        DefaultRPCPort,
 		HTTPPort:       DefaultHTTPPort,
@@ -250,6 +302,7 @@ func (in *GreptimeDBCluster) defaultFrontendGroups() []*FrontendSpec {
 				Template: &PodTemplateSpec{},
 				Replicas: replicas,
 				Logging:  &LoggingSpec{},
+				Tracing:  &TracingSpec{},
 			},
 			RPCPort:        rpcPort,
 			HTTPPort:       httpPort,
@@ -275,6 +328,7 @@ func (in *GreptimeDBCluster) defaultMeta() *MetaSpec {
 		ComponentSpec: ComponentSpec{
 			Template: &PodTemplateSpec{},
 			Logging:  &LoggingSpec{},
+			Tracing:  &TracingSpec{},
 		},
 		RPCPort:              DefaultMetaRPCPort,
 		HTTPPort:             DefaultHTTPPort,
@@ -294,6 +348,7 @@ func (in *GreptimeDBCluster) defaultDatanode() *DatanodeSpec {
 		ComponentSpec: ComponentSpec{
 			Template: &PodTemplateSpec{},
 			Logging:  &LoggingSpec{},
+			Tracing:  &TracingSpec{},
 		},
 		RPCPort:       DefaultRPCPort,
 		HTTPPort:      DefaultHTTPPort,
@@ -313,6 +368,7 @@ func (in *GreptimeDBCluster) defaultFlownodeSpec() *FlownodeSpec {
 		ComponentSpec: ComponentSpec{
 			Template: &PodTemplateSpec{},
 			Logging:  &LoggingSpec{},
+			Tracing:  &TracingSpec{},
 		},
 		RPCPort:  DefaultRPCPort,
 		HTTPPort: DefaultHTTPPort,
