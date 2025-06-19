@@ -284,7 +284,7 @@ func (b *standaloneBuilder) generatePodTemplateSpec() corev1.PodTemplateSpec {
 
 	if len(b.standalone.Spec.Base.MainContainer.Args) == 0 {
 		// Setup main container args.
-		template.Spec.Containers[constant.MainContainerIndex].Args = b.generateMainContainerArgs()
+		template.Spec.Containers[constant.MainContainerIndex].Args = append(b.generateMainContainerArgs(), b.standalone.Spec.Base.MainContainer.ExtraArgs...)
 	}
 
 	b.addVolumeMounts(template)

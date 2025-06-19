@@ -1957,6 +1957,10 @@ spec:
                           - name
                           type: object
                         type: array
+                      extraArgs:
+                        items:
+                          type: string
+                        type: array
                       image:
                         type: string
                       imagePullPolicy:
@@ -5333,6 +5337,10 @@ spec:
                               required:
                               - name
                               type: object
+                            type: array
+                          extraArgs:
+                            items:
+                              type: string
                             type: array
                           image:
                             type: string
@@ -8722,6 +8730,10 @@ spec:
                                 - name
                                 type: object
                               type: array
+                            extraArgs:
+                              items:
+                                type: string
+                              type: array
                             image:
                               type: string
                             imagePullPolicy:
@@ -12077,6 +12089,10 @@ spec:
                               required:
                               - name
                               type: object
+                            type: array
+                          extraArgs:
+                            items:
+                              type: string
                             type: array
                           image:
                             type: string
@@ -15477,6 +15493,10 @@ spec:
                               required:
                               - name
                               type: object
+                            type: array
+                          extraArgs:
+                            items:
+                              type: string
                             type: array
                           image:
                             type: string
@@ -18885,6 +18905,10 @@ spec:
                                 required:
                                 - name
                                 type: object
+                              type: array
+                            extraArgs:
+                              items:
+                                type: string
                               type: array
                             image:
                               type: string
@@ -22398,6 +22422,10 @@ spec:
                               - name
                               type: object
                             type: array
+                          extraArgs:
+                            items:
+                              type: string
+                            type: array
                           image:
                             type: string
                           imagePullPolicy:
@@ -25712,6 +25740,10 @@ spec:
                                   required:
                                   - name
                                   type: object
+                                type: array
+                              extraArgs:
+                                items:
+                                  type: string
                                 type: array
                               image:
                                 type: string
@@ -29655,6 +29687,10 @@ spec:
                           required:
                           - name
                           type: object
+                        type: array
+                      extraArgs:
+                        items:
+                          type: string
                         type: array
                       image:
                         type: string

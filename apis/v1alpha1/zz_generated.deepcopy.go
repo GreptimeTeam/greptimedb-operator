@@ -907,6 +907,11 @@ func (in *MainContainerSpec) DeepCopyInto(out *MainContainerSpec) {
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
+	if in.ExtraArgs != nil {
+		in, out := &in.ExtraArgs, &out.ExtraArgs
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	if in.Env != nil {
 		in, out := &in.Env, &out.Env
 		*out = make([]v1.EnvVar, len(*in))

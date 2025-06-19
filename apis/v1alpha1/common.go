@@ -230,6 +230,11 @@ type MainContainerSpec struct {
 	// +optional
 	Args []string `json:"args,omitempty"`
 
+	// ExtraArgs specifies additional command-line arguments for the container entrypoint.
+	// These arguments will be appended to the default command line.
+	// +optional
+	ExtraArgs []string `json:"extraArgs,omitempty"`
+
 	// Container's working directory.
 	// If not specified, the container runtime's default will be used, which
 	// might be configured in the container image.
