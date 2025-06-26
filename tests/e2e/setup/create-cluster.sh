@@ -36,6 +36,7 @@ INGRESS_NGINX_CONTROLLER_CHART_VERSION=4.12.0
 # The argument for deploying Kafka cluster.
 KAFKA_NAMESPACE=kafka
 KAFKA_CLUSTER_NAME=kafka-wal
+KAFKA_OPERATOR_VERSION=0.45.0
 
 # The argument for deploying postgresql.
 POSTGRESQL_NAMESPACE=postgresql
@@ -256,7 +257,7 @@ function deploy_ingress_nginx_controller() {
 function deploy_kafka_cluster() {
   echo -e "${GREEN}=> Deploy Kafka cluster...${RESET}"
   kubectl create namespace "$KAFKA_NAMESPACE"
-  kubectl create -f "https://strimzi.io/install/latest?namespace=$KAFKA_NAMESPACE" -n "$KAFKA_NAMESPACE"
+  kubectl create -f "https://github.com/strimzi/strimzi-kafka-operator/releases/download/${KAFKA_OPERATOR_VERSION}/strimzi-cluster-operator-${KAFKA_OPERATOR_VERSION}.yaml" -n "$KAFKA_NAMESPACE"
 
   # Wait for the CRDs to be created.
   kubectl wait \
