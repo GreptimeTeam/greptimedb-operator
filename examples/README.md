@@ -15,7 +15,7 @@ The following examples suppose that you have installed the etcd cluster in the `
 - [Kafka Remote WAL](./cluster/kafka-remote-wal/cluster.yaml): Create a GreptimeDB cluster with Kafka remote WAL. Please ensure you have installed the Kafka cluster in the `kafka` namespace with the service endpoint `kafka-bootstrap.kafka.svc.cluster.local:9092`.
 - [Add Custom Config](./cluster/add-custom-config/cluster.yaml): Create a GreptimeDB cluster with custom configuration by using the `config` field.
 - [AWS NLB](./cluster/aws-nlb/cluster.yaml): Create a GreptimeDB cluster with the AWS NLB service. Please ensure you have already configured it.
-- [Dedicated WAL](./cluster/standalone-wal/cluster.yaml): Create a GreptimeDB cluster with dedicated storage for WAL.
+- [Dedicated WAL](./cluster/dedicated-wal/cluster.yaml): Create a GreptimeDB cluster with dedicated storage for WAL.
 - [Configure Logging](./cluster/configure-logging/cluster.yaml): Create a GreptimeDB cluster with custom logging configuration.
 - [Enable Monitoring Bootstrap](./cluster/enable-monitoring/cluster.yaml): Create a GreptimeDB cluster with monitoring enabled.
 - [Configure FrontendGroups](./cluster/configure-frontend-groups/cluster.yaml): Create a GreptimeDB cluster with custom frontend groups.
