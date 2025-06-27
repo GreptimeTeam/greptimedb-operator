@@ -36,7 +36,7 @@ INGRESS_NGINX_CONTROLLER_CHART_VERSION=4.12.0
 # The argument for deploying Kafka cluster.
 KAFKA_NAMESPACE=kafka
 KAFKA_CLUSTER_NAME=kafka-wal
-KAFKA_OPERATOR_VERSION=0.46.0
+KAFKA_CHART_VERSION=31.0.0
 
 # The argument for deploying postgresql.
 POSTGRESQL_NAMESPACE=postgresql
@@ -253,27 +253,16 @@ function deploy_ingress_nginx_controller() {
   echo -e "${GREEN}<= Ingress nginx controller is deployed.${RESET}"
 }
 
-# Deploy Kafka cluster using Strimzi for remote WAL testing.
+# Deploy Kafka cluster used for remote WAL testing.
 function deploy_kafka_cluster() {
   echo -e "${GREEN}=> Deploy Kafka cluster...${RESET}"
-  kubectl create namespace "$KAFKA_NAMESPACE"
-  kubectl create -f "https://github.com/strimzi/strimzi-kafka-operator/releases/download/${KAFKA_OPERATOR_VERSION}/strimzi-cluster-operator-${KAFKA_OPERATOR_VERSION}.yaml" -n "$KAFKA_NAMESPACE"
-
-  # Wait for the CRDs to be created.
-  kubectl wait \
-    --for=condition=Established \
-    crd/kafkabridges.kafka.strimzi.io \
-    crd/kafkaconnects.kafka.strimzi.io \
-    crd/kafkaconnectors.kafka.strimzi.io \
-    crd/kafkanodepools.kafka.strimzi.io \
-    crd/kafkarebalances.kafka.strimzi.io \
-    crd/kafkas.kafka.strimzi.io \
-    crd/kafkatopics.kafka.strimzi.io \
-    crd/kafkausers.kafka.strimzi.io \
-    crd/strimzipodsets.core.strimzi.io \
-    --timeout="$DEFAULT_TIMEOUT"
-
-  kubectl apply -f ./tests/e2e/setup/kafka-wal.yaml -n "$KAFKA_NAMESPACE"
+  helm upgrade --install kafka oci://registry-1.docker.io/bitnamicharts/kafka \
+      --namespace "$KAFKA_NAMESPACE" \
+      --set controller.replicaCount=1 \
+      --set broker.replicaCount=1 \
+      --set listeners.client.protocol=PLAINTEXT \
+      --create-namespace \
+      --version "$KAFKA_CHART_VERSION"
   echo -e "${GREEN}<= Kafka cluster is deployed.${RESET}"
 }
 
@@ -290,12 +279,6 @@ function deploy_cloud_provider_kind() {
   # If the os is darwin, we need to use sudo to run cloud-provider-kind.
   nohup cloud-provider-kind > /tmp/cloud-provider-kind-logs 2>&1 &
   echo -e "${GREEN}<= cloud-provider-kind is deployed.${RESET}"
-}
-
-function check_kafka_cluster_status() {
-  wait_for \
-    "kubectl -n $KAFKA_NAMESPACE get kafka $KAFKA_CLUSTER_NAME -o json | jq '.status.conditions[] | select(.type==\"Ready\" and .status==\"True\")' | grep Ready" \
-    "${DEFAULT_TIMEOUT%s}"
 }
 
 function wait_for() {
@@ -362,7 +345,11 @@ function wait_all_service_ready() {
     --timeout="$DEFAULT_TIMEOUT"
 
   # Wait for kafka to be ready.
-  check_kafka_cluster_status
+  kubectl wait \
+      --for=condition=Ready \
+      pod -l app.kubernetes.io/instance=kafka \
+      -n "$KAFKA_NAMESPACE" \
+      --timeout="$DEFAULT_TIMEOUT"
 
   # Wait for greptimedb-operator to be ready.
   kubectl rollout \
