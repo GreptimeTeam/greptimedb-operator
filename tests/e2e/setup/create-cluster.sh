@@ -35,7 +35,6 @@ INGRESS_NGINX_CONTROLLER_CHART_VERSION=4.12.0
 
 # The argument for deploying Kafka cluster.
 KAFKA_NAMESPACE=kafka
-KAFKA_CLUSTER_NAME=kafka-wal
 KAFKA_CHART_VERSION=31.0.0
 
 # The argument for deploying postgresql.
