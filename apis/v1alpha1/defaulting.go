@@ -15,6 +15,7 @@
 package v1alpha1
 
 import (
+	"fmt"
 	"reflect"
 	"strings"
 
@@ -236,6 +237,17 @@ func (in *GreptimeDBCluster) defaultSpec() *GreptimeDBClusterSpec {
 
 		// Set the default logging format to JSON if monitoring is enabled.
 		defaultSpec.Logging.Format = LogFormatJSON
+
+		// Set the default tracing configuration if monitoring is enabled.
+		defaultSpec.Tracing = &TracingSpec{
+			Enabled:     ptr.To(true),
+			SampleRatio: "1.0",
+			Endpoint: fmt.Sprintf("%s.%s:%d/v1/otlp",
+				in.Name+"-monitor-"+string(StandaloneRoleKind),
+				in.Namespace,
+				DefaultHTTPPort,
+			),
+		}
 	}
 
 	return defaultSpec

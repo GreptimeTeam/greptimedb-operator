@@ -221,7 +221,7 @@ func (c *CommonBuilder) vectorConfigTemplate() (string, error) {
 }
 
 func (c *CommonBuilder) env(kind v1alpha1.RoleKind) []corev1.EnvVar {
-	return []corev1.EnvVar{
+	envs := []corev1.EnvVar{
 		{
 			Name: deployer.EnvPodIP,
 			ValueFrom: &corev1.EnvVarSource{
@@ -251,6 +251,15 @@ func (c *CommonBuilder) env(kind v1alpha1.RoleKind) []corev1.EnvVar {
 			Value: string(kind),
 		},
 	}
+
+	if c.Cluster.GetMonitoring() != nil && c.Cluster.GetMonitoring().IsEnabled() {
+		envs = append(envs, corev1.EnvVar{
+			Name:  "OTEL_EXPORTER_OTLP_TRACES_HEADERS",
+			Value: "x-greptime-pipeline-name=greptime_trace_v1",
+		})
+	}
+
+	return envs
 }
 
 func UpdateStatus(ctx context.Context, input *v1alpha1.GreptimeDBCluster, kc client.Client, opts ...client.SubResourceUpdateOption) error {
