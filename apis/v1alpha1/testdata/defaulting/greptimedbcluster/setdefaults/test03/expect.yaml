@@ -32,6 +32,10 @@ spec:
   rpcPort: 4001
   mysqlPort: 4002
   postgreSQLPort: 4003
+  tracing:
+    enabled: true
+    endpoint: test03-monitor-standalone.default:4000/v1/otlp
+    sampleRatio: "1.0"
   objectStorage:
     s3:
       bucket: greptimedb
