@@ -1,0 +1,41 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: minio-dev
+spec:
+  ports:
+    - name: api
+      port: 9000
+      targetPort: 9000
+    - name: console
+      port: 9001
+      targetPort: 9001
+  selector:
+    app: minio
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app: minio
+  name: minio
+spec:
+  containers:
+  - name: minio
+    image: quay.io/minio/minio:RELEASE.2025-02-18T16-25-55Z
+    command:
+    - /bin/bash
+    - -c
+    args: 
+    - minio server /data --console-address :9001
+    ports:
+    - containerPort: 9000
+      name: api
+    - containerPort: 9001
+      name: console
+    volumeMounts:
+    - mountPath: /data
+      name: localvolume
+  volumes:
+  - name: localvolume
+    emptyDir: {} # This is a temporary volume that will be deleted when the pod is deleted.
