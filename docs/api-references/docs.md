@@ -224,6 +224,7 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `name` _string_ | Name is the name of the PVC that will be created. |  |  |
+| `useEmptyDir` _boolean_ | UseEmptyDir is a flag to indicate whether to use an empty dir. If true, the PVC will not be created and the whole storage of datanode will be cleaned up when the datanode restarts. |  |  |
 | `storageClassName` _string_ | StorageClassName is the name of the StorageClass to use for the PVC. |  |  |
 | `storageSize` _string_ | StorageSize is the size of the storage. |  | Pattern: `(^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$)` <br /> |
 | `mountPath` _string_ | MountPath is the path where the storage will be mounted in the container. |  |  |

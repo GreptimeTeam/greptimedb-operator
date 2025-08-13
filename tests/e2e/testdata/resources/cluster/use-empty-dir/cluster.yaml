@@ -1,0 +1,25 @@
+apiVersion: greptime.io/v1alpha1
+kind: GreptimeDBCluster
+metadata:
+  name: e2e-cluster-use-empty-dir
+  namespace: default
+spec:
+  initializer:
+    image: localhost:5001/greptime/greptimedb-initializer:latest
+  base:
+    main:
+      image: localhost:5001/greptime/greptimedb:latest
+  frontend:
+    replicas: 1
+  meta:
+    replicas: 1
+    backendStorage:
+      etcd:
+        endpoints:
+          - "etcd.etcd-cluster.svc.cluster.local:2379"
+  datanode:
+    replicas: 3
+    storage:
+      fs:
+        useEmptyDir: true
+        storageSize: 10Gi

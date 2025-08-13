@@ -330,6 +330,10 @@ type FileStorage struct {
 	// +optional
 	Name string `json:"name,omitempty"`
 
+	// UseEmptyDir is a flag to indicate whether to use an empty dir. If true, the PVC will not be created and the whole storage of datanode will be cleaned up when the datanode restarts.
+	// +optional
+	UseEmptyDir *bool `json:"useEmptyDir,omitempty"`
+
 	// StorageClassName is the name of the StorageClass to use for the PVC.
 	// +optional
 	StorageClassName *string `json:"storageClassName,omitempty"`
@@ -416,6 +420,13 @@ func (in *FileStorage) GetAnnotations() map[string]string {
 		return in.Annotations
 	}
 	return nil
+}
+
+func (in *FileStorage) IsUseEmptyDir() bool {
+	if in != nil {
+		return in.UseEmptyDir != nil && *in.UseEmptyDir
+	}
+	return false
 }
 
 // WALProviderSpec defines the WAL provider for the cluster.

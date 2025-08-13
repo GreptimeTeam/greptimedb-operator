@@ -80,4 +80,8 @@ var _ = Describe("Test GreptimeDBCluster", func() {
 	It("Test a cluster with read write groups", func() {
 		greptimedbcluster.TestClusterReadWriteGroups(ctx, h)
 	})
+
+	It("Test a cluster with empty dir", func() {
+		greptimedbcluster.TestClusterWithEmptyDir(ctx, h)
+	})
 })

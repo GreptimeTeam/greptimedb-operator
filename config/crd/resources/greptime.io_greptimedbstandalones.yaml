@@ -3363,6 +3363,8 @@ spec:
                       storageSize:
                         pattern: (^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$)
                         type: string
+                      useEmptyDir:
+                        type: boolean
                     type: object
                 type: object
               httpPort:
@@ -3449,6 +3451,8 @@ spec:
                           storageSize:
                             pattern: (^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$)
                             type: string
+                          useEmptyDir:
+                            type: boolean
                         type: object
                     type: object
                   gcs:
@@ -3624,6 +3628,8 @@ spec:
                           storageSize:
                             pattern: (^([+-]?[0-9.]+)([eEinumkKMGTP]*[-+]?[0-9]*)$)
                             type: string
+                          useEmptyDir:
+                            type: boolean
                         type: object
                     type: object
                 type: object

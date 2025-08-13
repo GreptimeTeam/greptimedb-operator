@@ -23,6 +23,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -80,16 +81,28 @@ func (d *DatanodeDeployer) CleanUp(ctx context.Context, crdObject client.Object)
 		return err
 	}
 
-	if cluster.GetDatanode().GetFileStorage().GetPolicy() == v1alpha1.StorageRetainPolicyTypeDelete {
-		if err := d.deleteStorage(ctx, cluster.Namespace, common.ResourceName(cluster.Name, v1alpha1.DatanodeRoleKind), common.FileStorageTypeDatanode); err != nil {
-			return err
+	if fs := cluster.GetDatanode().GetFileStorage(); fs != nil {
+		if fs.IsUseEmptyDir() {
+			return nil
+		}
+
+		if fs.GetPolicy() == v1alpha1.StorageRetainPolicyTypeDelete {
+			if err := d.deleteStorage(ctx, cluster.Namespace, common.ResourceName(cluster.Name, v1alpha1.DatanodeRoleKind), common.FileStorageTypeDatanode); err != nil {
+				return err
+			}
 		}
 	}
 
 	for _, datanodeGroup := range cluster.GetDatanodeGroups() {
-		if datanodeGroup.GetFileStorage().GetPolicy() == v1alpha1.StorageRetainPolicyTypeDelete {
-			if err := d.deleteStorage(ctx, cluster.Namespace, common.ResourceName(cluster.Name, v1alpha1.DatanodeRoleKind, datanodeGroup.GetName()), common.FileStorageTypeDatanode); err != nil {
-				return err
+		if fs := datanodeGroup.GetFileStorage(); fs != nil {
+			if fs.IsUseEmptyDir() {
+				continue
+			}
+
+			if fs.GetPolicy() == v1alpha1.StorageRetainPolicyTypeDelete {
+				if err := d.deleteStorage(ctx, cluster.Namespace, common.ResourceName(cluster.Name, v1alpha1.DatanodeRoleKind, datanodeGroup.GetName()), common.FileStorageTypeDatanode); err != nil {
+					return err
+				}
 			}
 		}
 	}
@@ -514,13 +527,16 @@ func (b *datanodeBuilder) generateDatanodeStatefulSet(groupID *int32, spec *v1al
 					constant.GreptimeDBComponentName: resourceName,
 				},
 			},
-			Template:             b.generatePodTemplateSpec(spec, groupID),
-			VolumeClaimTemplates: b.generatePVCs(spec),
+			Template: b.generatePodTemplateSpec(spec, groupID),
 			UpdateStrategy: appsv1.StatefulSetUpdateStrategy{
 				Type:          appsv1.RollingUpdateStatefulSetStrategyType,
 				RollingUpdate: spec.RollingUpdate,
 			},
 		},
+	}
+
+	if !spec.GetFileStorage().IsUseEmptyDir() {
+		sts.Spec.VolumeClaimTemplates = b.generatePVCs(spec)
 	}
 
 	configData, err := dbconfig.FromCluster(b.Cluster, spec)
@@ -585,6 +601,10 @@ func (b *datanodeBuilder) generatePodTemplateSpec(spec *v1alpha1.DatanodeSpec, g
 	b.mountConfigDir(podTemplateSpec)
 	b.addVolumeMounts(podTemplateSpec, spec)
 	b.addInitConfigDirVolume(podTemplateSpec, common.ResourceName(b.Cluster.Name, b.RoleKind, spec.GetName()))
+
+	if spec.GetFileStorage().IsUseEmptyDir() {
+		b.addEmptyDirAsStorage(podTemplateSpec, spec)
+	}
 
 	if logging := spec.GetLogging(); logging != nil &&
 		!logging.IsOnlyLogToStdout() && !logging.IsPersistentWithData() {
@@ -722,6 +742,18 @@ func (b *datanodeBuilder) addInitConfigDirVolume(template *corev1.PodTemplateSpe
 				LocalObjectReference: corev1.LocalObjectReference{
 					Name: configMapName,
 				},
+			},
+		},
+	})
+}
+
+func (b *datanodeBuilder) addEmptyDirAsStorage(template *corev1.PodTemplateSpec, spec *v1alpha1.DatanodeSpec) {
+	storageSize := resource.MustParse(spec.GetFileStorage().GetSize())
+	template.Spec.Volumes = append(template.Spec.Volumes, corev1.Volume{
+		Name: spec.GetFileStorage().GetName(),
+		VolumeSource: corev1.VolumeSource{
+			EmptyDir: &corev1.EmptyDirVolumeSource{
+				SizeLimit: &storageSize,
 			},
 		},
 	})
