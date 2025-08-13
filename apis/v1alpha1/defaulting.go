@@ -324,6 +324,7 @@ func (in *GreptimeDBCluster) defaultFrontendGroups() []*FrontendSpec {
 				Type: corev1.ServiceTypeClusterIP,
 			},
 			RollingUpdate: rollingUpdate,
+			SlowQuery:     defaultSlowQuery(),
 		}
 		frontendGroups = append(frontendGroups, frontendSpec)
 	}
