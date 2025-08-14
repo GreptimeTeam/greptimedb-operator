@@ -162,9 +162,9 @@ spec:
     slowQuery:
       enabled: true
       recordType: system_table
-      sampleRatio: "1.0"
-      threshold: 30s
-      ttl: 30d
+      sampleRatio: "0.5"
+      threshold: 20s
+      ttl: 20d
     template:
       main:
         image: greptime/greptimedb:latest
@@ -217,9 +217,9 @@ spec:
     slowQuery:
       enabled: true
       recordType: system_table
-      sampleRatio: "1.0"
-      threshold: 30s
-      ttl: 30d
+      sampleRatio: "0.5"
+      threshold: 20s
+      ttl: 20d
     template:
       main:
         image: greptime/greptimedb:latest
