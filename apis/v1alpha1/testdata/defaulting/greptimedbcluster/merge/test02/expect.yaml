@@ -150,6 +150,12 @@ spec:
     rpcPort: 4001
     service:
       type: ClusterIP
+    slowQuery:
+      enabled: true
+      recordType: system_table
+      sampleRatio: "1.0"
+      threshold: 30s
+      ttl: 30d
     template:
       main:
         image: greptime/greptimedb:latest
@@ -196,6 +202,12 @@ spec:
     rpcPort: 4001
     service:
       type: ClusterIP
+    slowQuery:
+      enabled: true
+      recordType: system_table
+      sampleRatio: "1.0"
+      threshold: 30s
+      ttl: 30d
     template:
       main:
         image: greptime/greptimedb:latest

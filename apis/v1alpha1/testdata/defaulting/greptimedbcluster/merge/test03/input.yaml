@@ -25,12 +25,24 @@ spec:
       enabled: true
       endpoint: "trace-endpoint"
       sampleRatio: "0.6"
+    slowQuery:
+      enabled: true
+      recordType: system_table
+      sampleRatio: "0.5"
+      threshold: 20s
+      ttl: 20d
   - name: write
     replicas: 2
     tracing:
       enabled: true
       endpoint: "trace-endpoint"
       sampleRatio: "0.7"
+    slowQuery:
+      enabled: true
+      recordType: system_table
+      sampleRatio: "0.5"
+      threshold: 20s
+      ttl: 20d
   meta:
     backendStorage:
       etcd:
