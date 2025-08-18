@@ -52,7 +52,7 @@ spec:
       recordType: system_table
       sampleRatio: "1.0"
       threshold: 30s
-      ttl: 30d
+      ttl: 90d
     logging: {}
     tracing: {}
     template: {}
@@ -75,7 +75,7 @@ spec:
       recordType: system_table
       sampleRatio: "1.0"
       threshold: 30s
-      ttl: 30d
+      ttl: 90d
     rollingUpdate:
       maxSurge: 50%
       maxUnavailable: 50%

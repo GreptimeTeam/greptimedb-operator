@@ -996,7 +996,7 @@ type SlowQuery struct {
 	// +kubebuilder:validation:Type=string
 	SampleRatio string `json:"sampleRatio,omitempty"`
 
-	// TTL is the TTL of the slow query log. Default to `30d`.
+	// TTL is the TTL of the slow query log. Default to `90d`.
 	// +optional
 	// +kubebuilder:validation:Pattern="^([0-9]+(\\.[0-9]+)?(ns|us|µs|ms|s|m|h|d))+$"
 	TTL string `json:"ttl,omitempty"`
