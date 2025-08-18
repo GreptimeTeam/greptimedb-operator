@@ -23,6 +23,12 @@ spec:
     rollingUpdate:
       maxUnavailable: 1
       maxSurge: 2
+    slowQuery:
+      enabled: true
+      recordType: system_table
+      sampleRatio: "0.5"
+      threshold: 20s
+      ttl: 20d
   meta:
     backendStorage:
       etcd:

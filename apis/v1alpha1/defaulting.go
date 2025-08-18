@@ -287,6 +287,7 @@ func (in *GreptimeDBCluster) defaultFrontendGroups() []*FrontendSpec {
 		mysqlPort      = DefaultMySQLPort
 		postgresqlPort = DefaultPostgreSQLPort
 		rollingUpdate  = defaultRollingUpdateForDeployment()
+		slowQuery      = defaultSlowQuery()
 	)
 
 	for _, frontend := range in.GetFrontendGroups() {
@@ -308,6 +309,9 @@ func (in *GreptimeDBCluster) defaultFrontendGroups() []*FrontendSpec {
 		if frontend.RollingUpdate != nil {
 			rollingUpdate = frontend.RollingUpdate
 		}
+		if frontend.SlowQuery != nil && frontend.SlowQuery.Enabled {
+			slowQuery = frontend.GetSlowQuery()
+		}
 		frontendSpec := &FrontendSpec{
 			Name: frontend.GetName(),
 			ComponentSpec: ComponentSpec{
@@ -324,6 +328,7 @@ func (in *GreptimeDBCluster) defaultFrontendGroups() []*FrontendSpec {
 				Type: corev1.ServiceTypeClusterIP,
 			},
 			RollingUpdate: rollingUpdate,
+			SlowQuery:     slowQuery,
 		}
 		frontendGroups = append(frontendGroups, frontendSpec)
 	}
