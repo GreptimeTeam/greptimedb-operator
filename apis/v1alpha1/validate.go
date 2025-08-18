@@ -190,6 +190,12 @@ func (in *GreptimeDBCluster) validateMetaBackendStorage() error {
 }
 
 func (in *GreptimeDBCluster) validateDatanode() error {
+	if fs := in.GetDatanode().GetFileStorage(); fs != nil {
+		if fs.IsUseEmptyDir() && fs.GetStorageClassName() != nil {
+			return fmt.Errorf("cannot set storageClassName when useEmptyDir is true")
+		}
+	}
+
 	if err := validateTomlConfig(in.GetDatanode().GetConfig()); err != nil {
 		return fmt.Errorf("invalid datanode toml config: '%v'", err)
 	}
