@@ -49,7 +49,7 @@ func (in *GreptimeDBCluster) SetDefaults() error {
 	return nil
 }
 
-// We need to execute another merge operation for slice struct becasue mergo still don't support to merge Slice without override(https://github.com/darccio/mergo/issues/233).
+// We need to execute another merge operation for slice struct because mergo still don't support to merge Slice without override(https://github.com/darccio/mergo/issues/233).
 func (in *GreptimeDBCluster) mergeDefaultGroups() error {
 	for _, datanodeGroup := range in.GetDatanodeGroups() {
 		if err := mergo.Merge(datanodeGroup, in.defaultDatanode()); err != nil {
@@ -66,8 +66,8 @@ func (in *GreptimeDBCluster) mergeDefaultGroups() error {
 	return nil
 }
 
-// MergeTemplate merges the base template with the component's template.
-func (in *GreptimeDBCluster) MergeTemplate() error {
+// MergeWithBaseTemplate merges the base template with the component's template.
+func (in *GreptimeDBCluster) MergeWithBaseTemplate() error {
 	mergeFuncs := []func() error{
 		in.mergeFrontendTemplate,
 		in.mergeMetaTemplate,
@@ -84,100 +84,38 @@ func (in *GreptimeDBCluster) MergeTemplate() error {
 	return nil
 }
 
-// MergeLogging merges the logging settings into the component's logging settings.
-func (in *GreptimeDBCluster) MergeLogging() error {
-	loggingSpecs := []*LoggingSpec{
-		in.GetMeta().GetLogging(),
-		in.GetFlownode().GetLogging(),
-	}
-
-	if in.GetFrontend() != nil {
-		loggingSpecs = append(loggingSpecs, in.GetFrontend().GetLogging())
-	}
-
-	for _, frontend := range in.GetFrontendGroups() {
-		loggingSpecs = append(loggingSpecs, frontend.GetLogging())
-	}
-
-	if in.GetDatanode() != nil {
-		loggingSpecs = append(loggingSpecs, in.GetDatanode().GetLogging())
-	}
-
-	for _, datanodeGroup := range in.GetDatanodeGroups() {
-		loggingSpecs = append(loggingSpecs, datanodeGroup.GetLogging())
-	}
-
-	for _, logging := range loggingSpecs {
-		if logging == nil {
-			continue
-		}
-		if err := in.doMergeLogging(logging, in.GetLogging(), in.GetMonitoring().IsEnabled()); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (in *GreptimeDBCluster) doMergeLogging(input, global *LoggingSpec, isEnableMonitoring bool) error {
-	if input == nil || global == nil {
+// MergeWithGlobalLogging will merge the base logging settings into the component's logging settings.
+// If the component's logging settings is not set, it will be set to the base logging settings.
+func (in *GreptimeDBCluster) MergeWithGlobalLogging() error {
+	if in.GetLogging() == nil {
 		return nil
 	}
 
-	if err := mergo.Merge(input, global.DeepCopy()); err != nil {
-		return err
-	}
-
-	if isEnableMonitoring {
-		// Set the default logging format to JSON if monitoring is enabled.
-		input.Format = LogFormatJSON
-	}
-
-	return nil
-}
-
-// MergeTracing merges the tracing settings into the component's tracing settings.
-func (in *GreptimeDBCluster) MergeTracing() error {
-	tracingSpecs := []*TracingSpec{
-		in.GetMeta().GetTracing(),
-		in.GetFlownode().GetTracing(),
-	}
-
-	if in.GetFrontend() != nil {
-		tracingSpecs = append(tracingSpecs, in.GetFrontend().GetTracing())
-	}
-
-	for _, frontend := range in.GetFrontendGroups() {
-		tracingSpecs = append(tracingSpecs, frontend.GetTracing())
-	}
-
-	if in.GetDatanode() != nil {
-		tracingSpecs = append(tracingSpecs, in.GetDatanode().GetTracing())
-	}
-
-	for _, datanodeGroup := range in.GetDatanodeGroups() {
-		tracingSpecs = append(tracingSpecs, datanodeGroup.GetTracing())
-	}
-
-	for _, tracing := range tracingSpecs {
-		if tracing == nil {
-			continue
-		}
-		if err := in.doMergeTracing(tracing, in.GetTracing()); err != nil {
+	for _, spec := range in.getAllLoggingSpecs() {
+		if err := mergo.Merge(spec, in.GetLogging().DeepCopy()); err != nil {
 			return err
 		}
+
+		if in.GetMonitoring().IsEnabled() {
+			// Set the default logging format to JSON if monitoring is enabled.
+			spec.Format = LogFormatJSON
+		}
 	}
 
 	return nil
 }
 
-func (in *GreptimeDBCluster) doMergeTracing(input, global *TracingSpec) error {
-	if input == nil || global == nil {
+// MergeWithGlobalTracing will merge the global tracing settings into the component's tracing settings.
+// If the component's tracing settings is not set, it will be set to the global tracing settings.
+func (in *GreptimeDBCluster) MergeWithGlobalTracing() error {
+	if in.GetTracing() == nil {
 		return nil
 	}
 
-	if err := mergo.Merge(input, global.DeepCopy()); err != nil {
-		return err
+	for _, spec := range in.getAllTracingSpecs() {
+		if err := mergo.Merge(spec, in.GetTracing().DeepCopy()); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -371,13 +309,13 @@ func (in *GreptimeDBCluster) defaultMonitoringStandaloneSpec() *GreptimeDBStanda
 
 func (in *GreptimeDBCluster) mergeFrontendTemplate() error {
 	for _, frontend := range in.Spec.FrontendGroups {
-		if err := in.mergeWithBaseTemplate(frontend.Template, frontend.HTTPPort); err != nil {
+		if err := in.doMergeWithBaseTemplate(frontend.Template, frontend.HTTPPort); err != nil {
 			return err
 		}
 	}
 
 	if frontend := in.GetFrontend(); frontend != nil {
-		if err := in.mergeWithBaseTemplate(frontend.Template, frontend.HTTPPort); err != nil {
+		if err := in.doMergeWithBaseTemplate(frontend.Template, frontend.HTTPPort); err != nil {
 			return err
 		}
 	}
@@ -387,7 +325,7 @@ func (in *GreptimeDBCluster) mergeFrontendTemplate() error {
 
 func (in *GreptimeDBCluster) mergeMetaTemplate() error {
 	if meta := in.GetMeta(); meta != nil {
-		if err := in.mergeWithBaseTemplate(meta.Template, meta.HTTPPort); err != nil {
+		if err := in.doMergeWithBaseTemplate(meta.Template, meta.HTTPPort); err != nil {
 			return err
 		}
 	}
@@ -397,13 +335,13 @@ func (in *GreptimeDBCluster) mergeMetaTemplate() error {
 
 func (in *GreptimeDBCluster) mergeDatanodeTemplate() error {
 	for _, datanode := range in.GetDatanodeGroups() {
-		if err := in.mergeWithBaseTemplate(datanode.Template, datanode.HTTPPort); err != nil {
+		if err := in.doMergeWithBaseTemplate(datanode.Template, datanode.HTTPPort); err != nil {
 			return err
 		}
 	}
 
 	if datanode := in.GetDatanode(); datanode != nil {
-		if err := in.mergeWithBaseTemplate(datanode.Template, datanode.HTTPPort); err != nil {
+		if err := in.doMergeWithBaseTemplate(datanode.Template, datanode.HTTPPort); err != nil {
 			return err
 		}
 	}
@@ -413,7 +351,7 @@ func (in *GreptimeDBCluster) mergeDatanodeTemplate() error {
 
 func (in *GreptimeDBCluster) mergeFlownodeTemplate() error {
 	if flownode := in.GetFlownode(); flownode != nil {
-		if err := in.mergeWithBaseTemplate(flownode.Template, flownode.HTTPPort); err != nil {
+		if err := in.doMergeWithBaseTemplate(flownode.Template, flownode.HTTPPort); err != nil {
 			return err
 		}
 	}
@@ -421,9 +359,9 @@ func (in *GreptimeDBCluster) mergeFlownodeTemplate() error {
 	return nil
 }
 
-// mergeWithBaseTemplate merges the base template with the component's template.
+// doMergeWithBaseTemplate merges the base template with the component's template.
 // If the component's template is not set, it will be set to the base template.
-func (in *GreptimeDBCluster) mergeWithBaseTemplate(dst *PodTemplateSpec, port int32) error {
+func (in *GreptimeDBCluster) doMergeWithBaseTemplate(dst *PodTemplateSpec, port int32) error {
 	if dst == nil {
 		dst = &PodTemplateSpec{}
 	}

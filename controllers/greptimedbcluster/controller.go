@@ -180,15 +180,15 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 		}
 	}
 
-	if err := cluster.MergeTemplate(); err != nil {
+	if err := cluster.MergeWithBaseTemplate(); err != nil {
 		return ctrl.Result{}, err
 	}
 
-	if err := cluster.MergeLogging(); err != nil {
+	if err := cluster.MergeWithGlobalLogging(); err != nil {
 		return ctrl.Result{}, err
 	}
 
-	if err := cluster.MergeTracing(); err != nil {
+	if err := cluster.MergeWithGlobalTracing(); err != nil {
 		return ctrl.Result{}, err
 	}
 

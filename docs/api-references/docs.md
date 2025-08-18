@@ -1056,7 +1056,7 @@ _Appears in:_
 | `recordType` _[SlowQueryRecordType](#slowqueryrecordtype)_ | RecordType is the type of the slow query record. Default to `system_table`. |  |  |
 | `threshold` _string_ | Threshold is the threshold of the slow query. Default to `30s`. |  | Pattern: `^([0-9]+(\.[0-9]+)?(ns\|us\|µs\|ms\|s\|m\|h))+$` <br /> |
 | `sampleRatio` _string_ | SampleRatio is the sampling ratio of slow query log. The value should be in the range of (0, 1]. Default to `1.0`. |  | Pattern: `^(0?\.\d+\|1(\.0+)?)$` <br />Type: string <br /> |
-| `ttl` _string_ | TTL is the TTL of the slow query log. Default to `30d`. |  | Pattern: `^([0-9]+(\.[0-9]+)?(ns\|us\|µs\|ms\|s\|m\|h\|d))+$` <br /> |
+| `ttl` _string_ | TTL is the TTL of the slow query log. Default to `90d`. |  | Pattern: `^([0-9]+(\.[0-9]+)?(ns\|us\|µs\|ms\|s\|m\|h\|d))+$` <br /> |
 
 
 #### SlowQueryRecordType
