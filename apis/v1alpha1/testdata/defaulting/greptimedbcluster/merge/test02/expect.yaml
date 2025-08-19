@@ -155,7 +155,7 @@ spec:
       recordType: system_table
       sampleRatio: "1.0"
       threshold: 30s
-      ttl: 30d
+      ttl: 90d
     template:
       main:
         image: greptime/greptimedb:latest
@@ -207,7 +207,7 @@ spec:
       recordType: system_table
       sampleRatio: "1.0"
       threshold: 30s
-      ttl: 30d
+      ttl: 90d
     template:
       main:
         image: greptime/greptimedb:latest

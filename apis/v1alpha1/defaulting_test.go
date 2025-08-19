@@ -127,11 +127,11 @@ func TestClusterMerge(t *testing.T) {
 				t.Fatalf("failed to set defaults: %v", err)
 			}
 
-			if err := input.MergeTemplate(); err != nil {
+			if err := input.MergeWithBaseTemplate(); err != nil {
 				t.Fatalf("failed to merge template: %v", err)
 			}
 
-			if err := input.MergeLogging(); err != nil {
+			if err := input.MergeWithGlobalLogging(); err != nil {
 				t.Fatalf("failed to merge logging: %v", err)
 			}
 

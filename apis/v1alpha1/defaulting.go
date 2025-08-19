@@ -41,9 +41,24 @@ func (in *GreptimeDBCluster) SetDefaults() error {
 		return err
 	}
 
-	// FIXME(zyy17): This is a temporary solution to merge the default settings into the datanode groups.
+	// Merge the default spec into the datanode groups and frontend groups.
+	if err := in.mergeDefaultGroups(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// We need to execute another merge operation for slice struct because mergo still don't support to merge Slice without override(https://github.com/darccio/mergo/issues/233).
+func (in *GreptimeDBCluster) mergeDefaultGroups() error {
 	for _, datanodeGroup := range in.GetDatanodeGroups() {
 		if err := mergo.Merge(datanodeGroup, in.defaultDatanode()); err != nil {
+			return err
+		}
+	}
+
+	for _, frontend := range in.GetFrontendGroups() {
+		if err := mergo.Merge(frontend, in.defaultFrontend()); err != nil {
 			return err
 		}
 	}
@@ -51,8 +66,8 @@ func (in *GreptimeDBCluster) SetDefaults() error {
 	return nil
 }
 
-// MergeTemplate merges the base template with the component's template.
-func (in *GreptimeDBCluster) MergeTemplate() error {
+// MergeWithBaseTemplate merges the base template with the component's template.
+func (in *GreptimeDBCluster) MergeWithBaseTemplate() error {
 	mergeFuncs := []func() error{
 		in.mergeFrontendTemplate,
 		in.mergeMetaTemplate,
@@ -69,108 +84,38 @@ func (in *GreptimeDBCluster) MergeTemplate() error {
 	return nil
 }
 
-// MergeLogging merges the logging settings into the component's logging settings.
-func (in *GreptimeDBCluster) MergeLogging() error {
-	loggingSpecs := []*LoggingSpec{
-		in.GetMeta().GetLogging(),
-		in.GetFlownode().GetLogging(),
-	}
-
-	if in.GetFrontend() != nil {
-		loggingSpecs = append(loggingSpecs, in.GetFrontend().GetLogging())
-	}
-
-	if len(in.GetFrontendGroups()) != 0 {
-		for _, frontend := range in.GetFrontendGroups() {
-			loggingSpecs = append(loggingSpecs, frontend.GetLogging())
-		}
-	}
-
-	if in.GetDatanode() != nil {
-		loggingSpecs = append(loggingSpecs, in.GetDatanode().GetLogging())
-	}
-
-	if len(in.GetDatanodeGroups()) != 0 {
-		for _, datanodeGroup := range in.GetDatanodeGroups() {
-			loggingSpecs = append(loggingSpecs, datanodeGroup.GetLogging())
-		}
-	}
-
-	for _, logging := range loggingSpecs {
-		if logging == nil {
-			continue
-		}
-		if err := in.doMergeLogging(logging, in.GetLogging(), in.GetMonitoring().IsEnabled()); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func (in *GreptimeDBCluster) doMergeLogging(input, global *LoggingSpec, isEnableMonitoring bool) error {
-	if input == nil || global == nil {
+// MergeWithGlobalLogging will merge the base logging settings into the component's logging settings.
+// If the component's logging settings is not set, it will be set to the base logging settings.
+func (in *GreptimeDBCluster) MergeWithGlobalLogging() error {
+	if in.GetLogging() == nil {
 		return nil
 	}
 
-	if err := mergo.Merge(input, global.DeepCopy()); err != nil {
-		return err
-	}
-
-	if isEnableMonitoring {
-		// Set the default logging format to JSON if monitoring is enabled.
-		input.Format = LogFormatJSON
-	}
-
-	return nil
-}
-
-// MergeTracing merges the tracing settings into the component's tracing settings.
-func (in *GreptimeDBCluster) MergeTracing() error {
-	tracingSpecs := []*TracingSpec{
-		in.GetMeta().GetTracing(),
-		in.GetFlownode().GetTracing(),
-	}
-
-	if in.GetFrontend() != nil {
-		tracingSpecs = append(tracingSpecs, in.GetFrontend().GetTracing())
-	}
-
-	if len(in.GetFrontendGroups()) != 0 {
-		for _, frontend := range in.GetFrontendGroups() {
-			tracingSpecs = append(tracingSpecs, frontend.GetTracing())
-		}
-	}
-
-	if in.GetDatanode() != nil {
-		tracingSpecs = append(tracingSpecs, in.GetDatanode().GetTracing())
-	}
-
-	if len(in.GetDatanodeGroups()) != 0 {
-		for _, datanodeGroup := range in.GetDatanodeGroups() {
-			tracingSpecs = append(tracingSpecs, datanodeGroup.GetTracing())
-		}
-	}
-
-	for _, tracing := range tracingSpecs {
-		if tracing == nil {
-			continue
-		}
-		if err := in.doMergeTracing(tracing, in.GetTracing()); err != nil {
+	for _, spec := range in.getAllLoggingSpecs() {
+		if err := mergo.Merge(spec, in.GetLogging().DeepCopy()); err != nil {
 			return err
 		}
+
+		if in.GetMonitoring().IsEnabled() {
+			// Set the default logging format to JSON if monitoring is enabled.
+			spec.Format = LogFormatJSON
+		}
 	}
 
 	return nil
 }
 
-func (in *GreptimeDBCluster) doMergeTracing(input, global *TracingSpec) error {
-	if input == nil || global == nil {
+// MergeWithGlobalTracing will merge the global tracing settings into the component's tracing settings.
+// If the component's tracing settings is not set, it will be set to the global tracing settings.
+func (in *GreptimeDBCluster) MergeWithGlobalTracing() error {
+	if in.GetTracing() == nil {
 		return nil
 	}
 
-	if err := mergo.Merge(input, global.DeepCopy()); err != nil {
-		return err
+	for _, spec := range in.getAllTracingSpecs() {
+		if err := mergo.Merge(spec, in.GetTracing().DeepCopy()); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -198,8 +143,8 @@ func (in *GreptimeDBCluster) defaultSpec() *GreptimeDBClusterSpec {
 		defaultSpec.Frontend = in.defaultFrontend()
 	}
 
-	if len(in.GetFrontendGroups()) != 0 {
-		defaultSpec.FrontendGroups = in.defaultFrontendGroups()
+	for range in.GetFrontendGroups() {
+		defaultSpec.FrontendGroups = append(defaultSpec.FrontendGroups, in.defaultFrontend())
 	}
 
 	if in.GetFlownode() != nil {
@@ -276,68 +221,6 @@ func (in *GreptimeDBCluster) defaultFrontend() *FrontendSpec {
 	}
 
 	return defaultSpec
-}
-
-func (in *GreptimeDBCluster) defaultFrontendGroups() []*FrontendSpec {
-	var frontendGroups []*FrontendSpec
-	var (
-		replicas       *int32
-		rpcPort        = DefaultRPCPort
-		httpPort       = DefaultHTTPPort
-		mysqlPort      = DefaultMySQLPort
-		postgresqlPort = DefaultPostgreSQLPort
-		rollingUpdate  = defaultRollingUpdateForDeployment()
-		slowQuery      = defaultSlowQuery()
-	)
-
-	for _, frontend := range in.GetFrontendGroups() {
-		if frontend.Replicas != nil {
-			replicas = frontend.Replicas
-		}
-		if frontend.RPCPort != 0 {
-			rpcPort = frontend.RPCPort
-		}
-		if frontend.HTTPPort != 0 {
-			httpPort = frontend.HTTPPort
-		}
-		if frontend.MySQLPort != 0 {
-			mysqlPort = frontend.MySQLPort
-		}
-		if frontend.PostgreSQLPort != 0 {
-			postgresqlPort = frontend.PostgreSQLPort
-		}
-		if frontend.RollingUpdate != nil {
-			rollingUpdate = frontend.RollingUpdate
-		}
-		if frontend.SlowQuery != nil && frontend.SlowQuery.Enabled {
-			slowQuery = frontend.GetSlowQuery()
-		}
-		frontendSpec := &FrontendSpec{
-			Name: frontend.GetName(),
-			ComponentSpec: ComponentSpec{
-				Template: &PodTemplateSpec{},
-				Replicas: replicas,
-				Logging:  &LoggingSpec{},
-				Tracing:  &TracingSpec{},
-			},
-			RPCPort:        rpcPort,
-			HTTPPort:       httpPort,
-			MySQLPort:      mysqlPort,
-			PostgreSQLPort: postgresqlPort,
-			Service: &ServiceSpec{
-				Type: corev1.ServiceTypeClusterIP,
-			},
-			RollingUpdate: rollingUpdate,
-			SlowQuery:     slowQuery,
-		}
-		frontendGroups = append(frontendGroups, frontendSpec)
-	}
-
-	if err := mergo.Merge(&in.Spec.FrontendGroups, frontendGroups, mergo.WithSliceDeepCopy); err != nil {
-		return frontendGroups
-	}
-
-	return frontendGroups
 }
 
 func (in *GreptimeDBCluster) defaultMeta() *MetaSpec {
@@ -425,99 +308,79 @@ func (in *GreptimeDBCluster) defaultMonitoringStandaloneSpec() *GreptimeDBStanda
 }
 
 func (in *GreptimeDBCluster) mergeFrontendTemplate() error {
-	if len(in.Spec.FrontendGroups) != 0 {
-		for _, frontend := range in.Spec.FrontendGroups {
-			if frontend.Template == nil {
-				frontend.Template = &PodTemplateSpec{}
-			}
-			if err := mergo.Merge(frontend.Template, in.DeepCopy().Spec.Base); err != nil {
-				return err
-			}
-
-			frontend.Template.MainContainer.StartupProbe.HTTPGet.Port = intstr.FromInt32(frontend.HTTPPort)
-			frontend.Template.MainContainer.LivenessProbe.HTTPGet.Port = intstr.FromInt32(frontend.HTTPPort)
-			frontend.Template.MainContainer.ReadinessProbe.HTTPGet.Port = intstr.FromInt32(frontend.HTTPPort)
+	for _, frontend := range in.Spec.FrontendGroups {
+		if err := in.doMergeWithBaseTemplate(frontend.Template, frontend.HTTPPort); err != nil {
+			return err
 		}
 	}
 
-	if in.GetFrontend() != nil {
-		// Use DeepCopy to avoid the same pointer.
-		if err := mergo.Merge(in.Spec.Frontend.Template, in.DeepCopy().Spec.Base); err != nil {
+	if frontend := in.GetFrontend(); frontend != nil {
+		if err := in.doMergeWithBaseTemplate(frontend.Template, frontend.HTTPPort); err != nil {
 			return err
 		}
-
-		// Reconfigure the probe settings based on the HTTP port.
-		in.Spec.Frontend.Template.MainContainer.StartupProbe.HTTPGet.Port = intstr.FromInt32(in.Spec.Frontend.HTTPPort)
-		in.Spec.Frontend.Template.MainContainer.LivenessProbe.HTTPGet.Port = intstr.FromInt32(in.Spec.Frontend.HTTPPort)
-		in.Spec.Frontend.Template.MainContainer.ReadinessProbe.HTTPGet.Port = intstr.FromInt32(in.Spec.Frontend.HTTPPort)
 	}
 
 	return nil
 }
 
 func (in *GreptimeDBCluster) mergeMetaTemplate() error {
-	if in.Spec.Meta != nil {
-		// Use DeepCopy to avoid the same pointer.
-		if err := mergo.Merge(in.Spec.Meta.Template, in.DeepCopy().Spec.Base); err != nil {
+	if meta := in.GetMeta(); meta != nil {
+		if err := in.doMergeWithBaseTemplate(meta.Template, meta.HTTPPort); err != nil {
 			return err
 		}
-
-		// Reconfigure the probe settings based on the HTTP port.
-		in.Spec.Meta.Template.MainContainer.StartupProbe.HTTPGet.Port = intstr.FromInt32(in.Spec.Meta.HTTPPort)
-		in.Spec.Meta.Template.MainContainer.LivenessProbe.HTTPGet.Port = intstr.FromInt32(in.Spec.Meta.HTTPPort)
-		in.Spec.Meta.Template.MainContainer.ReadinessProbe.HTTPGet.Port = intstr.FromInt32(in.Spec.Meta.HTTPPort)
 	}
 
 	return nil
 }
 
 func (in *GreptimeDBCluster) mergeDatanodeTemplate() error {
-	if len(in.GetDatanodeGroups()) != 0 {
-		for _, datanodeGroup := range in.GetDatanodeGroups() {
-			if datanodeGroup.Template == nil {
-				datanodeGroup.Template = &PodTemplateSpec{}
-			}
-
-			if err := mergo.Merge(datanodeGroup.Template, in.DeepCopy().Spec.Base); err != nil {
-				return err
-			}
-
-			// Reconfigure the probe settings based on the HTTP port.
-			datanodeGroup.Template.MainContainer.StartupProbe.HTTPGet.Port = intstr.FromInt32(datanodeGroup.HTTPPort)
-			datanodeGroup.Template.MainContainer.LivenessProbe.HTTPGet.Port = intstr.FromInt32(datanodeGroup.HTTPPort)
-			datanodeGroup.Template.MainContainer.ReadinessProbe.HTTPGet.Port = intstr.FromInt32(datanodeGroup.HTTPPort)
+	for _, datanode := range in.GetDatanodeGroups() {
+		if err := in.doMergeWithBaseTemplate(datanode.Template, datanode.HTTPPort); err != nil {
+			return err
 		}
 	}
 
-	if in.GetDatanode() != nil {
-		// Use DeepCopy to avoid the same pointer.
-		if err := mergo.Merge(in.GetDatanode().Template, in.DeepCopy().Spec.Base); err != nil {
+	if datanode := in.GetDatanode(); datanode != nil {
+		if err := in.doMergeWithBaseTemplate(datanode.Template, datanode.HTTPPort); err != nil {
 			return err
 		}
-
-		// Reconfigure the probe settings based on the HTTP port.
-		in.Spec.Datanode.Template.MainContainer.StartupProbe.HTTPGet.Port = intstr.FromInt32(in.Spec.Datanode.HTTPPort)
-		in.Spec.Datanode.Template.MainContainer.LivenessProbe.HTTPGet.Port = intstr.FromInt32(in.Spec.Datanode.HTTPPort)
-		in.Spec.Datanode.Template.MainContainer.ReadinessProbe.HTTPGet.Port = intstr.FromInt32(in.Spec.Datanode.HTTPPort)
 	}
 
 	return nil
 }
 
 func (in *GreptimeDBCluster) mergeFlownodeTemplate() error {
-	if in.Spec.Flownode != nil {
-		// Use DeepCopy to avoid the same pointer.
-		if err := mergo.Merge(in.Spec.Flownode.Template, in.DeepCopy().Spec.Base); err != nil {
+	if flownode := in.GetFlownode(); flownode != nil {
+		if err := in.doMergeWithBaseTemplate(flownode.Template, flownode.HTTPPort); err != nil {
 			return err
 		}
-
-		// Reconfigure the probe settings based on the HTTP port.
-		in.Spec.Flownode.Template.MainContainer.StartupProbe.HTTPGet.Port = intstr.FromInt32(in.Spec.Flownode.HTTPPort)
-		in.Spec.Flownode.Template.MainContainer.LivenessProbe.HTTPGet.Port = intstr.FromInt32(in.Spec.Flownode.HTTPPort)
-		in.Spec.Flownode.Template.MainContainer.ReadinessProbe.HTTPGet.Port = intstr.FromInt32(in.Spec.Flownode.HTTPPort)
 	}
 
 	return nil
+}
+
+// doMergeWithBaseTemplate merges the base template with the component's template.
+// If the component's template is not set, it will be set to the base template.
+func (in *GreptimeDBCluster) doMergeWithBaseTemplate(dst *PodTemplateSpec, port int32) error {
+	if dst == nil {
+		dst = &PodTemplateSpec{}
+	}
+
+	// Use DeepCopy to avoid the same pointer.
+	if err := mergo.Merge(dst, in.DeepCopy().Spec.Base); err != nil {
+		return err
+	}
+
+	// Reconfigure the probe settings based on the HTTP port.
+	in.configureProbePort(dst, port)
+
+	return nil
+}
+
+func (in *GreptimeDBCluster) configureProbePort(spec *PodTemplateSpec, port int32) {
+	spec.MainContainer.StartupProbe.HTTPGet.Port = intstr.FromInt32(port)
+	spec.MainContainer.LivenessProbe.HTTPGet.Port = intstr.FromInt32(port)
+	spec.MainContainer.ReadinessProbe.HTTPGet.Port = intstr.FromInt32(port)
 }
 
 func (in *GreptimeDBStandalone) SetDefaults() error {
@@ -587,7 +450,7 @@ func defaultSlowQuery() *SlowQuery {
 		Enabled:     true,
 		Threshold:   "30s",
 		SampleRatio: "1.0",
-		TTL:         "30d",
+		TTL:         "90d",
 		RecordType:  SlowQueryRecordTypeSystemTable,
 	}
 }

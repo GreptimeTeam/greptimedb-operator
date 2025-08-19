@@ -866,6 +866,72 @@ func (in *GreptimeDBCluster) GetIngress() *IngressSpec {
 	return nil
 }
 
+func (in *GreptimeDBCluster) getAllLoggingSpecs() []*LoggingSpec {
+	var specs []*LoggingSpec
+
+	if logging := in.GetMeta().GetLogging(); logging != nil {
+		specs = append(specs, logging)
+	}
+
+	if logging := in.GetFlownode().GetLogging(); logging != nil {
+		specs = append(specs, logging)
+	}
+
+	if logging := in.GetDatanode().GetLogging(); logging != nil {
+		specs = append(specs, logging)
+	}
+	for _, datanode := range in.GetDatanodeGroups() {
+		if logging := datanode.GetLogging(); logging != nil {
+			specs = append(specs, logging)
+		}
+	}
+
+	if logging := in.GetFrontend().GetLogging(); logging != nil {
+		specs = append(specs, logging)
+	}
+	for _, frontend := range in.GetFrontendGroups() {
+		if logging := frontend.GetLogging(); logging != nil {
+			specs = append(specs, logging)
+		}
+	}
+
+	return specs
+}
+
+func (in *GreptimeDBCluster) getAllTracingSpecs() []*TracingSpec {
+	var specs []*TracingSpec
+
+	if tracing := in.GetMeta().GetTracing(); tracing != nil {
+		specs = append(specs, tracing)
+	}
+
+	if tracing := in.GetFlownode().GetTracing(); tracing != nil {
+		specs = append(specs, tracing)
+	}
+
+	if tracing := in.GetDatanode().GetTracing(); tracing != nil {
+		specs = append(specs, tracing)
+	}
+
+	for _, datanode := range in.GetDatanodeGroups() {
+		if tracing := datanode.GetTracing(); tracing != nil {
+			specs = append(specs, tracing)
+		}
+	}
+
+	if tracing := in.GetFrontend().GetTracing(); tracing != nil {
+		specs = append(specs, tracing)
+	}
+
+	for _, frontend := range in.GetFrontendGroups() {
+		if tracing := frontend.GetTracing(); tracing != nil {
+			specs = append(specs, tracing)
+		}
+	}
+
+	return specs
+}
+
 // GreptimeDBClusterStatus defines the observed state of GreptimeDBCluster
 type GreptimeDBClusterStatus struct {
 	// Frontend is the status of frontend node.
