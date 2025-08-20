@@ -3335,6 +3335,8 @@ spec:
                 type: object
               config:
                 type: string
+              configMergeStrategy:
+                type: string
               datanodeStorage:
                 properties:
                   dataHome:

@@ -127,7 +127,7 @@ func (c *ConfigGenerator) generateDatanodeConfig(initConfig []byte) ([]byte, err
 	datanodeCfg.RPCServerAddr = ptr.To(fmt.Sprintf("%s.%s.%s:%d", podName,
 		c.DatanodeServiceName, c.Namespace, c.DatanodeRPCPort))
 
-	configData, err := dbconfig.Marshal(cfg)
+	configData, err := dbconfig.Marshal(cfg, v1alpha1.ConfigMergeStrategyOperatorFirst)
 	if err != nil {
 		return nil, err
 	}
@@ -170,7 +170,7 @@ func (c *ConfigGenerator) generateFlownodeConfig(initConfig []byte) ([]byte, err
 	flownodeCfg.RPCServerAddr = ptr.To(fmt.Sprintf("%s.%s.%s:%d", podName,
 		c.ServiceName, c.Namespace, c.RPCPort))
 
-	configData, err := dbconfig.Marshal(cfg)
+	configData, err := dbconfig.Marshal(cfg, v1alpha1.ConfigMergeStrategyOperatorFirst)
 	if err != nil {
 		return nil, err
 	}
