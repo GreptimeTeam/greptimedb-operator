@@ -3345,6 +3345,8 @@ spec:
                       type: object
                     type: array
                 type: object
+              configMergeStrategy:
+                type: string
               datanode:
                 properties:
                   config:
@@ -27134,6 +27136,8 @@ spec:
                             type: array
                         type: object
                       config:
+                        type: string
+                      configMergeStrategy:
                         type: string
                       datanodeStorage:
                         properties:
