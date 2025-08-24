@@ -220,6 +220,10 @@ func (in *GreptimeDBCluster) defaultFrontend() *FrontendSpec {
 		defaultSpec.Replicas = ptr.To(int32(DefaultReplicas))
 	}
 
+	if in.GetFrontend().GetInternalPRC() != nil && in.GetFrontend().GetInternalPRC().IsEnabled() {
+		defaultSpec.InternalPRC.Port = DefaultInternalRPCPort
+	}
+
 	return defaultSpec
 }
 

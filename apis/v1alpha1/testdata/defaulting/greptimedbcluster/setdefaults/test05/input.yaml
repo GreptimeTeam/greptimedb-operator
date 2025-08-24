@@ -1,0 +1,22 @@
+apiVersion: greptime.io/v1alpha1
+kind: GreptimeDBCluster
+metadata:
+  name: test00
+  namespace: default
+spec:
+  base:
+    main:
+      image: greptime/greptimedb:latest
+  frontend:
+    replicas: 1
+    internalPRC:
+      enabled: true
+  meta:
+    backendStorage:
+      etcd:
+        endpoints:
+          - etcd.etcd-cluster.svc.cluster.local:2379
+    replicas: 1
+  datanode:
+    replicas: 3
+  httpPort: 5000

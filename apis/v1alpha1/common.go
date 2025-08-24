@@ -1006,6 +1006,23 @@ func (in *SlowQuery) IsEnabled() bool {
 	return in != nil && in.Enabled
 }
 
+// InternalPRC defines the frontend internal gRPC configuration.
+type InternalPRC struct {
+	// Enabled indicates whether the frontend internal gRPC is enabled.
+	// +optional
+	Enabled bool `json:"enabled,omitempty"`
+
+	// Port is the internal gRPC port of the frontend.
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=65535
+	// +optional
+	Port int32 `json:"port,omitempty"`
+}
+
+func (in *InternalPRC) IsEnabled() bool {
+	return in != nil && in.Enabled
+}
+
 // ConditionType is the type of the condition.
 type ConditionType string
 

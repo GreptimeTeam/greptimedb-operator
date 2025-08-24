@@ -355,6 +355,10 @@ type FrontendSpec struct {
 	// SlowQuery is the slow query configuration.
 	// +optional
 	SlowQuery *SlowQuery `json:"slowQuery,omitempty"`
+
+	// InternalPRC is the frontend internal gPRC configuration.
+	// +optional
+	InternalPRC *InternalPRC `json:"internalPRC,omitempty"`
 }
 
 var _ RoleSpec = &FrontendSpec{}
@@ -374,6 +378,13 @@ func (in *FrontendSpec) GetReplicas() *int32 {
 func (in *FrontendSpec) GetTLS() *TLSSpec {
 	if in != nil {
 		return in.TLS
+	}
+	return nil
+}
+
+func (in *FrontendSpec) GetInternalPRC() *InternalPRC {
+	if in != nil {
+		return in.InternalPRC
 	}
 	return nil
 }
