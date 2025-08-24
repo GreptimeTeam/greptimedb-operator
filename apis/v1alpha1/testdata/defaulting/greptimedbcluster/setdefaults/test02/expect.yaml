@@ -60,6 +60,7 @@ spec:
     logging: {}
     tracing: {}
     template: {}
+    internal: {}
     rollingUpdate:
       maxUnavailable: 25%
       maxSurge: 25%

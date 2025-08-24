@@ -1006,20 +1006,20 @@ func (in *SlowQuery) IsEnabled() bool {
 	return in != nil && in.Enabled
 }
 
-// InternalPRC defines the frontend internal gRPC configuration.
-type InternalPRC struct {
-	// Enabled indicates whether the frontend internal gRPC is enabled.
+// Internal defines the internal configuration.
+type Internal struct {
+	// Enabled indicates whether the internal configuration is enabled.
 	// +optional
 	Enabled bool `json:"enabled,omitempty"`
 
-	// Port is the internal gRPC port of the frontend.
+	// Port is the internal gRPC port.
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=65535
 	// +optional
-	Port int32 `json:"port,omitempty"`
+	RPCPort int32 `json:"rpcPort,omitempty"`
 }
 
-func (in *InternalPRC) IsEnabled() bool {
+func (in *Internal) IsEnabled() bool {
 	return in != nil && in.Enabled
 }
 

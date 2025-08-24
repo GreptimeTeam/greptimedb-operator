@@ -204,6 +204,7 @@ func (in *GreptimeDBCluster) defaultFrontend() *FrontendSpec {
 			Template: &PodTemplateSpec{},
 			Logging:  &LoggingSpec{},
 			Tracing:  &TracingSpec{},
+			Internal: &Internal{},
 		},
 		RPCPort:        DefaultRPCPort,
 		HTTPPort:       DefaultHTTPPort,
@@ -220,8 +221,9 @@ func (in *GreptimeDBCluster) defaultFrontend() *FrontendSpec {
 		defaultSpec.Replicas = ptr.To(int32(DefaultReplicas))
 	}
 
-	if in.GetFrontend().GetInternalPRC() != nil && in.GetFrontend().GetInternalPRC().IsEnabled() {
-		defaultSpec.InternalPRC.Port = DefaultInternalRPCPort
+	if internal := in.GetFrontend().GetInternal(); internal != nil && internal.IsEnabled() {
+		defaultSpec.Internal.Enabled = true
+		defaultSpec.Internal.RPCPort = DefaultInternalRPCPort
 	}
 
 	return defaultSpec

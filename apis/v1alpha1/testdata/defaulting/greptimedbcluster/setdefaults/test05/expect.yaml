@@ -7,7 +7,7 @@ spec:
   version: latest
   initializer:
     image: greptime/greptimedb-initializer:latest
-  httpPort: 5000
+  httpPort: 4000
   rpcPort: 4001
   mysqlPort: 4002
   postgreSQLPort: 4003
@@ -46,9 +46,9 @@ spec:
     rpcPort: 4001
     service:
       type: ClusterIP
-    internalPRC:
+    internal:
       enabled: true
-      port: 4010
+      rpcPort: 4010
     logging: {}
     tracing: {}
     template: {}
@@ -79,7 +79,7 @@ spec:
   datanode:
     httpPort: 4000
     rpcPort: 4001
-    replicas: 3
+    replicas: 1
     storage:
       dataHome: /data/greptimedb
       fs:

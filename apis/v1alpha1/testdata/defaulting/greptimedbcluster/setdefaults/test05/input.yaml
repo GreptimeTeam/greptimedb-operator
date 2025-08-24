@@ -9,7 +9,7 @@ spec:
       image: greptime/greptimedb:latest
   frontend:
     replicas: 1
-    internalPRC:
+    internal:
       enabled: true
   meta:
     backendStorage:
@@ -18,5 +18,5 @@ spec:
           - etcd.etcd-cluster.svc.cluster.local:2379
     replicas: 1
   datanode:
-    replicas: 3
-  httpPort: 5000
+    replicas: 1
+  httpPort: 4000
