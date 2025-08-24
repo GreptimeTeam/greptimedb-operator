@@ -48,7 +48,7 @@ spec:
       type: ClusterIP
     internal:
       enabled: true
-      rpcPort: 4010
+      rpcPort: 5010
     logging: {}
     tracing: {}
     template: {}

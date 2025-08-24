@@ -11,6 +11,7 @@ spec:
     replicas: 1
     internal:
       enabled: true
+      rpcPort: 5010
   meta:
     backendStorage:
       etcd:
