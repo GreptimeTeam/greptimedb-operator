@@ -140,6 +140,7 @@ spec:
   frontendGroups:
   - name: read
     httpPort: 4000
+    internal: {}
     logging:
       format: text
       level: info
@@ -195,6 +196,7 @@ spec:
           periodSeconds: 5
   - name: write
     httpPort: 4000
+    internal: {}
     logging:
       format: text
       level: info

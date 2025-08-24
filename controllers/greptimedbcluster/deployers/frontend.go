@@ -422,6 +422,13 @@ func (b *frontendBuilder) generateMainContainerArgs(frontend *v1alpha1.FrontendS
 		}...)
 	}
 
+	if frontend.GetInternal() != nil && frontend.GetInternal().IsEnabled() {
+		args = append(args, []string{
+			"--internal-rpc-bind-addr", fmt.Sprintf("0.0.0.0:%d", frontend.Internal.RPCPort),
+			"--internal-rpc-server-addr", fmt.Sprintf("$(%s):%d", deployer.EnvPodIP, frontend.Internal.RPCPort),
+		}...)
+	}
+
 	return args
 }
 
@@ -510,7 +517,7 @@ func (b *frontendBuilder) servicePorts(frontend *v1alpha1.FrontendSpec) []corev1
 }
 
 func (b *frontendBuilder) containerPorts(frontend *v1alpha1.FrontendSpec) []corev1.ContainerPort {
-	return []corev1.ContainerPort{
+	ports := []corev1.ContainerPort{
 		{
 			Name:          "rpc",
 			Protocol:      corev1.ProtocolTCP,
@@ -532,4 +539,16 @@ func (b *frontendBuilder) containerPorts(frontend *v1alpha1.FrontendSpec) []core
 			ContainerPort: frontend.PostgreSQLPort,
 		},
 	}
+
+	if frontend.GetInternal() != nil && frontend.GetInternal().IsEnabled() {
+		ports = append(ports, []corev1.ContainerPort{
+			{
+				Name:          "internal-rpc",
+				Protocol:      corev1.ProtocolTCP,
+				ContainerPort: frontend.GetInternal().RPCPort,
+			},
+		}...)
+	}
+
+	return ports
 }

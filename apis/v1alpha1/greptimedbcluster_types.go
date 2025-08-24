@@ -42,6 +42,10 @@ type ComponentSpec struct {
 	// Tracing defines the tracing configuration for the component.
 	// +optional
 	Tracing *TracingSpec `json:"tracing,omitempty"`
+
+	// Internal is the internal configuration for the component.
+	// +optional
+	Internal *Internal `json:"internal,omitempty"`
 }
 
 // MetaSpec is the specification for meta component.
@@ -374,6 +378,13 @@ func (in *FrontendSpec) GetReplicas() *int32 {
 func (in *FrontendSpec) GetTLS() *TLSSpec {
 	if in != nil {
 		return in.TLS
+	}
+	return nil
+}
+
+func (in *FrontendSpec) GetInternal() *Internal {
+	if in != nil {
+		return in.Internal
 	}
 	return nil
 }

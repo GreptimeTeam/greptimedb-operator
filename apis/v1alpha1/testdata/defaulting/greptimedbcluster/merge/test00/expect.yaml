@@ -60,6 +60,7 @@ spec:
       onlyLogToStdout: false
       persistentWithData: false
     tracing: {}
+    internal: {}
     rollingUpdate:
       maxUnavailable: 1
       maxSurge: 2
