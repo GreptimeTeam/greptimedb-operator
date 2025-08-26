@@ -42,10 +42,6 @@ type ComponentSpec struct {
 	// Tracing defines the tracing configuration for the component.
 	// +optional
 	Tracing *TracingSpec `json:"tracing,omitempty"`
-
-	// Internal is the internal configuration for the component.
-	// +optional
-	Internal *Internal `json:"internal,omitempty"`
 }
 
 // MetaSpec is the specification for meta component.
@@ -344,6 +340,12 @@ type FrontendSpec struct {
 	// +optional
 	PostgreSQLPort int32 `json:"postgreSQLPort,omitempty"`
 
+	// InternalPort is the internal gRPC port of the frontend.
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=65535
+	// +optional
+	InternalPort *int32 `json:"internalPort,omitempty"`
+
 	// Service is the service configuration of the frontend.
 	// +optional
 	Service *ServiceSpec `json:"service,omitempty"`
@@ -378,13 +380,6 @@ func (in *FrontendSpec) GetReplicas() *int32 {
 func (in *FrontendSpec) GetTLS() *TLSSpec {
 	if in != nil {
 		return in.TLS
-	}
-	return nil
-}
-
-func (in *FrontendSpec) GetInternal() *Internal {
-	if in != nil {
-		return in.Internal
 	}
 	return nil
 }

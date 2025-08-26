@@ -1006,23 +1006,6 @@ func (in *SlowQuery) IsEnabled() bool {
 	return in != nil && in.Enabled
 }
 
-// Internal defines the internal configuration.
-type Internal struct {
-	// Enabled indicates whether the internal configuration is enabled.
-	// +optional
-	Enabled bool `json:"enabled,omitempty"`
-
-	// Port is the internal gRPC port.
-	// +kubebuilder:validation:Minimum=0
-	// +kubebuilder:validation:Maximum=65535
-	// +optional
-	RPCPort int32 `json:"rpcPort,omitempty"`
-}
-
-func (in *Internal) IsEnabled() bool {
-	return in != nil && in.Enabled
-}
-
 // ConditionType is the type of the condition.
 type ConditionType string
 

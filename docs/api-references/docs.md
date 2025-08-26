@@ -90,7 +90,6 @@ _Appears in:_
 | `template` _[PodTemplateSpec](#podtemplatespec)_ | Template defines the pod template for the component, if not specified, the pod template will use the default value. |  |  |
 | `logging` _[LoggingSpec](#loggingspec)_ | Logging defines the logging configuration for the component. |  |  |
 | `tracing` _[TracingSpec](#tracingspec)_ | Tracing defines the tracing configuration for the component. |  |  |
-| `internal` _[Internal](#internal)_ | Internal is the internal configuration for the component. |  |  |
 
 
 #### Condition
@@ -167,7 +166,6 @@ _Appears in:_
 | `template` _[PodTemplateSpec](#podtemplatespec)_ | Template defines the pod template for the component, if not specified, the pod template will use the default value. |  |  |
 | `logging` _[LoggingSpec](#loggingspec)_ | Logging defines the logging configuration for the component. |  |  |
 | `tracing` _[TracingSpec](#tracingspec)_ | Tracing defines the tracing configuration for the component. |  |  |
-| `internal` _[Internal](#internal)_ | Internal is the internal configuration for the component. |  |  |
 | `name` _string_ | Name is the name of the datanode. |  |  |
 | `rpcPort` _integer_ | RPCPort is the gRPC port of the datanode. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
 | `httpPort` _integer_ | HTTPPort is the HTTP port of the datanode. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
@@ -273,7 +271,6 @@ _Appears in:_
 | `template` _[PodTemplateSpec](#podtemplatespec)_ | Template defines the pod template for the component, if not specified, the pod template will use the default value. |  |  |
 | `logging` _[LoggingSpec](#loggingspec)_ | Logging defines the logging configuration for the component. |  |  |
 | `tracing` _[TracingSpec](#tracingspec)_ | Tracing defines the tracing configuration for the component. |  |  |
-| `internal` _[Internal](#internal)_ | Internal is the internal configuration for the component. |  |  |
 | `rpcPort` _integer_ | The gRPC port of the flownode. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
 | `httpPort` _integer_ | The HTTP port of the flownode. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
 | `rollingUpdate` _[RollingUpdateStatefulSetStrategy](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#rollingupdatestatefulsetstrategy-v1-apps)_ | RollingUpdate is the rolling update configuration. We always use `RollingUpdate` strategy. |  |  |
@@ -314,12 +311,12 @@ _Appears in:_
 | `template` _[PodTemplateSpec](#podtemplatespec)_ | Template defines the pod template for the component, if not specified, the pod template will use the default value. |  |  |
 | `logging` _[LoggingSpec](#loggingspec)_ | Logging defines the logging configuration for the component. |  |  |
 | `tracing` _[TracingSpec](#tracingspec)_ | Tracing defines the tracing configuration for the component. |  |  |
-| `internal` _[Internal](#internal)_ | Internal is the internal configuration for the component. |  |  |
 | `name` _string_ | Name is the name of the frontend. |  |  |
 | `rpcPort` _integer_ | RPCPort is the gRPC port of the frontend. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
 | `httpPort` _integer_ | HTTPPort is the HTTP port of the frontend. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
 | `mysqlPort` _integer_ | MySQLPort is the MySQL port of the frontend. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
 | `postgreSQLPort` _integer_ | PostgreSQLPort is the PostgreSQL port of the frontend. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
+| `internalPort` _integer_ | InternalPort is the internal gRPC port of the frontend. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
 | `service` _[ServiceSpec](#servicespec)_ | Service is the service configuration of the frontend. |  |  |
 | `tls` _[TLSSpec](#tlsspec)_ | TLS is the TLS configuration of the frontend. |  |  |
 | `rollingUpdate` _[RollingUpdateDeployment](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#rollingupdatedeployment-v1-apps)_ | RollingUpdate is the rolling update configuration. We always use `RollingUpdate` strategyt. |  |  |
@@ -584,27 +581,6 @@ _Appears in:_
 | `image` _string_ | The image of the initializer. |  |  |
 
 
-#### Internal
-
-
-
-Internal defines the internal configuration.
-
-
-
-_Appears in:_
-- [ComponentSpec](#componentspec)
-- [DatanodeSpec](#datanodespec)
-- [FlownodeSpec](#flownodespec)
-- [FrontendSpec](#frontendspec)
-- [MetaSpec](#metaspec)
-
-| Field | Description | Default | Validation |
-| --- | --- | --- | --- |
-| `enabled` _boolean_ | Enabled indicates whether the internal configuration is enabled. |  |  |
-| `rpcPort` _integer_ | Port is the internal gRPC port. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
-
-
 #### KafkaWAL
 
 
@@ -764,7 +740,6 @@ _Appears in:_
 | `template` _[PodTemplateSpec](#podtemplatespec)_ | Template defines the pod template for the component, if not specified, the pod template will use the default value. |  |  |
 | `logging` _[LoggingSpec](#loggingspec)_ | Logging defines the logging configuration for the component. |  |  |
 | `tracing` _[TracingSpec](#tracingspec)_ | Tracing defines the tracing configuration for the component. |  |  |
-| `internal` _[Internal](#internal)_ | Internal is the internal configuration for the component. |  |  |
 | `rpcPort` _integer_ | RPCPort is the gRPC port of the meta. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
 | `httpPort` _integer_ | HTTPPort is the HTTP port of the meta. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
 | `backendStorage` _[BackendStorage](#backendstorage)_ | BackendStorage is the specification for the backend storage for meta. |  |  |

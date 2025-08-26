@@ -55,7 +55,6 @@ spec:
       type: ClusterIP
     logging: {}
     tracing: {}
-    internal: {}
     template:
       main:
         image: greptime/greptimedb:latest

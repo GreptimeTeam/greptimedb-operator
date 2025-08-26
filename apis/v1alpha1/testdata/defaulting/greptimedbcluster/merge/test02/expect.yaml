@@ -156,7 +156,6 @@ spec:
       sampleRatio: "1.0"
       threshold: 30s
       ttl: 90d
-    internal: {}
     template:
       main:
         image: greptime/greptimedb:latest
@@ -194,7 +193,6 @@ spec:
       onlyLogToStdout: false
       persistentWithData: false
     tracing: {}
-    internal: {}
     mysqlPort: 4002
     postgreSQLPort: 4003
     replicas: 2

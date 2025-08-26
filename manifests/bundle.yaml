@@ -3362,16 +3362,6 @@ spec:
                     maximum: 65535
                     minimum: 0
                     type: integer
-                  internal:
-                    properties:
-                      enabled:
-                        type: boolean
-                      rpcPort:
-                        format: int32
-                        maximum: 65535
-                        minimum: 0
-                        type: integer
-                    type: object
                   logging:
                     properties:
                       filters:
@@ -6766,16 +6756,6 @@ spec:
                       maximum: 65535
                       minimum: 0
                       type: integer
-                    internal:
-                      properties:
-                        enabled:
-                          type: boolean
-                        rpcPort:
-                          format: int32
-                          maximum: 65535
-                          minimum: 0
-                          type: integer
-                      type: object
                     logging:
                       properties:
                         filters:
@@ -10170,16 +10150,6 @@ spec:
                     maximum: 65535
                     minimum: 0
                     type: integer
-                  internal:
-                    properties:
-                      enabled:
-                        type: boolean
-                      rpcPort:
-                        format: int32
-                        maximum: 65535
-                        minimum: 0
-                        type: integer
-                    type: object
                   logging:
                     properties:
                       filters:
@@ -13539,16 +13509,11 @@ spec:
                     maximum: 65535
                     minimum: 0
                     type: integer
-                  internal:
-                    properties:
-                      enabled:
-                        type: boolean
-                      rpcPort:
-                        format: int32
-                        maximum: 65535
-                        minimum: 0
-                        type: integer
-                    type: object
+                  internalPort:
+                    format: int32
+                    maximum: 65535
+                    minimum: 0
+                    type: integer
                   logging:
                     properties:
                       filters:
@@ -16961,16 +16926,11 @@ spec:
                       maximum: 65535
                       minimum: 0
                       type: integer
-                    internal:
-                      properties:
-                        enabled:
-                          type: boolean
-                        rpcPort:
-                          format: int32
-                          maximum: 65535
-                          minimum: 0
-                          type: integer
-                      type: object
+                    internalPort:
+                      format: int32
+                      maximum: 65535
+                      minimum: 0
+                      type: integer
                     logging:
                       properties:
                         filters:
@@ -20528,16 +20488,6 @@ spec:
                     maximum: 65535
                     minimum: 0
                     type: integer
-                  internal:
-                    properties:
-                      enabled:
-                        type: boolean
-                      rpcPort:
-                        format: int32
-                        maximum: 65535
-                        minimum: 0
-                        type: integer
-                    type: object
                   logging:
                     properties:
                       filters:

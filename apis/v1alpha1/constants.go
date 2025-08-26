@@ -37,9 +37,6 @@ const (
 	// DefaultMetaRPCPort is the default Meta RPC port for the GreptimeDB.
 	DefaultMetaRPCPort int32 = 3002
 
-	// DefaultInternalRPCPort is the default Frontend internal RPC port for the GreptimeDB.
-	DefaultInternalRPCPort int32 = 4010
-
 	// DefaultReplicas is the default number of replicas for components of the GreptimeDB cluster.
 	DefaultReplicas = 1
 

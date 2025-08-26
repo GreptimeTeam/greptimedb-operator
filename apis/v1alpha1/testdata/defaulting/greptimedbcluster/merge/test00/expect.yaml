@@ -48,6 +48,7 @@ spec:
   frontend:
     replicas: 1
     httpPort: 9000
+    internalPort: 5010
     mysqlPort: 4002
     postgreSQLPort: 4003
     rpcPort: 4001
@@ -60,7 +61,6 @@ spec:
       onlyLogToStdout: false
       persistentWithData: false
     tracing: {}
-    internal: {}
     rollingUpdate:
       maxUnavailable: 1
       maxSurge: 2
