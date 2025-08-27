@@ -13509,6 +13509,11 @@ spec:
                     maximum: 65535
                     minimum: 0
                     type: integer
+                  internalPort:
+                    format: int32
+                    maximum: 65535
+                    minimum: 0
+                    type: integer
                   logging:
                     properties:
                       filters:
@@ -16917,6 +16922,11 @@ spec:
                     config:
                       type: string
                     httpPort:
+                      format: int32
+                      maximum: 65535
+                      minimum: 0
+                      type: integer
+                    internalPort:
                       format: int32
                       maximum: 65535
                       minimum: 0

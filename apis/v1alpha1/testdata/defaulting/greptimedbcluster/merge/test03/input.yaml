@@ -25,6 +25,7 @@ spec:
       enabled: true
       endpoint: "trace-endpoint"
       sampleRatio: "0.6"
+    internalPort: 4010
     slowQuery:
       enabled: true
       recordType: system_table
@@ -43,6 +44,7 @@ spec:
       sampleRatio: "0.5"
       threshold: 20s
       ttl: 20d
+    internalPort: 4010
   meta:
     backendStorage:
       etcd:

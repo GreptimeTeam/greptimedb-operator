@@ -316,6 +316,7 @@ _Appears in:_
 | `httpPort` _integer_ | HTTPPort is the HTTP port of the frontend. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
 | `mysqlPort` _integer_ | MySQLPort is the MySQL port of the frontend. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
 | `postgreSQLPort` _integer_ | PostgreSQLPort is the PostgreSQL port of the frontend. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
+| `internalPort` _integer_ | InternalPort is the internal gRPC port of the frontend. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
 | `service` _[ServiceSpec](#servicespec)_ | Service is the service configuration of the frontend. |  |  |
 | `tls` _[TLSSpec](#tlsspec)_ | TLS is the TLS configuration of the frontend. |  |  |
 | `rollingUpdate` _[RollingUpdateDeployment](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#rollingupdatedeployment-v1-apps)_ | RollingUpdate is the rolling update configuration. We always use `RollingUpdate` strategyt. |  |  |

@@ -302,6 +302,11 @@ func (in *FlownodeStatus) DeepCopy() *FlownodeStatus {
 func (in *FrontendSpec) DeepCopyInto(out *FrontendSpec) {
 	*out = *in
 	in.ComponentSpec.DeepCopyInto(&out.ComponentSpec)
+	if in.InternalPort != nil {
+		in, out := &in.InternalPort, &out.InternalPort
+		*out = new(int32)
+		**out = **in
+	}
 	if in.Service != nil {
 		in, out := &in.Service, &out.Service
 		*out = new(ServiceSpec)

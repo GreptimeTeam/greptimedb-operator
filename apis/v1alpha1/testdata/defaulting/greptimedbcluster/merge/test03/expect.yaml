@@ -150,6 +150,7 @@ spec:
       enabled: true
       endpoint: "trace-endpoint"
       sampleRatio: "0.6"
+    internalPort: 4010
     mysqlPort: 4002
     postgreSQLPort: 4003
     replicas: 2
@@ -195,6 +196,7 @@ spec:
           periodSeconds: 5
   - name: write
     httpPort: 4000
+    internalPort: 4010
     logging:
       format: text
       level: info
