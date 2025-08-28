@@ -18,7 +18,7 @@ ETCD_NAME=""
 ETCD_NAMESPACE=""
 SKIP_CONFIRM=false
 DEFAULT_KUBECONFIG="${HOME}/.kube/config"
-KUBECTL_IMAGE="bitnami/kubectl:1.32.3"
+KUBECTL_IMAGE="public.ecr.aws/i8k6a5e1/bitnami/kubectl:1.32.3"
 KUBECTL=""
 
 # Parse command line arguments

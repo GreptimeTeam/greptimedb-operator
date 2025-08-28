@@ -27,7 +27,7 @@ REGISTRY_PORT=5001
 
 # The argument for deploying etcd cluster.
 ETCD_NAMESPACE=etcd-cluster
-ETCD_CHART_VERSION=9.0.0
+ETCD_CHART_VERSION=12.0.8
 
 # The argument for deploying ingress nginx controller.
 INGRESS_NGINX_CONTROLLER_NAMESPACE=ingress-nginx
@@ -199,6 +199,10 @@ function deploy_etcd_cluster() {
     --set auth.rbac.token.enabled=false \
     --namespace "$ETCD_NAMESPACE" \
     --create-namespace \
+    --set global.security.allowInsecureImages=true \
+    --set image.registry=public.ecr.aws/i8k6a5e1 \
+    --set image.repository=bitnami/etcd \
+    --set image.tag=3.6.1-debian-12-r3 \
     --version "$ETCD_CHART_VERSION"
   echo -e "${GREEN}<= etcd cluster is deployed.${RESET}"
 }
@@ -211,6 +215,10 @@ function deploy_postgresql() {
     --set auth.database="$POSTGRESQL_DATABASE" \
     --namespace "$POSTGRESQL_NAMESPACE" \
     --create-namespace \
+    --set global.security.allowInsecureImages=true \
+    --set image.registry=public.ecr.aws/i8k6a5e1 \
+    --set image.repository=bitnami/postgresql \
+    --set image.tag=17.5.0-debian-12-r3 \
     --version "$POSTGRESQL_CHART_VERSION"
 
   # Create postgres-credentials secret.
@@ -228,6 +236,10 @@ function deploy_mysql() {
     --set auth.database="$MYSQL_DATABASE" \
     --namespace "$MYSQL_NAMESPACE" \
     --create-namespace \
+    --set global.security.allowInsecureImages=true \
+    --set image.registry=public.ecr.aws/i8k6a5e1 \
+    --set image.repository=bitnami/mysql \
+    --set image.tag=9.3.0-debian-12-r0 \
     --version "$MYSQL_CHART_VERSION"
 
   # Create mysql-credentials secret.
@@ -261,6 +273,9 @@ function deploy_kafka_cluster() {
       --set broker.replicaCount=1 \
       --set listeners.client.protocol=PLAINTEXT \
       --create-namespace \
+      --set image.registry=public.ecr.aws/i8k6a5e1 \
+      --set image.repository=bitnami/kafka \
+      --set image.tag=3.9.0-debian-12-r1 \
       --version "$KAFKA_CHART_VERSION"
   echo -e "${GREEN}<= Kafka cluster is deployed.${RESET}"
 }
