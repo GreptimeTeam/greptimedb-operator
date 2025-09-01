@@ -200,8 +200,8 @@ function deploy_etcd_cluster() {
     --namespace "$ETCD_NAMESPACE" \
     --create-namespace \
     --set global.security.allowInsecureImages=true \
-    --set image.registry=public.ecr.aws/i8k6a5e1 \
-    --set image.repository=bitnami/etcd \
+    --set image.registry=docker.io \
+    --set image.repository=greptime/etcd \
     --set image.tag=3.6.1-debian-12-r3 \
     --version "$ETCD_CHART_VERSION"
   echo -e "${GREEN}<= etcd cluster is deployed.${RESET}"
@@ -216,8 +216,8 @@ function deploy_postgresql() {
     --namespace "$POSTGRESQL_NAMESPACE" \
     --create-namespace \
     --set global.security.allowInsecureImages=true \
-    --set image.registry=public.ecr.aws/i8k6a5e1 \
-    --set image.repository=bitnami/postgresql \
+    --set image.registry=docker.io \
+    --set image.repository=greptime/postgresql \
     --set image.tag=17.5.0-debian-12-r3 \
     --version "$POSTGRESQL_CHART_VERSION"
 
@@ -237,8 +237,8 @@ function deploy_mysql() {
     --namespace "$MYSQL_NAMESPACE" \
     --create-namespace \
     --set global.security.allowInsecureImages=true \
-    --set image.registry=public.ecr.aws/i8k6a5e1 \
-    --set image.repository=bitnami/mysql \
+    --set image.registry=docker.io \
+    --set image.repository=greptime/mysql \
     --set image.tag=9.3.0-debian-12-r0 \
     --version "$MYSQL_CHART_VERSION"
 
@@ -273,8 +273,8 @@ function deploy_kafka_cluster() {
       --set broker.replicaCount=1 \
       --set listeners.client.protocol=PLAINTEXT \
       --create-namespace \
-      --set image.registry=public.ecr.aws/i8k6a5e1 \
-      --set image.repository=bitnami/kafka \
+      --set image.registry=docker.io \
+      --set image.repository=greptime/kafka \
       --set image.tag=3.9.0-debian-12-r1 \
       --version "$KAFKA_CHART_VERSION"
   echo -e "${GREEN}<= Kafka cluster is deployed.${RESET}"
