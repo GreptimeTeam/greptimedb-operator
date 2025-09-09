@@ -437,7 +437,15 @@ func (b *frontendBuilder) generatePodTemplateSpec(frontend *v1alpha1.FrontendSpe
 
 	if len(frontend.Template.MainContainer.Args) == 0 {
 		// Setup main container args.
-		podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Args = append(b.generateMainContainerArgs(frontend), frontend.Template.MainContainer.ExtraArgs...)
+		podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Args = b.generateMainContainerArgs(frontend)
+	}
+
+	if len(frontend.Template.MainContainer.PrependArgs) > 0 {
+		podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Args = append(frontend.Template.MainContainer.PrependArgs, podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Args...)
+	}
+
+	if len(frontend.Template.MainContainer.ExtraArgs) > 0 {
+		podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Args = append(podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Args, frontend.Template.MainContainer.ExtraArgs...)
 	}
 
 	resourceName := common.ResourceName(b.Cluster.Name, b.RoleKind, frontend.GetName())

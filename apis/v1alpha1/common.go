@@ -230,6 +230,11 @@ type MainContainerSpec struct {
 	// +optional
 	Args []string `json:"args,omitempty"`
 
+	// PrependArgs specifies additional command-line arguments for the container entrypoint.
+	// These arguments will be prepended to the default command line.
+	// +optional
+	PrependArgs []string `json:"prependArgs,omitempty"`
+
 	// ExtraArgs specifies additional command-line arguments for the container entrypoint.
 	// These arguments will be appended to the default command line.
 	// +optional

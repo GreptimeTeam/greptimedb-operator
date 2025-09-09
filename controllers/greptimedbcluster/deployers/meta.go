@@ -351,7 +351,15 @@ func (b *metaBuilder) generatePodTemplateSpec() *corev1.PodTemplateSpec {
 
 	if len(b.Cluster.Spec.Meta.Template.MainContainer.Args) == 0 {
 		// Setup main container args.
-		podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Args = append(b.generateMainContainerArgs(), b.Cluster.Spec.Meta.Template.MainContainer.ExtraArgs...)
+		podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Args = b.generateMainContainerArgs()
+	}
+
+	if len(b.Cluster.Spec.Meta.Template.MainContainer.PrependArgs) > 0 {
+		podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Args = append(b.Cluster.Spec.Meta.Template.MainContainer.PrependArgs, podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Args...)
+	}
+
+	if len(b.Cluster.Spec.Meta.Template.MainContainer.ExtraArgs) > 0 {
+		podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Args = append(podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Args, b.Cluster.Spec.Meta.Template.MainContainer.ExtraArgs...)
 	}
 
 	podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Ports = b.containerPorts()

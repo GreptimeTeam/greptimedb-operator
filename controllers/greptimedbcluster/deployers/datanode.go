@@ -592,7 +592,15 @@ func (b *datanodeBuilder) generatePodTemplateSpec(spec *v1alpha1.DatanodeSpec, g
 
 	if len(spec.Template.MainContainer.Args) == 0 {
 		// Setup main container args.
-		podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Args = append(b.generateMainContainerArgs(spec), spec.Template.MainContainer.ExtraArgs...)
+		podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Args = b.generateMainContainerArgs(spec)
+	}
+
+	if len(spec.Template.MainContainer.PrependArgs) > 0 {
+		podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Args = append(spec.Template.MainContainer.PrependArgs, podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Args...)
+	}
+
+	if len(spec.Template.MainContainer.ExtraArgs) > 0 {
+		podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Args = append(podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Args, spec.Template.MainContainer.ExtraArgs...)
 	}
 
 	podTemplateSpec.Spec.Containers[constant.MainContainerIndex].Ports = b.containerPorts(spec)
