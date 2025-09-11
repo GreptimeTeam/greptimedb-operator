@@ -9,6 +9,7 @@ spec:
   mysqlPort: 4002
   postgreSQLPort: 4003
   rpcPort: 4001
+  configMergeStrategy: ConfigMergeStrategyInjectedDataFirst
   base:
     main:
       image: greptime/greptimedb:latest

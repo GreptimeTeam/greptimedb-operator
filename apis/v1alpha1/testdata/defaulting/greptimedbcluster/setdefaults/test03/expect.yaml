@@ -26,6 +26,7 @@ spec:
         periodSeconds: 5
         failureThreshold: 60
   version: latest
+  configMergeStrategy: ConfigMergeStrategyInjectedDataFirst
   initializer:
     image: greptime/greptimedb-initializer:latest
   httpPort: 4000

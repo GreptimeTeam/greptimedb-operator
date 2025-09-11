@@ -5,6 +5,7 @@ metadata:
   namespace: default
 spec:
   version: latest
+  configMergeStrategy: ConfigMergeStrategyInjectedDataFirst
   initializer:
     image: greptime/greptimedb-initializer:latest
   httpPort: 4000
