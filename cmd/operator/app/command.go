@@ -41,7 +41,6 @@ import (
 	"github.com/GreptimeTeam/greptimedb-operator/cmd/operator/app/version"
 	"github.com/GreptimeTeam/greptimedb-operator/controllers/greptimedbcluster"
 	"github.com/GreptimeTeam/greptimedb-operator/controllers/greptimedbstandalone"
-	"github.com/GreptimeTeam/greptimedb-operator/pkg/apiserver"
 )
 
 const (
@@ -137,24 +136,6 @@ func NewOperatorCommand() *cobra.Command {
 					setupLog.Error(err, "unable to setup admission webhook", "controller", "greptimedbstandalone")
 					os.Exit(1)
 				}
-			}
-
-			if o.EnableAPIServer {
-				server, err := apiserver.NewServer(mgr, &apiserver.Options{
-					Port:             o.APIServerPort,
-					EnablePodMetrics: o.EnablePodMetrics,
-				})
-				if err != nil {
-					setupLog.Error(err, "unable to create API server")
-					os.Exit(1)
-				}
-
-				go func() {
-					if err := server.Run(); err != nil {
-						setupLog.Error(err, "unable to run API service")
-						os.Exit(1)
-					}
-				}()
 			}
 
 			if o.EnableProfiling {
