@@ -314,3 +314,4 @@ spec:
     sampleRatio: "0.9"
   rpcPort: 4001
   version: latest
+  configMergeStrategy: ConfigMergeStrategyInjectedDataFirst

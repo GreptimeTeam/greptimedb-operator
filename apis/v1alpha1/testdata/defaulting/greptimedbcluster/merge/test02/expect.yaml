@@ -296,3 +296,4 @@ spec:
   postgreSQLPort: 4003
   rpcPort: 4001
   version: latest
+  configMergeStrategy: ConfigMergeStrategyInjectedDataFirst

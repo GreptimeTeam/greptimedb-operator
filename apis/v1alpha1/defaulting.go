@@ -45,6 +45,9 @@ func (in *GreptimeDBCluster) SetDefaults() error {
 		return err
 	}
 
+	// Set the default config merge strategy to ConfigMergeStrategyInjectedDataFirst.
+	in.Spec.ConfigMergeStrategy = ConfigMergeStrategyInjectedDataFirst
+
 	return nil
 }
 
@@ -381,6 +384,9 @@ func (in *GreptimeDBStandalone) SetDefaults() error {
 	if err := mergo.Merge(&in.Spec, in.defaultSpec(), mergo.WithTransformers(intOrStringTransformer{})); err != nil {
 		return err
 	}
+
+	// Set the default config merge strategy to ConfigMergeStrategyInjectedDataFirst.
+	in.Spec.ConfigMergeStrategy = ConfigMergeStrategyInjectedDataFirst
 
 	return nil
 }
