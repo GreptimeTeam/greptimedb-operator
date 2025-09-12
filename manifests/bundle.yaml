@@ -2169,6 +2169,10 @@ spec:
                             format: int32
                             type: integer
                         type: object
+                      prependArgs:
+                        items:
+                          type: string
+                        type: array
                       readinessProbe:
                         properties:
                           exec:
@@ -5554,6 +5558,10 @@ spec:
                                 format: int32
                                 type: integer
                             type: object
+                          prependArgs:
+                            items:
+                              type: string
+                            type: array
                           readinessProbe:
                             properties:
                               exec:
@@ -8948,6 +8956,10 @@ spec:
                                   format: int32
                                   type: integer
                               type: object
+                            prependArgs:
+                              items:
+                                type: string
+                              type: array
                             readinessProbe:
                               properties:
                                 exec:
@@ -12308,6 +12320,10 @@ spec:
                                 format: int32
                                 type: integer
                             type: object
+                          prependArgs:
+                            items:
+                              type: string
+                            type: array
                           readinessProbe:
                             properties:
                               exec:
@@ -15717,6 +15733,10 @@ spec:
                                 format: int32
                                 type: integer
                             type: object
+                          prependArgs:
+                            items:
+                              type: string
+                            type: array
                           readinessProbe:
                             properties:
                               exec:
@@ -19134,6 +19154,10 @@ spec:
                                   format: int32
                                   type: integer
                               type: object
+                            prependArgs:
+                              items:
+                                type: string
+                              type: array
                             readinessProbe:
                               properties:
                                 exec:
@@ -22650,6 +22674,10 @@ spec:
                                 format: int32
                                 type: integer
                             type: object
+                          prependArgs:
+                            items:
+                              type: string
+                            type: array
                           readinessProbe:
                             properties:
                               exec:
@@ -25969,6 +25997,10 @@ spec:
                                     format: int32
                                     type: integer
                                 type: object
+                              prependArgs:
+                                items:
+                                  type: string
+                                type: array
                               readinessProbe:
                                 properties:
                                   exec:
@@ -29928,6 +29960,10 @@ spec:
                             format: int32
                             type: integer
                         type: object
+                      prependArgs:
+                        items:
+                          type: string
+                        type: array
                       readinessProbe:
                         properties:
                           exec:

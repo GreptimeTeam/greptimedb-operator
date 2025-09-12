@@ -917,6 +917,11 @@ func (in *MainContainerSpec) DeepCopyInto(out *MainContainerSpec) {
 		*out = make([]string, len(*in))
 		copy(*out, *in)
 	}
+	if in.PrependArgs != nil {
+		in, out := &in.PrependArgs, &out.PrependArgs
+		*out = make([]string, len(*in))
+		copy(*out, *in)
+	}
 	if in.ExtraArgs != nil {
 		in, out := &in.ExtraArgs, &out.ExtraArgs
 		*out = make([]string, len(*in))
