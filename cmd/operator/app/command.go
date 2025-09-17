@@ -84,14 +84,6 @@ func NewOperatorCommand() *cobra.Command {
 			setupLog := ctrl.Log.WithName("setup")
 			cfg := ctrl.GetConfigOrDie()
 
-			webhookServer := webhook.NewServer(webhook.Options{})
-			if o.EnableAdmissionWebhook {
-				webhookServerOptions := webhook.Options{
-					Port:    o.AdmissionWebhookPort,
-					CertDir: o.AdmissionWebhookCertDir,
-				}
-				webhookServer = webhook.NewServer(webhookServerOptions)
-			}
 			mgr, err := ctrl.NewManager(cfg, ctrl.Options{
 				Scheme:                 scheme,
 				HealthProbeBindAddress: o.HealthProbeAddr,
@@ -100,8 +92,15 @@ func NewOperatorCommand() *cobra.Command {
 				Metrics: metricsserver.Options{
 					BindAddress: o.MetricsAddr,
 				},
-				WebhookServer: webhookServer,
 			})
+			if o.EnableAdmissionWebhook {
+				webhookServerOptions := webhook.Options{
+					Port:    o.AdmissionWebhookPort,
+					CertDir: o.AdmissionWebhookCertDir,
+				}
+				webhookServer := webhook.NewServer(webhookServerOptions)
+				mgr.Add(webhookServer)
+			}
 			if err != nil {
 				setupLog.Error(err, "unable to start manager")
 				os.Exit(1)
