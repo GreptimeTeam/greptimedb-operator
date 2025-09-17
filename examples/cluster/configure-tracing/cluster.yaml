@@ -5,7 +5,7 @@ metadata:
 spec:
   tracing:
     enabled: true
-    endpoint: "http://basic-monitor-standalone.default:4000/v1/otlp"
+    endpoint: "http://basic-monitor-standalone.default:4000/v1/otlp/v1/traces"
     sampleRatio: "1.0"
   base:
     main:
@@ -14,7 +14,7 @@ spec:
     replicas: 1
     tracing:
       enabled: true
-      endpoint: "http://basic-monitor-standalone.default:4000/v1/otlp"
+      endpoint: "http://basic-monitor-standalone.default:4000/v1/otlp/v1/traces"
       sampleRatio: "0.5"
   meta:
     replicas: 1
