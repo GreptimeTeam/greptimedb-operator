@@ -99,7 +99,10 @@ func NewOperatorCommand() *cobra.Command {
 					CertDir: o.AdmissionWebhookCertDir,
 				}
 				webhookServer := webhook.NewServer(webhookServerOptions)
-				mgr.Add(webhookServer)
+				if err := mgr.Add(webhookServer); err != nil {
+					setupLog.Error(err, "unable to add admission webhook server to manager")
+					os.Exit(1)
+				}
 			}
 			if err != nil {
 				setupLog.Error(err, "unable to start manager")
