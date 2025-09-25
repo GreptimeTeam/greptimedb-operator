@@ -36,7 +36,7 @@ on:
         default: false
 
 env:
-  GO_VERSION: "1.24.3"
+  GO_VERSION: "1.25.1"
 
   # The source code will check out in the following path: '${WORKING_DIR}/dev/greptimedb-operator'.
   CHECKOUT_SOURCE_PATH: dev/greptimedb-operator
