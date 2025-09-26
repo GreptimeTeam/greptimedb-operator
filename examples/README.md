@@ -35,3 +35,4 @@ The following examples suppose that you have installed the etcd cluster in the `
 - [OSS](./standalone/oss/standalone.yaml): Create a GreptimeDB standalone with Aliyun OSS storage.
 - [AZBlob](./standalone/azblob/standalone.yaml): Create a GreptimeDB standalone with Azure Blob storage.
 - [Configure Tracing](./standalone/configure-tracing/standalone.yaml): Create a GreptimeDB standalone with custom tracing configuration.
+- [Prometheus Monitoring](./standalone/prometheus-monitor/standalone.yaml): Create a GreptimeDB standalone with Prometheus monitoring. Please ensure you have already installed prometheus-operator and created a Prometheus instance with the label `release=prometheus`.

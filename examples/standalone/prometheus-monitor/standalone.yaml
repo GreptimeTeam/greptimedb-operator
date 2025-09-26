@@ -1,0 +1,13 @@
+apiVersion: greptime.io/v1alpha1
+kind: GreptimeDBStandalone
+metadata:
+  name: basic
+spec:
+  base:
+    main:
+      image: greptime/greptimedb:latest
+  prometheusMonitor: # Make sure you have already installed prometheus-operator and created a Prometheus instance with the label `release=prometheus`.
+    enabled: true
+    interval: "30s"
+    labels:
+      release: prometheus
