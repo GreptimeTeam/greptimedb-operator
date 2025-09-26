@@ -80,6 +80,7 @@ func (d *StandaloneDeployer) Generate(crdObject client.Object) ([]client.Object,
 		BuildService().
 		BuildConfigMap().
 		BuildStatefulSet().
+		BuildPodMonitor().
 		SetControllerAndAnnotation().
 		Generate()
 
@@ -275,6 +276,30 @@ func (b *standaloneBuilder) BuildStatefulSet() deployer.Builder {
 		map[string]string{deployer.ConfigHash: util.CalculateConfigHash(configData)})
 
 	b.Objects = append(b.Objects, sts)
+
+	return b
+}
+
+func (b *standaloneBuilder) BuildPodMonitor() deployer.Builder {
+	if b.Err != nil {
+		return b
+	}
+
+	if b.standalone == nil {
+		return b
+	}
+
+	if b.standalone.Spec.PrometheusMonitor == nil || !b.standalone.Spec.PrometheusMonitor.Enabled {
+		return b
+	}
+
+	pm, err := common.GeneratePodMonitor(b.standalone.Namespace, common.ResourceName(b.standalone.Name, v1alpha1.StandaloneRoleKind), b.standalone.Spec.PrometheusMonitor)
+	if err != nil {
+		b.Err = err
+		return b
+	}
+
+	b.Objects = append(b.Objects, pm)
 
 	return b
 }
