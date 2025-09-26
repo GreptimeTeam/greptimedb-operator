@@ -414,6 +414,10 @@ func (in *GreptimeDBStandalone) defaultSpec() *GreptimeDBStandaloneSpec {
 		SlowQuery:       defaultSlowQuery(),
 	}
 
+	if in.Spec.Replicas == nil {
+		defaultSpec.Replicas = ptr.To(int32(DefaultReplicas))
+	}
+
 	return defaultSpec
 }
 

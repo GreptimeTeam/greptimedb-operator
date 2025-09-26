@@ -495,6 +495,7 @@ _Appears in:_
 | `postgreSQLPort` _integer_ | PostgreSQLPort is the port of the greptimedb postgresql service. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
 | `prometheusMonitor` _[PrometheusMonitorSpec](#prometheusmonitorspec)_ | PrometheusMonitor is the specification for creating PodMonitor or ServiceMonitor. |  |  |
 | `version` _string_ | Version is the version of the greptimedb. |  |  |
+| `replicas` _integer_ | The number of replicas of the standalone. |  | Enum: [0 1] <br /> |
 | `initializer` _[InitializerSpec](#initializerspec)_ | Initializer is the init container to set up components configurations before running the container. |  |  |
 | `objectStorage` _[ObjectStorageProviderSpec](#objectstorageproviderspec)_ | ObjectStorageProvider is the storage provider for the greptimedb cluster. |  |  |
 | `datanodeStorage` _[DatanodeStorageSpec](#datanodestoragespec)_ | DatanodeStorage is the default file storage of the datanode. For example, WAL, cache, index etc. |  |  |

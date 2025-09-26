@@ -27339,6 +27339,12 @@ spec:
                         required:
                         - enabled
                         type: object
+                      replicas:
+                        enum:
+                        - 0
+                        - 1
+                        format: int32
+                        type: integer
                       rollingUpdate:
                         properties:
                           maxUnavailable:
@@ -27787,6 +27793,9 @@ spec:
   scope: Namespaced
   versions:
   - additionalPrinterColumns:
+    - jsonPath: .status.readyReplicas
+      name: STANDALONE
+      type: integer
     - jsonPath: .status.standalonePhase
       name: PHASE
       type: string
@@ -31298,6 +31307,12 @@ spec:
                 required:
                 - enabled
                 type: object
+              replicas:
+                enum:
+                - 0
+                - 1
+                format: int32
+                type: integer
               rollingUpdate:
                 properties:
                   maxUnavailable:
@@ -31433,10 +31448,19 @@ spec:
               observedGeneration:
                 format: int64
                 type: integer
+              readyReplicas:
+                format: int32
+                type: integer
+              replicas:
+                format: int32
+                type: integer
               standalonePhase:
                 type: string
               version:
                 type: string
+            required:
+            - readyReplicas
+            - replicas
             type: object
         type: object
     served: true

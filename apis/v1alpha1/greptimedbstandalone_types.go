@@ -65,6 +65,11 @@ type GreptimeDBStandaloneSpec struct {
 	// +optional
 	Version string `json:"version,omitempty"`
 
+	// The number of replicas of the standalone.
+	// +optional
+	// +kubebuilder:validation:Enum:={0, 1}
+	Replicas *int32 `json:"replicas,omitempty"`
+
 	// Initializer is the init container to set up components configurations before running the container.
 	// +optional
 	Initializer *InitializerSpec `json:"initializer,omitempty"`
@@ -108,6 +113,12 @@ type GreptimeDBStandaloneSpec struct {
 
 // GreptimeDBStandaloneStatus defines the observed state of GreptimeDBStandalone
 type GreptimeDBStandaloneStatus struct {
+	// Replicas is the number of replicas of the standalone.
+	Replicas int32 `json:"replicas"`
+
+	// ReadyReplicas is the number of ready replicas of the standalone.
+	ReadyReplicas int32 `json:"readyReplicas"`
+
 	// Version is the version of the greptimedb.
 	// +optional
 	Version string `json:"version,omitempty"`
@@ -129,6 +140,7 @@ type GreptimeDBStandaloneStatus struct {
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
 // +kubebuilder:resource:shortName=gts
+// +kubebuilder:printcolumn:name="STANDALONE",type="integer",JSONPath=".status.readyReplicas"
 // +kubebuilder:printcolumn:name="PHASE",type=string,JSONPath=".status.standalonePhase"
 // +kubebuilder:printcolumn:name="VERSION",type=string,JSONPath=".status.version"
 // +kubebuilder:printcolumn:name="AGE",type=date,JSONPath=".metadata.creationTimestamp"

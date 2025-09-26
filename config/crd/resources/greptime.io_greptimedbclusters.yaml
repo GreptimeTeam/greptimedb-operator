@@ -27340,6 +27340,12 @@ spec:
                         required:
                         - enabled
                         type: object
+                      replicas:
+                        enum:
+                        - 0
+                        - 1
+                        format: int32
+                        type: integer
                       rollingUpdate:
                         properties:
                           maxUnavailable:

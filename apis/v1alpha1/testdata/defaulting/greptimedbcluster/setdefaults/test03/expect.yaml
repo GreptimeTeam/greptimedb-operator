@@ -102,6 +102,7 @@ spec:
     enabled: true
     logsCollection: {}
     standalone:
+      replicas: 1
       base:
         main:
           image: greptime/greptimedb:latest
