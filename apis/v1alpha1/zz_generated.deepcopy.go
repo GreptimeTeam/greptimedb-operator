@@ -639,6 +639,11 @@ func (in *GreptimeDBStandaloneSpec) DeepCopyInto(out *GreptimeDBStandaloneSpec) 
 		*out = new(PrometheusMonitorSpec)
 		(*in).DeepCopyInto(*out)
 	}
+	if in.Replicas != nil {
+		in, out := &in.Replicas, &out.Replicas
+		*out = new(int32)
+		**out = **in
+	}
 	if in.Initializer != nil {
 		in, out := &in.Initializer, &out.Initializer
 		*out = new(InitializerSpec)

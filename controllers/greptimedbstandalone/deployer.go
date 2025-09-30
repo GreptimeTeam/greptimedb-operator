@@ -25,7 +25,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/klog/v2"
-	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -141,6 +140,12 @@ func (d *StandaloneDeployer) CheckAndUpdateStatus(ctx context.Context, crdObject
 		return false, err
 	}
 
+	standalone.Status.Replicas = *sts.Spec.Replicas
+	standalone.Status.ReadyReplicas = sts.Status.ReadyReplicas
+	if err = UpdateStatus(ctx, standalone, d.Client); err != nil {
+		klog.Errorf("Failed to update status: %s", err)
+	}
+
 	return k8sutil.IsStatefulSetReady(sts), nil
 }
 
@@ -251,7 +256,7 @@ func (b *standaloneBuilder) BuildStatefulSet() deployer.Builder {
 		},
 		Spec: appsv1.StatefulSetSpec{
 			// Always set replicas to 1 for standalone mode.
-			Replicas: ptr.To(int32(1)),
+			Replicas: b.standalone.Spec.Replicas,
 			Selector: &metav1.LabelSelector{
 				MatchLabels: map[string]string{
 					constant.GreptimeDBComponentName: common.ResourceName(b.standalone.Name, v1alpha1.StandaloneRoleKind),
