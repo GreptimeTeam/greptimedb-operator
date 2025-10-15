@@ -297,8 +297,6 @@ func (b *flownodeBuilder) generateInitializer() *corev1.Container {
 			"--config-path", path.Join(constant.GreptimeDBConfigDir, constant.GreptimeDBConfigFileName),
 			"--init-config-path", path.Join(constant.GreptimeDBInitConfigDir, constant.GreptimeDBConfigFileName),
 			"--rpc-port", fmt.Sprintf("%d", b.Cluster.Spec.Flownode.RPCPort),
-			"--service-name", common.ResourceName(b.Cluster.Name, b.RoleKind),
-			"--namespace", b.Cluster.Namespace,
 			"--component-kind", string(b.RoleKind),
 		},
 		VolumeMounts: []corev1.VolumeMount{

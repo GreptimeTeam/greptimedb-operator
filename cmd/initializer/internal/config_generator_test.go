@@ -46,12 +46,11 @@ func TestDatanodeConfigGenerator(t *testing.T) {
 	defer file.Close()
 
 	opts := &Options{
-		ConfigPath:          file.Name(),
-		InitConfigPath:      "testdata/datanode-config.toml",
-		Namespace:           testClusterNamespace,
-		RoleKind:            string(v1alpha1.DatanodeRoleKind),
-		DatanodeRPCPort:     testRPCPort,
-		DatanodeServiceName: testClusterService,
+		ConfigPath:     file.Name(),
+		InitConfigPath: "testdata/datanode-config.toml",
+		Namespace:      testClusterNamespace,
+		RoleKind:       string(v1alpha1.DatanodeRoleKind),
+		RPCPort:        testRPCPort,
 	}
 
 	t.Setenv(deployer.EnvPodIP, testPodIP)
@@ -93,7 +92,7 @@ func TestDatanodeConfigGenerator(t *testing.T) {
 	if !ok {
 		t.Fatalf("grpc server_addr is not string")
 	}
-	wantRPCServerAddr := fmt.Sprintf("%s.%s.%s:%d", testDatanodePodName, testClusterService, testClusterNamespace, testRPCPort)
+	wantRPCServerAddr := fmt.Sprintf("%s:%d", testPodIP, testRPCPort)
 	if !reflect.DeepEqual(wantRPCServerAddr, rpcServerAddr) {
 		t.Fatalf("RPCServerAddr is not equal, want: '%s', got: '%s'", wantRPCServerAddr, rpcServerAddr)
 	}
@@ -112,7 +111,6 @@ func TestFlownodeConfigGenerator(t *testing.T) {
 		Namespace:      testClusterNamespace,
 		RoleKind:       string(v1alpha1.FlownodeRoleKind),
 		RPCPort:        testRPCPort,
-		ServiceName:    testClusterService,
 	}
 
 	t.Setenv(deployer.EnvPodIP, testPodIP)
@@ -154,7 +152,7 @@ func TestFlownodeConfigGenerator(t *testing.T) {
 	if !ok {
 		t.Fatalf("grpc server_addr is not string")
 	}
-	wantRPCServerAddr := fmt.Sprintf("%s.%s.%s:%d", testFlownodePodName, testClusterService, testClusterNamespace, testRPCPort)
+	wantRPCServerAddr := fmt.Sprintf("%s:%d", testPodIP, testRPCPort)
 	if !reflect.DeepEqual(wantRPCServerAddr, rpcServerAddr) {
 		t.Fatalf("RPCServerAddr is not equal, want: '%s', got: '%s'", wantRPCServerAddr, rpcServerAddr)
 	}
@@ -170,13 +168,12 @@ func TestDatanodeConfigGeneratorWithDatanodeGroupID(t *testing.T) {
 	defer tmpConfigFile.Close()
 
 	opts := &Options{
-		ConfigPath:          tmpConfigFile.Name(),
-		InitConfigPath:      "testdata/datanode-config.toml",
-		Namespace:           testClusterNamespace,
-		RoleKind:            string(v1alpha1.DatanodeRoleKind),
-		DatanodeRPCPort:     testRPCPort,
-		DatanodeServiceName: testClusterService,
-		DatanodeGroupID:     testDatanodeGroupID,
+		ConfigPath:      tmpConfigFile.Name(),
+		InitConfigPath:  "testdata/datanode-config.toml",
+		Namespace:       testClusterNamespace,
+		RoleKind:        string(v1alpha1.DatanodeRoleKind),
+		RPCPort:         testRPCPort,
+		DatanodeGroupID: testDatanodeGroupID,
 	}
 
 	t.Setenv(deployer.EnvPodIP, testPodIP)
