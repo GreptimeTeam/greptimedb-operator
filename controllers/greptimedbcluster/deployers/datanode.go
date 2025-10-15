@@ -655,9 +655,7 @@ func (b *datanodeBuilder) generateInitializer(spec *v1alpha1.DatanodeSpec, group
 		Args: []string{
 			"--config-path", path.Join(constant.GreptimeDBConfigDir, constant.GreptimeDBConfigFileName),
 			"--init-config-path", path.Join(constant.GreptimeDBInitConfigDir, constant.GreptimeDBConfigFileName),
-			"--datanode-rpc-port", fmt.Sprintf("%d", spec.RPCPort),
-			"--datanode-service-name", common.ResourceName(b.Cluster.Name, b.RoleKind, spec.GetName()),
-			"--namespace", b.Cluster.Namespace,
+			"--rpc-port", fmt.Sprintf("%d", spec.RPCPort),
 			"--component-kind", string(b.RoleKind),
 		},
 		VolumeMounts: []corev1.VolumeMount{

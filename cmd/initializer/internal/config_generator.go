@@ -35,12 +35,7 @@ type Options struct {
 	RoleKind       string
 
 	// For generating config of datanode or flownode.
-	RPCPort     int32
-	ServiceName string
-
-	// Note: It's Deprecated and will be removed soon. For generating config of datanode.
-	DatanodeRPCPort     int32
-	DatanodeServiceName string
+	RPCPort int32
 
 	// DatanodeGroupID is the id of the datanode group when use `DatanodeGroups` in GreptimeDBCluster.
 	DatanodeGroupID int32
@@ -117,22 +112,16 @@ func (c *ConfigGenerator) generateDatanodeConfig(initConfig []byte) ([]byte, err
 	if len(podIP) == 0 {
 		return nil, fmt.Errorf("empty pod ip")
 	}
-	datanodeCfg.RPCBindAddr = ptr.To(fmt.Sprintf("%s:%d", podIP, c.DatanodeRPCPort))
+	datanodeCfg.RPCBindAddr = ptr.To(fmt.Sprintf("%s:%d", podIP, c.RPCPort))
 
 	podName := os.Getenv(deployer.EnvPodName)
 	if len(podName) == 0 {
 		return nil, fmt.Errorf("empty pod name")
 	}
 
-	datanodeCfg.RPCServerAddr = ptr.To(fmt.Sprintf("%s.%s.%s:%d", podName,
-		c.DatanodeServiceName, c.Namespace, c.DatanodeRPCPort))
+	datanodeCfg.RPCServerAddr = ptr.To(fmt.Sprintf("%s:%d", podIP, c.RPCPort))
 
-	configData, err := dbconfig.Marshal(cfg, v1alpha1.ConfigMergeStrategyOperatorFirst)
-	if err != nil {
-		return nil, err
-	}
-
-	return configData, nil
+	return dbconfig.Marshal(cfg, v1alpha1.ConfigMergeStrategyOperatorFirst)
 }
 
 func (c *ConfigGenerator) generateFlownodeConfig(initConfig []byte) ([]byte, error) {
@@ -167,8 +156,7 @@ func (c *ConfigGenerator) generateFlownodeConfig(initConfig []byte) ([]byte, err
 		return nil, fmt.Errorf("empty pod name")
 	}
 
-	flownodeCfg.RPCServerAddr = ptr.To(fmt.Sprintf("%s.%s.%s:%d", podName,
-		c.ServiceName, c.Namespace, c.RPCPort))
+	flownodeCfg.RPCServerAddr = ptr.To(fmt.Sprintf("%s:%d", podIP, c.RPCPort))
 
 	configData, err := dbconfig.Marshal(cfg, v1alpha1.ConfigMergeStrategyOperatorFirst)
 	if err != nil {

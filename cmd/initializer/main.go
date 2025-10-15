@@ -29,13 +29,9 @@ func main() {
 
 	pflag.StringVar(&opts.ConfigPath, "config-path", "/etc/greptimedb/config.toml", "the config path")
 	pflag.StringVar(&opts.InitConfigPath, "init-config-path", "/etc/greptimedb/init-config.toml", "the init config path")
-	pflag.StringVar(&opts.Namespace, "namespace", "", "the namespace of greptimedb cluster")
 	pflag.StringVar(&opts.RoleKind, "component-kind", "", "the component kind")
 
-	pflag.StringVar(&opts.ServiceName, "service-name", "", "the name of service")
 	pflag.Int32Var(&opts.RPCPort, "rpc-port", 4001, "the RPC port")
-	pflag.StringVar(&opts.DatanodeServiceName, "datanode-service-name", "", "the name of datanode service")
-	pflag.Int32Var(&opts.DatanodeRPCPort, "datanode-rpc-port", 4001, "the datanode RPC port")
 	pflag.Int32Var(&opts.DatanodeGroupID, "datanode-group-id", -1, "the id of the datanode group")
 	klog.InitFlags(nil)
 	pflag.CommandLine.AddGoFlagSet(goflag.CommandLine)
