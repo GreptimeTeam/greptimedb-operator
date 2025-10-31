@@ -24,6 +24,9 @@ var _ Config = &FrontendConfig{}
 
 // FrontendConfig is the configuration for the frontend.
 type FrontendConfig struct {
+	// StoreConfig is the configuration for the store.
+	StorageConfig `tomlmapping:",inline"`
+
 	// LoggingConfig is the configuration for the logging.
 	LoggingConfig `tomlmapping:",inline"`
 
@@ -38,7 +41,7 @@ type FrontendConfig struct {
 }
 
 // ConfigureByCluster is not need to implement in frontend components.
-func (c *FrontendConfig) ConfigureByCluster(_ *v1alpha1.GreptimeDBCluster, roleSpec v1alpha1.RoleSpec) error {
+func (c *FrontendConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster, roleSpec v1alpha1.RoleSpec) error {
 	if roleSpec.GetRoleKind() != v1alpha1.FrontendRoleKind {
 		return fmt.Errorf("invalid role kind: %s", roleSpec.GetRoleKind())
 	}
@@ -46,6 +49,12 @@ func (c *FrontendConfig) ConfigureByCluster(_ *v1alpha1.GreptimeDBCluster, roleS
 	frontendSpec, ok := roleSpec.(*v1alpha1.FrontendSpec)
 	if !ok {
 		return fmt.Errorf("invalid role spec type: %T", roleSpec)
+	}
+
+	if objectStorage := cluster.GetObjectStorageProvider(); objectStorage != nil {
+		if err := c.ConfigureObjectStorage(cluster.GetNamespace(), objectStorage); err != nil {
+			return err
+		}
 	}
 
 	if cfg := frontendSpec.GetConfig(); cfg != "" {
