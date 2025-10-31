@@ -51,9 +51,11 @@ func (c *FrontendConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster,
 		return fmt.Errorf("invalid role spec type: %T", roleSpec)
 	}
 
-	if objectStorage := cluster.GetObjectStorageProvider(); objectStorage != nil {
-		if err := c.ConfigureObjectStorage(cluster.GetNamespace(), objectStorage); err != nil {
-			return err
+	if frontendSpec.ShouldInjectObjectStorage() {
+		if objectStorage := cluster.GetObjectStorageProvider(); objectStorage != nil {
+			if err := c.ConfigureObjectStorage(cluster.GetNamespace(), objectStorage); err != nil {
+				return err
+			}
 		}
 	}
 
