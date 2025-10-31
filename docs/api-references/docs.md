@@ -321,6 +321,7 @@ _Appears in:_
 | `tls` _[TLSSpec](#tlsspec)_ | TLS is the TLS configuration of the frontend. |  |  |
 | `rollingUpdate` _[RollingUpdateDeployment](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#rollingupdatedeployment-v1-apps)_ | RollingUpdate is the rolling update configuration. We always use `RollingUpdate` strategyt. |  |  |
 | `slowQuery` _[SlowQuery](#slowquery)_ | SlowQuery is the slow query configuration. |  |  |
+| `enableObjectStorage` _boolean_ | EnableObjectStorage indicates whether to inject object storage configurations into frontend instances.<br />If true, the object storage configurations from the cluster will be injected into the frontend config.<br />Default to false. |  |  |
 
 
 #### FrontendStatus
