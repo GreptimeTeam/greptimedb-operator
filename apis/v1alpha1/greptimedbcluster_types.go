@@ -361,6 +361,12 @@ type FrontendSpec struct {
 	// SlowQuery is the slow query configuration.
 	// +optional
 	SlowQuery *SlowQuery `json:"slowQuery,omitempty"`
+
+	// EnableObjectStorage indicates whether to inject object storage configurations into frontend instances.
+	// If true, the object storage configurations from the cluster will be injected into the frontend config.
+	// Default to false.
+	// +optional
+	EnableObjectStorage *bool `json:"enableObjectStorage,omitempty"`
 }
 
 var _ RoleSpec = &FrontendSpec{}
@@ -396,6 +402,11 @@ func (in *FrontendSpec) GetConfig() string {
 		return in.Config
 	}
 	return ""
+}
+
+// ShouldInjectObjectStorage returns whether object storage configurations should be injected into frontend instances.
+func (in *FrontendSpec) ShouldInjectObjectStorage() bool {
+	return in != nil && in.EnableObjectStorage != nil && *in.EnableObjectStorage
 }
 
 func (in *FrontendSpec) GetName() string {
