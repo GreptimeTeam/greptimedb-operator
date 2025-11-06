@@ -282,16 +282,31 @@ function deploy_kafka_cluster() {
 
 # Deploy cloud-provider-kind for using LoadBalancer service type.
 function deploy_cloud_provider_kind() {
-  if ! hash cloud-provider-kind 2>/dev/null; then
+  # Get GOBIN path or default to GOPATH/bin
+  if [ -z "$(go env GOBIN)" ]; then
+    GOBIN_PATH="$(go env GOPATH)/bin"
+  else
+    GOBIN_PATH="$(go env GOBIN)"
+  fi
+
+  # Install cloud-provider-kind if not found in PATH or GOBIN
+  if ! hash cloud-provider-kind 2>/dev/null && [ ! -f "$GOBIN_PATH/cloud-provider-kind" ]; then
     go install sigs.k8s.io/cloud-provider-kind@latest
   fi
 
   echo -e "${GREEN}=> Deploy cloud-provider-kind...${RESET}"
   kubectl label node "${CLUSTER_NAME}-control-plane" node.kubernetes.io/exclude-from-external-load-balancers-
 
+  # Use cloud-provider-kind from PATH if available, otherwise use GOBIN path
+  if hash cloud-provider-kind 2>/dev/null; then
+    CLOUD_PROVIDER_KIND_CMD="cloud-provider-kind"
+  else
+    CLOUD_PROVIDER_KIND_CMD="$GOBIN_PATH/cloud-provider-kind"
+  fi
+
   # Check if the os is darwin or linux.
   # If the os is darwin, we need to use sudo to run cloud-provider-kind.
-  nohup cloud-provider-kind > /tmp/cloud-provider-kind-logs 2>&1 &
+  nohup "$CLOUD_PROVIDER_KIND_CMD" > /tmp/cloud-provider-kind-logs 2>&1 &
   echo -e "${GREEN}<= cloud-provider-kind is deployed.${RESET}"
 }
 
