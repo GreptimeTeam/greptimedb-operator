@@ -147,17 +147,32 @@ func (h *Helper) AddIPToHosts(ip string, host string) error {
 }
 
 // GetIngressIP returns the ingress IP of the given service. It is assumed that the service is of type LoadBalancer.
+// It waits for the LoadBalancer IP to be assigned with a timeout.
 func (h *Helper) GetIngressIP(ctx context.Context, namespace, name string) (string, error) {
-	var svc corev1.Service
-	if err := h.Get(ctx, client.ObjectKey{Namespace: namespace, Name: name}, &svc); err != nil {
-		return "", err
+	const timeout = 2 * time.Minute
+	const interval = 2 * time.Second
+
+	deadline := time.Now().Add(timeout)
+	for time.Now().Before(deadline) {
+		var svc corev1.Service
+		if err := h.Get(ctx, client.ObjectKey{Namespace: namespace, Name: name}, &svc); err != nil {
+			return "", fmt.Errorf("failed to get service %s/%s: %w", namespace, name, err)
+		}
+
+		if len(svc.Status.LoadBalancer.Ingress) > 0 && svc.Status.LoadBalancer.Ingress[0].IP != "" {
+			return svc.Status.LoadBalancer.Ingress[0].IP, nil
+		}
+
+		// Wait before checking again
+		select {
+		case <-ctx.Done():
+			return "", ctx.Err()
+		case <-time.After(interval):
+			// Continue to next iteration
+		}
 	}
 
-	if len(svc.Status.LoadBalancer.Ingress) == 0 {
-		return "", fmt.Errorf("no ingress found for service %s", name)
-	}
-
-	return svc.Status.LoadBalancer.Ingress[0].IP, nil
+	return "", fmt.Errorf("timeout waiting for LoadBalancer IP to be assigned to service %s/%s", namespace, name)
 }
 
 // GetPhase returns the phase of GreptimeDBCluster or GreptimeDBStandalone object.
