@@ -133,8 +133,12 @@ func createCluster(name, namespace string) *v1alpha1.GreptimeDBCluster {
 				ComponentSpec: v1alpha1.ComponentSpec{
 					Replicas: ptr.To(int32(1)),
 				},
-				EtcdEndpoints: []string{
-					"etcd.default:2379",
+				BackendStorage: &v1alpha1.BackendStorage{
+					EtcdStorage: &v1alpha1.EtcdStorage{
+						Endpoints: []string{
+							"etcd.default:2379",
+						},
+					},
 				},
 			},
 			Datanode: &v1alpha1.DatanodeSpec{

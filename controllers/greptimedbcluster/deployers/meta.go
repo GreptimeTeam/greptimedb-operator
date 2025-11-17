@@ -166,7 +166,8 @@ func (d *MetaDeployer) checkEtcdService(ctx context.Context, crdObject client.Ob
 		return err
 	}
 
-	if cluster.Spec.Meta == nil || !cluster.Spec.Meta.EnableCheckEtcdService {
+	if cluster.Spec.Meta == nil || cluster.Spec.Meta.BackendStorage == nil ||
+		cluster.Spec.Meta.BackendStorage.EtcdStorage == nil || !cluster.Spec.Meta.BackendStorage.EtcdStorage.EnableCheckEtcdService {
 		return nil
 	}
 

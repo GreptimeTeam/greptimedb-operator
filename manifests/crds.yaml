@@ -20472,8 +20472,6 @@ spec:
                     type: object
                   config:
                     type: string
-                  enableCheckEtcdService:
-                    type: boolean
                   enableRegionFailover:
                     type: boolean
                   httpPort:

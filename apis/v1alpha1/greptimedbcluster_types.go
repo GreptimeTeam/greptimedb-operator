@@ -64,11 +64,6 @@ type MetaSpec struct {
 	// +optional
 	BackendStorage *BackendStorage `json:"backendStorage,omitempty"`
 
-	// EnableCheckEtcdService indicates whether to check etcd cluster health when starting meta.
-	// +optional
-	// +kubebuilder:deprecatedversion:warning="EnableCheckEtcdService is deprecated and will be removed in a future version. Please use BackendStorage instead."
-	EnableCheckEtcdService bool `json:"enableCheckEtcdService,omitempty"`
-
 	// EnableRegionFailover indicates whether to enable region failover.
 	// +optional
 	EnableRegionFailover *bool `json:"enableRegionFailover,omitempty"`
@@ -278,10 +273,6 @@ func (in *MetaSpec) GetTracing() *TracingSpec {
 
 func (in *MetaSpec) IsEnableRegionFailover() bool {
 	return in != nil && in.EnableRegionFailover != nil && *in.EnableRegionFailover
-}
-
-func (in *MetaSpec) IsEnableCheckEtcdService() bool {
-	return in != nil && in.EnableCheckEtcdService
 }
 
 // FrontendSpec is the specification for frontend component.
