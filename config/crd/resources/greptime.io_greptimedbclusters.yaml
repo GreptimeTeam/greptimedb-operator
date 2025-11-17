@@ -27740,10 +27740,6 @@ spec:
                 type: object
               meta:
                 properties:
-                  etcdEndpoints:
-                    items:
-                      type: string
-                    type: array
                   maintenanceMode:
                     type: boolean
                   readyReplicas:

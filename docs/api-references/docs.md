@@ -765,7 +765,6 @@ _Appears in:_
 | --- | --- | --- | --- |
 | `replicas` _integer_ | Replicas is the number of replicas of the meta. |  |  |
 | `readyReplicas` _integer_ | ReadyReplicas is the number of ready replicas of the meta. |  |  |
-| `etcdEndpoints` _string array_ | EtcdEndpoints is the endpoints of the etcd cluster. |  |  |
 | `maintenanceMode` _boolean_ | MaintenanceMode is the maintenance mode of the meta. |  |  |
 
 

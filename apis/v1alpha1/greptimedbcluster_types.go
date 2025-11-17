@@ -985,10 +985,6 @@ type MetaStatus struct {
 	// ReadyReplicas is the number of ready replicas of the meta.
 	ReadyReplicas int32 `json:"readyReplicas"`
 
-	// EtcdEndpoints is the endpoints of the etcd cluster.
-	// +optional
-	EtcdEndpoints []string `json:"etcdEndpoints,omitempty"`
-
 	// MaintenanceMode is the maintenance mode of the meta.
 	MaintenanceMode bool `json:"maintenanceMode"`
 }
