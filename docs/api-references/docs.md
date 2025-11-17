@@ -745,10 +745,8 @@ _Appears in:_
 | `rpcPort` _integer_ | RPCPort is the gRPC port of the meta. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
 | `httpPort` _integer_ | HTTPPort is the HTTP port of the meta. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
 | `backendStorage` _[BackendStorage](#backendstorage)_ | BackendStorage is the specification for the backend storage for meta. |  |  |
-| `etcdEndpoints` _string array_ | EtcdEndpoints is the endpoints of the etcd cluster. |  |  |
 | `enableCheckEtcdService` _boolean_ | EnableCheckEtcdService indicates whether to check etcd cluster health when starting meta. |  |  |
 | `enableRegionFailover` _boolean_ | EnableRegionFailover indicates whether to enable region failover. |  |  |
-| `storeKeyPrefix` _string_ | StoreKeyPrefix is the prefix of the key in the etcd. We can use it to isolate the data of different clusters. |  |  |
 | `rollingUpdate` _[RollingUpdateDeployment](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#rollingupdatedeployment-v1-apps)_ | RollingUpdate is the rolling update configuration. We always use `RollingUpdate` strategyt. |  |  |
 
 

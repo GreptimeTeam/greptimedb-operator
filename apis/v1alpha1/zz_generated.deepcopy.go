@@ -992,11 +992,6 @@ func (in *MetaSpec) DeepCopyInto(out *MetaSpec) {
 		*out = new(BackendStorage)
 		(*in).DeepCopyInto(*out)
 	}
-	if in.EtcdEndpoints != nil {
-		in, out := &in.EtcdEndpoints, &out.EtcdEndpoints
-		*out = make([]string, len(*in))
-		copy(*out, *in)
-	}
 	if in.EnableRegionFailover != nil {
 		in, out := &in.EnableRegionFailover, &out.EnableRegionFailover
 		*out = new(bool)
