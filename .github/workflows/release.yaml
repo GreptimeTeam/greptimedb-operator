@@ -28,7 +28,7 @@ env:
 jobs:
   docker:
     name: Build and push image
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -95,7 +95,7 @@ jobs:
 
   release:
     name: Release the artifacts
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout sources
         uses: actions/checkout@v4
