@@ -20472,14 +20472,8 @@ spec:
                     type: object
                   config:
                     type: string
-                  enableCheckEtcdService:
-                    type: boolean
                   enableRegionFailover:
                     type: boolean
-                  etcdEndpoints:
-                    items:
-                      type: string
-                    type: array
                   httpPort:
                     format: int32
                     maximum: 65535
@@ -20532,8 +20526,6 @@ spec:
                     maximum: 65535
                     minimum: 0
                     type: integer
-                  storeKeyPrefix:
-                    type: string
                   template:
                     properties:
                       activeDeadlineSeconds:
@@ -27745,10 +27737,6 @@ spec:
                 type: object
               meta:
                 properties:
-                  etcdEndpoints:
-                    items:
-                      type: string
-                    type: array
                   maintenanceMode:
                     type: boolean
                   readyReplicas:

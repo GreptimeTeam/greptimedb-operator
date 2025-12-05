@@ -172,6 +172,10 @@ func (in *GreptimeDBCluster) validateMeta() error {
 		return fmt.Errorf("invalid meta toml config: '%v'", err)
 	}
 
+	if err := in.validateMetaBackendStorage(); err != nil {
+		return err
+	}
+
 	return nil
 }
 

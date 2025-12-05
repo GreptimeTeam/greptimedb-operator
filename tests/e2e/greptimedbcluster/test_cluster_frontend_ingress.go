@@ -80,7 +80,7 @@ func TestClusterFrontendIngress(ctx context.Context, h *helper.Helper) {
 	err = h.RunHTTPTest("http://"+host+"/v1/sql", data, http.MethodPost)
 	Expect(err).NotTo(HaveOccurred(), "failed to run HTTP test")
 
-	data = "sql=SELECT * FROM numbers"
+	data = "sql=SELECT 1"
 	err = h.RunHTTPTest("http://"+host+"/v1/sql", data, http.MethodPost)
 	Expect(err).NotTo(HaveOccurred(), "failed to run HTTP test")
 

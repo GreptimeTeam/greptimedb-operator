@@ -64,24 +64,9 @@ type MetaSpec struct {
 	// +optional
 	BackendStorage *BackendStorage `json:"backendStorage,omitempty"`
 
-	// EtcdEndpoints is the endpoints of the etcd cluster.
-	// +optional
-	// +kubebuilder:deprecatedversion:warning="EtcdEndpoints is deprecated and will be removed in a future version. Please use BackendStorage instead."
-	EtcdEndpoints []string `json:"etcdEndpoints,omitempty"`
-
-	// EnableCheckEtcdService indicates whether to check etcd cluster health when starting meta.
-	// +optional
-	// +kubebuilder:deprecatedversion:warning="EnableCheckEtcdService is deprecated and will be removed in a future version. Please use BackendStorage instead."
-	EnableCheckEtcdService bool `json:"enableCheckEtcdService,omitempty"`
-
 	// EnableRegionFailover indicates whether to enable region failover.
 	// +optional
 	EnableRegionFailover *bool `json:"enableRegionFailover,omitempty"`
-
-	// StoreKeyPrefix is the prefix of the key in the etcd. We can use it to isolate the data of different clusters.
-	// +optional
-	// +kubebuilder:deprecatedversion:warning="StoreKeyPrefix is deprecated and will be removed in a future version. Please use BackendStorage instead."
-	StoreKeyPrefix string `json:"storeKeyPrefix,omitempty"`
 
 	// RollingUpdate is the rolling update configuration. We always use `RollingUpdate` strategyt.
 	// +optional
@@ -288,24 +273,6 @@ func (in *MetaSpec) GetTracing() *TracingSpec {
 
 func (in *MetaSpec) IsEnableRegionFailover() bool {
 	return in != nil && in.EnableRegionFailover != nil && *in.EnableRegionFailover
-}
-
-func (in *MetaSpec) GetStoreKeyPrefix() string {
-	if in != nil {
-		return in.StoreKeyPrefix
-	}
-	return ""
-}
-
-func (in *MetaSpec) GetEtcdEndpoints() []string {
-	if in != nil {
-		return in.EtcdEndpoints
-	}
-	return nil
-}
-
-func (in *MetaSpec) IsEnableCheckEtcdService() bool {
-	return in != nil && in.EnableCheckEtcdService
 }
 
 // FrontendSpec is the specification for frontend component.
@@ -1008,10 +975,6 @@ type MetaStatus struct {
 
 	// ReadyReplicas is the number of ready replicas of the meta.
 	ReadyReplicas int32 `json:"readyReplicas"`
-
-	// EtcdEndpoints is the endpoints of the etcd cluster.
-	// +optional
-	EtcdEndpoints []string `json:"etcdEndpoints,omitempty"`
 
 	// MaintenanceMode is the maintenance mode of the meta.
 	MaintenanceMode bool `json:"maintenanceMode"`

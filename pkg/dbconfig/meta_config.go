@@ -145,15 +145,6 @@ func (c *MetaConfig) configureBackendStorage(spec *v1alpha1.MetaSpec, namespace 
 		c.MetaElectionLockID = ptr.To(postgresql.ElectionLockID)
 	}
 
-	// Compatibility with the old api version.
-	if len(spec.EtcdEndpoints) > 0 {
-		c.Backend = ptr.To("etcd_store")
-		c.StoreAddrs = spec.EtcdEndpoints
-		if prefix := spec.GetStoreKeyPrefix(); prefix != "" {
-			c.StoreKeyPrefix = ptr.To(prefix)
-		}
-	}
-
 	return nil
 }
 

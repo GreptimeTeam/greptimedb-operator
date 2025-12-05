@@ -25,7 +25,7 @@ on:
 
 jobs:
   check-pr-title:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: thehanimo/pr-title-checker@v1.4.2
         with:

@@ -136,7 +136,6 @@ func (d *MetaDeployer) CheckAndUpdateStatus(ctx context.Context, highLevelObject
 
 	cluster.Status.Meta.Replicas = *deployment.Spec.Replicas
 	cluster.Status.Meta.ReadyReplicas = deployment.Status.ReadyReplicas
-	cluster.Status.Meta.EtcdEndpoints = cluster.Spec.Meta.EtcdEndpoints
 
 	ready := k8sutil.IsDeploymentReady(deployment)
 
@@ -167,16 +166,17 @@ func (d *MetaDeployer) checkEtcdService(ctx context.Context, crdObject client.Ob
 		return err
 	}
 
-	if cluster.Spec.Meta == nil || !cluster.Spec.Meta.EnableCheckEtcdService {
+	if cluster.Spec.Meta == nil || cluster.Spec.Meta.BackendStorage == nil ||
+		cluster.Spec.Meta.BackendStorage.EtcdStorage == nil || !cluster.Spec.Meta.BackendStorage.EtcdStorage.EnableCheckEtcdService {
 		return nil
 	}
 
-	maintainer, err := d.etcdMaintenanceBuilder(cluster.Spec.Meta.EtcdEndpoints)
+	maintainer, err := d.etcdMaintenanceBuilder(cluster.Spec.Meta.BackendStorage.EtcdStorage.Endpoints)
 	if err != nil {
 		return err
 	}
 
-	rsp, err := maintainer.Status(ctx, strings.Join(cluster.Spec.Meta.EtcdEndpoints, ","))
+	rsp, err := maintainer.Status(ctx, strings.Join(cluster.Spec.Meta.BackendStorage.EtcdStorage.Endpoints, ","))
 	if err != nil {
 		return err
 	}

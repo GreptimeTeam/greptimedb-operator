@@ -28,7 +28,7 @@ permissions:
 
 jobs:
   labeler:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout sources
         uses: actions/checkout@v4
@@ -40,7 +40,7 @@ jobs:
           sync-labels: true
 
   size-label:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: pascalgn/size-label-action@v0.5.5
         env:
