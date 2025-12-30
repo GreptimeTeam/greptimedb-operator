@@ -26,6 +26,10 @@ const (
 	defaultAdmissionWebhookPort    = 8082
 	defaultAdmissionWebhookCertDir = "/etc/webhook-tls"
 	defaultProfilingPort           = 8083
+
+	defaultLeaderElectionLeaseDuration = 15 * time.Second
+	defaultLeaderElectionRenewDeadline = 10 * time.Second
+	defaultLeaderElectionRetryPeriod   = 2 * time.Second
 )
 
 type Options struct {
@@ -50,6 +54,9 @@ func NewDefaultOptions() *Options {
 		MetricsAddr:             defaultMetricsAddr,
 		HealthProbeAddr:         defaultHealthProbeAddr,
 		EnableLeaderElection:    false,
+		LeaseDuration:           defaultLeaderElectionLeaseDuration,
+		RenewDeadline:           defaultLeaderElectionRenewDeadline,
+		RetryPeriod:             defaultLeaderElectionRetryPeriod,
 		EnablePodMetrics:        false,
 		EnableAdmissionWebhook:  false,
 		AdmissionWebhookPort:    defaultAdmissionWebhookPort,
