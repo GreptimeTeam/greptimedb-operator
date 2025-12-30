@@ -88,6 +88,9 @@ func NewOperatorCommand() *cobra.Command {
 				Scheme:                 scheme,
 				HealthProbeBindAddress: o.HealthProbeAddr,
 				LeaderElection:         o.EnableLeaderElection,
+				LeaseDuration:          &o.LeaseDuration,
+				RenewDeadline:          &o.RenewDeadline,
+				RetryPeriod:            &o.RetryPeriod,
 				LeaderElectionID:       leaderElectionID,
 				Metrics: metricsserver.Options{
 					BindAddress: o.MetricsAddr,
