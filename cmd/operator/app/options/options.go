@@ -26,10 +26,6 @@ const (
 	defaultAdmissionWebhookPort    = 8082
 	defaultAdmissionWebhookCertDir = "/etc/webhook-tls"
 	defaultProfilingPort           = 8083
-
-	defaultLeaderElectionLeaseDuration = 15 * time.Second
-	defaultLeaderElectionRenewDeadline = 10 * time.Second
-	defaultLeaderElectionRetryPeriod   = 2 * time.Second
 )
 
 type Options struct {
@@ -54,9 +50,6 @@ func NewDefaultOptions() *Options {
 		MetricsAddr:             defaultMetricsAddr,
 		HealthProbeAddr:         defaultHealthProbeAddr,
 		EnableLeaderElection:    false,
-		LeaseDuration:           defaultLeaderElectionLeaseDuration,
-		RenewDeadline:           defaultLeaderElectionRenewDeadline,
-		RetryPeriod:             defaultLeaderElectionRetryPeriod,
 		EnablePodMetrics:        false,
 		EnableAdmissionWebhook:  false,
 		AdmissionWebhookPort:    defaultAdmissionWebhookPort,
@@ -70,9 +63,9 @@ func (o *Options) AddFlags(fs *pflag.FlagSet) {
 	fs.StringVar(&o.MetricsAddr, "metrics-bind-address", o.MetricsAddr, "The address the metric endpoint binds to.")
 	fs.StringVar(&o.HealthProbeAddr, "health-probe-bind-address", o.HealthProbeAddr, "The address the probe endpoint binds to.")
 	fs.BoolVar(&o.EnableLeaderElection, "enable-leader-election", o.EnableLeaderElection, "Enable leader election for controller manager. Enabling this will ensure there is only one active controller manager.")
-	fs.DurationVar(&o.LeaseDuration, "leader-election-lease-duration", o.LeaseDuration, "LeaseDuration is the duration that non-leader candidates will wait to force acquire leadership. This is measured against time of last observed ack. Default is 15 seconds.")
-	fs.DurationVar(&o.RenewDeadline, "leader-election-renew-deadline", o.RenewDeadline, "RenewDeadline is the duration that the acting controlplane will retry refreshing leadership before giving up. Default is 10 seconds.")
-	fs.DurationVar(&o.RetryPeriod, "leader-election-retry-period", o.RetryPeriod, "RetryPeriod is the duration the LeaderElector clients should wait between tries of actions. Default is 2 seconds.")
+	fs.DurationVar(&o.LeaseDuration, "leader-election-lease-duration", 15*time.Second, "LeaseDuration is the duration that non-leader candidates will wait to force acquire leadership. This is measured against time of last observed ack. Default is 15 seconds.")
+	fs.DurationVar(&o.RenewDeadline, "leader-election-renew-deadline", 10*time.Second, "RenewDeadline is the duration that the acting controlplane will retry refreshing leadership before giving up. Default is 10 seconds.")
+	fs.DurationVar(&o.RetryPeriod, "leader-election-retry-period", 2*time.Second, "RetryPeriod is the duration the LeaderElector clients should wait between tries of actions. Default is 2 seconds.")
 	fs.BoolVar(&o.EnablePodMetrics, "enable-pod-metrics", o.EnablePodMetrics, "Enable fetching PodMetrics from metrics-server.")
 	fs.BoolVar(&o.EnableAdmissionWebhook, "enable-admission-webhook", o.EnableAdmissionWebhook, "Enable admission webhook for GreptimeDB operator.")
 	fs.IntVar(&o.AdmissionWebhookPort, "admission-webhook-port", o.AdmissionWebhookPort, "The port the admission webhook binds to.")
