@@ -39,6 +39,9 @@ type Options struct {
 
 	// DatanodeGroupID is the id of the datanode group when use `DatanodeGroups` in GreptimeDBCluster.
 	DatanodeGroupID int32
+
+	// StartNodeID is the start node id of the datanode and flownode.
+	StartNodeID int32
 }
 
 type ConfigGenerator struct {
@@ -197,5 +200,5 @@ func (c *ConfigGenerator) allocateNodeID() (uint64, error) {
 		nodeID = uint64(c.DatanodeGroupID)<<32 | nodeID
 	}
 
-	return nodeID, nil
+	return nodeID + uint64(c.StartNodeID), nil
 }
