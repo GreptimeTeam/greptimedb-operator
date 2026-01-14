@@ -431,6 +431,10 @@ type DatanodeSpec struct {
 	// RollingUpdate is the rolling update configuration. We always use `RollingUpdate` strategy.
 	// +optional
 	RollingUpdate *appsv1.RollingUpdateStatefulSetStrategy `json:"rollingUpdate,omitempty"`
+
+	// StartNodeID is the start node id of the datanode.
+	// +optional
+	StartNodeID *int32 `json:"startNodeID,omitempty"`
 }
 
 var _ RoleSpec = &DatanodeSpec{}
@@ -489,6 +493,13 @@ func (in *DatanodeSpec) GetDataHome() string {
 	return ""
 }
 
+func (in *DatanodeSpec) GetStartNodeID() *int32 {
+	if in != nil {
+		return in.StartNodeID
+	}
+	return nil
+}
+
 // FlownodeSpec is the specification for flownode component.
 type FlownodeSpec struct {
 	ComponentSpec `json:",inline"`
@@ -508,6 +519,10 @@ type FlownodeSpec struct {
 	// RollingUpdate is the rolling update configuration. We always use `RollingUpdate` strategy.
 	// +optional
 	RollingUpdate *appsv1.RollingUpdateStatefulSetStrategy `json:"rollingUpdate,omitempty"`
+
+	// StartNodeID is the start node id of the flownode.
+	// +optional
+	StartNodeID *int32 `json:"startNodeID,omitempty"`
 }
 
 var _ RoleSpec = &FlownodeSpec{}
@@ -545,6 +560,13 @@ func (in *FlownodeSpec) GetLogging() *LoggingSpec {
 func (in *FlownodeSpec) GetTracing() *TracingSpec {
 	if in != nil {
 		return in.Tracing
+	}
+	return nil
+}
+
+func (in *FlownodeSpec) GetStartNodeID() *int32 {
+	if in != nil {
+		return in.StartNodeID
 	}
 	return nil
 }

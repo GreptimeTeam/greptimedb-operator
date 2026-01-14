@@ -677,6 +677,10 @@ func (b *datanodeBuilder) generateInitializer(spec *v1alpha1.DatanodeSpec, group
 		initializer.Args = append(initializer.Args, "--datanode-group-id", fmt.Sprintf("%d", *groupID))
 	}
 
+	if spec.GetStartNodeID() != nil {
+		initializer.Args = append(initializer.Args, "--start-node-id", fmt.Sprintf("%d", *spec.GetStartNodeID()))
+	}
+
 	return initializer
 }
 

@@ -171,6 +171,7 @@ _Appears in:_
 | `httpPort` _integer_ | HTTPPort is the HTTP port of the datanode. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
 | `storage` _[DatanodeStorageSpec](#datanodestoragespec)_ | Storage is the default file storage of the datanode. For example, WAL, cache, index etc. |  |  |
 | `rollingUpdate` _[RollingUpdateStatefulSetStrategy](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#rollingupdatestatefulsetstrategy-v1-apps)_ | RollingUpdate is the rolling update configuration. We always use `RollingUpdate` strategy. |  |  |
+| `startNodeID` _integer_ | StartNodeID is the start node id of the datanode. |  |  |
 
 
 #### DatanodeStatus
@@ -274,6 +275,7 @@ _Appears in:_
 | `rpcPort` _integer_ | The gRPC port of the flownode. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
 | `httpPort` _integer_ | The HTTP port of the flownode. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
 | `rollingUpdate` _[RollingUpdateStatefulSetStrategy](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#rollingupdatestatefulsetstrategy-v1-apps)_ | RollingUpdate is the rolling update configuration. We always use `RollingUpdate` strategy. |  |  |
+| `startNodeID` _integer_ | StartNodeID is the start node id of the flownode. |  |  |
 
 
 #### FlownodeStatus
