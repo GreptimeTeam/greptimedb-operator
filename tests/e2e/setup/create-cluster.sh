@@ -126,6 +126,7 @@ function pull_greptimedb_image() {
   # After pushing the image to the local registry, we can use the image in the kind cluster as localhost:5001/greptimedb:latest.
   docker tag "$GREPTIMEDB_IMAGE" localhost:${REGISTRY_PORT}/greptime/greptimedb:latest
   docker push localhost:${REGISTRY_PORT}/greptime/greptimedb:latest
+  docker rmi "$GREPTIMEDB_IMAGE"
   echo -e "${GREEN}<= Greptimedb image is pulled and pushed.${RESET}"
 }
 
@@ -134,6 +135,7 @@ function pull_vector_image() {
   docker pull "$VECTOR_IMAGE"
   docker tag "$VECTOR_IMAGE" localhost:${REGISTRY_PORT}/timberio/vector:nightly-alpine
   docker push localhost:${REGISTRY_PORT}/timberio/vector:nightly-alpine
+  docker rmi "$VECTOR_IMAGE"
   echo -e "${GREEN}<= Vector image is pulled and pushed.${RESET}"
 }
 
