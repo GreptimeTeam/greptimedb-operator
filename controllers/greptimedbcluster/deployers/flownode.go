@@ -330,6 +330,9 @@ func (b *flownodeBuilder) generateInitializer() *corev1.Container {
 			},
 		},
 	}
+	if b.Cluster.GetFlownode().GetStartNodeID() != nil {
+		initializer.Args = append(initializer.Args, "--start-node-id", fmt.Sprintf("%d", b.Cluster.GetFlownode().GetStartNodeID()))
+	}
 
 	return initializer
 }
