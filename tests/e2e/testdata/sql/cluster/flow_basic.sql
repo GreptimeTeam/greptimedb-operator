@@ -1,6 +1,6 @@
 -- FIXME(liyang): The test cases from: https://github.com/GreptimeTeam/greptimedb/blob/main/tests/cases/standalone/common/flow/flow_user_guide.sql
 
-CREATE TABLE `ngx_access_log` (
+CREATE TABLE ngx_access_log (
     "client" STRING NULL,
     "ua_platform" STRING NULL,
     "referer" STRING NULL,
@@ -15,7 +15,7 @@ CREATE TABLE `ngx_access_log` (
     TIME INDEX (access_time)
 ) WITH(append_mode = 'true');
 
-CREATE TABLE `ngx_statistics` (
+CREATE TABLE ngx_statistics (
     "status" SMALLINT UNSIGNED NULL,
     "total_logs" BIGINT NULL,
     "min_size" DOUBLE NULL,
@@ -36,7 +36,7 @@ SELECT
     avg(size) as avg_size,
     sum(
         case
-            when `size` > 550 then 1
+            when size > 550 then 1
             else 0
         end
     ) as high_size_count,
@@ -354,7 +354,7 @@ DROP TABLE temp_alerts;
 CREATE TABLE ngx_access_log (
     client STRING,
     stat INT,
-    "size" INT,
+    size INT,
     access_time TIMESTAMP TIME INDEX
 );
 
