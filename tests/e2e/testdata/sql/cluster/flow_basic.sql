@@ -1,4 +1,4 @@
--- FIXME(liyang): The test cases from: https://github.com/GreptimeTeam/greptimedb/blob/main/tests/cases/standalone/common/flow/flow_user_guide.sql.
+-- FIXME(liyang): The test cases from: https://github.com/GreptimeTeam/greptimedb/blob/main/tests/cases/standalone/common/flow/flow_user_guide.sql
 
 CREATE TABLE `ngx_access_log` (
     "client" STRING NULL,
@@ -40,7 +40,7 @@ SELECT
             else 0
         end
     ) as high_size_count,
-    date_bin(INTERVAL '1 minutes', access_time) as time_window,
+    date_bin(INTERVAL '1' minutes, access_time) as time_window,
 FROM
     ngx_access_log
 GROUP BY
@@ -240,7 +240,7 @@ CREATE TABLE ngx_country (
 CREATE FLOW calc_ngx_country SINK TO ngx_country AS
 SELECT
     DISTINCT country,
-    date_bin(INTERVAL '1 hour', access_time) as time_window,
+    date_bin(INTERVAL '1' hour, access_time) as time_window,
 FROM
     ngx_access_log
 GROUP BY
@@ -375,7 +375,7 @@ SELECT
     stat,
     trunc(size, -1) :: INT as bucket_size,
     count(client) AS total_logs,
-    date_bin(INTERVAL '1 minutes', access_time) as time_window,
+    date_bin(INTERVAL '1' minutes, access_time) as time_window,
 FROM
     ngx_access_log
 GROUP BY
