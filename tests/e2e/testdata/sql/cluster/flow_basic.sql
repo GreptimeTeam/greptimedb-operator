@@ -1,30 +1,30 @@
 -- FIXME(liyang): The test cases from: https://github.com/GreptimeTeam/greptimedb/blob/main/tests/cases/standalone/common/flow/flow_user_guide.sql.
 
 CREATE TABLE `ngx_access_log` (
-    `client` STRING NULL,
-    `ua_platform` STRING NULL,
-    `referer` STRING NULL,
-    `method` STRING NULL,
-    `endpoint` STRING NULL,
-    `trace_id` STRING NULL FULLTEXT INDEX,
-    `protocol` STRING NULL,
-    `status` SMALLINT UNSIGNED NULL,
-    `size` DOUBLE NULL,
-    `agent` STRING NULL,
-    `access_time` TIMESTAMP(3) NOT NULL,
-    TIME INDEX (`access_time`)
+    "client" STRING NULL,
+    "ua_platform" STRING NULL,
+    "referer" STRING NULL,
+    "method" STRING NULL,
+    "endpoint" STRING NULL,
+    "trace_id" STRING NULL FULLTEXT INDEX,
+    "protocol" STRING NULL,
+    "status" SMALLINT UNSIGNED NULL,
+    "size" DOUBLE NULL,
+    "agent" STRING NULL,
+    "access_time" TIMESTAMP(3) NOT NULL,
+    TIME INDEX (access_time)
 ) WITH(append_mode = 'true');
 
 CREATE TABLE `ngx_statistics` (
-    `status` SMALLINT UNSIGNED NULL,
-    `total_logs` BIGINT NULL,
-    `min_size` DOUBLE NULL,
-    `max_size` DOUBLE NULL,
-    `avg_size` DOUBLE NULL,
-    `high_size_count` BIGINT NULL,
-    `time_window` TIMESTAMP time index,
-    `update_at` TIMESTAMP NULL,
-    PRIMARY KEY (`status`)
+    "status" SMALLINT UNSIGNED NULL,
+    "total_logs" BIGINT NULL,
+    "min_size" DOUBLE NULL,
+    "max_size" DOUBLE NULL,
+    "avg_size" DOUBLE NULL,
+    "high_size_count" BIGINT NULL,
+    "time_window" TIMESTAMP time index,
+    "update_at" TIMESTAMP NULL,
+    PRIMARY KEY (status)
 );
 
 CREATE FLOW ngx_aggregation SINK TO ngx_statistics COMMENT 'Aggregate statistics for ngx_access_log' AS
