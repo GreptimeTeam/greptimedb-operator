@@ -16,6 +16,7 @@ spec:
     postgreSQLPort: 6003
     rpcPort: 6001
     httpPort: 6000
+    internalPort: 5010
     rollingUpdate:
       maxSurge: 25%
       maxUnavailable: 25%
@@ -27,6 +28,7 @@ spec:
     postgreSQLPort: 7003
     rpcPort: 7001
     httpPort: 7000
+    internalPort: 5010
     rollingUpdate:
       maxSurge: 50%
       maxUnavailable: 50%

@@ -311,7 +311,7 @@ type FrontendSpec struct {
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=65535
 	// +optional
-	InternalPort *int32 `json:"internalPort,omitempty"`
+	InternalPort int32 `json:"internalPort,omitempty"`
 
 	// Service is the service configuration of the frontend.
 	// +optional

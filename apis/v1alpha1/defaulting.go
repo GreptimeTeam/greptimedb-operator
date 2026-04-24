@@ -200,6 +200,7 @@ func (in *GreptimeDBCluster) defaultFrontend() *FrontendSpec {
 		HTTPPort:       DefaultHTTPPort,
 		MySQLPort:      DefaultMySQLPort,
 		PostgreSQLPort: DefaultPostgreSQLPort,
+		InternalPort:   DefaultFrontendInternalRPCPort,
 		Service: &ServiceSpec{
 			Type: corev1.ServiceTypeClusterIP,
 		},

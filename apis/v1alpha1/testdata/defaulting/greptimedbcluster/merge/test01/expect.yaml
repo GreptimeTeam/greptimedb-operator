@@ -53,6 +53,7 @@ spec:
     mysqlPort: 4002
     postgreSQLPort: 4003
     rpcPort: 4001
+    internalPort: 4010
     service:
       type: ClusterIP
     slowQuery:
