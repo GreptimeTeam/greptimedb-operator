@@ -1,44 +1,48 @@
 -- FIXME(liyang): The test cases from: https://github.com/GreptimeTeam/greptimedb/blob/main/tests/cases/standalone/common/flow/flow_user_guide.sql.
 
-CREATE TABLE ngx_access_log (
-    "client" STRING NULL,
-    "ua_platform" STRING NULL,
-    "referer" STRING NULL,
-    "method" STRING NULL,
-    "endpoint" STRING NULL,
-    "trace_id" STRING NULL FULLTEXT INDEX,
-    "protocol" STRING NULL,
-    "status" SMALLINT UNSIGNED NULL,
-    "size" DOUBLE NULL,
-    "agent" STRING NULL,
-    "access_time" TIMESTAMP(3) NOT NULL,
-    TIME INDEX (access_time)
+CREATE TABLE `ngx_access_log` (
+    `client` STRING NULL,
+    `ua_platform` STRING NULL,
+    `referer` STRING NULL,
+    `method` STRING NULL,
+    `endpoint` STRING NULL,
+    `trace_id` STRING NULL FULLTEXT INDEX,
+    `protocol` STRING NULL,
+    `status` SMALLINT UNSIGNED NULL,
+    `size` DOUBLE NULL,
+    `agent` STRING NULL,
+    `access_time` TIMESTAMP(3) NOT NULL,
+    TIME INDEX (`access_time`)
 ) WITH(append_mode = 'true');
 
-CREATE TABLE ngx_statistics (
-    "status" SMALLINT UNSIGNED NULL,
-    "total_logs" BIGINT NULL,
-    "min_size" DOUBLE NULL,
-    "max_size" DOUBLE NULL,
-    "avg_size" DOUBLE NULL,
-    "high_size_count" BIGINT NULL,
-    "time_window" TIMESTAMP time index,
-    "update_at" TIMESTAMP NULL,
-    PRIMARY KEY (status)
+CREATE TABLE `ngx_statistics` (
+    `status` SMALLINT UNSIGNED NULL,
+    `total_logs` BIGINT NULL,
+    `min_size` DOUBLE NULL,
+    `max_size` DOUBLE NULL,
+    `avg_size` DOUBLE NULL,
+    `high_size_count` BIGINT NULL,
+    `time_window` TIMESTAMP time index,
+    `update_at` TIMESTAMP NULL,
+    PRIMARY KEY (`status`)
 );
 
-CREATE FLOW ngx_aggregation
-SINK TO ngx_statistics
-AS
+CREATE FLOW ngx_aggregation SINK TO ngx_statistics COMMENT 'Aggregate statistics for ngx_access_log' AS
 SELECT
     status,
     count(client) AS total_logs,
     min(size) as min_size,
     max(size) as max_size,
     avg(size) as avg_size,
-    sum(case when size > 550 then 1 else 0 end) as high_size_count,
-    date_bin(INTERVAL '1' MINUTE, access_time) as time_window,
-FROM ngx_access_log
+    sum(
+        case
+            when `size` > 550 then 1
+            else 0
+        end
+    ) as high_size_count,
+    date_bin(INTERVAL '1 minutes', access_time) as time_window,
+FROM
+    ngx_access_log
 GROUP BY
     status,
     time_window;
@@ -236,7 +240,7 @@ CREATE TABLE ngx_country (
 CREATE FLOW calc_ngx_country SINK TO ngx_country AS
 SELECT
     DISTINCT country,
-    date_bin(INTERVAL '1' hour, access_time) as time_window,
+    date_bin(INTERVAL '1 hour', access_time) as time_window,
 FROM
     ngx_access_log
 GROUP BY
@@ -288,7 +292,7 @@ CREATE TABLE temp_alerts (
     sensor_id INT,
     loc STRING,
     max_temp DOUBLE,
-    update_at TIMESTAMP TIME INDEX,
+    event_ts TIMESTAMP TIME INDEX,
     PRIMARY KEY(sensor_id, loc)
 );
 
@@ -297,6 +301,7 @@ SELECT
     sensor_id,
     loc,
     max(temperature) as max_temp,
+    max(ts) as event_ts,
 FROM
     temp_sensor_data
 GROUP BY
@@ -317,7 +322,8 @@ ADMIN FLUSH_FLOW('temp_monitoring');
 SELECT
     sensor_id,
     loc,
-    max_temp
+    max_temp,
+    event_ts
 FROM
     temp_alerts;
 
@@ -334,7 +340,8 @@ ADMIN FLUSH_FLOW('temp_monitoring');
 SELECT
     sensor_id,
     loc,
-    max_temp
+    max_temp,
+    event_ts
 FROM
     temp_alerts;
 
@@ -347,7 +354,7 @@ DROP TABLE temp_alerts;
 CREATE TABLE ngx_access_log (
     client STRING,
     stat INT,
-    size INT,
+    "size" INT,
     access_time TIMESTAMP TIME INDEX
 );
 
@@ -368,7 +375,7 @@ SELECT
     stat,
     trunc(size, -1) :: INT as bucket_size,
     count(client) AS total_logs,
-    date_bin(INTERVAL '1' minute, access_time) as time_window,
+    date_bin(INTERVAL '1 minutes', access_time) as time_window,
 FROM
     ngx_access_log
 GROUP BY
