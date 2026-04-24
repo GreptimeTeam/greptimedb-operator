@@ -143,6 +143,7 @@ spec:
     tracing: {}
     mysqlPort: 4002
     postgreSQLPort: 4003
+    internalPort: 4010
     replicas: 2
     rollingUpdate:
       maxSurge: 25%
@@ -195,6 +196,7 @@ spec:
     tracing: {}
     mysqlPort: 4002
     postgreSQLPort: 4003
+    internalPort: 4010
     replicas: 2
     rollingUpdate:
       maxSurge: 25%
