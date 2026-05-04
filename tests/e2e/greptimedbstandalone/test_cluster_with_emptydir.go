@@ -89,14 +89,8 @@ func TestClusterWithEmptyDir(ctx context.Context, h *helper.Helper) {
 		return h.Get(ctx, client.ObjectKey{Name: testStandalone.Name, Namespace: testStandalone.Namespace}, testStandalone)
 	}, helper.DefaultTimeout, time.Second).Should(HaveOccurred())
 
-	By("The PVC of the database should be retained")
+	By("The PVC of the database should be null")
 	dataPVCs, err := h.GetPVCs(ctx, testStandalone.Namespace, common.ResourceName(testStandalone.Name, greptimev1alpha1.StandaloneRoleKind), common.FileStorageTypeDatanode)
 	Expect(err).NotTo(HaveOccurred(), "failed to get data PVCs")
-	Expect(len(dataPVCs)).To(Equal(1), "the number of datanode PVCs should be equal to 1")
-
-	By("Remove the PVC of the datanode")
-	for _, pvc := range dataPVCs {
-		err = h.Delete(ctx, &pvc)
-		Expect(err).NotTo(HaveOccurred(), "failed to delete data PVCs")
-	}
+	Expect(len(dataPVCs)).To(Equal(0), "the number of datanode PVCs should be equal to 0")
 }
