@@ -30,4 +30,7 @@ var _ = Describe("Test GreptimeDBStandalone", func() {
 	It("Test a basic standalone", func() {
 		greptimedbstandalone.TestBasicStandalone(ctx, h)
 	})
+	It("Test a standalone with empty dir", func() {
+		greptimedbstandalone.TestClusterWithEmptyDir(ctx, h)
+	})
 })

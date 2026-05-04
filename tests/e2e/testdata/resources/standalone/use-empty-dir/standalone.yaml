@@ -1,0 +1,13 @@
+apiVersion: greptime.io/v1alpha1
+kind: GreptimeDBStandalone
+metadata:
+  name: e2e-standalone-use-empty-dir
+  namespace: default
+spec:
+  base:
+    main:
+      image: greptime/greptimedb:latest
+  datanodeStorage:
+    fs:
+      useEmptyDir: true
+      storageSize: 10Gi
