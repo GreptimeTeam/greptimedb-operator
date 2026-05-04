@@ -22,6 +22,7 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/klog/v2"
@@ -96,9 +97,14 @@ func (d *StandaloneDeployer) CleanUp(ctx context.Context, crdObject client.Objec
 		return err
 	}
 
-	if standalone.GetDatanodeFileStorage().GetPolicy() == v1alpha1.StorageRetainPolicyTypeDelete {
-		if err := d.deleteStorage(ctx, standalone.Namespace, common.ResourceName(standalone.Name, v1alpha1.StandaloneRoleKind), common.FileStorageTypeDatanode); err != nil {
-			return err
+	if fs := standalone.GetDatanodeFileStorage(); fs != nil {
+		if fs.IsUseEmptyDir() {
+			return nil
+		}
+		if fs.GetPolicy() == v1alpha1.StorageRetainPolicyTypeDelete {
+			if err := d.deleteStorage(ctx, standalone.Namespace, common.ResourceName(standalone.Name, v1alpha1.StandaloneRoleKind), common.FileStorageTypeDatanode); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -262,13 +268,16 @@ func (b *standaloneBuilder) BuildStatefulSet() deployer.Builder {
 					constant.GreptimeDBComponentName: common.ResourceName(b.standalone.Name, v1alpha1.StandaloneRoleKind),
 				},
 			},
-			Template:             b.generatePodTemplateSpec(),
-			VolumeClaimTemplates: b.generatePVCs(),
+			Template: b.generatePodTemplateSpec(),
 			UpdateStrategy: appsv1.StatefulSetUpdateStrategy{
 				Type:          appsv1.RollingUpdateStatefulSetStrategyType,
 				RollingUpdate: b.standalone.Spec.RollingUpdate,
 			},
 		},
+	}
+
+	if !b.standalone.GetDatanodeFileStorage().IsUseEmptyDir() {
+		sts.Spec.VolumeClaimTemplates = b.generatePVCs()
 	}
 
 	configData, err := dbconfig.FromStandalone(b.standalone)
@@ -318,6 +327,10 @@ func (b *standaloneBuilder) generatePodTemplateSpec() corev1.PodTemplateSpec {
 	}
 
 	b.addVolumeMounts(template)
+
+	if b.standalone.GetDatanodeFileStorage().IsUseEmptyDir() {
+		b.addEmptyDirAsStorage(template, b.standalone)
+	}
 
 	template.Spec.Containers[constant.MainContainerIndex].Ports = b.containerPorts()
 	template.Labels = util.MergeStringMap(template.Labels, map[string]string{
@@ -489,4 +502,16 @@ func (b *standaloneBuilder) addVolumeMounts(template *corev1.PodTemplateSpec) {
 			MountPath: logging.GetLogsDir(),
 		})
 	}
+}
+
+func (b *standaloneBuilder) addEmptyDirAsStorage(template *corev1.PodTemplateSpec, spec *v1alpha1.GreptimeDBStandalone) {
+	storageSize := resource.MustParse(spec.GetDatanodeFileStorage().GetSize())
+	template.Spec.Volumes = append(template.Spec.Volumes, corev1.Volume{
+		Name: spec.GetDatanodeFileStorage().GetName(),
+		VolumeSource: corev1.VolumeSource{
+			EmptyDir: &corev1.EmptyDirVolumeSource{
+				SizeLimit: &storageSize,
+			},
+		},
+	})
 }
