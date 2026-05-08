@@ -249,6 +249,11 @@ type MainContainerSpec struct {
 	// +optional
 	Env []corev1.EnvVar `json:"env,omitempty"`
 
+	// EnvFromSource represents the source of a set of ConfigMaps or Secrets.
+	// EnvFrom field is from `corev1.Container.EnvFrom`.
+	// +optional
+	EnvFrom []corev1.EnvFromSource `json:"envFrom,omitempty"`
+
 	// Periodic probe of container liveness.
 	// Container will be restarted if the probe fails.
 	// More info: `https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle#container-probes`
