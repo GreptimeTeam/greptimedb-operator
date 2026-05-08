@@ -163,6 +163,7 @@ func GeneratePodTemplateSpec(kind v1alpha1.RoleKind, template *v1alpha1.PodTempl
 					Args:            template.MainContainer.Args,
 					WorkingDir:      template.MainContainer.WorkingDir,
 					Env:             template.MainContainer.Env,
+					EnvFrom:         template.MainContainer.EnvFrom,
 					StartupProbe:    template.MainContainer.StartupProbe,
 					LivenessProbe:   template.MainContainer.LivenessProbe,
 					ReadinessProbe:  template.MainContainer.ReadinessProbe,
