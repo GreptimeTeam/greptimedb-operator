@@ -73,6 +73,157 @@ func TestFromClusterForDatanodeConfig(t *testing.T) {
 	}
 }
 
+func TestFromClusterForDatanodeConfigWithKafkaWALAuthAndTLS(t *testing.T) {
+	testCluster := &v1alpha1.GreptimeDBCluster{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-cluster",
+			Namespace: "default",
+		},
+		Spec: v1alpha1.GreptimeDBClusterSpec{
+			WALProvider: &v1alpha1.WALProviderSpec{
+				KafkaWAL: &v1alpha1.KafkaWAL{
+					BrokerEndpoints: []string{"broker1:9096"},
+					SASL: &v1alpha1.KafkaSASL{
+						Type:     "SCRAM-SHA-512",
+						Username: "greptime",
+						Password: "secret",
+					},
+					TLS: &v1alpha1.KafkaTLS{
+						ServerCACertPath: "/etc/kafka-tls/ca.crt",
+						ClientCertPath:   "/etc/kafka-tls/client.crt",
+						ClientKeyPath:    "/etc/kafka-tls/client.key",
+					},
+				},
+			},
+		},
+	}
+
+	testConfig := `
+[wal]
+  broker_endpoints = ["broker1:9096"]
+  provider = "kafka"
+
+  [wal.sasl]
+    password = "secret"
+    type = "SCRAM-SHA-512"
+    username = "greptime"
+
+  [wal.tls]
+    client_cert_path = "/etc/kafka-tls/client.crt"
+    client_key_path = "/etc/kafka-tls/client.key"
+    server_ca_cert_path = "/etc/kafka-tls/ca.crt"
+`
+
+	data, err := FromCluster(testCluster, testCluster.GetDatanode())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !reflect.DeepEqual([]byte(testConfig), data) {
+		t.Errorf("generated config is not equal to wanted config:\n, want: %s\n, got: %s\n", testConfig, string(data))
+	}
+}
+
+func TestFromClusterForMetaConfigWithKafkaWALAuthAndTLS(t *testing.T) {
+	testCluster := &v1alpha1.GreptimeDBCluster{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-cluster",
+			Namespace: "default",
+		},
+		Spec: v1alpha1.GreptimeDBClusterSpec{
+			WALProvider: &v1alpha1.WALProviderSpec{
+				KafkaWAL: &v1alpha1.KafkaWAL{
+					BrokerEndpoints: []string{"broker1:9096"},
+					SASL: &v1alpha1.KafkaSASL{
+						Type:     "SCRAM-SHA-512",
+						Username: "greptime",
+						Password: "secret",
+					},
+					TLS: &v1alpha1.KafkaTLS{},
+				},
+			},
+		},
+	}
+
+	testConfig := `enable_region_failover = false
+
+[wal]
+  broker_endpoints = ["broker1:9096"]
+  provider = "kafka"
+
+  [wal.sasl]
+    password = "secret"
+    type = "SCRAM-SHA-512"
+    username = "greptime"
+
+  [wal.tls]
+`
+
+	data, err := FromCluster(testCluster, testCluster.GetMeta())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !reflect.DeepEqual([]byte(testConfig), data) {
+		t.Errorf("generated config is not equal to wanted config:\n, want: %s\n, got: %s\n", testConfig, string(data))
+	}
+}
+
+func TestFromClusterRemoteWALConfigOverridesInputConfig(t *testing.T) {
+	testCluster := &v1alpha1.GreptimeDBCluster{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-cluster",
+			Namespace: "default",
+		},
+		Spec: v1alpha1.GreptimeDBClusterSpec{
+			ConfigMergeStrategy: v1alpha1.ConfigMergeStrategyInjectedDataFirst,
+			WALProvider: &v1alpha1.WALProviderSpec{
+				KafkaWAL: &v1alpha1.KafkaWAL{
+					BrokerEndpoints: []string{"broker1:9096"},
+					SASL: &v1alpha1.KafkaSASL{
+						Type:     "SCRAM-SHA-512",
+						Username: "greptime",
+						Password: "secret",
+					},
+				},
+			},
+			Datanode: &v1alpha1.DatanodeSpec{
+				ComponentSpec: v1alpha1.ComponentSpec{
+					Config: `[wal]
+provider = "raft_engine"
+broker_endpoints = ["broker2:9096"]
+
+[wal.sasl]
+type = "PLAIN"
+username = "other"
+password = "other-secret"
+`,
+				},
+			},
+		},
+	}
+
+	testConfig := `
+[wal]
+  broker_endpoints = ["broker1:9096"]
+  provider = "kafka"
+
+  [wal.sasl]
+    password = "secret"
+    type = "SCRAM-SHA-512"
+    username = "greptime"
+`
+
+	data, err := FromCluster(testCluster, testCluster.GetDatanode())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !reflect.DeepEqual([]byte(testConfig), data) {
+		t.Errorf("generated config is not equal to wanted config:\n, want: %s\n, got: %s\n", testConfig, string(data))
+	}
+}
+
 func TestFromClusterForDatanodeConfigWithExtraConfig(t *testing.T) {
 	extraConfig := `[extra]
 key1 = 'value1'

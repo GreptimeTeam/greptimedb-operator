@@ -177,6 +177,57 @@ type WALConfig struct {
 
 	// The kafka broker endpoints.
 	WalBrokerEndpoints []string `tomlmapping:"wal.broker_endpoints"`
+
+	// The kafka SASL type.
+	WalSASLType *string `tomlmapping:"wal.sasl.type"`
+
+	// The kafka SASL username.
+	WalSASLUsername *string `tomlmapping:"wal.sasl.username"`
+
+	// The kafka SASL password.
+	WalSASLPassword *string `tomlmapping:"wal.sasl.password"`
+
+	// The kafka TLS section.
+	WalTLS map[string]string `tomlmapping:"wal.tls"`
+
+	// The kafka TLS server CA certificate path.
+	WalTLSServerCACertPath *string `tomlmapping:"wal.tls.server_ca_cert_path"`
+
+	// The kafka TLS client certificate path.
+	WalTLSClientCertPath *string `tomlmapping:"wal.tls.client_cert_path"`
+
+	// The kafka TLS client private key path.
+	WalTLSClientKeyPath *string `tomlmapping:"wal.tls.client_key_path"`
+}
+
+func (c *WALConfig) configureKafka(kafka *v1alpha1.KafkaWAL) {
+	c.WalProvider = ptr.To("kafka")
+	c.WalBrokerEndpoints = kafka.GetBrokerEndpoints()
+
+	if sasl := kafka.GetSASL(); sasl != nil {
+		if sasl.Type != "" {
+			c.WalSASLType = ptr.To(sasl.Type)
+		}
+		if sasl.Username != "" {
+			c.WalSASLUsername = ptr.To(sasl.Username)
+		}
+		if sasl.Password != "" {
+			c.WalSASLPassword = ptr.To(sasl.Password)
+		}
+	}
+
+	if tls := kafka.GetTLS(); tls != nil {
+		c.WalTLS = map[string]string{}
+		if tls.ServerCACertPath != "" {
+			c.WalTLSServerCACertPath = ptr.To(tls.ServerCACertPath)
+		}
+		if tls.ClientCertPath != "" {
+			c.WalTLSClientCertPath = ptr.To(tls.ClientCertPath)
+		}
+		if tls.ClientKeyPath != "" {
+			c.WalTLSClientKeyPath = ptr.To(tls.ClientKeyPath)
+		}
+	}
 }
 
 // LoggingConfig is the configuration for the logging.

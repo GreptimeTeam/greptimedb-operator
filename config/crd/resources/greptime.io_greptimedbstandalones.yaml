@@ -3635,6 +3635,24 @@ spec:
                         items:
                           type: string
                         type: array
+                      sasl:
+                        properties:
+                          password:
+                            type: string
+                          type:
+                            type: string
+                          username:
+                            type: string
+                        type: object
+                      tls:
+                        properties:
+                          clientCertPath:
+                            type: string
+                          clientKeyPath:
+                            type: string
+                          serverCaCertPath:
+                            type: string
+                        type: object
                     required:
                     - brokerEndpoints
                     type: object

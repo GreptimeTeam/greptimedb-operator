@@ -458,6 +458,44 @@ type KafkaWAL struct {
 	// BrokerEndpoints is the list of Kafka broker endpoints.
 	// +required
 	BrokerEndpoints []string `json:"brokerEndpoints"`
+
+	// SASL is the SASL authentication configuration for Kafka remote WAL.
+	// +optional
+	SASL *KafkaSASL `json:"sasl,omitempty"`
+
+	// TLS is the TLS configuration for Kafka remote WAL.
+	// +optional
+	TLS *KafkaTLS `json:"tls,omitempty"`
+}
+
+// KafkaSASL is the SASL authentication configuration for Kafka remote WAL.
+type KafkaSASL struct {
+	// Type is the SASL mechanism, such as PLAIN, SCRAM-SHA-256, or SCRAM-SHA-512.
+	// +optional
+	Type string `json:"type,omitempty"`
+
+	// Username is the SASL username.
+	// +optional
+	Username string `json:"username,omitempty"`
+
+	// Password is the SASL password.
+	// +optional
+	Password string `json:"password,omitempty"`
+}
+
+// KafkaTLS is the TLS configuration for Kafka remote WAL.
+type KafkaTLS struct {
+	// ServerCACertPath is the path to the server CA certificate.
+	// +optional
+	ServerCACertPath string `json:"serverCaCertPath,omitempty"`
+
+	// ClientCertPath is the path to the client certificate for mTLS.
+	// +optional
+	ClientCertPath string `json:"clientCertPath,omitempty"`
+
+	// ClientKeyPath is the path to the client private key for mTLS.
+	// +optional
+	ClientKeyPath string `json:"clientKeyPath,omitempty"`
 }
 
 func (in *WALProviderSpec) GetRaftEngineWAL() *RaftEngineWAL {
@@ -484,6 +522,20 @@ func (in *RaftEngineWAL) GetFileStorage() *FileStorage {
 func (in *KafkaWAL) GetBrokerEndpoints() []string {
 	if in != nil {
 		return in.BrokerEndpoints
+	}
+	return nil
+}
+
+func (in *KafkaWAL) GetSASL() *KafkaSASL {
+	if in != nil {
+		return in.SASL
+	}
+	return nil
+}
+
+func (in *KafkaWAL) GetTLS() *KafkaTLS {
+	if in != nil {
+		return in.TLS
 	}
 	return nil
 }

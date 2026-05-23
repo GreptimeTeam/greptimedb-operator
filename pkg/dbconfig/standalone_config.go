@@ -72,8 +72,7 @@ func (c *StandaloneConfig) ConfigureByStandalone(standalone *v1alpha1.GreptimeDB
 	}
 
 	if kafka := standalone.GetWALProvider().GetKafkaWAL(); kafka != nil {
-		c.WalProvider = ptr.To("kafka")
-		c.WalBrokerEndpoints = kafka.GetBrokerEndpoints()
+		c.configureKafka(kafka)
 	}
 
 	c.ConfigureLogging(standalone.GetLogging())

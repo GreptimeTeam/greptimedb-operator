@@ -45,11 +45,8 @@ type MetaConfig struct {
 	// The backend storage type.
 	Backend *string `tomlmapping:"backend"`
 
-	// The wal provider.
-	WalProvider *string `tomlmapping:"wal.provider"`
-
-	// The kafka broker endpoints.
-	WalBrokerEndpoints []string `tomlmapping:"wal.broker_endpoints"`
+	// WALConfig is the configuration for the WAL.
+	WALConfig `tomlmapping:",inline"`
 
 	// LoggingConfig is the configuration for the logging.
 	LoggingConfig `tomlmapping:",inline"`
@@ -84,8 +81,7 @@ func (c *MetaConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster, rol
 	}
 
 	if kafka := cluster.GetWALProvider().GetKafkaWAL(); kafka != nil {
-		c.WalProvider = ptr.To("kafka")
-		c.WalBrokerEndpoints = kafka.GetBrokerEndpoints()
+		c.configureKafka(kafka)
 	}
 
 	c.ConfigureLogging(metaSpec.GetLogging())

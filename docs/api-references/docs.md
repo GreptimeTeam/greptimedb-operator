@@ -585,6 +585,42 @@ _Appears in:_
 | `image` _string_ | The image of the initializer. |  |  |
 
 
+#### KafkaSASL
+
+
+
+KafkaSASL is the SASL authentication configuration for Kafka remote WAL.
+
+
+
+_Appears in:_
+- [KafkaWAL](#kafkawal)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `type` _string_ | Type is the SASL mechanism, such as PLAIN, SCRAM-SHA-256, or SCRAM-SHA-512. |  |  |
+| `username` _string_ | Username is the SASL username. |  |  |
+| `password` _string_ | Password is the SASL password. |  |  |
+
+
+#### KafkaTLS
+
+
+
+KafkaTLS is the TLS configuration for Kafka remote WAL.
+
+
+
+_Appears in:_
+- [KafkaWAL](#kafkawal)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `serverCaCertPath` _string_ | ServerCACertPath is the path to the server CA certificate. |  |  |
+| `clientCertPath` _string_ | ClientCertPath is the path to the client certificate for mTLS. |  |  |
+| `clientKeyPath` _string_ | ClientKeyPath is the path to the client private key for mTLS. |  |  |
+
+
 #### KafkaWAL
 
 
@@ -599,6 +635,8 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `brokerEndpoints` _string array_ | BrokerEndpoints is the list of Kafka broker endpoints. |  |  |
+| `sasl` _[KafkaSASL](#kafkasasl)_ | SASL is the SASL authentication configuration for Kafka remote WAL. |  |  |
+| `tls` _[KafkaTLS](#kafkatls)_ | TLS is the TLS configuration for Kafka remote WAL. |  |  |
 
 
 #### LogFormat
