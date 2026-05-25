@@ -210,6 +210,12 @@ func (c *WALConfig) configureKafka(namespace string, kafka *v1alpha1.KafkaWAL) e
 		if sasl.Type != "" {
 			c.WalSASLType = ptr.To(sasl.Type)
 		}
+		if sasl.Username != "" {
+			c.WalSASLUsername = ptr.To(sasl.Username)
+		}
+		if sasl.Password != "" {
+			c.WalSASLPassword = ptr.To(sasl.Password)
+		}
 		if secretRef := sasl.SecretRef; secretRef != nil {
 			data, err := getSecretsData(namespace, secretRef.Name, []string{secretRef.UsernameKey, secretRef.PasswordKey})
 			if err != nil {

@@ -474,6 +474,14 @@ type KafkaSASL struct {
 	// +optional
 	Type string `json:"type,omitempty"`
 
+	// Username is the SASL username. If SecretRef is set, the username from the Secret is used instead.
+	// +optional
+	Username string `json:"username,omitempty"`
+
+	// Password is the SASL password. If SecretRef is set, the password from the Secret is used instead.
+	// +optional
+	Password string `json:"password,omitempty"`
+
 	// SecretRef is the reference to the Secret that stores the SASL username and password.
 	// +optional
 	SecretRef *KafkaSASLSecretRef `json:"secretRef,omitempty"`

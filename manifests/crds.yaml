@@ -27625,6 +27625,8 @@ spec:
                                 type: array
                               sasl:
                                 properties:
+                                  password:
+                                    type: string
                                   secretRef:
                                     properties:
                                       name:
@@ -27639,6 +27641,8 @@ spec:
                                     - usernameKey
                                     type: object
                                   type:
+                                    type: string
+                                  username:
                                     type: string
                                 type: object
                               tls:
@@ -27876,6 +27880,8 @@ spec:
                         type: array
                       sasl:
                         properties:
+                          password:
+                            type: string
                           secretRef:
                             properties:
                               name:
@@ -27890,6 +27896,8 @@ spec:
                             - usernameKey
                             type: object
                           type:
+                            type: string
+                          username:
                             type: string
                         type: object
                       tls:
@@ -31668,6 +31676,8 @@ spec:
                         type: array
                       sasl:
                         properties:
+                          password:
+                            type: string
                           secretRef:
                             properties:
                               name:
@@ -31682,6 +31692,8 @@ spec:
                             - usernameKey
                             type: object
                           type:
+                            type: string
+                          username:
                             type: string
                         type: object
                       tls:
