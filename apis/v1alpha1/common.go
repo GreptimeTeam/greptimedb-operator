@@ -458,6 +458,64 @@ type KafkaWAL struct {
 	// BrokerEndpoints is the list of Kafka broker endpoints.
 	// +required
 	BrokerEndpoints []string `json:"brokerEndpoints"`
+
+	// SASL is the SASL authentication configuration for Kafka remote WAL.
+	// +optional
+	SASL *KafkaSASL `json:"sasl,omitempty"`
+
+	// TLS is the TLS configuration for Kafka remote WAL.
+	// +optional
+	TLS *KafkaTLS `json:"tls,omitempty"`
+}
+
+// KafkaSASL is the SASL authentication configuration for Kafka remote WAL.
+type KafkaSASL struct {
+	// Type is the SASL mechanism, such as PLAIN, SCRAM-SHA-256, or SCRAM-SHA-512.
+	// +optional
+	// +kubebuilder:validation:Enum:={"PLAIN", "SCRAM-SHA-256", "SCRAM-SHA-512"}
+	Type string `json:"type,omitempty"`
+
+	// Username is the SASL username. If SecretRef is set, the username from the Secret is used instead.
+	// +optional
+	Username string `json:"username,omitempty"`
+
+	// Password is the SASL password. If SecretRef is set, the password from the Secret is used instead.
+	// +optional
+	Password string `json:"password,omitempty"`
+
+	// SecretRef is the reference to the Secret that stores the SASL username and password.
+	// +optional
+	SecretRef *KafkaSASLSecretRef `json:"secretRef,omitempty"`
+}
+
+// KafkaSASLSecretRef is the reference to the Secret that stores Kafka SASL credentials.
+type KafkaSASLSecretRef struct {
+	// Name is the name of the Secret.
+	// +required
+	Name string `json:"name"`
+
+	// UsernameKey is the key of the SASL username in the Secret.
+	// +required
+	UsernameKey string `json:"usernameKey"`
+
+	// PasswordKey is the key of the SASL password in the Secret.
+	// +required
+	PasswordKey string `json:"passwordKey"`
+}
+
+// KafkaTLS is the TLS configuration for Kafka remote WAL.
+type KafkaTLS struct {
+	// ServerCACertPath is the path to the server CA certificate.
+	// +optional
+	ServerCACertPath string `json:"serverCaCertPath,omitempty"`
+
+	// ClientCertPath is the path to the client certificate for mTLS.
+	// +optional
+	ClientCertPath string `json:"clientCertPath,omitempty"`
+
+	// ClientKeyPath is the path to the client private key for mTLS.
+	// +optional
+	ClientKeyPath string `json:"clientKeyPath,omitempty"`
 }
 
 func (in *WALProviderSpec) GetRaftEngineWAL() *RaftEngineWAL {
@@ -484,6 +542,20 @@ func (in *RaftEngineWAL) GetFileStorage() *FileStorage {
 func (in *KafkaWAL) GetBrokerEndpoints() []string {
 	if in != nil {
 		return in.BrokerEndpoints
+	}
+	return nil
+}
+
+func (in *KafkaWAL) GetSASL() *KafkaSASL {
+	if in != nil {
+		return in.SASL
+	}
+	return nil
+}
+
+func (in *KafkaWAL) GetTLS() *KafkaTLS {
+	if in != nil {
+		return in.TLS
 	}
 	return nil
 }

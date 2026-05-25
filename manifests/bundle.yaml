@@ -27630,6 +27630,41 @@ spec:
                                 items:
                                   type: string
                                 type: array
+                              sasl:
+                                properties:
+                                  password:
+                                    type: string
+                                  secretRef:
+                                    properties:
+                                      name:
+                                        type: string
+                                      passwordKey:
+                                        type: string
+                                      usernameKey:
+                                        type: string
+                                    required:
+                                    - name
+                                    - passwordKey
+                                    - usernameKey
+                                    type: object
+                                  type:
+                                    enum:
+                                    - PLAIN
+                                    - SCRAM-SHA-256
+                                    - SCRAM-SHA-512
+                                    type: string
+                                  username:
+                                    type: string
+                                type: object
+                              tls:
+                                properties:
+                                  clientCertPath:
+                                    type: string
+                                  clientKeyPath:
+                                    type: string
+                                  serverCaCertPath:
+                                    type: string
+                                type: object
                             required:
                             - brokerEndpoints
                             type: object
@@ -27854,6 +27889,41 @@ spec:
                         items:
                           type: string
                         type: array
+                      sasl:
+                        properties:
+                          password:
+                            type: string
+                          secretRef:
+                            properties:
+                              name:
+                                type: string
+                              passwordKey:
+                                type: string
+                              usernameKey:
+                                type: string
+                            required:
+                            - name
+                            - passwordKey
+                            - usernameKey
+                            type: object
+                          type:
+                            enum:
+                            - PLAIN
+                            - SCRAM-SHA-256
+                            - SCRAM-SHA-512
+                            type: string
+                          username:
+                            type: string
+                        type: object
+                      tls:
+                        properties:
+                          clientCertPath:
+                            type: string
+                          clientKeyPath:
+                            type: string
+                          serverCaCertPath:
+                            type: string
+                        type: object
                     required:
                     - brokerEndpoints
                     type: object
@@ -31619,6 +31689,41 @@ spec:
                         items:
                           type: string
                         type: array
+                      sasl:
+                        properties:
+                          password:
+                            type: string
+                          secretRef:
+                            properties:
+                              name:
+                                type: string
+                              passwordKey:
+                                type: string
+                              usernameKey:
+                                type: string
+                            required:
+                            - name
+                            - passwordKey
+                            - usernameKey
+                            type: object
+                          type:
+                            enum:
+                            - PLAIN
+                            - SCRAM-SHA-256
+                            - SCRAM-SHA-512
+                            type: string
+                          username:
+                            type: string
+                        type: object
+                      tls:
+                        properties:
+                          clientCertPath:
+                            type: string
+                          clientKeyPath:
+                            type: string
+                          serverCaCertPath:
+                            type: string
+                        type: object
                     required:
                     - brokerEndpoints
                     type: object

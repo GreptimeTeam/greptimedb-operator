@@ -173,6 +173,18 @@ func mergeConfig(input *toml.Tree, config interface{}, strategy v1alpha1.ConfigM
 			if field.Len() > 0 {
 				input.Set(tag, field.Interface())
 			}
+		case reflect.Map:
+			if !field.IsNil() {
+				if field.Len() == 0 {
+					tree, err := toml.TreeFromMap(map[string]interface{}{})
+					if err != nil {
+						return "", err
+					}
+					input.Set(tag, tree)
+				} else {
+					input.Set(tag, field.Interface())
+				}
+			}
 		default:
 			return "", fmt.Errorf("field %s is not a pointer type, got %s", tag, field.Kind())
 		}
