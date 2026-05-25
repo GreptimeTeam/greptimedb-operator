@@ -27648,6 +27648,10 @@ spec:
                                     - usernameKey
                                     type: object
                                   type:
+                                    enum:
+                                    - PLAIN
+                                    - SCRAM-SHA-256
+                                    - SCRAM-SHA-512
                                     type: string
                                   username:
                                     type: string
@@ -27903,6 +27907,10 @@ spec:
                             - usernameKey
                             type: object
                           type:
+                            enum:
+                            - PLAIN
+                            - SCRAM-SHA-256
+                            - SCRAM-SHA-512
                             type: string
                           username:
                             type: string
@@ -31699,6 +31707,10 @@ spec:
                             - usernameKey
                             type: object
                           type:
+                            enum:
+                            - PLAIN
+                            - SCRAM-SHA-256
+                            - SCRAM-SHA-512
                             type: string
                           username:
                             type: string

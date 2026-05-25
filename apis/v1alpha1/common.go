@@ -472,6 +472,7 @@ type KafkaWAL struct {
 type KafkaSASL struct {
 	// Type is the SASL mechanism, such as PLAIN, SCRAM-SHA-256, or SCRAM-SHA-512.
 	// +optional
+	// +kubebuilder:validation:Enum:={"PLAIN", "SCRAM-SHA-256", "SCRAM-SHA-512"}
 	Type string `json:"type,omitempty"`
 
 	// Username is the SASL username. If SecretRef is set, the username from the Secret is used instead.
