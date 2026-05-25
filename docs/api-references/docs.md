@@ -598,7 +598,7 @@ _Appears in:_
 
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
-| `type` _string_ | Type is the SASL mechanism, such as PLAIN, SCRAM-SHA-256, or SCRAM-SHA-512. |  |  |
+| `type` _string_ | Type is the SASL mechanism, such as PLAIN, SCRAM-SHA-256, or SCRAM-SHA-512. |  | Enum: [PLAIN SCRAM-SHA-256 SCRAM-SHA-512] <br /> |
 | `username` _string_ | Username is the SASL username. If SecretRef is set, the username from the Secret is used instead. |  |  |
 | `password` _string_ | Password is the SASL password. If SecretRef is set, the password from the Secret is used instead. |  |  |
 | `secretRef` _[KafkaSASLSecretRef](#kafkasaslsecretref)_ | SecretRef is the reference to the Secret that stores the SASL username and password. |  |  |
