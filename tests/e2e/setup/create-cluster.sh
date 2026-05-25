@@ -36,6 +36,8 @@ INGRESS_NGINX_CONTROLLER_CHART_VERSION=4.12.0
 # The argument for deploying Kafka cluster.
 KAFKA_NAMESPACE=kafka
 KAFKA_CHART_VERSION=31.0.0
+KAFKA_CLIENT_USER=greptime
+KAFKA_CLIENT_PASSWORD=gt-operator-e2e
 
 # The argument for deploying postgresql.
 POSTGRESQL_NAMESPACE=postgresql
@@ -273,7 +275,9 @@ function deploy_kafka_cluster() {
       --namespace "$KAFKA_NAMESPACE" \
       --set controller.replicaCount=1 \
       --set broker.replicaCount=1 \
-      --set listeners.client.protocol=PLAINTEXT \
+      --set listeners.client.protocol=SASL_PLAINTEXT \
+      --set sasl.client.users[0]="$KAFKA_CLIENT_USER" \
+      --set sasl.client.passwords[0]="$KAFKA_CLIENT_PASSWORD" \
       --create-namespace \
       --set image.registry=docker.io \
       --set image.repository=greptime/kafka \

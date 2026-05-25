@@ -160,43 +160,47 @@ func TestFromClusterForDatanodeConfigWithKafkaWALAuthAndTLS(t *testing.T) {
 }
 
 func TestFromClusterForDatanodeConfigWithKafkaWALPlaintextSASL(t *testing.T) {
-	testCluster := &v1alpha1.GreptimeDBCluster{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      "test-cluster",
-			Namespace: "default",
-		},
-		Spec: v1alpha1.GreptimeDBClusterSpec{
-			WALProvider: &v1alpha1.WALProviderSpec{
-				KafkaWAL: &v1alpha1.KafkaWAL{
-					BrokerEndpoints: []string{"broker1:9096"},
-					SASL: &v1alpha1.KafkaSASL{
-						Type:     "SCRAM-SHA-512",
-						Username: "plain-user",
-						Password: "plain-secret",
+	for _, saslType := range []string{"PLAIN", "SCRAM-SHA-256", "SCRAM-SHA-512"} {
+		t.Run(saslType, func(t *testing.T) {
+			testCluster := &v1alpha1.GreptimeDBCluster{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      "test-cluster",
+					Namespace: "default",
+				},
+				Spec: v1alpha1.GreptimeDBClusterSpec{
+					WALProvider: &v1alpha1.WALProviderSpec{
+						KafkaWAL: &v1alpha1.KafkaWAL{
+							BrokerEndpoints: []string{"broker1:9096"},
+							SASL: &v1alpha1.KafkaSASL{
+								Type:     saslType,
+								Username: "plain-user",
+								Password: "plain-secret",
+							},
+						},
 					},
 				},
-			},
-		},
-	}
+			}
 
-	testConfig := `
+			testConfig := fmt.Sprintf(`
 [wal]
   broker_endpoints = ["broker1:9096"]
   provider = "kafka"
 
   [wal.sasl]
     password = "plain-secret"
-    type = "SCRAM-SHA-512"
+    type = "%s"
     username = "plain-user"
-`
+`, saslType)
 
-	data, err := FromCluster(testCluster, testCluster.GetDatanode())
-	if err != nil {
-		t.Fatal(err)
-	}
+			data, err := FromCluster(testCluster, testCluster.GetDatanode())
+			if err != nil {
+				t.Fatal(err)
+			}
 
-	if !reflect.DeepEqual([]byte(testConfig), data) {
-		t.Errorf("generated config is not equal to wanted config:\n, want: %s\n, got: %s\n", testConfig, string(data))
+			if !reflect.DeepEqual([]byte(testConfig), data) {
+				t.Errorf("generated config is not equal to wanted config:\n, want: %s\n, got: %s\n", testConfig, string(data))
+			}
+		})
 	}
 }
 
