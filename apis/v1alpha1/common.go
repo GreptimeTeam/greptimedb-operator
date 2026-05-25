@@ -474,13 +474,24 @@ type KafkaSASL struct {
 	// +optional
 	Type string `json:"type,omitempty"`
 
-	// Username is the SASL username.
+	// SecretRef is the reference to the Secret that stores the SASL username and password.
 	// +optional
-	Username string `json:"username,omitempty"`
+	SecretRef *KafkaSASLSecretRef `json:"secretRef,omitempty"`
+}
 
-	// Password is the SASL password.
-	// +optional
-	Password string `json:"password,omitempty"`
+// KafkaSASLSecretRef is the reference to the Secret that stores Kafka SASL credentials.
+type KafkaSASLSecretRef struct {
+	// Name is the name of the Secret.
+	// +required
+	Name string `json:"name"`
+
+	// UsernameKey is the key of the SASL username in the Secret.
+	// +required
+	UsernameKey string `json:"usernameKey"`
+
+	// PasswordKey is the key of the SASL password in the Secret.
+	// +required
+	PasswordKey string `json:"passwordKey"`
 }
 
 // KafkaTLS is the TLS configuration for Kafka remote WAL.

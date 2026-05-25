@@ -15,6 +15,7 @@
 package dbconfig
 
 import (
+	"fmt"
 	"reflect"
 	"testing"
 
@@ -23,6 +24,30 @@ import (
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 )
+
+func stubGetSecretsData(t *testing.T, data map[string]map[string]string) func() {
+	t.Helper()
+	original := getSecretsData
+	getSecretsData = func(namespace, name string, keys []string) ([][]byte, error) {
+		secret, ok := data[namespace+"/"+name]
+		if !ok {
+			return nil, fmt.Errorf("secret '%s/%s' not found", namespace, name)
+		}
+
+		values := make([][]byte, 0, len(keys))
+		for _, key := range keys {
+			value, ok := secret[key]
+			if !ok {
+				return nil, fmt.Errorf("secret '%s/%s' does not have key '%s'", namespace, name, key)
+			}
+			values = append(values, []byte(value))
+		}
+
+		return values, nil
+	}
+
+	return func() { getSecretsData = original }
+}
 
 func TestFromClusterForDatanodeConfig(t *testing.T) {
 	testCluster := &v1alpha1.GreptimeDBCluster{
@@ -74,6 +99,13 @@ func TestFromClusterForDatanodeConfig(t *testing.T) {
 }
 
 func TestFromClusterForDatanodeConfigWithKafkaWALAuthAndTLS(t *testing.T) {
+	defer stubGetSecretsData(t, map[string]map[string]string{
+		"default/kafka-sasl": {
+			"username": "greptime",
+			"password": "secret",
+		},
+	})()
+
 	testCluster := &v1alpha1.GreptimeDBCluster{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-cluster",
@@ -84,9 +116,12 @@ func TestFromClusterForDatanodeConfigWithKafkaWALAuthAndTLS(t *testing.T) {
 				KafkaWAL: &v1alpha1.KafkaWAL{
 					BrokerEndpoints: []string{"broker1:9096"},
 					SASL: &v1alpha1.KafkaSASL{
-						Type:     "SCRAM-SHA-512",
-						Username: "greptime",
-						Password: "secret",
+						Type: "SCRAM-SHA-512",
+						SecretRef: &v1alpha1.KafkaSASLSecretRef{
+							Name:        "kafka-sasl",
+							UsernameKey: "username",
+							PasswordKey: "password",
+						},
 					},
 					TLS: &v1alpha1.KafkaTLS{
 						ServerCACertPath: "/etc/kafka-tls/ca.crt",
@@ -125,6 +160,13 @@ func TestFromClusterForDatanodeConfigWithKafkaWALAuthAndTLS(t *testing.T) {
 }
 
 func TestFromClusterForMetaConfigWithKafkaWALAuthAndTLS(t *testing.T) {
+	defer stubGetSecretsData(t, map[string]map[string]string{
+		"default/kafka-sasl": {
+			"username": "greptime",
+			"password": "secret",
+		},
+	})()
+
 	testCluster := &v1alpha1.GreptimeDBCluster{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-cluster",
@@ -135,9 +177,12 @@ func TestFromClusterForMetaConfigWithKafkaWALAuthAndTLS(t *testing.T) {
 				KafkaWAL: &v1alpha1.KafkaWAL{
 					BrokerEndpoints: []string{"broker1:9096"},
 					SASL: &v1alpha1.KafkaSASL{
-						Type:     "SCRAM-SHA-512",
-						Username: "greptime",
-						Password: "secret",
+						Type: "SCRAM-SHA-512",
+						SecretRef: &v1alpha1.KafkaSASLSecretRef{
+							Name:        "kafka-sasl",
+							UsernameKey: "username",
+							PasswordKey: "password",
+						},
 					},
 					TLS: &v1alpha1.KafkaTLS{},
 				},
@@ -170,6 +215,13 @@ func TestFromClusterForMetaConfigWithKafkaWALAuthAndTLS(t *testing.T) {
 }
 
 func TestFromClusterRemoteWALConfigOverridesInputConfig(t *testing.T) {
+	defer stubGetSecretsData(t, map[string]map[string]string{
+		"default/kafka-sasl": {
+			"username": "greptime",
+			"password": "secret",
+		},
+	})()
+
 	testCluster := &v1alpha1.GreptimeDBCluster{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      "test-cluster",
@@ -181,9 +233,12 @@ func TestFromClusterRemoteWALConfigOverridesInputConfig(t *testing.T) {
 				KafkaWAL: &v1alpha1.KafkaWAL{
 					BrokerEndpoints: []string{"broker1:9096"},
 					SASL: &v1alpha1.KafkaSASL{
-						Type:     "SCRAM-SHA-512",
-						Username: "greptime",
-						Password: "secret",
+						Type: "SCRAM-SHA-512",
+						SecretRef: &v1alpha1.KafkaSASLSecretRef{
+							Name:        "kafka-sasl",
+							UsernameKey: "username",
+							PasswordKey: "password",
+						},
 					},
 				},
 			},

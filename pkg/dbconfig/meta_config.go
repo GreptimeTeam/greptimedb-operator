@@ -81,7 +81,9 @@ func (c *MetaConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster, rol
 	}
 
 	if kafka := cluster.GetWALProvider().GetKafkaWAL(); kafka != nil {
-		c.configureKafka(kafka)
+		if err := c.configureKafka(cluster.GetNamespace(), kafka); err != nil {
+			return err
+		}
 	}
 
 	c.ConfigureLogging(metaSpec.GetLogging())

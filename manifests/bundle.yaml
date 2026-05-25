@@ -27632,11 +27632,20 @@ spec:
                                 type: array
                               sasl:
                                 properties:
-                                  password:
-                                    type: string
+                                  secretRef:
+                                    properties:
+                                      name:
+                                        type: string
+                                      passwordKey:
+                                        type: string
+                                      usernameKey:
+                                        type: string
+                                    required:
+                                    - name
+                                    - passwordKey
+                                    - usernameKey
+                                    type: object
                                   type:
-                                    type: string
-                                  username:
                                     type: string
                                 type: object
                               tls:
@@ -27874,11 +27883,20 @@ spec:
                         type: array
                       sasl:
                         properties:
-                          password:
-                            type: string
+                          secretRef:
+                            properties:
+                              name:
+                                type: string
+                              passwordKey:
+                                type: string
+                              usernameKey:
+                                type: string
+                            required:
+                            - name
+                            - passwordKey
+                            - usernameKey
+                            type: object
                           type:
-                            type: string
-                          username:
                             type: string
                         type: object
                       tls:
@@ -31657,11 +31675,20 @@ spec:
                         type: array
                       sasl:
                         properties:
-                          password:
-                            type: string
+                          secretRef:
+                            properties:
+                              name:
+                                type: string
+                              passwordKey:
+                                type: string
+                              usernameKey:
+                                type: string
+                            required:
+                            - name
+                            - passwordKey
+                            - usernameKey
+                            type: object
                           type:
-                            type: string
-                          username:
                             type: string
                         type: object
                       tls:

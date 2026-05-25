@@ -72,7 +72,9 @@ func (c *StandaloneConfig) ConfigureByStandalone(standalone *v1alpha1.GreptimeDB
 	}
 
 	if kafka := standalone.GetWALProvider().GetKafkaWAL(); kafka != nil {
-		c.configureKafka(kafka)
+		if err := c.configureKafka(standalone.GetNamespace(), kafka); err != nil {
+			return err
+		}
 	}
 
 	c.ConfigureLogging(standalone.GetLogging())

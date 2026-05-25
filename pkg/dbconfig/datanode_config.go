@@ -79,7 +79,9 @@ func (c *DatanodeConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster,
 	}
 
 	if kafka := cluster.GetWALProvider().GetKafkaWAL(); kafka != nil {
-		c.configureKafka(kafka)
+		if err := c.configureKafka(cluster.GetNamespace(), kafka); err != nil {
+			return err
+		}
 	}
 
 	c.ConfigureLogging(datanodeSpec.GetLogging())

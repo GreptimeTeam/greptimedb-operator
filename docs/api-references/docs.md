@@ -599,8 +599,25 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `type` _string_ | Type is the SASL mechanism, such as PLAIN, SCRAM-SHA-256, or SCRAM-SHA-512. |  |  |
-| `username` _string_ | Username is the SASL username. |  |  |
-| `password` _string_ | Password is the SASL password. |  |  |
+| `secretRef` _[KafkaSASLSecretRef](#kafkasaslsecretref)_ | SecretRef is the reference to the Secret that stores the SASL username and password. |  |  |
+
+
+#### KafkaSASLSecretRef
+
+
+
+KafkaSASLSecretRef is the reference to the Secret that stores Kafka SASL credentials.
+
+
+
+_Appears in:_
+- [KafkaSASL](#kafkasasl)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `name` _string_ | Name is the name of the Secret. |  |  |
+| `usernameKey` _string_ | UsernameKey is the key of the SASL username in the Secret. |  |  |
+| `passwordKey` _string_ | PasswordKey is the key of the SASL password in the Secret. |  |  |
 
 
 #### KafkaTLS

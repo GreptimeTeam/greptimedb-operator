@@ -27,6 +27,8 @@ import (
 	k8sutil "github.com/GreptimeTeam/greptimedb-operator/pkg/util/k8s"
 )
 
+var getSecretsData = k8sutil.GetSecretsData
+
 // StorageConfig is the configuration for the storage.
 type StorageConfig struct {
 	StorageType            *string `tomlmapping:"storage.type"`
@@ -93,7 +95,7 @@ func (c *StorageConfig) configureS3(namespace string, s3 *v1alpha1.S3Storage) er
 	c.StorageRegion = ptr.To(s3.Region)
 
 	if s3.SecretName != "" {
-		data, err := k8sutil.GetSecretsData(namespace, s3.SecretName, []string{v1alpha1.AccessKeyIDSecretKey, v1alpha1.SecretAccessKeySecretKey})
+		data, err := getSecretsData(namespace, s3.SecretName, []string{v1alpha1.AccessKeyIDSecretKey, v1alpha1.SecretAccessKeySecretKey})
 		if err != nil {
 			return err
 		}
@@ -116,7 +118,7 @@ func (c *StorageConfig) configureOSS(namespace string, oss *v1alpha1.OSSStorage)
 	c.StorageRegion = ptr.To(oss.Region)
 
 	if oss.SecretName != "" {
-		data, err := k8sutil.GetSecretsData(namespace, oss.SecretName, []string{v1alpha1.AccessKeyIDSecretKey, v1alpha1.AccessKeySecretSecretKey})
+		data, err := getSecretsData(namespace, oss.SecretName, []string{v1alpha1.AccessKeyIDSecretKey, v1alpha1.AccessKeySecretSecretKey})
 		if err != nil {
 			return err
 		}
@@ -135,7 +137,7 @@ func (c *StorageConfig) configureGCS(namespace string, gcs *v1alpha1.GCSStorage)
 	c.StorageScope = ptr.To(gcs.Scope)
 
 	if gcs.SecretName != "" {
-		data, err := k8sutil.GetSecretsData(namespace, gcs.SecretName, []string{v1alpha1.ServiceAccountKey})
+		data, err := getSecretsData(namespace, gcs.SecretName, []string{v1alpha1.ServiceAccountKey})
 		if err != nil {
 			return err
 		}
@@ -156,7 +158,7 @@ func (c *StorageConfig) configureAZBlob(namespace string, azblob *v1alpha1.AZBlo
 	c.StorageEndpoint = ptr.To(azblob.Endpoint)
 
 	if azblob.SecretName != "" {
-		data, err := k8sutil.GetSecretsData(namespace, azblob.SecretName, []string{v1alpha1.AccountName, v1alpha1.AccountKey})
+		data, err := getSecretsData(namespace, azblob.SecretName, []string{v1alpha1.AccountName, v1alpha1.AccountKey})
 		if err != nil {
 			return err
 		}
@@ -200,7 +202,7 @@ type WALConfig struct {
 	WalTLSClientKeyPath *string `tomlmapping:"wal.tls.client_key_path"`
 }
 
-func (c *WALConfig) configureKafka(kafka *v1alpha1.KafkaWAL) {
+func (c *WALConfig) configureKafka(namespace string, kafka *v1alpha1.KafkaWAL) error {
 	c.WalProvider = ptr.To("kafka")
 	c.WalBrokerEndpoints = kafka.GetBrokerEndpoints()
 
@@ -208,11 +210,13 @@ func (c *WALConfig) configureKafka(kafka *v1alpha1.KafkaWAL) {
 		if sasl.Type != "" {
 			c.WalSASLType = ptr.To(sasl.Type)
 		}
-		if sasl.Username != "" {
-			c.WalSASLUsername = ptr.To(sasl.Username)
-		}
-		if sasl.Password != "" {
-			c.WalSASLPassword = ptr.To(sasl.Password)
+		if secretRef := sasl.SecretRef; secretRef != nil {
+			data, err := getSecretsData(namespace, secretRef.Name, []string{secretRef.UsernameKey, secretRef.PasswordKey})
+			if err != nil {
+				return err
+			}
+			c.WalSASLUsername = ptr.To(string(data[0]))
+			c.WalSASLPassword = ptr.To(string(data[1]))
 		}
 	}
 
@@ -228,6 +232,8 @@ func (c *WALConfig) configureKafka(kafka *v1alpha1.KafkaWAL) {
 			c.WalTLSClientKeyPath = ptr.To(tls.ClientKeyPath)
 		}
 	}
+
+	return nil
 }
 
 // LoggingConfig is the configuration for the logging.
