@@ -308,7 +308,7 @@ func TestFromClusterForMetaConfigWithKafkaWALAuthAndTLS(t *testing.T) {
 	}
 }
 
-func TestFromClusterRemoteWALConfigOverridesInputConfig(t *testing.T) {
+func TestFromClusterRemoteWALConfigHonorsInjectedDataFirst(t *testing.T) {
 	defer stubGetSecretsData(t, map[string]map[string]string{
 		"default/kafka-sasl": {
 			"username": "greptime",
@@ -323,6 +323,71 @@ func TestFromClusterRemoteWALConfigOverridesInputConfig(t *testing.T) {
 		},
 		Spec: v1alpha1.GreptimeDBClusterSpec{
 			ConfigMergeStrategy: v1alpha1.ConfigMergeStrategyInjectedDataFirst,
+			WALProvider: &v1alpha1.WALProviderSpec{
+				KafkaWAL: &v1alpha1.KafkaWAL{
+					BrokerEndpoints: []string{"broker1:9096"},
+					SASL: &v1alpha1.KafkaSASL{
+						Type: "SCRAM-SHA-512",
+						SecretRef: &v1alpha1.KafkaSASLSecretRef{
+							Name:        "kafka-sasl",
+							UsernameKey: "username",
+							PasswordKey: "password",
+						},
+					},
+				},
+			},
+			Datanode: &v1alpha1.DatanodeSpec{
+				ComponentSpec: v1alpha1.ComponentSpec{
+					Config: `[wal]
+provider = "raft_engine"
+broker_endpoints = ["broker2:9096"]
+
+[wal.sasl]
+type = "PLAIN"
+username = "other"
+password = "other-secret"
+`,
+				},
+			},
+		},
+	}
+
+	testConfig := `
+[wal]
+  broker_endpoints = ["broker2:9096"]
+  provider = "raft_engine"
+
+  [wal.sasl]
+    password = "other-secret"
+    type = "PLAIN"
+    username = "other"
+`
+
+	data, err := FromCluster(testCluster, testCluster.GetDatanode())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !reflect.DeepEqual([]byte(testConfig), data) {
+		t.Errorf("generated config is not equal to wanted config:\n, want: %s\n, got: %s\n", testConfig, string(data))
+	}
+}
+
+func TestFromClusterRemoteWALConfigHonorsOperatorFirst(t *testing.T) {
+	defer stubGetSecretsData(t, map[string]map[string]string{
+		"default/kafka-sasl": {
+			"username": "greptime",
+			"password": "secret",
+		},
+	})()
+
+	testCluster := &v1alpha1.GreptimeDBCluster{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-cluster",
+			Namespace: "default",
+		},
+		Spec: v1alpha1.GreptimeDBClusterSpec{
+			ConfigMergeStrategy: v1alpha1.ConfigMergeStrategyOperatorFirst,
 			WALProvider: &v1alpha1.WALProviderSpec{
 				KafkaWAL: &v1alpha1.KafkaWAL{
 					BrokerEndpoints: []string{"broker1:9096"},
