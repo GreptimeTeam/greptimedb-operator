@@ -6789,6 +6789,10 @@ spec:
                         type: boolean
                       endpoint:
                         type: string
+                      headers:
+                        additionalProperties:
+                          type: string
+                        type: object
                       sampleRatio:
                         type: string
                     type: object
@@ -10211,6 +10215,10 @@ spec:
                           type: boolean
                         endpoint:
                           type: string
+                        headers:
+                          additionalProperties:
+                            type: string
+                          type: object
                         sampleRatio:
                           type: string
                       type: object
@@ -13599,6 +13607,10 @@ spec:
                         type: boolean
                       endpoint:
                         type: string
+                      headers:
+                        additionalProperties:
+                          type: string
+                        type: object
                       sampleRatio:
                         type: string
                     type: object
@@ -17042,6 +17054,10 @@ spec:
                         type: boolean
                       endpoint:
                         type: string
+                      headers:
+                        additionalProperties:
+                          type: string
+                        type: object
                       sampleRatio:
                         type: string
                     type: object
@@ -20486,6 +20502,10 @@ spec:
                           type: boolean
                         endpoint:
                           type: string
+                        headers:
+                          additionalProperties:
+                            type: string
+                          type: object
                         sampleRatio:
                           type: string
                       type: object
@@ -24012,6 +24032,10 @@ spec:
                         type: boolean
                       endpoint:
                         type: string
+                      headers:
+                        additionalProperties:
+                          type: string
+                        type: object
                       sampleRatio:
                         type: string
                     type: object
@@ -27611,6 +27635,10 @@ spec:
                             type: boolean
                           endpoint:
                             type: string
+                          headers:
+                            additionalProperties:
+                              type: string
+                            type: object
                           sampleRatio:
                             type: string
                         type: object
@@ -27694,6 +27722,9 @@ spec:
                             type: object
                         type: object
                     type: object
+                  ttl:
+                    pattern: ^([0-9]+(\.[0-9]+)?(ns|us|µs|ms|s|m|h|d))+$
+                    type: string
                   vector:
                     properties:
                       image:
@@ -27870,6 +27901,10 @@ spec:
                     type: boolean
                   endpoint:
                     type: string
+                  headers:
+                    additionalProperties:
+                      type: string
+                    type: object
                   sampleRatio:
                     type: string
                 type: object

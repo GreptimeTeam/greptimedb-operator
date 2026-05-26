@@ -841,6 +841,7 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `enabled` _boolean_ | Enabled indicates whether to enable the monitoring service. |  |  |
+| `ttl` _string_ | TTL is the default retention time for monitoring data., Default to `30d`. |  | Pattern: `^([0-9]+(\.[0-9]+)?(ns\|us\|µs\|ms\|s\|m\|h\|d))+$` <br /> |
 | `standalone` _[GreptimeDBStandaloneSpec](#greptimedbstandalonespec)_ | The specification of the standalone greptimedb instance. |  |  |
 | `logsCollection` _[LogsCollectionSpec](#logscollectionspec)_ | The specification of cluster logs collection. |  |  |
 | `vector` _[VectorSpec](#vectorspec)_ | The specification of the vector instance. |  |  |
@@ -1211,6 +1212,7 @@ _Appears in:_
 | `enabled` _boolean_ | Enabled indicates whether to enable OTLP tracing. |  |  |
 | `endpoint` _string_ | Endpoint it the OTLP tracing endpoint. |  |  |
 | `sampleRatio` _string_ | SampleRatio is the percentage of tracing will be sampled and exported.<br />Valid range `[0, 1]`, 1 means all traces are sampled, 0 means all traces are not sampled, the default value is 1. |  |  |
+| `headers` _object (keys:string, values:string)_ | Headers are additional HTTP headers to add to OTLP HTTP requests.<br />Only used when protocol is HTTP. |  |  |
 
 
 #### VectorSpec

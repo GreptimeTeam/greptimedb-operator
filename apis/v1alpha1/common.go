@@ -655,6 +655,11 @@ type TracingSpec struct {
 	// SampleRatio is the percentage of tracing will be sampled and exported.
 	// Valid range `[0, 1]`, 1 means all traces are sampled, 0 means all traces are not sampled, the default value is 1.
 	SampleRatio string `json:"sampleRatio,omitempty"`
+
+	// Headers are additional HTTP headers to add to OTLP HTTP requests.
+	// Only used when protocol is HTTP.
+	// +optional
+	Headers map[string]string `json:"headers,omitempty"`
 }
 
 // ServiceSpec defines the service configuration for the component.
