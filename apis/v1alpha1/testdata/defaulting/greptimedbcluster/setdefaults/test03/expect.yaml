@@ -34,10 +34,8 @@ spec:
   mysqlPort: 4002
   postgreSQLPort: 4003
   tracing:
-    enabled: true
     headers:
       x-greptime-hint-ttl: 30d
-    sampleRatio: "1.0"
   objectStorage:
     s3:
       bucket: greptimedb
