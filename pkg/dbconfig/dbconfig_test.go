@@ -298,8 +298,6 @@ func TestFromClusterForMetaConfigWithKafkaWALAuthAndTLS(t *testing.T) {
     password = "secret"
     type = "SCRAM-SHA-512"
     username = "greptime"
-
-  [wal.tls]
 `
 
 	data, err := FromCluster(testCluster, testCluster.GetMeta())

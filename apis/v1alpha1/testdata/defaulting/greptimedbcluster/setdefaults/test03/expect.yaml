@@ -33,6 +33,9 @@ spec:
   rpcPort: 4001
   mysqlPort: 4002
   postgreSQLPort: 4003
+  tracing:
+    headers:
+      x-greptime-hint-ttl: 30d
   objectStorage:
     s3:
       bucket: greptimedb
@@ -101,6 +104,7 @@ spec:
       partition: 0
   monitoring:
     enabled: true
+    ttl: 30d
     logsCollection: {}
     standalone:
       replicas: 1

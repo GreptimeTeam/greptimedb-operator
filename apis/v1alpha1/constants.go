@@ -84,6 +84,9 @@ const (
 
 	// DefaultVectorMemoryLimit is the default memory limit for the vector.
 	DefaultVectorMemoryLimit = "256Mi"
+
+	// DefaultMonitoringTTL is the default retention time for monitoring data.
+	DefaultMonitoringTTL = "30d"
 )
 
 // The following constants are the constant configuration for the GreptimeDBCluster and GreptimeDBStandalone.

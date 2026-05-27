@@ -165,6 +165,7 @@ func (in *GreptimeDBCluster) defaultSpec() *GreptimeDBClusterSpec {
 
 	if in.GetMonitoring().IsEnabled() {
 		defaultSpec.Monitoring = &MonitoringSpec{
+			TTL:            DefaultMonitoringTTL,
 			Standalone:     in.defaultMonitoringStandaloneSpec(),
 			LogsCollection: &LogsCollectionSpec{},
 			Vector: &VectorSpec{
@@ -184,6 +185,17 @@ func (in *GreptimeDBCluster) defaultSpec() *GreptimeDBClusterSpec {
 
 		// Set the default logging format to JSON if monitoring is enabled.
 		defaultSpec.Logging.Format = LogFormatJSON
+
+		// Set the default tracing configuration.
+		ttl := DefaultMonitoringTTL
+		if len(in.GetMonitoring().TTL) != 0 {
+			ttl = in.GetMonitoring().TTL
+		}
+		defaultSpec.Tracing = &TracingSpec{
+			Headers: map[string]string{
+				"x-greptime-hint-ttl": ttl,
+			},
+		}
 	}
 
 	return defaultSpec

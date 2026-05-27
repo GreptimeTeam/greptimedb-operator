@@ -3622,6 +3622,10 @@ spec:
                     type: boolean
                   endpoint:
                     type: string
+                  headers:
+                    additionalProperties:
+                      type: string
+                    type: object
                   sampleRatio:
                     type: string
                 type: object

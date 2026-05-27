@@ -178,6 +178,7 @@ func (c *CommonBuilder) GenerateVectorConfigMap() (*corev1.ConfigMap, error) {
 		"LogsPipelineName": common.LogsPipelineName(c.Cluster.Namespace, c.Cluster.Name),
 		"LoggingService":   fmt.Sprintf("http://%s:%d", svc, v1alpha1.DefaultHTTPPort),
 		"MetricService":    fmt.Sprintf("http://%s:%d/v1/prometheus/write?db=public", svc, v1alpha1.DefaultHTTPPort),
+		"TTL":              c.Cluster.GetMonitoring().TTL,
 	}
 
 	vectorConfigTemplate, err := c.vectorConfigTemplate()

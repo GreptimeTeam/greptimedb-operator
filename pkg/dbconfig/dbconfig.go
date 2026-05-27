@@ -18,9 +18,8 @@ import (
 	"fmt"
 	"reflect"
 
-	"github.com/pelletier/go-toml"
-
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
+	"github.com/pelletier/go-toml"
 )
 
 const (
@@ -165,6 +164,21 @@ func mergeConfig(input *toml.Tree, config interface{}, strategy v1alpha1.ConfigM
 					input.Set(tag, elem.String())
 				case reflect.Bool:
 					input.Set(tag, elem.Bool())
+				case reflect.Map:
+					if elem.Len() > 0 {
+						mapInterface := make(map[string]interface{})
+						iter := elem.MapRange()
+						for iter.Next() {
+							k := iter.Key().String()
+							v := iter.Value().Interface()
+							mapInterface[k] = v
+						}
+						tree, err := toml.TreeFromMap(mapInterface)
+						if err != nil {
+							return "", err
+						}
+						input.Set(tag, tree)
+					}
 				default:
 					return "", fmt.Errorf("tag '%s' with type '%s is not supported", tag, elem.Kind())
 				}
@@ -175,14 +189,19 @@ func mergeConfig(input *toml.Tree, config interface{}, strategy v1alpha1.ConfigM
 			}
 		case reflect.Map:
 			if !field.IsNil() {
-				if field.Len() == 0 {
-					tree, err := toml.TreeFromMap(map[string]interface{}{})
+				if field.Len() > 0 {
+					mapInterface := make(map[string]interface{})
+					iter := field.MapRange()
+					for iter.Next() {
+						k := iter.Key().String()
+						v := iter.Value().Interface()
+						mapInterface[k] = v
+					}
+					tree, err := toml.TreeFromMap(mapInterface)
 					if err != nil {
 						return "", err
 					}
 					input.Set(tag, tree)
-				} else {
-					input.Set(tag, field.Interface())
 				}
 			}
 		default:

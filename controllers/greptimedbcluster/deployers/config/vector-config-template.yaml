@@ -59,9 +59,14 @@ sinks:
     inputs:
       - transform_logs
     endpoint: {{ .LoggingService }}
+    extra_headers:
+      x-greptime-hint-ttl: {{ .TTL }}
 
   sink_greptimedb_metrics:
     type: prometheus_remote_write
     inputs:
       - add_metrics_labels
     endpoint: {{ .MetricService }}
+    request:
+      headers:
+        x-greptime-hint-ttl: {{ .TTL }}
