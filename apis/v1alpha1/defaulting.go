@@ -187,11 +187,13 @@ func (in *GreptimeDBCluster) defaultSpec() *GreptimeDBClusterSpec {
 		defaultSpec.Logging.Format = LogFormatJSON
 
 		// Set the default tracing configuration.
+		ttl := DefaultMonitoringTTL
+		if len(in.GetMonitoring().TTL) != 0 {
+			ttl = in.GetMonitoring().TTL
+		}
 		defaultSpec.Tracing = &TracingSpec{
-			Enabled:     ptr.To(true),
-			SampleRatio: "1.0",
 			Headers: map[string]string{
-				"x-greptime-hint-ttl": DefaultMonitoringTTL,
+				"x-greptime-hint-ttl": ttl,
 			},
 		}
 	}

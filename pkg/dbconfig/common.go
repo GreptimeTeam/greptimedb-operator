@@ -297,7 +297,7 @@ type TracingConfig struct {
 	SampleRatio *float64 `tomlmapping:"logging.tracing_sample_ratio.default_ratio"`
 
 	// The OTLP headers, only valid when using OTLP HTTP protocol.
-	Headers map[string]string `tomlmapping:"logging.otlp_headers"`
+	Headers *map[string]string `tomlmapping:"logging.otlp_headers"`
 }
 
 // ConfigureTracing configures the tracing config with the given tracing spec.
@@ -316,7 +316,7 @@ func (c *TracingConfig) ConfigureTracing(spec *v1alpha1.TracingSpec) {
 		}
 		c.SampleRatio = ptr.To(sampleRatio)
 		if len(spec.Headers) > 0 {
-			c.Headers = spec.Headers
+			c.Headers = &spec.Headers
 		}
 	}
 }
