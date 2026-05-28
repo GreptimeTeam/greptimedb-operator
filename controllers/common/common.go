@@ -326,7 +326,7 @@ func SetMaintenanceMode(metaHTTPServiceURL string, enabled bool) error {
 	requestURL := metaHTTPServiceURL + endpoint[enabled]
 
 	operation := func() error {
-		rsp, err := http.Get(requestURL)
+		rsp, err := http.Post(requestURL, "application/json", nil)
 		if err != nil {
 			return err
 		}
