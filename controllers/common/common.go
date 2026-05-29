@@ -312,15 +312,21 @@ func LogsPipelineName(namespace, name string) string {
 }
 
 func GetMetaHTTPServiceURL(cluster *v1alpha1.GreptimeDBCluster) string {
-	return fmt.Sprintf("http://%s.%s:%d", ResourceName(cluster.GetName(), v1alpha1.MetaRoleKind), cluster.GetNamespace(), cluster.Spec.Meta.RPCPort)
+	return fmt.Sprintf("http://%s.%s:%d", ResourceName(cluster.GetName(), v1alpha1.MetaRoleKind), cluster.GetNamespace(), cluster.Spec.Meta.HTTPPort)
 }
 
 // SetMaintenanceMode requests the metasrv to set the maintenance mode.
 func SetMaintenanceMode(metaHTTPServiceURL string, enabled bool) error {
-	requestURL := fmt.Sprintf("%s/admin/maintenance?enable=%v", metaHTTPServiceURL, enabled)
+	var endpoint = map[bool]string{
+		true:  "/admin/maintenance/enable",
+		false: "/admin/maintenance/disable",
+	}
+
+	// Related to: https://docs.greptime.com/user-guide/deployments-administration/maintenance/maintenance-mode/#managing-maintenance-mode
+	requestURL := metaHTTPServiceURL + endpoint[enabled]
 
 	operation := func() error {
-		rsp, err := http.Get(requestURL)
+		rsp, err := http.Post(requestURL, "application/json", nil)
 		if err != nil {
 			return err
 		}
