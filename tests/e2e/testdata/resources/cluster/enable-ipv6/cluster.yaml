@@ -6,7 +6,8 @@ metadata:
 spec:
   enableIPv6: true
   initializer:
-    image: localhost:5001/greptime/greptimedb-initializer:latest
+    image: greptime/greptimedb-initializer-dev:latest
+    #image: localhost:5001/greptime/greptimedb-initializer:latest
   base:
     main:
       image: localhost:5001/greptime/greptimedb:latest
