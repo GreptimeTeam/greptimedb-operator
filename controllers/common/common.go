@@ -354,3 +354,11 @@ func SetMaintenanceMode(metaHTTPServiceURL string, enabled bool) error {
 
 	return nil
 }
+
+// GetBindAddress returns the appropriate bind address based on IPv6 enablement.
+func GetBindAddress(enableIPv6 bool, port int32) string {
+	if enableIPv6 {
+		return fmt.Sprintf("[::]:%d", port)
+	}
+	return fmt.Sprintf("0.0.0.0:%d", port)
+}

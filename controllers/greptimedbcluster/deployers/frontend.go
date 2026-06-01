@@ -404,15 +404,15 @@ func (b *frontendBuilder) Generate() ([]client.Object, error) {
 func (b *frontendBuilder) generateMainContainerArgs(frontend *v1alpha1.FrontendSpec) []string {
 	var args = []string{
 		"frontend", "start",
-		"--rpc-bind-addr", fmt.Sprintf("0.0.0.0:%d", frontend.RPCPort),
+		"--rpc-bind-addr", common.GetBindAddress(b.Cluster.Spec.EnableIPv6, frontend.RPCPort),
 		"--rpc-server-addr", fmt.Sprintf("$(%s):%d", deployer.EnvPodIP, frontend.RPCPort),
 		"--metasrv-addrs", fmt.Sprintf("%s.%s:%d", common.ResourceName(b.Cluster.Name, v1alpha1.MetaRoleKind),
 			b.Cluster.Namespace, b.Cluster.Spec.Meta.RPCPort),
-		"--http-addr", fmt.Sprintf("0.0.0.0:%d", frontend.HTTPPort),
-		"--mysql-addr", fmt.Sprintf("0.0.0.0:%d", frontend.MySQLPort),
-		"--postgres-addr", fmt.Sprintf("0.0.0.0:%d", frontend.PostgreSQLPort),
+		"--http-addr", common.GetBindAddress(b.Cluster.Spec.EnableIPv6, frontend.HTTPPort),
+		"--mysql-addr", common.GetBindAddress(b.Cluster.Spec.EnableIPv6, frontend.MySQLPort),
+		"--postgres-addr", common.GetBindAddress(b.Cluster.Spec.EnableIPv6, frontend.PostgreSQLPort),
 		"--config-file", path.Join(constant.GreptimeDBConfigDir, constant.GreptimeDBConfigFileName),
-		"--internal-rpc-bind-addr", fmt.Sprintf("0.0.0.0:%d", frontend.InternalPort),
+		"--internal-rpc-bind-addr", common.GetBindAddress(b.Cluster.Spec.EnableIPv6, frontend.InternalPort),
 		"--internal-rpc-server-addr", fmt.Sprintf("$(%s):%d", deployer.EnvPodIP, frontend.InternalPort),
 	}
 

@@ -26,6 +26,7 @@ The following examples suppose that you have installed the etcd cluster in the `
 - [Datanode Groups](./cluster/datanode-groups/cluster.yaml): Create a GreptimeDB cluster with datanode groups.
 - [Dedicated Cache Volume](./cluster/dedicated-cache-volume/cluster.yaml): Create a GreptimeDB cluster with dedicated cache volume.
 - [Configure Tracing](./cluster/configure-tracing/cluster.yaml): Create a GreptimeDB cluster with custom tracing configuration.
+- [Enable IPv6](./cluster/enable-ipv6/cluster.yaml): Create a GreptimeDB cluster with IPv6 support enabled.
 
 ## Standalone
 
@@ -36,3 +37,4 @@ The following examples suppose that you have installed the etcd cluster in the `
 - [AZBlob](./standalone/azblob/standalone.yaml): Create a GreptimeDB standalone with Azure Blob storage.
 - [Configure Tracing](./standalone/configure-tracing/standalone.yaml): Create a GreptimeDB standalone with custom tracing configuration.
 - [Prometheus Monitoring](./standalone/prometheus-monitor/standalone.yaml): Create a GreptimeDB standalone with Prometheus monitoring. Please ensure you have already installed prometheus-operator and created a Prometheus instance with the label `release=prometheus`.
+- [Enable IPv6](./standalone/enable-ipv6/standalone.yaml): Create a GreptimeDB standalone instance with IPv6 support enabled.

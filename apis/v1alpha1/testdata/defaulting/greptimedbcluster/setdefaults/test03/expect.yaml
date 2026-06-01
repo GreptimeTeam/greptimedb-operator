@@ -33,6 +33,7 @@ spec:
   rpcPort: 4001
   mysqlPort: 4002
   postgreSQLPort: 4003
+  enableIPv6: true
   tracing:
     headers:
       x-greptime-hint-ttl: 30d
@@ -108,6 +109,7 @@ spec:
     logsCollection: {}
     standalone:
       replicas: 1
+      enableIPv6: true
       base:
         main:
           image: greptime/greptimedb:latest

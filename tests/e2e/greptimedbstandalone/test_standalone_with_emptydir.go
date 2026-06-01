@@ -30,8 +30,8 @@ import (
 	"github.com/GreptimeTeam/greptimedb-operator/tests/e2e/helper"
 )
 
-// TestClusterWithEmptyDir tests a standalone with empty dir..
-func TestClusterWithEmptyDir(ctx context.Context, h *helper.Helper) {
+// TestStandaloneWithEmptyDir tests a standalone with empty dir.
+func TestStandaloneWithEmptyDir(ctx context.Context, h *helper.Helper) {
 	const (
 		testCRFile  = "./testdata/resources/standalone/use-empty-dir/standalone.yaml"
 		testSQLFile = "./testdata/sql/standalone/basic.sql"

@@ -25,7 +25,7 @@ const (
 	defaultHealthProbeAddr         = ":9494"
 	defaultAdmissionWebhookPort    = 8082
 	defaultAdmissionWebhookCertDir = "/etc/webhook-tls"
-	defaultProfilingPort           = 8083
+	defaultProfilingAddress        = "0.0.0.0:8083"
 )
 
 type Options struct {
@@ -42,7 +42,7 @@ type Options struct {
 	AdmissionWebhookPort    int
 	AdmissionWebhookCertDir string
 	EnableProfiling         bool
-	ProfilingPort           int32
+	ProfilingAddress        string
 }
 
 func NewDefaultOptions() *Options {
@@ -55,7 +55,7 @@ func NewDefaultOptions() *Options {
 		AdmissionWebhookPort:    defaultAdmissionWebhookPort,
 		AdmissionWebhookCertDir: defaultAdmissionWebhookCertDir,
 		EnableProfiling:         false,
-		ProfilingPort:           defaultProfilingPort,
+		ProfilingAddress:        defaultProfilingAddress,
 	}
 }
 
@@ -71,5 +71,5 @@ func (o *Options) AddFlags(fs *pflag.FlagSet) {
 	fs.IntVar(&o.AdmissionWebhookPort, "admission-webhook-port", o.AdmissionWebhookPort, "The port the admission webhook binds to.")
 	fs.StringVar(&o.AdmissionWebhookCertDir, "admission-webhook-cert-dir", o.AdmissionWebhookCertDir, "The directory that contains the server key and certificate.")
 	fs.BoolVar(&o.EnableProfiling, "enable-profiling", o.EnableProfiling, "Enable pprof performance profiling (exposes /debug/pprof endpoints).")
-	fs.Int32Var(&o.ProfilingPort, "profiling-port", o.ProfilingPort, "The port that pprof profiling HTTP server binds to (e.g., for accessing /debug/pprof).")
+	fs.StringVar(&o.ProfilingAddress, "profiling-address", o.ProfilingAddress, "The address that pprof profiling HTTP server binds to (e.g., for accessing /debug/pprof).")
 }

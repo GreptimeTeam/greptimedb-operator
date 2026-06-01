@@ -1,0 +1,59 @@
+apiVersion: greptime.io/v1alpha1
+kind: GreptimeDBStandalone
+metadata:
+  name: test01
+  namespace: default
+spec:
+  version: v1.0.0
+  httpPort: 4000
+  mysqlPort: 4002
+  postgreSQLPort: 4003
+  rpcPort: 4001
+  enableIPv6: true
+  replicas: 1
+  configMergeStrategy: ConfigMergeStrategyInjectedDataFirst
+  base:
+    main:
+      image: greptime/greptimedb:v1.0.0
+      livenessProbe:
+        httpGet:
+          path: /health
+          port: 4000
+        periodSeconds: 5
+        failureThreshold: 10
+      readinessProbe:
+        httpGet:
+          path: /health
+          port: 4000
+        periodSeconds: 5
+        failureThreshold: 10
+      startupProbe:
+        httpGet:
+          path: /health
+          port: 4000
+        periodSeconds: 5
+        failureThreshold: 60
+  service:
+    type: ClusterIP
+  logging:
+    format: text
+    level: info
+    logsDir: /data/greptimedb/logs
+    onlyLogToStdout: false
+    persistentWithData: false
+  datanodeStorage:
+    dataHome: /data/greptimedb
+    fs:
+      name: datanode
+      mountPath: /data/greptimedb
+      storageRetainPolicy: Retain
+      storageSize: 10Gi
+  rollingUpdate:
+    maxUnavailable: 1
+    partition: 0
+  slowQuery:
+    enabled: true
+    recordType: system_table
+    sampleRatio: "1.0"
+    threshold: 30s
+    ttl: 90d

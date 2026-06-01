@@ -10223,6 +10223,9 @@ spec:
                       type: object
                   type: object
                 type: array
+              enableIPv6:
+                default: false
+                type: boolean
               flownode:
                 properties:
                   config:
@@ -27409,6 +27412,9 @@ spec:
                                 type: boolean
                             type: object
                         type: object
+                      enableIPv6:
+                        default: false
+                        type: boolean
                       httpPort:
                         format: int32
                         maximum: 65535
@@ -31479,6 +31485,9 @@ spec:
                         type: boolean
                     type: object
                 type: object
+              enableIPv6:
+                default: false
+                type: boolean
               httpPort:
                 format: int32
                 maximum: 65535

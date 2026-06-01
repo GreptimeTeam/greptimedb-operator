@@ -440,10 +440,10 @@ func (b *standaloneBuilder) containerPorts() []corev1.ContainerPort {
 func (b *standaloneBuilder) generateMainContainerArgs() []string {
 	var args = []string{
 		"standalone", "start",
-		"--rpc-bind-addr", fmt.Sprintf("0.0.0.0:%d", b.standalone.Spec.RPCPort),
-		"--mysql-addr", fmt.Sprintf("0.0.0.0:%d", b.standalone.Spec.MySQLPort),
-		"--http-addr", fmt.Sprintf("0.0.0.0:%d", b.standalone.Spec.HTTPPort),
-		"--postgres-addr", fmt.Sprintf("0.0.0.0:%d", b.standalone.Spec.PostgreSQLPort),
+		"--rpc-bind-addr", common.GetBindAddress(b.standalone.Spec.EnableIPv6, b.standalone.Spec.RPCPort),
+		"--mysql-addr", common.GetBindAddress(b.standalone.Spec.EnableIPv6, b.standalone.Spec.MySQLPort),
+		"--http-addr", common.GetBindAddress(b.standalone.Spec.EnableIPv6, b.standalone.Spec.HTTPPort),
+		"--postgres-addr", common.GetBindAddress(b.standalone.Spec.EnableIPv6, b.standalone.Spec.PostgreSQLPort),
 		"--config-file", path.Join(constant.GreptimeDBConfigDir, constant.GreptimeDBConfigFileName),
 	}
 

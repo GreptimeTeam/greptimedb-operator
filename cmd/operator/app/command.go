@@ -16,7 +16,6 @@ package app
 
 import (
 	"flag"
-	"fmt"
 	"net/http"
 	"net/http/pprof"
 	"os"
@@ -152,9 +151,8 @@ func NewOperatorCommand() *cobra.Command {
 				mux.HandleFunc("/debug/pprof/trace", pprof.Trace)
 
 				go func() {
-					addr := fmt.Sprintf("0.0.0.0:%d", o.ProfilingPort)
-					klog.Infof("Start pprof at %s", addr)
-					if err := http.ListenAndServe(addr, mux); err != nil {
+					klog.Infof("Start pprof at %s", o.ProfilingAddress)
+					if err := http.ListenAndServe(o.ProfilingAddress, mux); err != nil {
 						klog.Fatalf("Failed to start pprof: %v", err)
 					}
 				}()

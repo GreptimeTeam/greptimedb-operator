@@ -53,3 +53,4 @@ spec:
       partition: 1
       maxUnavailable: 25%
   httpPort: 5000
+  enableIPv6: true

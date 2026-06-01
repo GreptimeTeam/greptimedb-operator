@@ -1,0 +1,10 @@
+apiVersion: greptime.io/v1alpha1
+kind: GreptimeDBStandalone
+metadata:
+  name: test01
+  namespace: default
+spec:
+  base:
+    main:
+      image: greptime/greptimedb:v1.0.0
+  enableIPv6: true

@@ -160,6 +160,8 @@ containerdConfigPatches:
 - |-
   [plugins."io.containerd.grpc.v1.cri".registry.mirrors."localhost:${REGISTRY_PORT}"]
     endpoint = ["http://${REGISTRY_NAME}:5000"]
+networking:
+  ipFamily: dual
 nodes:
 - role: control-plane
 - role: worker

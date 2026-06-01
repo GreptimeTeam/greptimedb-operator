@@ -1,0 +1,22 @@
+apiVersion: greptime.io/v1alpha1
+kind: GreptimeDBCluster
+metadata:
+  name: cluster-with-enabled-ipv6
+spec:
+  # Enable IPv6 support for all components
+  enableIPv6: true
+  initializer:
+    image: greptime/greptimedb-initializer:latest
+  base:
+    main:
+      image: greptime/greptimedb:latest
+  frontend:
+    replicas: 1
+  meta:
+    replicas: 1
+    backendStorage:
+      etcd:
+        endpoints:
+          - "etcd.etcd-cluster.svc.cluster.local:2379"
+  datanode:
+    replicas: 1

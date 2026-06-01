@@ -115,14 +115,14 @@ func (c *ConfigGenerator) generateDatanodeConfig(initConfig []byte) ([]byte, err
 	if len(podIP) == 0 {
 		return nil, fmt.Errorf("empty pod ip")
 	}
-	datanodeCfg.RPCBindAddr = ptr.To(fmt.Sprintf("%s:%d", podIP, c.RPCPort))
+	datanodeCfg.RPCBindAddr = ptr.To(generateAddress(podIP, c.RPCPort))
 
 	podName := os.Getenv(deployer.EnvPodName)
 	if len(podName) == 0 {
 		return nil, fmt.Errorf("empty pod name")
 	}
 
-	datanodeCfg.RPCServerAddr = ptr.To(fmt.Sprintf("%s:%d", podIP, c.RPCPort))
+	datanodeCfg.RPCServerAddr = ptr.To(generateAddress(podIP, c.RPCPort))
 
 	return dbconfig.Marshal(cfg, v1alpha1.ConfigMergeStrategyOperatorFirst)
 }
@@ -152,14 +152,14 @@ func (c *ConfigGenerator) generateFlownodeConfig(initConfig []byte) ([]byte, err
 	if len(podIP) == 0 {
 		return nil, fmt.Errorf("empty pod ip")
 	}
-	flownodeCfg.RPCBindAddr = ptr.To(fmt.Sprintf("%s:%d", podIP, c.RPCPort))
+	flownodeCfg.RPCBindAddr = ptr.To(generateAddress(podIP, c.RPCPort))
 
 	podName := os.Getenv(deployer.EnvPodName)
 	if len(podName) == 0 {
 		return nil, fmt.Errorf("empty pod name")
 	}
 
-	flownodeCfg.RPCServerAddr = ptr.To(fmt.Sprintf("%s:%d", podIP, c.RPCPort))
+	flownodeCfg.RPCServerAddr = ptr.To(generateAddress(podIP, c.RPCPort))
 
 	configData, err := dbconfig.Marshal(cfg, v1alpha1.ConfigMergeStrategyOperatorFirst)
 	if err != nil {
@@ -201,4 +201,15 @@ func (c *ConfigGenerator) allocateNodeID() (uint64, error) {
 	}
 
 	return nodeID + uint64(c.StartNodeID), nil
+}
+
+// generateAddress generates a formatted address string with proper IPv6 support.
+func generateAddress(ip string, port int32) string {
+	// Check if IPv6 is enabled via environment variable
+	enableIPv6 := os.Getenv("ENABLE_IPV6") == "true"
+
+	if enableIPv6 {
+		return fmt.Sprintf("[%s]:%d", ip, port)
+	}
+	return fmt.Sprintf("%s:%d", ip, port)
 }
