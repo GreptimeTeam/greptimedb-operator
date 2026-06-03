@@ -10,7 +10,7 @@ sources:
   metrics:
     type: prometheus_scrape
     endpoints:
-      - http://${POD_IP}:4000/metrics
+      - {{ .MetricsEndpoint }}
     instance_tag: instance
     endpoint_tag: endpoint
     honor_labels: true

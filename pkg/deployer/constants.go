@@ -19,4 +19,5 @@ const (
 	EnvPodName      = "POD_NAME"
 	EnvPodNamespace = "POD_NAMESPACE"
 	EnvRole         = "ROLE"
+	EnvEnableIPv6   = "ENABLE_IPV6"
 )

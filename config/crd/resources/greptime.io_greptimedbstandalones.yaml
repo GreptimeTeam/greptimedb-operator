@@ -3397,6 +3397,9 @@ spec:
                         type: boolean
                     type: object
                 type: object
+              enableIPv6:
+                default: false
+                type: boolean
               httpPort:
                 format: int32
                 maximum: 65535

@@ -179,6 +179,12 @@ func (c *CommonBuilder) GenerateVectorConfigMap() (*corev1.ConfigMap, error) {
 		"LoggingService":   fmt.Sprintf("http://%s:%d", svc, v1alpha1.DefaultHTTPPort),
 		"MetricService":    fmt.Sprintf("http://%s:%d/v1/prometheus/write?db=public", svc, v1alpha1.DefaultHTTPPort),
 		"TTL":              c.Cluster.GetMonitoring().TTL,
+		"PodIP":            "${POD_IP}",
+	}
+	if c.Cluster.Spec.EnableIPv6 {
+		vars["MetricsEndpoint"] = fmt.Sprintf("http://[${POD_IP}]:%d/metrics", v1alpha1.DefaultHTTPPort)
+	} else {
+		vars["MetricsEndpoint"] = fmt.Sprintf("http://${POD_IP}:%d/metrics", v1alpha1.DefaultHTTPPort)
 	}
 
 	vectorConfigTemplate, err := c.vectorConfigTemplate()
@@ -257,6 +263,13 @@ func (c *CommonBuilder) env(kind v1alpha1.RoleKind) []corev1.EnvVar {
 		envs = append(envs, corev1.EnvVar{
 			Name:  "OTEL_EXPORTER_OTLP_TRACES_HEADERS",
 			Value: "x-greptime-pipeline-name=greptime_trace_v1",
+		})
+	}
+
+	if c.Cluster.Spec.EnableIPv6 {
+		envs = append(envs, corev1.EnvVar{
+			Name:  deployer.EnvEnableIPv6,
+			Value: "true",
 		})
 	}
 

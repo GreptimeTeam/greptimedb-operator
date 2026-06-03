@@ -24,6 +24,7 @@ import (
 	"github.com/pelletier/go-toml"
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
+	"github.com/GreptimeTeam/greptimedb-operator/controllers/common"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/deployer"
 )
 
@@ -83,7 +84,7 @@ func TestDatanodeConfigGenerator(t *testing.T) {
 	if !ok {
 		t.Fatalf("grpc bind_addr is not string")
 	}
-	wantRPCAddr := fmt.Sprintf("%s:%d", testPodIP, testRPCPort)
+	wantRPCAddr := common.GetBindAddress(false, testRPCPort)
 	if !reflect.DeepEqual(wantRPCAddr, rpcBindAddr) {
 		t.Fatalf("RPCBindAddr is not equal, want: '%s', got: '%s'", wantRPCAddr, rpcBindAddr)
 	}
@@ -143,7 +144,7 @@ func TestFlownodeConfigGenerator(t *testing.T) {
 	if !ok {
 		t.Fatalf("grpc bind_addr is not string")
 	}
-	wantRPCAddr := fmt.Sprintf("%s:%d", testPodIP, testRPCPort)
+	wantRPCAddr := common.GetBindAddress(false, testRPCPort)
 	if !reflect.DeepEqual(wantRPCAddr, rpcBindAddr) {
 		t.Fatalf("RPCBindAddr is not equal, want: '%s', got: '%s'", wantRPCAddr, rpcBindAddr)
 	}

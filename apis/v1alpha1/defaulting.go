@@ -289,6 +289,10 @@ func (in *GreptimeDBCluster) defaultMonitoringStandaloneSpec() *GreptimeDBStanda
 	standalone := new(GreptimeDBStandalone)
 	standalone.Spec = *standalone.defaultSpec()
 
+	if in.Spec.EnableIPv6 {
+		standalone.Spec.EnableIPv6 = true
+	}
+
 	if image := in.GetBaseMainContainer().GetImage(); image != "" {
 		standalone.Spec.Base.MainContainer.Image = image
 	} else {

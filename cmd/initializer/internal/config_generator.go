@@ -24,6 +24,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
+	"github.com/GreptimeTeam/greptimedb-operator/controllers/common"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/dbconfig"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/deployer"
 )
@@ -115,14 +116,16 @@ func (c *ConfigGenerator) generateDatanodeConfig(initConfig []byte) ([]byte, err
 	if len(podIP) == 0 {
 		return nil, fmt.Errorf("empty pod ip")
 	}
-	datanodeCfg.RPCBindAddr = ptr.To(fmt.Sprintf("%s:%d", podIP, c.RPCPort))
+	enableIPv6 := os.Getenv(deployer.EnvEnableIPv6) == "true"
+
+	datanodeCfg.RPCBindAddr = ptr.To(common.GetBindAddress(enableIPv6, c.RPCPort))
 
 	podName := os.Getenv(deployer.EnvPodName)
 	if len(podName) == 0 {
 		return nil, fmt.Errorf("empty pod name")
 	}
 
-	datanodeCfg.RPCServerAddr = ptr.To(fmt.Sprintf("%s:%d", podIP, c.RPCPort))
+	datanodeCfg.RPCServerAddr = ptr.To(common.GetServerAddress(enableIPv6, podIP, c.RPCPort))
 
 	return dbconfig.Marshal(cfg, v1alpha1.ConfigMergeStrategyOperatorFirst)
 }
@@ -152,14 +155,16 @@ func (c *ConfigGenerator) generateFlownodeConfig(initConfig []byte) ([]byte, err
 	if len(podIP) == 0 {
 		return nil, fmt.Errorf("empty pod ip")
 	}
-	flownodeCfg.RPCBindAddr = ptr.To(fmt.Sprintf("%s:%d", podIP, c.RPCPort))
+	enableIPv6 := os.Getenv(deployer.EnvEnableIPv6) == "true"
+
+	flownodeCfg.RPCBindAddr = ptr.To(common.GetBindAddress(enableIPv6, c.RPCPort))
 
 	podName := os.Getenv(deployer.EnvPodName)
 	if len(podName) == 0 {
 		return nil, fmt.Errorf("empty pod name")
 	}
 
-	flownodeCfg.RPCServerAddr = ptr.To(fmt.Sprintf("%s:%d", podIP, c.RPCPort))
+	flownodeCfg.RPCServerAddr = ptr.To(common.GetServerAddress(enableIPv6, podIP, c.RPCPort))
 
 	configData, err := dbconfig.Marshal(cfg, v1alpha1.ConfigMergeStrategyOperatorFirst)
 	if err != nil {

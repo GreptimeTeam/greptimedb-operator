@@ -1,9 +1,24 @@
 mode = 'distributed'
-enable_memory_catalog = false
-node_id = 42
-rpc_bind_addr = '127.0.0.1:3001'
-rpc_server_addr = '127.0.0.1'
-rpc_runtime_size = 8
+[grpc]
+## The address to bind the gRPC server.
+bind_addr = "127.0.0.1:3001"
+## The address advertised to the metasrv, and used for connections from outside the host.
+## If left empty or unset, the server will automatically use the IP address of the first network interface
+## on the host, with the same port number as the one specified in `grpc.bind_addr`.
+server_addr = "127.0.0.1:3001"
+## The number of server worker threads.
+runtime_size = 8
+## The maximum receive message size for gRPC server.
+max_recv_message_size = "512MB"
+## The maximum send message size for gRPC server.
+max_send_message_size = "512MB"
+## Compression mode for datanode side Arrow IPC service. Available options:
+## - `none`: disable all compression
+## - `transport`: only enable gRPC transport compression (zstd)
+## - `arrow_ipc`: only enable Arrow IPC compression (lz4)
+## - `all`: enable all compression.
+## Default to `none`
+flight_compression = "arrow_ipc"
 
 [meta_client_options]
 metasrv_addrs = ['127.0.0.1:3002']

@@ -18,6 +18,7 @@ spec:
     enableRegionFailover: true
   datanode:
     replicas: 1
+  enableIPv6: true
   objectStorage:
     s3:
       bucket: greptimedb

@@ -378,9 +378,9 @@ func (b *metaBuilder) generatePodTemplateSpec() *corev1.PodTemplateSpec {
 func (b *metaBuilder) generateMainContainerArgs() []string {
 	return []string{
 		"metasrv", "start",
-		"--rpc-bind-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.Meta.RPCPort),
-		"--http-addr", fmt.Sprintf("0.0.0.0:%d", b.Cluster.Spec.Meta.HTTPPort),
-		"--rpc-server-addr", fmt.Sprintf("$(%s):%d", deployer.EnvPodIP, b.Cluster.Spec.Meta.RPCPort),
+		"--rpc-bind-addr", common.GetBindAddress(b.Cluster.Spec.EnableIPv6, b.Cluster.Spec.Meta.RPCPort),
+		"--http-addr", common.GetBindAddress(b.Cluster.Spec.EnableIPv6, b.Cluster.Spec.Meta.HTTPPort),
+		"--rpc-server-addr", common.GetServerAddress(b.Cluster.Spec.EnableIPv6, fmt.Sprintf("$(%s)", deployer.EnvPodIP), b.Cluster.Spec.Meta.RPCPort),
 		"--config-file", path.Join(constant.GreptimeDBConfigDir, constant.GreptimeDBConfigFileName),
 	}
 }

@@ -582,7 +582,7 @@ func (b *datanodeBuilder) generateMainContainerArgs(spec *v1alpha1.DatanodeSpec)
 		"datanode", "start",
 		"--metasrv-addrs", fmt.Sprintf("%s.%s:%d", common.ResourceName(b.Cluster.Name, v1alpha1.MetaRoleKind),
 			b.Cluster.Namespace, b.Cluster.Spec.Meta.RPCPort),
-		"--http-addr", fmt.Sprintf("0.0.0.0:%d", spec.HTTPPort),
+		"--http-addr", common.GetBindAddress(b.Cluster.Spec.EnableIPv6, spec.HTTPPort),
 		"--config-file", path.Join(constant.GreptimeDBConfigDir, constant.GreptimeDBConfigFileName),
 	}
 }

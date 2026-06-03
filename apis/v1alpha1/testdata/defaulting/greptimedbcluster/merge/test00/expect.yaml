@@ -12,6 +12,7 @@ spec:
   mysqlPort: 4002
   postgreSQLPort: 4003
   configMergeStrategy: ConfigMergeStrategyInjectedDataFirst
+  enableIPv6: true
   logging:
     format: text
     level: info

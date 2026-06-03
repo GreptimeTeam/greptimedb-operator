@@ -1,0 +1,10 @@
+apiVersion: greptime.io/v1alpha1
+kind: GreptimeDBStandalone
+metadata:
+  name: e2e-standalone-enable-ipv6
+  namespace: default
+spec:
+  enableIPv6: true
+  base:
+    main:
+      image: localhost:5001/greptime/greptimedb:latest
