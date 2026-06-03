@@ -248,7 +248,7 @@ func (b *flownodeBuilder) generateMainContainerArgs() []string {
 	return []string{
 		"flownode", "start",
 		"--rpc-bind-addr", common.GetBindAddress(b.Cluster.Spec.EnableIPv6, b.Cluster.Spec.Flownode.RPCPort),
-		"--rpc-server-addr", fmt.Sprintf("$(%s):%d", deployer.EnvPodIP, b.Cluster.Spec.Flownode.RPCPort),
+		"--rpc-server-addr", common.GetServerAddress(b.Cluster.Spec.EnableIPv6, fmt.Sprintf("$(%s)", deployer.EnvPodIP), b.Cluster.Spec.Flownode.RPCPort),
 		"--http-addr", common.GetBindAddress(b.Cluster.Spec.EnableIPv6, b.Cluster.Spec.Flownode.HTTPPort),
 		"--metasrv-addrs", fmt.Sprintf("%s.%s:%d", common.ResourceName(b.Cluster.Name, v1alpha1.MetaRoleKind), b.Cluster.Namespace, b.Cluster.Spec.Meta.RPCPort),
 		"--config-file", path.Join(constant.GreptimeDBConfigDir, constant.GreptimeDBConfigFileName),

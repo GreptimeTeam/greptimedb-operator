@@ -405,7 +405,7 @@ func (b *frontendBuilder) generateMainContainerArgs(frontend *v1alpha1.FrontendS
 	var args = []string{
 		"frontend", "start",
 		"--rpc-bind-addr", common.GetBindAddress(b.Cluster.Spec.EnableIPv6, frontend.RPCPort),
-		"--rpc-server-addr", fmt.Sprintf("$(%s):%d", deployer.EnvPodIP, frontend.RPCPort),
+		"--rpc-server-addr", common.GetServerAddress(b.Cluster.Spec.EnableIPv6, fmt.Sprintf("$(%s)", deployer.EnvPodIP), frontend.RPCPort),
 		"--metasrv-addrs", fmt.Sprintf("%s.%s:%d", common.ResourceName(b.Cluster.Name, v1alpha1.MetaRoleKind),
 			b.Cluster.Namespace, b.Cluster.Spec.Meta.RPCPort),
 		"--http-addr", common.GetBindAddress(b.Cluster.Spec.EnableIPv6, frontend.HTTPPort),
@@ -413,7 +413,7 @@ func (b *frontendBuilder) generateMainContainerArgs(frontend *v1alpha1.FrontendS
 		"--postgres-addr", common.GetBindAddress(b.Cluster.Spec.EnableIPv6, frontend.PostgreSQLPort),
 		"--config-file", path.Join(constant.GreptimeDBConfigDir, constant.GreptimeDBConfigFileName),
 		"--internal-rpc-bind-addr", common.GetBindAddress(b.Cluster.Spec.EnableIPv6, frontend.InternalPort),
-		"--internal-rpc-server-addr", fmt.Sprintf("$(%s):%d", deployer.EnvPodIP, frontend.InternalPort),
+		"--internal-rpc-server-addr", common.GetServerAddress(b.Cluster.Spec.EnableIPv6, fmt.Sprintf("$(%s)", deployer.EnvPodIP), frontend.InternalPort),
 	}
 
 	if frontend.TLS != nil {

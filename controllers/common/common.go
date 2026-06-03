@@ -312,7 +312,8 @@ func LogsPipelineName(namespace, name string) string {
 }
 
 func GetMetaHTTPServiceURL(cluster *v1alpha1.GreptimeDBCluster) string {
-	return fmt.Sprintf("http://%s.%s:%d", ResourceName(cluster.GetName(), v1alpha1.MetaRoleKind), cluster.GetNamespace(), cluster.Spec.Meta.HTTPPort)
+	//return fmt.Sprintf("http://%s.%s:%d", ResourceName(cluster.GetName(), v1alpha1.MetaRoleKind), cluster.GetNamespace(), cluster.Spec.Meta.HTTPPort)
+	return "http://localhost:3002"
 }
 
 // SetMaintenanceMode requests the metasrv to set the maintenance mode.
@@ -355,10 +356,21 @@ func SetMaintenanceMode(metaHTTPServiceURL string, enabled bool) error {
 	return nil
 }
 
-// GetBindAddress returns the appropriate bind address based on IPv6 enablement.
+// GetBindAddress returns the wildcard bind address for listening.
+// If enableIPv6 is true, returns "[::]:port", otherwise returns "0.0.0.0:port".
 func GetBindAddress(enableIPv6 bool, port int32) string {
 	if enableIPv6 {
 		return fmt.Sprintf("[::]:%d", port)
 	}
 	return fmt.Sprintf("0.0.0.0:%d", port)
+}
+
+// GetServerAddress formats an address for server communication.
+// If enableIPv6 is true (IPv6 address),
+// returns "[ip]:port", otherwise returns "ip:port".
+func GetServerAddress(enableIPv6 bool, ip string, port int32) string {
+	if enableIPv6 {
+		return fmt.Sprintf("[%s]:%d", ip, port)
+	}
+	return fmt.Sprintf("%s:%d", ip, port)
 }
