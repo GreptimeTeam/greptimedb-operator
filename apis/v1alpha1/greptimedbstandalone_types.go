@@ -110,7 +110,7 @@ type GreptimeDBStandaloneSpec struct {
 	// +optional
 	ConfigMergeStrategy ConfigMergeStrategy `json:"configMergeStrategy,omitempty"`
 
-	// EnableIPv6 enables IPv6 support for all components in the cluster.
+	// EnableIPv6 enables IPv6 support for the standalone instance.
 	// When true, all components will use "[::]:port" as the bind address.
 	// When false or omitted, they will use "0.0.0.0:port".
 	// +optional

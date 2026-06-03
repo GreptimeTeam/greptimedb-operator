@@ -116,7 +116,7 @@ func (c *ConfigGenerator) generateDatanodeConfig(initConfig []byte) ([]byte, err
 	if len(podIP) == 0 {
 		return nil, fmt.Errorf("empty pod ip")
 	}
-	enableIPv6 := os.Getenv("ENABLE_IPV6") == "true"
+	enableIPv6 := os.Getenv(deployer.EnvEnableIPv6) == "true"
 
 	datanodeCfg.RPCBindAddr = ptr.To(common.GetBindAddress(enableIPv6, c.RPCPort))
 
@@ -155,7 +155,7 @@ func (c *ConfigGenerator) generateFlownodeConfig(initConfig []byte) ([]byte, err
 	if len(podIP) == 0 {
 		return nil, fmt.Errorf("empty pod ip")
 	}
-	enableIPv6 := os.Getenv("ENABLE_IPV6") == "true"
+	enableIPv6 := os.Getenv(deployer.EnvEnableIPv6) == "true"
 
 	flownodeCfg.RPCBindAddr = ptr.To(common.GetBindAddress(enableIPv6, c.RPCPort))
 

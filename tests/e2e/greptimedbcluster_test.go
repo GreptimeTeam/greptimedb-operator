@@ -86,6 +86,6 @@ var _ = Describe("Test GreptimeDBCluster", func() {
 	})
 
 	It("Test a cluster with enable ipv6", func() {
-		greptimedbcluster.TestClusterWithEnableIPV6(ctx, h)
+		greptimedbcluster.TestClusterWithEnableIPv6(ctx, h)
 	})
 })

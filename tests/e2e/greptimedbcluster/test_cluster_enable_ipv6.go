@@ -30,8 +30,8 @@ import (
 	"github.com/GreptimeTeam/greptimedb-operator/tests/e2e/helper"
 )
 
-// TestClusterWithEnableIPV6 tests a basic cluster.
-func TestClusterWithEnableIPV6(ctx context.Context, h *helper.Helper) {
+// TestClusterWithEnableIPv6 tests a cluster with IPv6 enabled.
+func TestClusterWithEnableIPv6(ctx context.Context, h *helper.Helper) {
 	const (
 		testCRFile  = "./testdata/resources/cluster/enable-ipv6/cluster.yaml"
 		testSQLFile = "./testdata/sql/cluster/partition.sql"
