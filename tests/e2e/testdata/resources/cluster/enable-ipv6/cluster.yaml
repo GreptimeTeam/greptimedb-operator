@@ -10,8 +10,7 @@ spec:
     #image: localhost:5001/greptime/greptimedb-initializer:latest
   base:
     main:
-      image: greptime/greptimedb-dev:dev-20260603-1780456124-fd6494e5
-      #image: localhost:5001/greptime/greptimedb:latest
+      image: localhost:5001/greptime/greptimedb:latest
   frontend:
     replicas: 1
   meta:
