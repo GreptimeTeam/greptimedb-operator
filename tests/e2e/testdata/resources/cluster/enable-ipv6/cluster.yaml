@@ -6,11 +6,12 @@ metadata:
 spec:
   enableIPv6: true
   initializer:
-    image: greptime/greptimedb-initializer-dev:latest
+    image: greptime/greptimedb-initializer-dev:dev-20260603-1780477848-5a2d6bad
     #image: localhost:5001/greptime/greptimedb-initializer:latest
   base:
     main:
-      image: localhost:5001/greptime/greptimedb:latest
+      image: greptime/greptimedb-dev:dev-20260603-1780456124-fd6494e5
+      #image: localhost:5001/greptime/greptimedb:latest
   frontend:
     replicas: 1
   meta:
