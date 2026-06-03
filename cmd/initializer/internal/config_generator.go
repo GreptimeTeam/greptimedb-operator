@@ -20,11 +20,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/GreptimeTeam/greptimedb-operator/controllers/common"
 	"k8s.io/klog/v2"
 	"k8s.io/utils/ptr"
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
+	"github.com/GreptimeTeam/greptimedb-operator/controllers/common"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/dbconfig"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/deployer"
 )
