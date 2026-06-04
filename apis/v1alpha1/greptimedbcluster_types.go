@@ -686,7 +686,7 @@ type MonitoringSpec struct {
 	// +required
 	Enabled bool `json:"enabled"`
 
-	// TTL is the default retention time for monitoring data., Default to `30d`.
+	// TTL is the default retention time for monitoring data, default to `30d`.
 	// +optional
 	// +kubebuilder:validation:Pattern="^([0-9]+(\\.[0-9]+)?(ns|us|µs|ms|s|m|h|d))+$"
 	TTL string `json:"ttl,omitempty"`

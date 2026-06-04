@@ -6,8 +6,7 @@ spec:
   # Enable IPv6 support for all components
   enableIPv6: true
   initializer:
-    image: greptime/greptimedb-initializer-dev:dev-20260603-1780477848-5a2d6bad
-    #image: greptime/greptimedb-initializer:latest
+    image: greptime/greptimedb-initializer:latest
   base:
     main:
       image: greptime/greptimedb:latest
