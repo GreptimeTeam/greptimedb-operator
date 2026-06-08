@@ -843,7 +843,7 @@ _Appears in:_
 | Field | Description | Default | Validation |
 | --- | --- | --- | --- |
 | `enabled` _boolean_ | Enabled indicates whether to enable the monitoring service. |  |  |
-| `ttl` _string_ | TTL is the default retention time for monitoring data., Default to `30d`. |  | Pattern: `^([0-9]+(\.[0-9]+)?(ns\|us\|µs\|ms\|s\|m\|h\|d))+$` <br /> |
+| `ttl` _string_ | TTL is the default retention time for monitoring data, default to `30d`. |  | Pattern: `^([0-9]+(\.[0-9]+)?(ns\|us\|µs\|ms\|s\|m\|h\|d))+$` <br /> |
 | `standalone` _[GreptimeDBStandaloneSpec](#greptimedbstandalonespec)_ | The specification of the standalone greptimedb instance. |  |  |
 | `logsCollection` _[LogsCollectionSpec](#logscollectionspec)_ | The specification of cluster logs collection. |  |  |
 | `vector` _[VectorSpec](#vectorspec)_ | The specification of the vector instance. |  |  |
