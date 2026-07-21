@@ -58,6 +58,9 @@ const (
 	// DefaultLogsDir is the default directory for the logs.
 	DefaultLogsDir = DefaultDataHome + "/logs"
 
+	// DefaultAuditLogsDir is the default directory for the audit logs.
+	DefaultAuditLogsDir = DefaultDataHome + "/audit-logs"
+
 	// DefaultStorageRetainPolicyType is the default storage retain policy type.
 	DefaultStorageRetainPolicyType = StorageRetainPolicyTypeRetain
 

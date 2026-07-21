@@ -150,7 +150,7 @@ func (in *GreptimeDBCluster) defaultSpec() *GreptimeDBClusterSpec {
 	}
 
 	if in.GetFlownode() != nil {
-		defaultSpec.Flownode = in.defaultFlownodeSpec()
+		defaultSpec.Flownode = in.defaultFlownode()
 	}
 
 	if in.GetDatanode() != nil {
@@ -224,6 +224,10 @@ func (in *GreptimeDBCluster) defaultFrontend() *FrontendSpec {
 		defaultSpec.Replicas = ptr.To(int32(DefaultReplicas))
 	}
 
+	if in.GetFrontend().GetAuditLog() != nil && in.GetFrontend().GetAuditLog().Enabled {
+		defaultSpec.AuditLog = defaultAuditLog()
+	}
+
 	return defaultSpec
 }
 
@@ -267,7 +271,7 @@ func (in *GreptimeDBCluster) defaultDatanode() *DatanodeSpec {
 	return defaultSpec
 }
 
-func (in *GreptimeDBCluster) defaultFlownodeSpec() *FlownodeSpec {
+func (in *GreptimeDBCluster) defaultFlownode() *FlownodeSpec {
 	defaultSpec := &FlownodeSpec{
 		ComponentSpec: ComponentSpec{
 			Template: &PodTemplateSpec{},
@@ -467,6 +471,18 @@ func defaultSlowQuery() *SlowQuery {
 		SampleRatio: "1.0",
 		TTL:         "90d",
 		RecordType:  SlowQueryRecordTypeSystemTable,
+	}
+}
+
+func defaultAuditLog() *AuditLogSpec {
+	return &AuditLogSpec{
+		Enabled:     true,
+		Dir:         DefaultAuditLogsDir,
+		Sources:     "all",
+		Classes:     "all",
+		Commands:    "all",
+		ObjectTypes: "all",
+		MaxLogFiles: ptr.To(int32(30)),
 	}
 }
 

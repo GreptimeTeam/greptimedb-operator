@@ -334,6 +334,11 @@ type FrontendSpec struct {
 	// Default to false.
 	// +optional
 	EnableObjectStorage *bool `json:"enableObjectStorage,omitempty"`
+
+	// AuditLog configures audit logging for the frontend
+	// This configuration use for GreptimeDB Enterprise, please do not enable it in OSS versions.
+	// +optional
+	AuditLog *AuditLogSpec `json:"auditLog,omitempty"`
 }
 
 var _ RoleSpec = &FrontendSpec{}
@@ -400,6 +405,13 @@ func (in *FrontendSpec) GetTracing() *TracingSpec {
 func (in *FrontendSpec) GetSlowQuery() *SlowQuery {
 	if in != nil {
 		return in.SlowQuery
+	}
+	return nil
+}
+
+func (in *FrontendSpec) GetAuditLog() *AuditLogSpec {
+	if in != nil {
+		return in.AuditLog
 	}
 	return nil
 }

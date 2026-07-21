@@ -7,6 +7,13 @@ sources:
       - /logs/greptimedb.*
     max_read_bytes: 536870912
 
+  audit_logs:
+    type: file
+    data_dir: /audit-logs
+    include:
+      - /audit-logs/*
+    max_read_bytes: 536870912
+
   metrics:
     type: prometheus_scrape
     endpoints:
@@ -41,6 +48,24 @@ transforms:
         .err = .fields.err
       }
 
+  transform_audit_logs:
+    type: remap
+    inputs:
+      - audit_logs
+    source: |
+      . = parse_json!(.message)
+      .pod = "${POD_NAME}"
+      .pod_ip = "${POD_IP}"
+      .namespace = "${POD_NAMESPACE}"
+      .cluster = "{{ .ClusterName }}"
+      .role = "${ROLE}"
+      if exists(.time) {
+        .timestamp = .time
+      }
+      if exists(.object_names) && is_array(.object_names) {
+        .object_names = to_string!(.object_names)
+      }
+
   add_metrics_labels:
     type: remap
     inputs:
@@ -59,6 +84,17 @@ sinks:
     inputs:
       - transform_logs
     endpoint: {{ .LoggingService }}
+    extra_headers:
+      x-greptime-hint-ttl: {{ .TTL }}
+
+  sink_greptimedb_audit_logs:
+    type: greptimedb_logs
+    table: { { .AuditLogsTableName } }
+    pipeline_name: { { .AuditLogsPipelineName } }
+    compression: gzip
+    inputs:
+      - transform_audit_logs
+    endpoint: { { .LoggingService } }
     extra_headers:
       x-greptime-hint-ttl: {{ .TTL }}
 

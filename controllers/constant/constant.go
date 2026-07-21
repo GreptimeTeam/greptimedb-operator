@@ -37,4 +37,7 @@ const (
 
 	// DefaultLogsVolumeName is the default name of logs volume.
 	DefaultLogsVolumeName = "logs"
+
+	// AuditLogsTableName is the table name of storing greptimedb audit logs.
+	AuditLogsTableName = "_gt_audit_logs"
 )

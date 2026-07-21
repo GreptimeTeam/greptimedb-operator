@@ -173,13 +173,15 @@ func (c *CommonBuilder) GenerateVectorConfigMap() (*corev1.ConfigMap, error) {
 	standaloneName := common.ResourceName(c.Cluster.Name+"-monitor", v1alpha1.StandaloneRoleKind)
 	svc := fmt.Sprintf("%s.%s.svc.cluster.local", standaloneName, c.Cluster.Namespace)
 	vars := map[string]string{
-		"ClusterName":      c.Cluster.Name,
-		"LogsTableName":    constant.LogsTableName,
-		"LogsPipelineName": common.LogsPipelineName(c.Cluster.Namespace, c.Cluster.Name),
-		"LoggingService":   fmt.Sprintf("http://%s:%d", svc, v1alpha1.DefaultHTTPPort),
-		"MetricService":    fmt.Sprintf("http://%s:%d/v1/prometheus/write?db=public", svc, v1alpha1.DefaultHTTPPort),
-		"TTL":              c.Cluster.GetMonitoring().TTL,
-		"PodIP":            "${POD_IP}",
+		"ClusterName":           c.Cluster.Name,
+		"LogsTableName":         constant.LogsTableName,
+		"LogsPipelineName":      common.LogsPipelineName(c.Cluster.Namespace, c.Cluster.Name),
+		"LoggingService":        fmt.Sprintf("http://%s:%d", svc, v1alpha1.DefaultHTTPPort),
+		"AuditLogsTableName":    constant.AuditLogsTableName,
+		"AuditLogsPipelineName": common.AuditLogsPipelineName(c.Cluster.Namespace, c.Cluster.Name),
+		"MetricService":         fmt.Sprintf("http://%s:%d/v1/prometheus/write?db=public", svc, v1alpha1.DefaultHTTPPort),
+		"TTL":                   c.Cluster.GetMonitoring().TTL,
+		"PodIP":                 "${POD_IP}",
 	}
 	if c.Cluster.Spec.EnableIPv6 {
 		vars["MetricsEndpoint"] = fmt.Sprintf("http://[${POD_IP}]:%d/metrics", v1alpha1.DefaultHTTPPort)
