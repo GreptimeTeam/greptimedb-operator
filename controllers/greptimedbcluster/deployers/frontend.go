@@ -450,9 +450,25 @@ func (b *frontendBuilder) generatePodTemplateSpec(frontend *v1alpha1.FrontendSpe
 		b.AddLogsVolume(podTemplateSpec, logging.GetLogsDir())
 	}
 
+	if auditLog := frontend.GetAuditLog(); auditLog != nil && auditLog.Enabled {
+		b.AddAuditLogsVolume(podTemplateSpec, auditLog.Dir)
+	}
+
 	if b.Cluster.GetMonitoring().IsEnabled() && b.Cluster.GetMonitoring().GetVector() != nil {
 		b.AddVectorConfigVolume(podTemplateSpec)
 		b.AddVectorSidecar(podTemplateSpec, v1alpha1.FrontendRoleKind)
+
+		// Mount the audit log volume to the vector sidecar if audit log is enabled.
+		if frontend.GetAuditLog() != nil && frontend.GetAuditLog().Enabled {
+			sidecarIdx := len(podTemplateSpec.Spec.Containers) - 1
+			podTemplateSpec.Spec.Containers[sidecarIdx].VolumeMounts = append(
+				podTemplateSpec.Spec.Containers[sidecarIdx].VolumeMounts,
+				corev1.VolumeMount{
+					Name:      constant.DefaultAuditLogsVolumeName,
+					MountPath: "/audit-logs",
+				},
+			)
+		}
 	}
 
 	if frontend.TLS != nil {

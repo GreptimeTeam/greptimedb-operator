@@ -1,6 +1,7 @@
 -- FIXME(liyang): The test cases from: https://github.com/GreptimeTeam/greptimedb/blob/main/tests/cases/standalone/common/flow/flow_user_guide.sql
 
-CREATE TABLE ngx_access_log (
+-- user guide example
+CREATE TABLE `ngx_access_log` (
     "client" STRING NULL,
     "ua_platform" STRING NULL,
     "referer" STRING NULL,
@@ -12,10 +13,10 @@ CREATE TABLE ngx_access_log (
     "size" DOUBLE NULL,
     "agent" STRING NULL,
     "access_time" TIMESTAMP(3) NOT NULL,
-    TIME INDEX (access_time)
+    TIME INDEX (`access_time`)
 ) WITH(append_mode = 'true');
 
-CREATE TABLE ngx_statistics (
+CREATE TABLE `ngx_statistics` (
     "status" SMALLINT UNSIGNED NULL,
     "total_logs" BIGINT NULL,
     "min_size" DOUBLE NULL,
@@ -24,7 +25,7 @@ CREATE TABLE ngx_statistics (
     "high_size_count" BIGINT NULL,
     "time_window" TIMESTAMP time index,
     "update_at" TIMESTAMP NULL,
-    PRIMARY KEY (status)
+    PRIMARY KEY (`status`)
 );
 
 CREATE FLOW ngx_aggregation SINK TO ngx_statistics COMMENT 'Aggregate statistics for ngx_access_log' AS
@@ -36,11 +37,11 @@ SELECT
     avg(size) as avg_size,
     sum(
         case
-            when size > 550 then 1
+            when `size` > 550 then 1
             else 0
         end
     ) as high_size_count,
-    date_bin(INTERVAL '1' minutes, access_time) as time_window,
+    date_bin(INTERVAL '1 minutes', access_time) as time_window,
 FROM
     ngx_access_log
 GROUP BY
@@ -185,7 +186,7 @@ CREATE TABLE ngx_country (
 );
 
 /* create flow task to calculate the distinct country */
-CREATE FLOW calc_ngx_country SINK TO ngx_country AS
+CREATE FLOW calc_ngx_country SINK TO ngx_country EVAL INTERVAL '1m' AS
 SELECT
     DISTINCT country,
 FROM
@@ -237,10 +238,10 @@ CREATE TABLE ngx_country (
     PRIMARY KEY(country)
 );
 
-CREATE FLOW calc_ngx_country SINK TO ngx_country AS
+CREATE FLOW calc_ngx_country SINK TO ngx_country EVAL INTERVAL '1m' AS
 SELECT
     DISTINCT country,
-    date_bin(INTERVAL '1' hour, access_time) as time_window,
+    date_bin(INTERVAL '1 hour', access_time) as time_window,
 FROM
     ngx_access_log
 GROUP BY
@@ -296,7 +297,7 @@ CREATE TABLE temp_alerts (
     PRIMARY KEY(sensor_id, loc)
 );
 
-CREATE FLOW temp_monitoring SINK TO temp_alerts AS
+CREATE FLOW temp_monitoring SINK TO temp_alerts EVAL INTERVAL '1m' AS
 SELECT
     sensor_id,
     loc,
@@ -353,7 +354,7 @@ DROP TABLE temp_alerts;
 /* create input table */
 CREATE TABLE ngx_access_log (
     client STRING,
-    stat   INT,
+    stat INT,
     "size" INT,
     access_time TIMESTAMP TIME INDEX
 );
@@ -375,7 +376,7 @@ SELECT
     stat,
     trunc(size, -1) :: INT as bucket_size,
     count(client) AS total_logs,
-    date_bin(INTERVAL '1' minutes, access_time) as time_window,
+    date_bin(INTERVAL '1 minutes', access_time) as time_window,
 FROM
     ngx_access_log
 GROUP BY

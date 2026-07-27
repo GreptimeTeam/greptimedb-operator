@@ -206,10 +206,19 @@ func (d *MonitoringDeployer) pipelines(cluster *v1alpha1.GreptimeDBCluster) ([]*
 		return nil, err
 	}
 
+	auditLogsPipeline, err := d.defaultAuditLogsPipeline()
+	if err != nil {
+		return nil, err
+	}
+
 	return []*pipeline{
 		{
 			name: common.LogsPipelineName(cluster.Namespace, cluster.Name),
 			data: logsPipeline,
+		},
+		{
+			name: common.AuditLogsPipelineName(cluster.Namespace, cluster.Name),
+			data: auditLogsPipeline,
 		},
 	}, nil
 }
@@ -217,6 +226,15 @@ func (d *MonitoringDeployer) pipelines(cluster *v1alpha1.GreptimeDBCluster) ([]*
 // defaultLogsPipeline returns the default pipeline that will be used by the standalone greptimedb instance to collect greptimedb logs.
 func (d *MonitoringDeployer) defaultLogsPipeline() (string, error) {
 	data, err := fs.ReadFile(config.DefaultLogsPipeline, "logs-pipeline.yaml")
+	if err != nil {
+		return "", err
+	}
+	return string(data), nil
+}
+
+// defaultAuditLogsPipeline returns the default pipeline that will be used by the standalone greptimedb instance to collect greptimedb audit logs.
+func (d *MonitoringDeployer) defaultAuditLogsPipeline() (string, error) {
+	data, err := fs.ReadFile(config.DefaultAuditLogsPipeline, "audit-logs-pipeline.yaml")
 	if err != nil {
 		return "", err
 	}

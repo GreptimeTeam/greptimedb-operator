@@ -23,3 +23,6 @@ var VectorConfigTemplate embed.FS
 
 //go:embed logs-pipeline.yaml
 var DefaultLogsPipeline embed.FS
+
+//go:embed audit-logs-pipeline.yaml
+var DefaultAuditLogsPipeline embed.FS

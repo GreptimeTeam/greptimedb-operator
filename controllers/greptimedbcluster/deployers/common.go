@@ -134,6 +134,21 @@ func (c *CommonBuilder) AddLogsVolume(template *corev1.PodTemplateSpec, mountPat
 	})
 }
 
+// AddAuditLogsVolume will create a shared volume for audit logs and mount it to the main container.
+func (c *CommonBuilder) AddAuditLogsVolume(template *corev1.PodTemplateSpec, mountPath string) {
+	template.Spec.Volumes = append(template.Spec.Volumes, corev1.Volume{
+		Name: constant.DefaultAuditLogsVolumeName,
+		VolumeSource: corev1.VolumeSource{
+			EmptyDir: &corev1.EmptyDirVolumeSource{},
+		},
+	})
+
+	template.Spec.Containers[constant.MainContainerIndex].VolumeMounts = append(template.Spec.Containers[constant.MainContainerIndex].VolumeMounts, corev1.VolumeMount{
+		Name:      constant.DefaultAuditLogsVolumeName,
+		MountPath: mountPath,
+	})
+}
+
 func (c *CommonBuilder) AddVectorConfigVolume(template *corev1.PodTemplateSpec) {
 	template.Spec.Volumes = append(template.Spec.Volumes, corev1.Volume{
 		Name: constant.DefaultVectorConfigName,

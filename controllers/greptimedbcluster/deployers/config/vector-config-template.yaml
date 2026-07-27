@@ -89,12 +89,12 @@ sinks:
 
   sink_greptimedb_audit_logs:
     type: greptimedb_logs
-    table: { { .AuditLogsTableName } }
-    pipeline_name: { { .AuditLogsPipelineName } }
+    table: {{ .AuditLogsTableName }}
+    pipeline_name: {{ .AuditLogsPipelineName }}
     compression: gzip
     inputs:
       - transform_audit_logs
-    endpoint: { { .LoggingService } }
+    endpoint: {{ .LoggingService }}
     extra_headers:
       x-greptime-hint-ttl: {{ .TTL }}
 
