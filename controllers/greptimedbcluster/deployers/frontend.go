@@ -196,7 +196,7 @@ func (b *frontendBuilder) BuildService() deployer.Builder {
 	return b
 }
 
-func (b *frontendBuilder) generateDeployment(frontend *v1alpha1.FrontendSpec, enableAuditLogs bool) {
+func (b *frontendBuilder) generateDeployment(frontend *v1alpha1.FrontendSpec) {
 	name := common.ResourceName(b.Cluster.Name, b.RoleKind, frontend.GetName())
 
 	deployment := &appsv1.Deployment{
@@ -247,10 +247,8 @@ func (b *frontendBuilder) BuildDeployment() deployer.Builder {
 		return b
 	}
 
-	var enableAuditLogs bool
 	if b.Cluster.GetMonitoring().IsEnabled() && b.Cluster.GetMonitoring().GetVector() != nil {
-		enableAuditLogs = b.shouldEnableAuditLogs()
-		cm, err := b.GenerateVectorConfigMap(enableAuditLogs)
+		cm, err := b.GenerateVectorConfigMap()
 		if err != nil {
 			b.Err = err
 			return b
@@ -259,12 +257,12 @@ func (b *frontendBuilder) BuildDeployment() deployer.Builder {
 	}
 
 	if b.Cluster.GetFrontend() != nil {
-		b.generateDeployment(b.Cluster.Spec.Frontend, enableAuditLogs)
+		b.generateDeployment(b.Cluster.Spec.Frontend)
 	}
 
 	if len(b.Cluster.GetFrontendGroups()) != 0 {
 		for _, frontend := range b.Cluster.Spec.FrontendGroups {
-			b.generateDeployment(frontend, enableAuditLogs)
+			b.generateDeployment(frontend)
 		}
 	}
 

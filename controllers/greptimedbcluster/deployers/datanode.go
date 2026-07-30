@@ -445,7 +445,7 @@ func (b *datanodeBuilder) BuildStatefulSet() deployer.Builder {
 	}
 
 	if b.Cluster.GetMonitoring().IsEnabled() && b.Cluster.GetMonitoring().GetVector() != nil {
-		cm, err := b.GenerateVectorConfigMap(b.shouldEnableAuditLogs())
+		cm, err := b.GenerateVectorConfigMap()
 		if err != nil {
 			b.Err = err
 			return b

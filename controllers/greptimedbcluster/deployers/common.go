@@ -224,7 +224,7 @@ func (c *CommonBuilder) AddVectorSidecar(template *corev1.PodTemplateSpec, kind 
 	})
 }
 
-func (c *CommonBuilder) GenerateVectorConfigMap(enableAuditLogs bool) (*corev1.ConfigMap, error) {
+func (c *CommonBuilder) GenerateVectorConfigMap() (*corev1.ConfigMap, error) {
 	standaloneName := common.ResourceName(c.Cluster.Name+"-monitor", v1alpha1.StandaloneRoleKind)
 	svc := fmt.Sprintf("%s.%s.svc.cluster.local", standaloneName, c.Cluster.Namespace)
 	vars := map[string]string{
@@ -237,7 +237,7 @@ func (c *CommonBuilder) GenerateVectorConfigMap(enableAuditLogs bool) (*corev1.C
 		"MetricService":         fmt.Sprintf("http://%s:%d/v1/prometheus/write?db=public", svc, v1alpha1.DefaultHTTPPort),
 		"TTL":                   c.Cluster.GetMonitoring().TTL,
 		"PodIP":                 "${POD_IP}",
-		"EnableAuditLogs":       fmt.Sprintf("%v", enableAuditLogs),
+		"EnableAuditLogs":       fmt.Sprintf("%v", c.shouldEnableAuditLogs()),
 	}
 	if c.Cluster.Spec.EnableIPv6 {
 		vars["MetricsEndpoint"] = fmt.Sprintf("http://[${POD_IP}]:%d/metrics", v1alpha1.DefaultHTTPPort)

@@ -364,7 +364,7 @@ func (b *metaBuilder) generatePodTemplateSpec() *corev1.PodTemplateSpec {
 	}
 
 	if b.Cluster.GetMonitoring().IsEnabled() && b.Cluster.GetMonitoring().GetVector() != nil {
-		cm, err := b.GenerateVectorConfigMap(b.shouldEnableAuditLogs())
+		cm, err := b.GenerateVectorConfigMap()
 		if err != nil {
 			b.Err = err
 			return podTemplateSpec
