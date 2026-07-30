@@ -242,66 +242,51 @@ func (c *WALConfig) configureKafka(namespace string, kafka *v1alpha1.KafkaWAL) e
 	return nil
 }
 
-// AuditLogConfig is the configuration for the audit logging plugin.
-type AuditLogConfig struct {
-	// Enable indicates whether audit logging is enabled.
-	Enable *bool `tomlmapping:"plugins.audit_log.enable"`
-
-	// Dir is the directory where audit log files are stored.
-	Dir *string `tomlmapping:"plugins.audit_log.dir"`
-
-	// Sources specifies the allowed sources for audit.
-	// Valid values: unknown, http, grpc, mysql, postgres, or "all".
-	Sources *string `tomlmapping:"plugins.audit_log.sources"`
-
-	// Classes specifies the allowed statement classes.
-	// Valid values: read, write, admin, ddl, misc, or "all".
-	Classes *string `tomlmapping:"plugins.audit_log.classes"`
-
-	// Commands specifies the allowed commands.
-	// Valid values: promql, select, copy, insert, delete, create, alter, truncate, drop, admin, misc, or "all".
-	Commands *string `tomlmapping:"plugins.audit_log.commands"`
-
-	// ObjectTypes specifies the allowed object types.
-	// Valid values: database, table, view, flow, index, misc, trigger, or "all".
-	ObjectTypes *string `tomlmapping:"plugins.audit_log.object_types"`
-
-	// MaxLogFiles is the maximum number of audit log files to retain.
-	MaxLogFiles *int32 `tomlmapping:"plugins.audit_log.max_log_files"`
+// PluginConfig is the configuration for the plugins.
+type PluginConfig struct {
+	// Plugins holds the plugin configuration array.
+	// In TOML, this is rendered as [[plugins]] (array of tables).
+	Plugins []map[string]interface{} `tomlmapping:"plugins"`
 }
 
-func (c *AuditLogConfig) ConfigureAuditLog(spec *v1alpha1.AuditLogSpec) {
+func (c *PluginConfig) ConfigureAuditLog(spec *v1alpha1.AuditLogSpec) {
 	if spec == nil {
 		return
 	}
 
-	if spec.Enabled {
-		c.Enable = ptr.To(spec.Enabled)
+	auditLog := map[string]interface{}{
+		"enable": spec.Enabled,
 	}
 
 	if spec.Dir != "" {
-		c.Dir = ptr.To(spec.Dir)
+		auditLog["dir"] = spec.Dir
 	}
 
 	if spec.Sources != "" {
-		c.Sources = ptr.To(spec.Sources)
+		auditLog["sources"] = spec.Sources
 	}
 
 	if spec.Classes != "" {
-		c.Classes = ptr.To(spec.Classes)
+		auditLog["classes"] = spec.Classes
 	}
 
 	if spec.Commands != "" {
-		c.Commands = ptr.To(spec.Commands)
+		auditLog["commands"] = spec.Commands
 	}
 
 	if spec.ObjectTypes != "" {
-		c.ObjectTypes = ptr.To(spec.ObjectTypes)
+		auditLog["object_types"] = spec.ObjectTypes
 	}
 
 	if spec.MaxLogFiles != nil {
-		c.MaxLogFiles = spec.MaxLogFiles
+		auditLog["max_log_files"] = *spec.MaxLogFiles
 	}
+
+	plugin := map[string]interface{}{
+		"audit_log": auditLog,
+	}
+
+	c.Plugins = append(c.Plugins, plugin)
 }
 
 // LoggingConfig is the configuration for the logging.

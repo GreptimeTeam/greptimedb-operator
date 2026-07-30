@@ -185,7 +185,22 @@ func mergeConfig(input *toml.Tree, config interface{}, strategy v1alpha1.ConfigM
 			}
 		case reflect.Slice:
 			if field.Len() > 0 {
-				input.Set(tag, field.Interface())
+				// If the slice contains maps, convert each map to a *toml.Tree
+				// so that go-toml renders them as [[array_of_tables]].
+				if field.Type().Elem().Kind() == reflect.Map {
+					trees := make([]*toml.Tree, 0, field.Len())
+					for j := 0; j < field.Len(); j++ {
+						elem := field.Index(j).Interface()
+						tree, err := toml.TreeFromMap(elem.(map[string]interface{}))
+						if err != nil {
+							return "", err
+						}
+						trees = append(trees, tree)
+					}
+					input.Set(tag, trees)
+				} else {
+					input.Set(tag, field.Interface())
+				}
 			}
 		case reflect.Map:
 			if !field.IsNil() {

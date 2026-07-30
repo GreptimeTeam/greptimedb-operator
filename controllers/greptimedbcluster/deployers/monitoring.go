@@ -64,7 +64,6 @@ func (d *MonitoringDeployer) NewBuilder(crdObject client.Object) deployer.Builde
 func (d *MonitoringDeployer) Generate(crdObject client.Object) ([]client.Object, error) {
 	objects, err := d.NewBuilder(crdObject).
 		BuildGreptimeDBStandalone().
-		BuildConfigMap().
 		SetControllerAndAnnotation().
 		Generate()
 
@@ -206,21 +205,26 @@ func (d *MonitoringDeployer) pipelines(cluster *v1alpha1.GreptimeDBCluster) ([]*
 		return nil, err
 	}
 
-	auditLogsPipeline, err := d.defaultAuditLogsPipeline()
-	if err != nil {
-		return nil, err
-	}
-
-	return []*pipeline{
+	pipelines := []*pipeline{
 		{
 			name: common.LogsPipelineName(cluster.Namespace, cluster.Name),
 			data: logsPipeline,
 		},
-		{
+	}
+
+	// Only create audit logs pipeline if audit logging is enabled.
+	if auditLog := cluster.GetFrontend().GetAuditLog(); auditLog != nil && auditLog.Enabled {
+		auditLogsPipeline, err := d.defaultAuditLogsPipeline()
+		if err != nil {
+			return nil, err
+		}
+		pipelines = append(pipelines, &pipeline{
 			name: common.AuditLogsPipelineName(cluster.Namespace, cluster.Name),
 			data: auditLogsPipeline,
-		},
-	}, nil
+		})
+	}
+
+	return pipelines, nil
 }
 
 // defaultLogsPipeline returns the default pipeline that will be used by the standalone greptimedb instance to collect greptimedb logs.
@@ -310,26 +314,6 @@ func (b *monitoringBuilder) BuildGreptimeDBStandalone() deployer.Builder {
 	}
 
 	b.Objects = append(b.Objects, standalone)
-
-	return b
-}
-
-func (b *monitoringBuilder) BuildConfigMap() deployer.Builder {
-	if !b.Cluster.GetMonitoring().IsEnabled() || b.Cluster.GetMonitoring().GetVector() == nil {
-		return b
-	}
-
-	if b.Err != nil {
-		return b
-	}
-
-	cm, err := b.GenerateVectorConfigMap()
-	if err != nil {
-		b.Err = err
-		return b
-	}
-
-	b.Objects = append(b.Objects, cm)
 
 	return b
 }

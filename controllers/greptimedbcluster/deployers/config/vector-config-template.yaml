@@ -7,17 +7,19 @@ sources:
       - /logs/greptimedb.*
     max_read_bytes: 536870912
 
+{{ if eq .EnableAuditLogs "true" }}
   audit_logs:
     type: file
     data_dir: /audit-logs
     include:
       - /audit-logs/*
     max_read_bytes: 536870912
+{{ end }}
 
   metrics:
     type: prometheus_scrape
     endpoints:
-      - {{ .MetricsEndpoint }}
+      - "{{ .MetricsEndpoint }}"
     instance_tag: instance
     endpoint_tag: endpoint
     honor_labels: true
@@ -48,6 +50,7 @@ transforms:
         .err = .fields.err
       }
 
+{{ if eq .EnableAuditLogs "true" }}
   transform_audit_logs:
     type: remap
     inputs:
@@ -63,8 +66,9 @@ transforms:
         .timestamp = .time
       }
       if exists(.object_names) && is_array(.object_names) {
-        .object_names = to_string!(.object_names)
+        .object_names = join!(.object_names, ", ")
       }
+{{ end }}
 
   add_metrics_labels:
     type: remap
@@ -87,6 +91,7 @@ sinks:
     extra_headers:
       x-greptime-hint-ttl: {{ .TTL }}
 
+{{ if eq .EnableAuditLogs "true" }}
   sink_greptimedb_audit_logs:
     type: greptimedb_logs
     table: {{ .AuditLogsTableName }}
@@ -97,6 +102,7 @@ sinks:
     endpoint: {{ .LoggingService }}
     extra_headers:
       x-greptime-hint-ttl: {{ .TTL }}
+{{ end }}
 
   sink_greptimedb_metrics:
     type: prometheus_remote_write

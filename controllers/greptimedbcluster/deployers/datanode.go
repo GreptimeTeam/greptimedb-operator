@@ -444,6 +444,15 @@ func (b *datanodeBuilder) BuildStatefulSet() deployer.Builder {
 		return b
 	}
 
+	if b.Cluster.GetMonitoring().IsEnabled() && b.Cluster.GetMonitoring().GetVector() != nil {
+		cm, err := b.GenerateVectorConfigMap(b.shouldEnableAuditLogs())
+		if err != nil {
+			b.Err = err
+			return b
+		}
+		b.Objects = append(b.Objects, cm)
+	}
+
 	if b.Cluster.GetDatanode() != nil {
 		sts, err := b.generateDatanodeStatefulSet(nil, b.Cluster.GetDatanode())
 		if err != nil {
@@ -613,6 +622,7 @@ func (b *datanodeBuilder) generatePodTemplateSpec(spec *v1alpha1.DatanodeSpec, g
 
 	if b.Cluster.GetMonitoring().IsEnabled() && b.Cluster.GetMonitoring().GetVector() != nil {
 		b.AddVectorConfigVolume(podTemplateSpec)
+		b.AddAuditLogsVolumeForVector(podTemplateSpec)
 		b.AddVectorSidecar(podTemplateSpec, v1alpha1.DatanodeRoleKind)
 	}
 

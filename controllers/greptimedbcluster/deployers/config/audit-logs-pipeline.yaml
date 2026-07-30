@@ -10,12 +10,6 @@ transform:
       - pod_ip
       - namespace
       - cluster
-      - user
-      - source
-      - class
-      - command
-      - object_type
-      - object_names
       - statement
     type: string
 

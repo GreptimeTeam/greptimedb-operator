@@ -196,7 +196,7 @@ func (b *frontendBuilder) BuildService() deployer.Builder {
 	return b
 }
 
-func (b *frontendBuilder) generateDeployment(frontend *v1alpha1.FrontendSpec) {
+func (b *frontendBuilder) generateDeployment(frontend *v1alpha1.FrontendSpec, enableAuditLogs bool) {
 	name := common.ResourceName(b.Cluster.Name, b.RoleKind, frontend.GetName())
 
 	deployment := &appsv1.Deployment{
@@ -247,13 +247,24 @@ func (b *frontendBuilder) BuildDeployment() deployer.Builder {
 		return b
 	}
 
+	var enableAuditLogs bool
+	if b.Cluster.GetMonitoring().IsEnabled() && b.Cluster.GetMonitoring().GetVector() != nil {
+		enableAuditLogs = b.shouldEnableAuditLogs()
+		cm, err := b.GenerateVectorConfigMap(enableAuditLogs)
+		if err != nil {
+			b.Err = err
+			return b
+		}
+		b.Objects = append(b.Objects, cm)
+	}
+
 	if b.Cluster.GetFrontend() != nil {
-		b.generateDeployment(b.Cluster.Spec.Frontend)
+		b.generateDeployment(b.Cluster.Spec.Frontend, enableAuditLogs)
 	}
 
 	if len(b.Cluster.GetFrontendGroups()) != 0 {
 		for _, frontend := range b.Cluster.Spec.FrontendGroups {
-			b.generateDeployment(frontend)
+			b.generateDeployment(frontend, enableAuditLogs)
 		}
 	}
 
@@ -457,18 +468,6 @@ func (b *frontendBuilder) generatePodTemplateSpec(frontend *v1alpha1.FrontendSpe
 	if b.Cluster.GetMonitoring().IsEnabled() && b.Cluster.GetMonitoring().GetVector() != nil {
 		b.AddVectorConfigVolume(podTemplateSpec)
 		b.AddVectorSidecar(podTemplateSpec, v1alpha1.FrontendRoleKind)
-
-		// Mount the audit log volume to the vector sidecar if audit log is enabled.
-		if frontend.GetAuditLog() != nil && frontend.GetAuditLog().Enabled {
-			sidecarIdx := len(podTemplateSpec.Spec.Containers) - 1
-			podTemplateSpec.Spec.Containers[sidecarIdx].VolumeMounts = append(
-				podTemplateSpec.Spec.Containers[sidecarIdx].VolumeMounts,
-				corev1.VolumeMount{
-					Name:      constant.DefaultAuditLogsVolumeName,
-					MountPath: "/audit-logs",
-				},
-			)
-		}
 	}
 
 	if frontend.TLS != nil {

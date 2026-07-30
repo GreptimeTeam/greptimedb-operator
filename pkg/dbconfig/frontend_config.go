@@ -36,8 +36,8 @@ type FrontendConfig struct {
 	// TracingConfig is the configuration for the tracing.
 	TracingConfig `tomlmapping:",inline"`
 
-	// AuditLogConfig is the configuration for the audit logging.
-	AuditLogConfig `tomlmapping:",inline"`
+	// PluginConfig is the configuration for the plugins.
+	PluginConfig `tomlmapping:",inline"`
 
 	// InputConfig is from config field of cluster spec.
 	InputConfig string
