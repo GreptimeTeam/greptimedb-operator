@@ -22,4 +22,4 @@ spec:
   monitoring:
     enabled: true
     vector:
-      image: localhost:5001/timberio/vector:nightly-alpine
+      image: localhost:5001/timberio/vector:0.49.0-debian
