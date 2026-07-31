@@ -213,7 +213,7 @@ func (d *MonitoringDeployer) pipelines(cluster *v1alpha1.GreptimeDBCluster) ([]*
 	}
 
 	// Only create audit logs pipeline if audit logging is enabled.
-	if auditLog := cluster.GetFrontend().GetAuditLog(); auditLog != nil && auditLog.Enabled {
+	if IsAuditLogEnabled(cluster) {
 		auditLogsPipeline, err := d.defaultAuditLogsPipeline()
 		if err != nil {
 			return nil, err
