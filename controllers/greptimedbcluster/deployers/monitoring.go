@@ -213,7 +213,7 @@ func (d *MonitoringDeployer) pipelines(cluster *v1alpha1.GreptimeDBCluster) ([]*
 	}
 
 	// Only create audit logs pipeline if audit logging is enabled.
-	if d.isAuditLogEnabled(cluster) {
+	if IsAuditLogEnabled(cluster) {
 		auditLogsPipeline, err := d.defaultAuditLogsPipeline()
 		if err != nil {
 			return nil, err
@@ -225,19 +225,6 @@ func (d *MonitoringDeployer) pipelines(cluster *v1alpha1.GreptimeDBCluster) ([]*
 	}
 
 	return pipelines, nil
-}
-
-// isAuditLogEnabled checks whether audit log is enabled on the frontend or any frontend group.
-func (d *MonitoringDeployer) isAuditLogEnabled(cluster *v1alpha1.GreptimeDBCluster) bool {
-	if auditLog := cluster.GetFrontend().GetAuditLog(); auditLog != nil && auditLog.Enabled {
-		return true
-	}
-	for _, frontend := range cluster.GetFrontendGroups() {
-		if auditLog := frontend.GetAuditLog(); auditLog != nil && auditLog.Enabled {
-			return true
-		}
-	}
-	return false
 }
 
 // defaultLogsPipeline returns the default pipeline that will be used by the standalone greptimedb instance to collect greptimedb logs.

@@ -160,21 +160,6 @@ func (c *CommonBuilder) AddAuditLogsVolumeForVector(template *corev1.PodTemplate
 	})
 }
 
-// shouldEnableAuditLogs checks if any frontend component has audit logging enabled.
-func (c *CommonBuilder) shouldEnableAuditLogs() bool {
-	if c.Cluster.GetFrontend() != nil {
-		if auditLog := c.Cluster.GetFrontend().GetAuditLog(); auditLog != nil && auditLog.Enabled {
-			return true
-		}
-	}
-	for _, fg := range c.Cluster.GetFrontendGroups() {
-		if auditLog := fg.GetAuditLog(); auditLog != nil && auditLog.Enabled {
-			return true
-		}
-	}
-	return false
-}
-
 func (c *CommonBuilder) AddVectorConfigVolume(template *corev1.PodTemplateSpec) {
 	template.Spec.Volumes = append(template.Spec.Volumes, corev1.Volume{
 		Name: constant.DefaultVectorConfigName,
@@ -237,7 +222,7 @@ func (c *CommonBuilder) GenerateVectorConfigMap() (*corev1.ConfigMap, error) {
 		"MetricService":         fmt.Sprintf("http://%s:%d/v1/prometheus/write?db=public", svc, v1alpha1.DefaultHTTPPort),
 		"TTL":                   c.Cluster.GetMonitoring().TTL,
 		"PodIP":                 "${POD_IP}",
-		"EnableAuditLogs":       fmt.Sprintf("%v", c.shouldEnableAuditLogs()),
+		"EnableAuditLogs":       fmt.Sprintf("%v", IsAuditLogEnabled(c.Cluster)),
 	}
 	if c.Cluster.Spec.EnableIPv6 {
 		vars["MetricsEndpoint"] = fmt.Sprintf("http://[${POD_IP}]:%d/metrics", v1alpha1.DefaultHTTPPort)
@@ -345,4 +330,19 @@ func UpdateStatus(ctx context.Context, input *v1alpha1.GreptimeDBCluster, kc cli
 		cluster.Status = status
 		return kc.Status().Update(ctx, cluster, opts...)
 	})
+}
+
+// IsAuditLogEnabled checks if any frontend component has audit logging enabled.
+func IsAuditLogEnabled(cluster *v1alpha1.GreptimeDBCluster) bool {
+	if cluster.GetFrontend() != nil {
+		if auditLog := cluster.GetFrontend().GetAuditLog(); auditLog != nil && auditLog.Enabled {
+			return true
+		}
+	}
+	for _, fg := range cluster.GetFrontendGroups() {
+		if auditLog := fg.GetAuditLog(); auditLog != nil && auditLog.Enabled {
+			return true
+		}
+	}
+	return false
 }
