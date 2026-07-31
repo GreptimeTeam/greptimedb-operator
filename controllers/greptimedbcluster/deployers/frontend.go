@@ -247,6 +247,15 @@ func (b *frontendBuilder) BuildDeployment() deployer.Builder {
 		return b
 	}
 
+	if b.Cluster.GetMonitoring().IsEnabled() && b.Cluster.GetMonitoring().GetVector() != nil {
+		cm, err := b.GenerateVectorConfigMap()
+		if err != nil {
+			b.Err = err
+			return b
+		}
+		b.Objects = append(b.Objects, cm)
+	}
+
 	if b.Cluster.GetFrontend() != nil {
 		b.generateDeployment(b.Cluster.Spec.Frontend)
 	}
@@ -448,6 +457,10 @@ func (b *frontendBuilder) generatePodTemplateSpec(frontend *v1alpha1.FrontendSpe
 
 	if logging := frontend.GetLogging(); logging != nil && !logging.IsOnlyLogToStdout() {
 		b.AddLogsVolume(podTemplateSpec, logging.GetLogsDir())
+	}
+
+	if auditLog := frontend.GetAuditLog(); auditLog != nil && auditLog.Enabled {
+		b.AddAuditLogsVolume(podTemplateSpec, auditLog.Dir)
 	}
 
 	if b.Cluster.GetMonitoring().IsEnabled() && b.Cluster.GetMonitoring().GetVector() != nil {

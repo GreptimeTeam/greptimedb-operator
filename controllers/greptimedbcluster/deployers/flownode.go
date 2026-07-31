@@ -274,7 +274,14 @@ func (b *flownodeBuilder) generatePodTemplateSpec() corev1.PodTemplateSpec {
 	}
 
 	if b.Cluster.GetMonitoring().IsEnabled() && b.Cluster.GetMonitoring().GetVector() != nil {
+		cm, err := b.GenerateVectorConfigMap()
+		if err != nil {
+			b.Err = err
+			return *podTemplateSpec
+		}
+		b.Objects = append(b.Objects, cm)
 		b.AddVectorConfigVolume(podTemplateSpec)
+		b.AddAuditLogsVolumeForVector(podTemplateSpec)
 		b.AddVectorSidecar(podTemplateSpec, v1alpha1.FlownodeRoleKind)
 	}
 

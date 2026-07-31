@@ -58,6 +58,9 @@ const (
 	// DefaultLogsDir is the default directory for the logs.
 	DefaultLogsDir = DefaultDataHome + "/logs"
 
+	// DefaultAuditLogsDir is the default directory for the audit logs.
+	DefaultAuditLogsDir = DefaultDataHome + "/audit-logs"
+
 	// DefaultStorageRetainPolicyType is the default storage retain policy type.
 	DefaultStorageRetainPolicyType = StorageRetainPolicyTypeRetain
 
@@ -71,7 +74,7 @@ const (
 	DefaultLoggingLevel = LoggingLevelInfo
 
 	// DefaultVectorImage is the default image for the vector.
-	DefaultVectorImage = "timberio/vector:nightly-alpine"
+	DefaultVectorImage = "timberio/vector:0.49.0-debian"
 
 	// DefaultVectorCPURequest is the default CPU request for the vector.
 	DefaultVectorCPURequest = "50m"

@@ -311,6 +311,10 @@ func LogsPipelineName(namespace, name string) string {
 	return strings.Join([]string{namespace, name, "logs"}, "-")
 }
 
+func AuditLogsPipelineName(namespace, name string) string {
+	return strings.Join([]string{namespace, name, "audit-logs"}, "-")
+}
+
 func GetMetaHTTPServiceURL(cluster *v1alpha1.GreptimeDBCluster) string {
 	return fmt.Sprintf("http://%s.%s:%d", ResourceName(cluster.GetName(), v1alpha1.MetaRoleKind), cluster.GetNamespace(), cluster.Spec.Meta.HTTPPort)
 }

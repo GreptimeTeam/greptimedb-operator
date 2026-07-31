@@ -36,6 +36,9 @@ type FrontendConfig struct {
 	// TracingConfig is the configuration for the tracing.
 	TracingConfig `tomlmapping:",inline"`
 
+	// PluginConfig is the configuration for the plugins.
+	PluginConfig `tomlmapping:",inline"`
+
 	// InputConfig is from config field of cluster spec.
 	InputConfig string
 }
@@ -65,6 +68,7 @@ func (c *FrontendConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster,
 		}
 	}
 
+	c.ConfigureAuditLog(frontendSpec.GetAuditLog())
 	c.ConfigureLogging(frontendSpec.GetLogging())
 	c.ConfigureSlowQuery(frontendSpec.GetSlowQuery())
 	c.ConfigureTracing(frontendSpec.GetTracing())

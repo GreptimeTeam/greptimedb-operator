@@ -34,6 +34,28 @@ _Appears in:_
 | `endpoint` _string_ | The Blob Storage endpoint. |  |  |
 
 
+#### AuditLogSpec
+
+
+
+AuditLogSpec defines the configuration for audit logging
+
+
+
+_Appears in:_
+- [FrontendSpec](#frontendspec)
+
+| Field | Description | Default | Validation |
+| --- | --- | --- | --- |
+| `enabled` _boolean_ | Enable indicates whether audit logging is enabled |  |  |
+| `dir` _string_ | Dir is the directory where audit log files will be stored |  |  |
+| `sources` _string_ | Sources specifies the allowed sources for audit, e.g., "all", "mysql,postgres" |  |  |
+| `classes` _string_ | Classes specifies the allowed statement classes, e.g., "ddl,admin" |  |  |
+| `commands` _string_ | Commands specifies the allowed commands |  |  |
+| `objectTypes` _string_ | ObjectTypes specifies the allowed object types |  |  |
+| `maxLogFiles` _integer_ | MaxLogFiles is the maximum number of audit log files to retain |  |  |
+
+
 #### BackendStorage
 
 
@@ -324,6 +346,7 @@ _Appears in:_
 | `rollingUpdate` _[RollingUpdateDeployment](https://kubernetes.io/docs/reference/generated/kubernetes-api/v/#rollingupdatedeployment-v1-apps)_ | RollingUpdate is the rolling update configuration. We always use `RollingUpdate` strategyt. |  |  |
 | `slowQuery` _[SlowQuery](#slowquery)_ | SlowQuery is the slow query configuration. |  |  |
 | `enableObjectStorage` _boolean_ | EnableObjectStorage indicates whether to inject object storage configurations into frontend instances.<br />If true, the object storage configurations from the cluster will be injected into the frontend config.<br />Default to false. |  |  |
+| `auditLog` _[AuditLogSpec](#auditlogspec)_ | AuditLog configures audit logging for the frontend<br />This configuration use for GreptimeDB Enterprise, please do not enable it in OSS versions. |  |  |
 
 
 #### FrontendStatus

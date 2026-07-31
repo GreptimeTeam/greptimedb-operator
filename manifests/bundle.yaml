@@ -13626,6 +13626,24 @@ spec:
                 type: object
               frontend:
                 properties:
+                  auditLog:
+                    properties:
+                      classes:
+                        type: string
+                      commands:
+                        type: string
+                      dir:
+                        type: string
+                      enabled:
+                        type: boolean
+                      maxLogFiles:
+                        format: int32
+                        type: integer
+                      objectTypes:
+                        type: string
+                      sources:
+                        type: string
+                    type: object
                   config:
                     type: string
                   enableObjectStorage:
@@ -17074,6 +17092,24 @@ spec:
               frontendGroups:
                 items:
                   properties:
+                    auditLog:
+                      properties:
+                        classes:
+                          type: string
+                        commands:
+                          type: string
+                        dir:
+                          type: string
+                        enabled:
+                          type: boolean
+                        maxLogFiles:
+                          format: int32
+                          type: integer
+                        objectTypes:
+                          type: string
+                        sources:
+                          type: string
+                      type: object
                     config:
                       type: string
                     enableObjectStorage:

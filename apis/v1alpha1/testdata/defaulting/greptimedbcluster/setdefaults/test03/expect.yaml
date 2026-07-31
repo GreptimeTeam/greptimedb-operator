@@ -161,7 +161,7 @@ spec:
         threshold: 30s
         ttl: 90d
     vector:
-      image: timberio/vector:nightly-alpine
+      image: timberio/vector:0.49.0-debian
       resources:
         limits:
           cpu: 200m

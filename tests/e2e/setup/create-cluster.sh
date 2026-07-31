@@ -60,7 +60,7 @@ DEFAULT_TIMEOUT=300s
 GREPTIMEDB_IMAGE=greptime/greptimedb:latest
 
 # We always use the latest released vector image for testing.
-VECTOR_IMAGE=timberio/vector:nightly-alpine
+VECTOR_IMAGE=timberio/vector:0.49.0-debian
 
 # Define the color for the output.
 RED='\033[1;31m'
@@ -135,8 +135,8 @@ function pull_greptimedb_image() {
 function pull_vector_image() {
   echo -e "${GREEN}=> Pull and push vector image...${RESET}"
   docker pull "$VECTOR_IMAGE"
-  docker tag "$VECTOR_IMAGE" localhost:${REGISTRY_PORT}/timberio/vector:nightly-alpine
-  docker push localhost:${REGISTRY_PORT}/timberio/vector:nightly-alpine
+  docker tag "$VECTOR_IMAGE" localhost:${REGISTRY_PORT}/timberio/vector:0.49.0-debian
+  docker push localhost:${REGISTRY_PORT}/timberio/vector:0.49.0-debian
   docker rmi "$VECTOR_IMAGE"
   echo -e "${GREEN}<= Vector image is pulled and pushed.${RESET}"
 }

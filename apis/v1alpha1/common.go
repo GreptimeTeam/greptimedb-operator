@@ -662,6 +662,37 @@ type TracingSpec struct {
 	Headers map[string]string `json:"headers,omitempty"`
 }
 
+// AuditLogSpec defines the configuration for audit logging
+type AuditLogSpec struct {
+	// Enable indicates whether audit logging is enabled
+	// +optional
+	Enabled bool `json:"enabled,omitempty"`
+
+	// Dir is the directory where audit log files will be stored
+	// +optional
+	Dir string `json:"dir,omitempty"`
+
+	// Sources specifies the allowed sources for audit, e.g., "all", "mysql,postgres"
+	// +optional
+	Sources string `json:"sources,omitempty"`
+
+	// Classes specifies the allowed statement classes, e.g., "ddl,admin"
+	// +optional
+	Classes string `json:"classes,omitempty"`
+
+	// Commands specifies the allowed commands
+	// +optional
+	Commands string `json:"commands,omitempty"`
+
+	// ObjectTypes specifies the allowed object types
+	// +optional
+	ObjectTypes string `json:"objectTypes,omitempty"`
+
+	// MaxLogFiles is the maximum number of audit log files to retain
+	// +optional
+	MaxLogFiles *int32 `json:"maxLogFiles,omitempty"`
+}
+
 // ServiceSpec defines the service configuration for the component.
 type ServiceSpec struct {
 	// Type is the type of the service.

@@ -134,6 +134,47 @@ func (c *CommonBuilder) AddLogsVolume(template *corev1.PodTemplateSpec, mountPat
 	})
 }
 
+// AddAuditLogsVolume will create a shared volume for audit logs and mount it to the main container.
+func (c *CommonBuilder) AddAuditLogsVolume(template *corev1.PodTemplateSpec, mountPath string) {
+	c.AddAuditLogsVolumeForVector(template)
+
+	template.Spec.Containers[constant.MainContainerIndex].VolumeMounts = append(template.Spec.Containers[constant.MainContainerIndex].VolumeMounts, corev1.VolumeMount{
+		Name:      constant.DefaultAuditLogsVolumeName,
+		MountPath: mountPath,
+	})
+}
+
+// AddAuditLogsVolumeForVector creates the audit logs emptyDir volume for the vector sidecar.
+// This is only used by components that produce audit logs (frontend with audit logging enabled).
+func (c *CommonBuilder) AddAuditLogsVolumeForVector(template *corev1.PodTemplateSpec) {
+	for _, vol := range template.Spec.Volumes {
+		if vol.Name == constant.DefaultAuditLogsVolumeName {
+			return
+		}
+	}
+	template.Spec.Volumes = append(template.Spec.Volumes, corev1.Volume{
+		Name: constant.DefaultAuditLogsVolumeName,
+		VolumeSource: corev1.VolumeSource{
+			EmptyDir: &corev1.EmptyDirVolumeSource{},
+		},
+	})
+}
+
+// shouldEnableAuditLogs checks if any frontend component has audit logging enabled.
+func (c *CommonBuilder) shouldEnableAuditLogs() bool {
+	if c.Cluster.GetFrontend() != nil {
+		if auditLog := c.Cluster.GetFrontend().GetAuditLog(); auditLog != nil && auditLog.Enabled {
+			return true
+		}
+	}
+	for _, fg := range c.Cluster.GetFrontendGroups() {
+		if auditLog := fg.GetAuditLog(); auditLog != nil && auditLog.Enabled {
+			return true
+		}
+	}
+	return false
+}
+
 func (c *CommonBuilder) AddVectorConfigVolume(template *corev1.PodTemplateSpec) {
 	template.Spec.Volumes = append(template.Spec.Volumes, corev1.Volume{
 		Name: constant.DefaultVectorConfigName,
@@ -148,24 +189,38 @@ func (c *CommonBuilder) AddVectorConfigVolume(template *corev1.PodTemplateSpec) 
 }
 
 func (c *CommonBuilder) AddVectorSidecar(template *corev1.PodTemplateSpec, kind v1alpha1.RoleKind) {
+	volumeMounts := []corev1.VolumeMount{
+		{
+			Name:      constant.DefaultLogsVolumeName,
+			MountPath: "/logs",
+		},
+		{
+			Name:      constant.DefaultVectorConfigName,
+			MountPath: "/etc/vector",
+		},
+	}
+
+	// Only add the audit-logs mount if the volume exists in the template.
+	// Audit logging is only produced by the frontend component.
+	for _, vol := range template.Spec.Volumes {
+		if vol.Name == constant.DefaultAuditLogsVolumeName {
+			volumeMounts = append(volumeMounts, corev1.VolumeMount{
+				Name:      constant.DefaultAuditLogsVolumeName,
+				MountPath: "/audit-logs",
+			})
+			break
+		}
+	}
+
 	template.Spec.Containers = append(template.Spec.Containers, corev1.Container{
 		Name:  "vector",
 		Image: c.Cluster.Spec.Monitoring.Vector.Image,
 		Args: []string{
 			"--config", "/etc/vector/vector.yaml",
 		},
-		Env:       c.env(kind),
-		Resources: c.Cluster.Spec.Monitoring.Vector.Resources,
-		VolumeMounts: []corev1.VolumeMount{
-			{
-				Name:      constant.DefaultLogsVolumeName,
-				MountPath: "/logs",
-			},
-			{
-				Name:      constant.DefaultVectorConfigName,
-				MountPath: "/etc/vector",
-			},
-		},
+		Env:          c.env(kind),
+		Resources:    c.Cluster.Spec.Monitoring.Vector.Resources,
+		VolumeMounts: volumeMounts,
 	})
 }
 
@@ -173,13 +228,16 @@ func (c *CommonBuilder) GenerateVectorConfigMap() (*corev1.ConfigMap, error) {
 	standaloneName := common.ResourceName(c.Cluster.Name+"-monitor", v1alpha1.StandaloneRoleKind)
 	svc := fmt.Sprintf("%s.%s.svc.cluster.local", standaloneName, c.Cluster.Namespace)
 	vars := map[string]string{
-		"ClusterName":      c.Cluster.Name,
-		"LogsTableName":    constant.LogsTableName,
-		"LogsPipelineName": common.LogsPipelineName(c.Cluster.Namespace, c.Cluster.Name),
-		"LoggingService":   fmt.Sprintf("http://%s:%d", svc, v1alpha1.DefaultHTTPPort),
-		"MetricService":    fmt.Sprintf("http://%s:%d/v1/prometheus/write?db=public", svc, v1alpha1.DefaultHTTPPort),
-		"TTL":              c.Cluster.GetMonitoring().TTL,
-		"PodIP":            "${POD_IP}",
+		"ClusterName":           c.Cluster.Name,
+		"LogsTableName":         constant.LogsTableName,
+		"LogsPipelineName":      common.LogsPipelineName(c.Cluster.Namespace, c.Cluster.Name),
+		"LoggingService":        fmt.Sprintf("http://%s:%d", svc, v1alpha1.DefaultHTTPPort),
+		"AuditLogsTableName":    constant.AuditLogsTableName,
+		"AuditLogsPipelineName": common.AuditLogsPipelineName(c.Cluster.Namespace, c.Cluster.Name),
+		"MetricService":         fmt.Sprintf("http://%s:%d/v1/prometheus/write?db=public", svc, v1alpha1.DefaultHTTPPort),
+		"TTL":                   c.Cluster.GetMonitoring().TTL,
+		"PodIP":                 "${POD_IP}",
+		"EnableAuditLogs":       fmt.Sprintf("%v", c.shouldEnableAuditLogs()),
 	}
 	if c.Cluster.Spec.EnableIPv6 {
 		vars["MetricsEndpoint"] = fmt.Sprintf("http://[${POD_IP}]:%d/metrics", v1alpha1.DefaultHTTPPort)

@@ -242,6 +242,53 @@ func (c *WALConfig) configureKafka(namespace string, kafka *v1alpha1.KafkaWAL) e
 	return nil
 }
 
+// PluginConfig is the configuration for the plugins.
+type PluginConfig struct {
+	// Plugins holds the plugin configuration array.
+	// In TOML, this is rendered as [[plugins]] (array of tables).
+	Plugins []map[string]interface{} `tomlmapping:"plugins"`
+}
+
+func (c *PluginConfig) ConfigureAuditLog(spec *v1alpha1.AuditLogSpec) {
+	if spec == nil {
+		return
+	}
+
+	auditLog := map[string]interface{}{
+		"enable": spec.Enabled,
+	}
+
+	if spec.Dir != "" {
+		auditLog["dir"] = spec.Dir
+	}
+
+	if spec.Sources != "" {
+		auditLog["sources"] = spec.Sources
+	}
+
+	if spec.Classes != "" {
+		auditLog["classes"] = spec.Classes
+	}
+
+	if spec.Commands != "" {
+		auditLog["commands"] = spec.Commands
+	}
+
+	if spec.ObjectTypes != "" {
+		auditLog["object_types"] = spec.ObjectTypes
+	}
+
+	if spec.MaxLogFiles != nil {
+		auditLog["max_log_files"] = *spec.MaxLogFiles
+	}
+
+	plugin := map[string]interface{}{
+		"audit_log": auditLog,
+	}
+
+	c.Plugins = append(c.Plugins, plugin)
+}
+
 // LoggingConfig is the configuration for the logging.
 type LoggingConfig struct {
 	// The directory to store the log files. If set to empty, logs will not be written to files.

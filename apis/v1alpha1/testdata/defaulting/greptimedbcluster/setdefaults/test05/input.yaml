@@ -1,0 +1,27 @@
+apiVersion: greptime.io/v1alpha1
+kind: GreptimeDBCluster
+metadata:
+  name: test05
+  namespace: default
+spec:
+  base:
+    main:
+      image: greptime/greptimedb:latest
+  frontend:
+    replicas: 1
+    auditLog:
+      enabled: true
+      dir: /data/greptimedb/audit-logs
+      sources: "mysql,postgres"
+      classes: "ddl,admin"
+      commands: "insert"
+      objectTypes: "database"
+      maxLogFiles: 30
+  meta:
+    backendStorage:
+      etcd:
+        endpoints:
+          - etcd.etcd-cluster.svc.cluster.local:2379
+    replicas: 1
+  datanode:
+    replicas: 3

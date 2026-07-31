@@ -1,0 +1,33 @@
+processors:
+  - date:
+      fields:
+        - time
+      formats:
+        - "%Y-%m-%dT%H:%M:%S.%fZ"
+
+transform:
+  - fields:
+      - pod_ip
+      - namespace
+      - cluster
+      - statement
+    type: string
+
+  - fields:
+      - user
+      - source
+      - class
+      - command
+      - object_type
+      - object_names
+    type: string
+    index: tag
+
+  - fields:
+      - pod
+    type: string
+    index: skipping
+
+  - field: time
+    type: time
+    index: timestamp
