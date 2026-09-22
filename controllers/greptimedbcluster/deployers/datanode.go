@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"path"
 	"reflect"
+	"sync"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -41,15 +42,22 @@ import (
 // DatanodeDeployer is the deployer for datanode.
 type DatanodeDeployer struct {
 	*CommonDeployer
-	maintenanceMode bool
+
+	// maintenanceMode tracks whether WE turned on datanode maintenance mode,
+	// PER CLUSTER (keyed by the cluster's NamespacedName). A single operator
+	// deployment typically reconciles several GreptimeDBClusters; with the
+	// previous single bool, the disable fired against whichever cluster's
+	// reconcile happened to run the post-sync hook while a datanode roll was
+	// in progress, leaving the actually-rolling cluster in maintenance mode
+	// (region failover + GC disabled) with no self-heal.
+	maintenanceMode sync.Map
 }
 
 var _ deployer.Deployer = &DatanodeDeployer{}
 
 func NewDatanodeDeployer(mgr ctrl.Manager) *DatanodeDeployer {
 	return &DatanodeDeployer{
-		CommonDeployer:  NewFromManager(mgr),
-		maintenanceMode: false,
+		CommonDeployer: NewFromManager(mgr),
 	}
 }
 
@@ -274,13 +282,14 @@ func (d *DatanodeDeployer) turnOnMaintenanceMode(ctx context.Context, newSts *ap
 		return err
 	}
 
-	if !d.maintenanceMode && d.isOldPodRestart(*newSts, *oldSts) {
-		klog.Infof("Turn on maintenance mode for datanode, statefulset: %s", newSts.Name)
+	key := client.ObjectKeyFromObject(cluster)
+	if _, armed := d.maintenanceMode.Load(key); !armed && d.isOldPodRestart(*newSts, *oldSts) {
+		klog.Infof("Turn on maintenance mode for datanode, cluster: %s, statefulset: %s", cluster.Name, newSts.Name)
 		// FIXME(zyy17): Should record the maintenance mode in the status.
 		if err := common.SetMaintenanceMode(common.GetMetaHTTPServiceURL(cluster), true); err != nil {
 			return err
 		}
-		d.maintenanceMode = true
+		d.maintenanceMode.Store(key, true)
 	}
 
 	return nil
@@ -292,13 +301,14 @@ func (d *DatanodeDeployer) turnOffMaintenanceMode(ctx context.Context, crdObject
 		return err
 	}
 
-	if d.maintenanceMode && d.shouldUseMaintenanceMode(cluster) {
+	key := client.ObjectKeyFromObject(cluster)
+	if _, armed := d.maintenanceMode.Load(key); armed && d.shouldUseMaintenanceMode(cluster) {
 		klog.Infof("Turn off maintenance mode for datanode, cluster: %s", cluster.Name)
 		// FIXME(zyy17): Should record the maintenance mode in the status.
 		if err := common.SetMaintenanceMode(common.GetMetaHTTPServiceURL(cluster), false); err != nil {
 			return err
 		}
-		d.maintenanceMode = false
+		d.maintenanceMode.Delete(key)
 	}
 
 	return nil
