@@ -233,7 +233,8 @@ func (r *Reconciler) sync(ctx context.Context, cluster *v1alpha1.GreptimeDBClust
 	}
 
 	if cluster.Status.ClusterPhase == v1alpha1.PhaseStarting ||
-		cluster.Status.ClusterPhase == v1alpha1.PhaseUpdating {
+		cluster.Status.ClusterPhase == v1alpha1.PhaseUpdating ||
+		(cluster.Status.ClusterPhase == v1alpha1.PhaseRunning && cluster.Status.ObservedGeneration != cluster.Generation) {
 		cluster.Status.SetCondition(*v1alpha1.NewCondition(v1alpha1.ConditionTypeReady, corev1.ConditionTrue, "ClusterReady", "the cluster is ready"))
 
 		// Turn off maintenance mode for metasrv.
@@ -308,8 +309,8 @@ func (r *Reconciler) delete(ctx context.Context, cluster *v1alpha1.GreptimeDBClu
 }
 
 func (r *Reconciler) updateClusterStatus(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster, phase v1alpha1.Phase) error {
-	// If the cluster is already in the phase, we will not update it.
-	if cluster.Status.ClusterPhase == phase {
+	// A no-op spec change still needs its generation acknowledged.
+	if cluster.Status.ClusterPhase == phase && cluster.Status.ObservedGeneration == cluster.Generation {
 		return nil
 	}
 
