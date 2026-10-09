@@ -101,6 +101,39 @@ var _ = Describe("Test greptimedbcluster controller", func() {
 			return false
 		}, 30*time.Second, time.Second).Should(BeTrue())
 
+		By("Acknowledge no-op spec changes without replacing workloads")
+		workloads := []client.Object{
+			&appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{Name: common.ResourceName(testClusterName, v1alpha1.MetaRoleKind), Namespace: testNamespace}},
+			&appsv1.StatefulSet{ObjectMeta: metav1.ObjectMeta{Name: common.ResourceName(testClusterName, v1alpha1.DatanodeRoleKind), Namespace: testNamespace}},
+			&appsv1.Deployment{ObjectMeta: metav1.ObjectMeta{Name: common.ResourceName(testClusterName, v1alpha1.FrontendRoleKind), Namespace: testNamespace}},
+		}
+		generations := make([]int64, len(workloads))
+		for i, workload := range workloads {
+			Expect(k8sClient.Get(ctx, client.ObjectKeyFromObject(workload), workload)).To(Succeed())
+			generations[i] = workload.GetGeneration()
+		}
+		for _, interval := range []string{"30s", "60s"} {
+			Expect(k8sClient.Get(ctx, req.NamespacedName, cluster)).To(Succeed())
+			previousGeneration := cluster.Generation
+			cluster.Spec.PrometheusMonitor = &v1alpha1.PrometheusMonitorSpec{Enabled: false, Interval: interval}
+			Expect(k8sClient.Update(ctx, cluster)).To(Succeed())
+			Expect(cluster.Generation).To(BeNumerically(">", previousGeneration))
+			Eventually(func() bool {
+				if _, err := reconciler.Reconcile(ctx, req); err != nil {
+					return false
+				}
+				if err := k8sClient.Get(ctx, req.NamespacedName, cluster); err != nil {
+					return false
+				}
+				return cluster.Status.ClusterPhase == v1alpha1.PhaseRunning &&
+					cluster.Status.ObservedGeneration == cluster.Generation
+			}, 30*time.Second, time.Second).Should(BeTrue())
+		}
+		for i, workload := range workloads {
+			Expect(k8sClient.Get(ctx, client.ObjectKeyFromObject(workload), workload)).To(Succeed())
+			Expect(workload.GetGeneration()).To(Equal(generations[i]))
+		}
+
 		By("Delete cluster")
 		err = k8sClient.Delete(ctx, testCluster)
 		Expect(err).NotTo(HaveOccurred(), "failed to delete cluster")
