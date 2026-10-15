@@ -119,7 +119,7 @@ func TestClusterHTTPAPIServer(ctx context.Context, h *helper.Helper) {
 	Expect(httpAPIContainerPort.ContainerPort).To(Equal(testCluster.Spec.Frontend.HTTPAPIServerPort), "http-api container port should be httpApiServerPort")
 
 	By("Run show tables via the HTTP API server through the http service port")
-	httpAddr, err := h.PortForward(ctx, testCluster.Namespace, frontendName, int(testCluster.Spec.HTTPPort))
+	httpAddr, err := h.PortForward(ctx, testCluster.Namespace, frontendName, int(testCluster.Spec.Frontend.HTTPAPIServerPort))
 	Expect(err).NotTo(HaveOccurred(), "failed to port forward frontend http service")
 	Eventually(func() error {
 		conn, err := net.Dial("tcp", httpAddr)
