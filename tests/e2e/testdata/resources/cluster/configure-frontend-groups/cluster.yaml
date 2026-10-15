@@ -18,6 +18,7 @@ spec:
     replicas: 1
     backendStorage:
       etcd:
+        storeKeyPrefix: e2e-cluster-with-frontend-groups-default
         endpoints:
           - "etcd.etcd-cluster.svc.cluster.local:2379"
         storeKeyPrefix: "e2e-cluster-with-frontend-groups"
