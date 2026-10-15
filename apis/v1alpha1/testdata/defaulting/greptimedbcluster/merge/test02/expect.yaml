@@ -134,6 +134,7 @@ spec:
   frontendGroups:
   - name: read
     httpPort: 4000
+    httpApiServerPort: 4006
     logging:
       format: text
       level: info
@@ -187,6 +188,7 @@ spec:
           periodSeconds: 5
   - name: write
     httpPort: 4000
+    httpApiServerPort: 4006
     logging:
       format: text
       level: info

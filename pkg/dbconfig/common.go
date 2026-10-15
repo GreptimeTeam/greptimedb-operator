@@ -332,6 +332,29 @@ func (c *LoggingConfig) levelWithFilters(level string, filters []string) string 
 	return level
 }
 
+// HTTPConfig is the configuration for the HTTP server.
+type HTTPConfig struct {
+	// EnableAPIServer enables the dedicated public HTTP API server.
+	EnableAPIServer *bool `tomlmapping:"http.enable_api_server"`
+
+	// APIServerAddr is the address the HTTP API server binds to.
+	APIServerAddr *string `tomlmapping:"http.api_server_addr"`
+}
+
+// ConfigureHTTPServer configures the HTTP API server.
+func (c *HTTPConfig) ConfigureHTTPServer(enableIPv6 bool, port int32) {
+	c.EnableAPIServer = ptr.To(true)
+	c.APIServerAddr = ptr.To(httpBindAddress(enableIPv6, port))
+}
+
+// httpBindAddress returns the wildcard bind address for the HTTP API server.
+func httpBindAddress(enableIPv6 bool, port int32) string {
+	if enableIPv6 {
+		return fmt.Sprintf("[::]:%d", port)
+	}
+	return fmt.Sprintf("0.0.0.0:%d", port)
+}
+
 // TracingConfig is the configuration for the tracing.
 type TracingConfig struct {
 	// Enable OTLP tracing.

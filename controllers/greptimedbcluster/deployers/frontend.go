@@ -437,7 +437,7 @@ func (b *frontendBuilder) servicePorts(frontend *v1alpha1.FrontendSpec) []corev1
 			Name:       "http",
 			Protocol:   corev1.ProtocolTCP,
 			Port:       b.Cluster.Spec.HTTPPort,
-			TargetPort: intstr.FromInt32(frontend.HTTPPort),
+			TargetPort: intstr.FromInt32(frontend.HTTPAPIServerPort),
 		},
 		{
 			Name:       "mysql",
@@ -465,6 +465,11 @@ func (b *frontendBuilder) containerPorts(frontend *v1alpha1.FrontendSpec) []core
 			Name:          "http",
 			Protocol:      corev1.ProtocolTCP,
 			ContainerPort: frontend.HTTPPort,
+		},
+		{
+			Name:          "http-api",
+			Protocol:      corev1.ProtocolTCP,
+			ContainerPort: frontend.HTTPAPIServerPort,
 		},
 		{
 			Name:          "mysql",
