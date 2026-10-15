@@ -53,7 +53,7 @@ MYSQL_DATABASE=metasrv
 DEFAULT_TIMEOUT=300s
 
 # We always use the latest released greptimedb image for testing.
-GREPTIMEDB_IMAGE=greptime/greptimedb:v1.1.3
+GREPTIMEDB_IMAGE=greptime/greptimedb:latest
 
 # We always use the latest released vector image for testing.
 VECTOR_IMAGE=timberio/vector:0.49.0-debian

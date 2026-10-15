@@ -119,7 +119,7 @@ func TestStandaloneHTTPAPIServer(ctx context.Context, h *helper.Helper) {
 	Expect(httpAPIContainerPort.ContainerPort).To(Equal(testStandalone.Spec.HTTPAPIServerPort), "http-api container port should be httpApiServerPort")
 
 	By("Run show tables via the HTTP API server through the http service port")
-	httpAddr, err := h.PortForward(ctx, testStandalone.Namespace, resourceName, int(testStandalone.Spec.HTTPAPIServerPort))
+	httpAddr, err := h.PortForward(ctx, testStandalone.Namespace, resourceName, int(testStandalone.Spec.HTTPPort))
 	Expect(err).NotTo(HaveOccurred(), "failed to port forward standalone http service")
 	Eventually(func() error {
 		conn, err := net.Dial("tcp", httpAddr)
