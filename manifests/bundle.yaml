@@ -32164,7 +32164,7 @@ spec:
         - --enable-leader-election
         command:
         - greptimedb-operator
-        image: greptime/greptimedb-operator:latest
+        image: localhost:5001/greptime/greptimedb-operator:latest
         imagePullPolicy: IfNotPresent
         livenessProbe:
           httpGet:

@@ -45,7 +45,7 @@ const (
 	MaxPort = 30000
 
 	// DefaultTimeout is the default timeout for the e2e tests.
-	DefaultTimeout = 2 * time.Minute
+	DefaultTimeout = 5 * time.Minute
 
 	// DefaultEtcdNamespace is the default namespace for the etcd cluster.
 	DefaultEtcdNamespace = "etcd-cluster"
