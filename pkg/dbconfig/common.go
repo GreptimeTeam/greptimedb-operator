@@ -20,6 +20,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/GreptimeTeam/greptimedb-operator/controllers/common"
 	"k8s.io/klog/v2"
 	"k8s.io/utils/ptr"
 
@@ -344,15 +345,7 @@ type HTTPConfig struct {
 // ConfigureHTTPServer configures the HTTP API server.
 func (c *HTTPConfig) ConfigureHTTPServer(enableIPv6 bool, port int32) {
 	c.EnableAPIServer = ptr.To(true)
-	c.APIServerAddr = ptr.To(httpBindAddress(enableIPv6, port))
-}
-
-// httpBindAddress returns the wildcard bind address for the HTTP API server.
-func httpBindAddress(enableIPv6 bool, port int32) string {
-	if enableIPv6 {
-		return fmt.Sprintf("[::]:%d", port)
-	}
-	return fmt.Sprintf("0.0.0.0:%d", port)
+	c.APIServerAddr = ptr.To(common.GetBindAddress(enableIPv6, port))
 }
 
 // TracingConfig is the configuration for the tracing.

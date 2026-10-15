@@ -44,6 +44,10 @@ var callLog []string // entries like "ON -> greptimedb-meta.greptimedb"
 // One proxy for the whole package: net/http caches proxy env lookups for ~30s,
 // so per-test httptest servers (fresh port each time) are unreliable.
 func TestMain(m *testing.M) {
+	os.Exit(run(m))
+}
+
+func run(m *testing.M) int {
 	proxy := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		dir := "ON"
 		if strings.HasSuffix(r.URL.Path, "/disable") {
@@ -53,9 +57,18 @@ func TestMain(m *testing.M) {
 		w.WriteHeader(http.StatusOK)
 	}))
 	defer proxy.Close()
-	os.Setenv("HTTP_PROXY", proxy.URL)
-	os.Setenv("HTTPS_PROXY", proxy.URL)
-	os.Exit(m.Run())
+
+	for key, value := range map[string]string{
+		"HTTP_PROXY":  proxy.URL,
+		"HTTPS_PROXY": proxy.URL,
+	} {
+		if err := os.Setenv(key, value); err != nil {
+			fmt.Fprintf(os.Stderr, "failed to set %s: %v\n", key, err)
+			return 1
+		}
+	}
+
+	return m.Run()
 }
 
 func newHarness(t *testing.T) (*DatanodeDeployer, *v1alpha1.GreptimeDBCluster, *v1alpha1.GreptimeDBCluster, context.Context) {
