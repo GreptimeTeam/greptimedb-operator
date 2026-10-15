@@ -6,6 +6,7 @@ metadata:
 spec:
   version: v1.0.0
   httpPort: 4000
+  httpApiServerPort: 5006
   mysqlPort: 4002
   postgreSQLPort: 4003
   rpcPort: 4001

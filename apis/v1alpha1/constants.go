@@ -34,6 +34,9 @@ const (
 	// DefaultPostgreSQLPort is the default PostgreSQL port for the GreptimeDB.
 	DefaultPostgreSQLPort int32 = 4003
 
+	// DefaultHTTPAPIServerPort is the default HTTP API server port for the GreptimeDB.
+	DefaultHTTPAPIServerPort int32 = 4006
+
 	// DefaultMetaRPCPort is the default Meta RPC port for the GreptimeDB.
 	DefaultMetaRPCPort int32 = 3002
 

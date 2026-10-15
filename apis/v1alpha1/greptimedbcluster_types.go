@@ -295,6 +295,12 @@ type FrontendSpec struct {
 	// +optional
 	HTTPPort int32 `json:"httpPort,omitempty"`
 
+	// HTTPAPIServerPort is the port of the dedicated HTTP API server of the frontend.
+	// +kubebuilder:validation:Minimum=0
+	// +kubebuilder:validation:Maximum=65535
+	// +optional
+	HTTPAPIServerPort int32 `json:"httpApiServerPort,omitempty"`
+
 	// MySQLPort is the MySQL port of the frontend.
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=65535
