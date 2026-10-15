@@ -36,4 +36,8 @@ var _ = Describe("Test GreptimeDBStandalone", func() {
 	It("Test a standalone enable ipv6", func() {
 		greptimedbstandalone.TestStandaloneWithEnableIPv6(ctx, h)
 	})
+
+	It("Test a standalone with HTTP API server", func() {
+		greptimedbstandalone.TestStandaloneHTTPAPIServer(ctx, h)
+	})
 })

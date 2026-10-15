@@ -1,0 +1,23 @@
+apiVersion: greptime.io/v1alpha1
+kind: GreptimeDBCluster
+metadata:
+  name: e2e-cluster-http-api-server
+  namespace: default
+spec:
+  initializer:
+    image: localhost:5001/greptime/greptimedb-initializer:latest
+  base:
+    main:
+      image: localhost:5001/greptime/greptimedb:latest
+  frontend:
+    replicas: 1
+    httpApiServerPort: 5006
+  meta:
+    replicas: 1
+    backendStorage:
+      etcd:
+        storeKeyPrefix: e2e-cluster-http-api-server
+        endpoints:
+          - "etcd.etcd-cluster.svc.cluster.local:2379"
+  datanode:
+    replicas: 3

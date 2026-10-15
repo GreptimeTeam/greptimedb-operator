@@ -8,3 +8,4 @@ spec:
     main:
       image: greptime/greptimedb:v1.0.0
   enableIPv6: true
+  httpApiServerPort: 5006
