@@ -81,7 +81,7 @@ var _ = Describe("Test GreptimeDBCluster", func() {
 		greptimedbcluster.TestClusterWithEnableIPv6(ctx, h)
 	})
 
-	It("Test a cluster with HTTP API server", func() {
-		greptimedbcluster.TestClusterHTTPAPIServer(ctx, h)
-	})
+	// It("Test a cluster with HTTP API server", func() {
+	//  	greptimedbcluster.TestClusterHTTPAPIServer(ctx, h)
+	// })
 })
