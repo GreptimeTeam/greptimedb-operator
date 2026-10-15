@@ -44,6 +44,10 @@ var callLog []string // entries like "ON -> greptimedb-meta.greptimedb"
 // One proxy for the whole package: net/http caches proxy env lookups for ~30s,
 // so per-test httptest servers (fresh port each time) are unreliable.
 func TestMain(m *testing.M) {
+	os.Exit(run(m))
+}
+
+func run(m *testing.M) int {
 	proxy := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		dir := "ON"
 		if strings.HasSuffix(r.URL.Path, "/disable") {

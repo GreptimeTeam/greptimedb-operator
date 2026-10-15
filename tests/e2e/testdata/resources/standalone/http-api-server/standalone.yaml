@@ -1,0 +1,10 @@
+apiVersion: greptime.io/v1alpha1
+kind: GreptimeDBStandalone
+metadata:
+  name: e2e-standalone-http-api-server
+  namespace: default
+spec:
+  httpApiServerPort: 5006
+  base:
+    main:
+      image: localhost:5001/greptime/greptimedb:latest
