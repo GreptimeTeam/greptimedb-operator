@@ -162,6 +162,7 @@ nodes:
 - role: control-plane
 - role: worker
 - role: worker
+- role: worker
 EOF
 
   # connect the registry to the cluster network if not already connected
