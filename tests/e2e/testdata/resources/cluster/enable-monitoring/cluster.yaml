@@ -15,6 +15,7 @@ spec:
     replicas: 1
     backendStorage:
       etcd:
+        storeKeyPrefix: e2e-cluster-enable-monitoring-default
         endpoints:
           - "etcd.etcd-cluster.svc.cluster.local:2379"
   datanode:
