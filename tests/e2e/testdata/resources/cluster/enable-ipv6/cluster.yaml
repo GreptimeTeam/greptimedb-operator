@@ -16,7 +16,7 @@ spec:
     replicas: 1
     backendStorage:
       etcd:
-        storeKeyPrefix: e2e-cluster-enable-ipv6-default
+        storeKeyPrefix: e2e-cluster-enable-ipv6
         endpoints:
           - "etcd.etcd-cluster.svc.cluster.local:2379"
   datanode:
