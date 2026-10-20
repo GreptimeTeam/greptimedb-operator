@@ -37,7 +37,7 @@ on:
   workflow_dispatch:
 
 env:
-  GO_VERSION: "1.25.1"
+  GO_VERSION: "1.25.14"
 
 jobs:
   build:
