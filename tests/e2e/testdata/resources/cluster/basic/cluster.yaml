@@ -17,5 +17,6 @@ spec:
       etcd:
         endpoints:
           - "etcd.etcd-cluster.svc.cluster.local:2379"
+        storeKeyPrefix: "e2e-cluster-basic"
   datanode:
     replicas: 3
