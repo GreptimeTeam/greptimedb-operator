@@ -331,6 +331,11 @@ func (in *FlownodeStatus) DeepCopy() *FlownodeStatus {
 func (in *FrontendSpec) DeepCopyInto(out *FrontendSpec) {
 	*out = *in
 	in.ComponentSpec.DeepCopyInto(&out.ComponentSpec)
+	if in.EnableHTTPAPIServer != nil {
+		in, out := &in.EnableHTTPAPIServer, &out.EnableHTTPAPIServer
+		*out = new(bool)
+		**out = **in
+	}
 	if in.Service != nil {
 		in, out := &in.Service, &out.Service
 		*out = new(ServiceSpec)
@@ -661,6 +666,11 @@ func (in *GreptimeDBStandaloneSpec) DeepCopyInto(out *GreptimeDBStandaloneSpec) 
 	if in.TLS != nil {
 		in, out := &in.TLS, &out.TLS
 		*out = new(TLSSpec)
+		**out = **in
+	}
+	if in.EnableHTTPAPIServer != nil {
+		in, out := &in.EnableHTTPAPIServer, &out.EnableHTTPAPIServer
+		*out = new(bool)
 		**out = **in
 	}
 	if in.PrometheusMonitor != nil {

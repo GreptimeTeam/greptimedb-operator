@@ -645,3 +645,130 @@ enable_region_failover = true
 		t.Errorf("generated config is not equal to wanted config:\n, want: '%s'\n, got: '%s'\n", expectedConfig, string(data))
 	}
 }
+
+func TestFromClusterForFrontendConfigEnablesHTTPAPIServer(t *testing.T) {
+	testCluster := &v1alpha1.GreptimeDBCluster{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-cluster",
+			Namespace: "default",
+		},
+		Spec: v1alpha1.GreptimeDBClusterSpec{
+			Frontend: &v1alpha1.FrontendSpec{
+				HTTPAPIServerPort: v1alpha1.DefaultHTTPAPIServerPort,
+			},
+		},
+	}
+
+	data, err := FromCluster(testCluster, testCluster.GetFrontend())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expectedConfig := `
+[http]
+  api_server_addr = "0.0.0.0:4006"
+  enable_api_server = true
+`
+	if !reflect.DeepEqual([]byte(expectedConfig), data) {
+		t.Errorf("generated config is not equal to wanted config:\n, want: '%s'\n, got: '%s'\n", expectedConfig, string(data))
+	}
+}
+
+func TestFromStandaloneEnablesHTTPAPIServer(t *testing.T) {
+	standalone := &v1alpha1.GreptimeDBStandalone{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-standalone",
+			Namespace: "default",
+		},
+		Spec: v1alpha1.GreptimeDBStandaloneSpec{
+			HTTPAPIServerPort: v1alpha1.DefaultHTTPAPIServerPort,
+		},
+	}
+
+	data, err := FromStandalone(standalone)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expectedConfig := `
+[http]
+  api_server_addr = "0.0.0.0:4006"
+  enable_api_server = true
+`
+	if !reflect.DeepEqual([]byte(expectedConfig), data) {
+		t.Errorf("generated config is not equal to wanted config:\n, want: '%s'\n, got: '%s'\n", expectedConfig, string(data))
+	}
+}
+
+func TestFromClusterForFrontendConfigHTTPAPIServerIPv6(t *testing.T) {
+	testCluster := &v1alpha1.GreptimeDBCluster{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-cluster",
+			Namespace: "default",
+		},
+		Spec: v1alpha1.GreptimeDBClusterSpec{
+			EnableIPv6: true,
+			Frontend: &v1alpha1.FrontendSpec{
+				HTTPAPIServerPort: v1alpha1.DefaultHTTPAPIServerPort,
+			},
+		},
+	}
+
+	data, err := FromCluster(testCluster, testCluster.GetFrontend())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expectedConfig := `
+[http]
+  api_server_addr = "[::]:4006"
+  enable_api_server = true
+`
+	if !reflect.DeepEqual([]byte(expectedConfig), data) {
+		t.Errorf("generated config is not equal to wanted config:\n, want: '%s'\n, got: '%s'\n", expectedConfig, string(data))
+	}
+}
+
+func TestFromClusterForFrontendConfigDisablesHTTPAPIServer(t *testing.T) {
+	testCluster := &v1alpha1.GreptimeDBCluster{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-cluster",
+			Namespace: "default",
+		},
+		Spec: v1alpha1.GreptimeDBClusterSpec{
+			Frontend: &v1alpha1.FrontendSpec{
+				EnableHTTPAPIServer: ptr.To(false),
+			},
+		},
+	}
+
+	data, err := FromCluster(testCluster, testCluster.GetFrontend())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(data) != 0 {
+		t.Errorf("generated config should be empty when the HTTP API server is disabled, got: '%s'", string(data))
+	}
+}
+
+func TestFromStandaloneDisablesHTTPAPIServer(t *testing.T) {
+	standalone := &v1alpha1.GreptimeDBStandalone{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-standalone",
+			Namespace: "default",
+		},
+		Spec: v1alpha1.GreptimeDBStandaloneSpec{
+			EnableHTTPAPIServer: ptr.To(false),
+		},
+	}
+
+	data, err := FromStandalone(standalone)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(data) != 0 {
+		t.Errorf("generated config should be empty when the HTTP API server is disabled, got: '%s'", string(data))
+	}
+}

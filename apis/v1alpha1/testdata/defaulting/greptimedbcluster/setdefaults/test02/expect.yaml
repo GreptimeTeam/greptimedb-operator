@@ -53,6 +53,7 @@ spec:
   frontend:
     replicas: 1
     httpPort: 4000
+    httpApiServerPort: 4006
     mysqlPort: 4002
     postgreSQLPort: 4003
     rpcPort: 4001

@@ -25,6 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/klog/v2"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -388,6 +389,11 @@ func (b *standaloneBuilder) generatePVCs() []corev1.PersistentVolumeClaim {
 }
 
 func (b *standaloneBuilder) servicePorts() []corev1.ServicePort {
+	httpTargetPort := b.standalone.Spec.HTTPPort
+	if b.standalone.Spec.IsEnableHTTPAPIServer() {
+		httpTargetPort = b.standalone.Spec.HTTPAPIServerPort
+	}
+
 	return []corev1.ServicePort{
 		{
 			Name:     "grpc",
@@ -395,9 +401,10 @@ func (b *standaloneBuilder) servicePorts() []corev1.ServicePort {
 			Port:     b.standalone.Spec.RPCPort,
 		},
 		{
-			Name:     "http",
-			Protocol: corev1.ProtocolTCP,
-			Port:     b.standalone.Spec.HTTPPort,
+			Name:       "http",
+			Protocol:   corev1.ProtocolTCP,
+			Port:       b.standalone.Spec.HTTPPort,
+			TargetPort: intstr.FromInt32(httpTargetPort),
 		},
 		{
 			Name:     "mysql",
@@ -413,7 +420,7 @@ func (b *standaloneBuilder) servicePorts() []corev1.ServicePort {
 }
 
 func (b *standaloneBuilder) containerPorts() []corev1.ContainerPort {
-	return []corev1.ContainerPort{
+	ports := []corev1.ContainerPort{
 		{
 			Name:          "grpc",
 			Protocol:      corev1.ProtocolTCP,
@@ -424,6 +431,15 @@ func (b *standaloneBuilder) containerPorts() []corev1.ContainerPort {
 			Protocol:      corev1.ProtocolTCP,
 			ContainerPort: b.standalone.Spec.HTTPPort,
 		},
+	}
+	if b.standalone.Spec.IsEnableHTTPAPIServer() {
+		ports = append(ports, corev1.ContainerPort{
+			Name:          "http-api",
+			Protocol:      corev1.ProtocolTCP,
+			ContainerPort: b.standalone.Spec.HTTPAPIServerPort,
+		})
+	}
+	ports = append(ports, []corev1.ContainerPort{
 		{
 			Name:          "mysql",
 			Protocol:      corev1.ProtocolTCP,
@@ -434,7 +450,9 @@ func (b *standaloneBuilder) containerPorts() []corev1.ContainerPort {
 			Protocol:      corev1.ProtocolTCP,
 			ContainerPort: b.standalone.Spec.PostgreSQLPort,
 		},
-	}
+	}...)
+
+	return ports
 }
 
 func (b *standaloneBuilder) generateMainContainerArgs() []string {

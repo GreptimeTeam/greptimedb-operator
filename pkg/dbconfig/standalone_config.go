@@ -39,6 +39,9 @@ type StandaloneConfig struct {
 	// TracingConfig is the configuration for the tracing.
 	TracingConfig `tomlmapping:",inline"`
 
+	// HTTPConfig is the configuration for the HTTP server.
+	HTTPConfig `tomlmapping:",inline"`
+
 	// InputConfig is from config field of cluster spec.
 	InputConfig string
 }
@@ -80,6 +83,9 @@ func (c *StandaloneConfig) ConfigureByStandalone(standalone *v1alpha1.GreptimeDB
 	c.ConfigureLogging(standalone.GetLogging())
 	c.ConfigureSlowQuery(standalone.GetSlowQuery())
 	c.ConfigureTracing(standalone.GetTracing())
+	if standalone.Spec.IsEnableHTTPAPIServer() {
+		c.ConfigureHTTPServer(standalone.Spec.EnableIPv6, standalone.Spec.HTTPAPIServerPort)
+	}
 
 	return nil
 }

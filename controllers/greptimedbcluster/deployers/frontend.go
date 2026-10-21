@@ -426,6 +426,11 @@ func (b *frontendBuilder) mountTLSSecret(secretName string, template *corev1.Pod
 }
 
 func (b *frontendBuilder) servicePorts(frontend *v1alpha1.FrontendSpec) []corev1.ServicePort {
+	httpTargetPort := frontend.HTTPPort
+	if frontend.IsEnableHTTPAPIServer() {
+		httpTargetPort = frontend.HTTPAPIServerPort
+	}
+
 	return []corev1.ServicePort{
 		{
 			Name:       "rpc",
@@ -437,7 +442,7 @@ func (b *frontendBuilder) servicePorts(frontend *v1alpha1.FrontendSpec) []corev1
 			Name:       "http",
 			Protocol:   corev1.ProtocolTCP,
 			Port:       b.Cluster.Spec.HTTPPort,
-			TargetPort: intstr.FromInt32(frontend.HTTPPort),
+			TargetPort: intstr.FromInt32(httpTargetPort),
 		},
 		{
 			Name:       "mysql",
@@ -466,6 +471,15 @@ func (b *frontendBuilder) containerPorts(frontend *v1alpha1.FrontendSpec) []core
 			Protocol:      corev1.ProtocolTCP,
 			ContainerPort: frontend.HTTPPort,
 		},
+	}
+	if frontend.IsEnableHTTPAPIServer() {
+		ports = append(ports, corev1.ContainerPort{
+			Name:          "http-api",
+			Protocol:      corev1.ProtocolTCP,
+			ContainerPort: frontend.HTTPAPIServerPort,
+		})
+	}
+	ports = append(ports, []corev1.ContainerPort{
 		{
 			Name:          "mysql",
 			Protocol:      corev1.ProtocolTCP,
@@ -481,7 +495,7 @@ func (b *frontendBuilder) containerPorts(frontend *v1alpha1.FrontendSpec) []core
 			Protocol:      corev1.ProtocolTCP,
 			ContainerPort: frontend.InternalPort,
 		},
-	}
+	}...)
 
 	return ports
 }

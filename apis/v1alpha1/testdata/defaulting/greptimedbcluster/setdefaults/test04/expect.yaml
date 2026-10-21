@@ -43,6 +43,7 @@ spec:
   - name: read
     replicas: 1
     httpPort: 6000
+    httpApiServerPort: 4006
     mysqlPort: 6002
     postgreSQLPort: 6003
     rpcPort: 6001
@@ -64,6 +65,7 @@ spec:
   - name: write
     replicas: 2
     httpPort: 7000
+    httpApiServerPort: 4006
     mysqlPort: 7002
     postgreSQLPort: 7003
     internalPort: 5010

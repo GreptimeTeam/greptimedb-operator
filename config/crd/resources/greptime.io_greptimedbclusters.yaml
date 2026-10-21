@@ -13640,8 +13640,16 @@ spec:
                     type: object
                   config:
                     type: string
+                  enableHttpApiServer:
+                    default: true
+                    type: boolean
                   enableObjectStorage:
                     type: boolean
+                  httpApiServerPort:
+                    format: int32
+                    maximum: 65535
+                    minimum: 0
+                    type: integer
                   httpPort:
                     format: int32
                     maximum: 65535
@@ -17131,8 +17139,16 @@ spec:
                       type: object
                     config:
                       type: string
+                    enableHttpApiServer:
+                      default: true
+                      type: boolean
                     enableObjectStorage:
                       type: boolean
+                    httpApiServerPort:
+                      format: int32
+                      maximum: 65535
+                      minimum: 0
+                      type: integer
                     httpPort:
                       format: int32
                       maximum: 65535
@@ -27456,9 +27472,17 @@ spec:
                                 type: boolean
                             type: object
                         type: object
+                      enableHttpApiServer:
+                        default: true
+                        type: boolean
                       enableIPv6:
                         default: false
                         type: boolean
+                      httpApiServerPort:
+                        format: int32
+                        maximum: 65535
+                        minimum: 0
+                        type: integer
                       httpPort:
                         format: int32
                         maximum: 65535

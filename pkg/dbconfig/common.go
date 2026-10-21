@@ -20,11 +20,11 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
+	"github.com/GreptimeTeam/greptimedb-operator/controllers/common"
+	k8sutil "github.com/GreptimeTeam/greptimedb-operator/pkg/util/k8s"
 	"k8s.io/klog/v2"
 	"k8s.io/utils/ptr"
-
-	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
-	k8sutil "github.com/GreptimeTeam/greptimedb-operator/pkg/util/k8s"
 )
 
 var getSecretsData = k8sutil.GetSecretsData
@@ -330,6 +330,21 @@ func (c *LoggingConfig) levelWithFilters(level string, filters []string) string 
 		return fmt.Sprintf("%s,%s", level, strings.Join(filters, ","))
 	}
 	return level
+}
+
+// HTTPConfig is the configuration for the HTTP server.
+type HTTPConfig struct {
+	// EnableAPIServer enables the dedicated public HTTP API server.
+	EnableAPIServer *bool `tomlmapping:"http.enable_api_server"`
+
+	// APIServerAddr is the address the HTTP API server binds to.
+	APIServerAddr *string `tomlmapping:"http.api_server_addr"`
+}
+
+// ConfigureHTTPServer configures the HTTP API server.
+func (c *HTTPConfig) ConfigureHTTPServer(enableIPv6 bool, port int32) {
+	c.EnableAPIServer = ptr.To(true)
+	c.APIServerAddr = ptr.To(common.GetBindAddress(enableIPv6, port))
 }
 
 // TracingConfig is the configuration for the tracing.
