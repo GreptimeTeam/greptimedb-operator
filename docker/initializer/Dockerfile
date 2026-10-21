@@ -1,4 +1,4 @@
-FROM golang:1.25.1 as builder
+FROM golang:1.25.14 as builder
 
 ENV LANG=en_US.utf8
 WORKDIR /greptimedb-operator

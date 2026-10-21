@@ -52,10 +52,16 @@ func TestMain(m *testing.M) {
 		callLog = append(callLog, fmt.Sprintf("%s -> %s", dir, strings.SplitN(r.Host, ":", 2)[0]))
 		w.WriteHeader(http.StatusOK)
 	}))
-	defer proxy.Close()
-	os.Setenv("HTTP_PROXY", proxy.URL)
-	os.Setenv("HTTPS_PROXY", proxy.URL)
-	os.Exit(m.Run())
+	for _, key := range []string{"HTTP_PROXY", "HTTPS_PROXY"} {
+		if err := os.Setenv(key, proxy.URL); err != nil {
+			proxy.Close()
+			fmt.Fprintf(os.Stderr, "set %s: %v\n", key, err)
+			os.Exit(1)
+		}
+	}
+	code := m.Run()
+	proxy.Close()
+	os.Exit(code)
 }
 
 func newHarness(t *testing.T) (*DatanodeDeployer, *v1alpha1.GreptimeDBCluster, *v1alpha1.GreptimeDBCluster, context.Context) {
