@@ -65,7 +65,7 @@ func run(m *testing.M) int {
 	}
 	code := m.Run()
 	proxy.Close()
-	os.Exit(code)
+	return code
 }
 
 func newHarness(t *testing.T) (*DatanodeDeployer, *v1alpha1.GreptimeDBCluster, *v1alpha1.GreptimeDBCluster, context.Context) {
