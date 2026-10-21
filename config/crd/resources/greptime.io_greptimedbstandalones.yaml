@@ -3397,6 +3397,9 @@ spec:
                         type: boolean
                     type: object
                 type: object
+              enableHttpApiServer:
+                default: true
+                type: boolean
               enableIPv6:
                 default: false
                 type: boolean

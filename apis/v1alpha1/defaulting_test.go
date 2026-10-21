@@ -23,6 +23,7 @@ import (
 	"dario.cat/mergo"
 	"github.com/sergi/go-diff/diffmatchpatch"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/yaml"
 )
 
@@ -255,5 +256,79 @@ func TestIntOrStringTransformer(t *testing.T) {
 		if !reflect.DeepEqual(tt.Dst, tt.Expect) {
 			t.Errorf("test [%d] failed: expected '%v', got '%v'", i, tt.Expect, tt.Dst)
 		}
+	}
+}
+
+func TestClusterSetDefaultsPreservesHTTPAPIServerDisabled(t *testing.T) {
+	input := GreptimeDBCluster{
+		Spec: GreptimeDBClusterSpec{
+			Frontend: &FrontendSpec{
+				EnableHTTPAPIServer: ptr.To(false),
+			},
+		},
+	}
+
+	if err := input.SetDefaults(); err != nil {
+		t.Fatal(err)
+	}
+
+	if input.Spec.Frontend.EnableHTTPAPIServer == nil || *input.Spec.Frontend.EnableHTTPAPIServer {
+		t.Fatalf("enableHttpApiServer should remain false, got %v", input.Spec.Frontend.EnableHTTPAPIServer)
+	}
+	if input.Spec.Frontend.IsEnableHTTPAPIServer() {
+		t.Fatal("IsEnableHTTPAPIServer should return false when disabled")
+	}
+}
+
+func TestStandaloneSetDefaultsPreservesHTTPAPIServerDisabled(t *testing.T) {
+	input := GreptimeDBStandalone{
+		Spec: GreptimeDBStandaloneSpec{
+			EnableHTTPAPIServer: ptr.To(false),
+		},
+	}
+
+	if err := input.SetDefaults(); err != nil {
+		t.Fatal(err)
+	}
+
+	if input.Spec.EnableHTTPAPIServer == nil || *input.Spec.EnableHTTPAPIServer {
+		t.Fatalf("enableHttpApiServer should remain false, got %v", input.Spec.EnableHTTPAPIServer)
+	}
+	if input.Spec.IsEnableHTTPAPIServer() {
+		t.Fatal("IsEnableHTTPAPIServer should return false when disabled")
+	}
+}
+
+func TestFrontendSpecIsEnableHTTPAPIServer(t *testing.T) {
+	var nilSpec *FrontendSpec
+	if !nilSpec.IsEnableHTTPAPIServer() {
+		t.Fatal("nil FrontendSpec should default to enabled")
+	}
+	if !(&FrontendSpec{}).IsEnableHTTPAPIServer() {
+		t.Fatal("unset EnableHTTPAPIServer should default to enabled")
+	}
+	if (&FrontendSpec{EnableHTTPAPIServer: ptr.To(true)}).IsEnableHTTPAPIServer() {
+		// expected true
+	} else {
+		t.Fatal("explicit true should be enabled")
+	}
+	if (&FrontendSpec{EnableHTTPAPIServer: ptr.To(false)}).IsEnableHTTPAPIServer() {
+		t.Fatal("explicit false should be disabled")
+	}
+}
+
+func TestStandaloneSpecIsEnableHTTPAPIServer(t *testing.T) {
+	var nilSpec *GreptimeDBStandaloneSpec
+	if !nilSpec.IsEnableHTTPAPIServer() {
+		t.Fatal("nil standalone spec should default to enabled")
+	}
+	if !(&GreptimeDBStandaloneSpec{}).IsEnableHTTPAPIServer() {
+		t.Fatal("unset EnableHTTPAPIServer should default to enabled")
+	}
+	if !(&GreptimeDBStandaloneSpec{EnableHTTPAPIServer: ptr.To(true)}).IsEnableHTTPAPIServer() {
+		t.Fatal("explicit true should be enabled")
+	}
+	if (&GreptimeDBStandaloneSpec{EnableHTTPAPIServer: ptr.To(false)}).IsEnableHTTPAPIServer() {
+		t.Fatal("explicit false should be disabled")
 	}
 }

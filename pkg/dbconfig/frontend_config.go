@@ -75,7 +75,9 @@ func (c *FrontendConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster,
 	c.ConfigureLogging(frontendSpec.GetLogging())
 	c.ConfigureSlowQuery(frontendSpec.GetSlowQuery())
 	c.ConfigureTracing(frontendSpec.GetTracing())
-	c.ConfigureHTTPServer(cluster.Spec.EnableIPv6, frontendSpec.HTTPAPIServerPort)
+	if frontendSpec.IsEnableHTTPAPIServer() {
+		c.ConfigureHTTPServer(cluster.Spec.EnableIPv6, frontendSpec.HTTPAPIServerPort)
+	}
 
 	return nil
 }

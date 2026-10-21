@@ -20,12 +20,11 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 	"github.com/GreptimeTeam/greptimedb-operator/controllers/common"
+	k8sutil "github.com/GreptimeTeam/greptimedb-operator/pkg/util/k8s"
 	"k8s.io/klog/v2"
 	"k8s.io/utils/ptr"
-
-	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
-	k8sutil "github.com/GreptimeTeam/greptimedb-operator/pkg/util/k8s"
 )
 
 var getSecretsData = k8sutil.GetSecretsData

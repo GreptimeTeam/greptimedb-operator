@@ -339,6 +339,7 @@ _Appears in:_
 | `rpcPort` _integer_ | RPCPort is the gRPC port of the frontend. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
 | `httpPort` _integer_ | HTTPPort is the HTTP port of the frontend. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
 | `httpApiServerPort` _integer_ | HTTPAPIServerPort is the port of the dedicated HTTP API server of the frontend. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
+| `enableHttpApiServer` _boolean_ | EnableHTTPAPIServer indicates whether to enable the dedicated HTTP API server of the frontend. | true |  |
 | `mysqlPort` _integer_ | MySQLPort is the MySQL port of the frontend. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
 | `postgreSQLPort` _integer_ | PostgreSQLPort is the PostgreSQL port of the frontend. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
 | `internalPort` _integer_ | InternalPort is the internal gRPC port of the frontend. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
@@ -518,6 +519,7 @@ _Appears in:_
 | `tls` _[TLSSpec](#tlsspec)_ | The TLS configurations of the greptimedb. |  |  |
 | `httpPort` _integer_ | HTTPPort is the port of the greptimedb http service. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
 | `httpApiServerPort` _integer_ | HTTPAPIServerPort is the port of the dedicated HTTP API server of the greptimedb. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
+| `enableHttpApiServer` _boolean_ | EnableHTTPAPIServer indicates whether to enable the dedicated HTTP API server of the greptimedb. | true |  |
 | `rpcPort` _integer_ | RPCPort is the port of the greptimedb rpc service. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
 | `mysqlPort` _integer_ | MySQLPort is the port of the greptimedb mysql service. |  | Maximum: 65535 <br />Minimum: 0 <br /> |
 | `postgreSQLPort` _integer_ | PostgreSQLPort is the port of the greptimedb postgresql service. |  | Maximum: 65535 <br />Minimum: 0 <br /> |

@@ -13639,6 +13639,9 @@ spec:
                     type: object
                   config:
                     type: string
+                  enableHttpApiServer:
+                    default: true
+                    type: boolean
                   enableObjectStorage:
                     type: boolean
                   httpApiServerPort:
@@ -17135,6 +17138,9 @@ spec:
                       type: object
                     config:
                       type: string
+                    enableHttpApiServer:
+                      default: true
+                      type: boolean
                     enableObjectStorage:
                       type: boolean
                     httpApiServerPort:
@@ -27465,6 +27471,9 @@ spec:
                                 type: boolean
                             type: object
                         type: object
+                      enableHttpApiServer:
+                        default: true
+                        type: boolean
                       enableIPv6:
                         default: false
                         type: boolean
@@ -31568,6 +31577,9 @@ spec:
                         type: boolean
                     type: object
                 type: object
+              enableHttpApiServer:
+                default: true
+                type: boolean
               enableIPv6:
                 default: false
                 type: boolean

@@ -301,6 +301,11 @@ type FrontendSpec struct {
 	// +optional
 	HTTPAPIServerPort int32 `json:"httpApiServerPort,omitempty"`
 
+	// EnableHTTPAPIServer indicates whether to enable the dedicated HTTP API server of the frontend.
+	// +kubebuilder:default=true
+	// +optional
+	EnableHTTPAPIServer *bool `json:"enableHttpApiServer,omitempty"`
+
 	// MySQLPort is the MySQL port of the frontend.
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=65535
@@ -385,6 +390,12 @@ func (in *FrontendSpec) GetConfig() string {
 // ShouldInjectObjectStorage returns whether object storage configurations should be injected into frontend instances.
 func (in *FrontendSpec) ShouldInjectObjectStorage() bool {
 	return in != nil && in.EnableObjectStorage != nil && *in.EnableObjectStorage
+}
+
+// IsEnableHTTPAPIServer returns whether the dedicated HTTP API server is enabled.
+// It defaults to true when the field is not set.
+func (in *FrontendSpec) IsEnableHTTPAPIServer() bool {
+	return in == nil || in.EnableHTTPAPIServer == nil || *in.EnableHTTPAPIServer
 }
 
 func (in *FrontendSpec) GetName() string {

@@ -83,7 +83,9 @@ func (c *StandaloneConfig) ConfigureByStandalone(standalone *v1alpha1.GreptimeDB
 	c.ConfigureLogging(standalone.GetLogging())
 	c.ConfigureSlowQuery(standalone.GetSlowQuery())
 	c.ConfigureTracing(standalone.GetTracing())
-	c.ConfigureHTTPServer(standalone.Spec.EnableIPv6, standalone.Spec.HTTPAPIServerPort)
+	if standalone.Spec.IsEnableHTTPAPIServer() {
+		c.ConfigureHTTPServer(standalone.Spec.EnableIPv6, standalone.Spec.HTTPAPIServerPort)
+	}
 
 	return nil
 }

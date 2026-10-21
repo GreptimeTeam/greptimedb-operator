@@ -45,6 +45,11 @@ type GreptimeDBStandaloneSpec struct {
 	// +optional
 	HTTPAPIServerPort int32 `json:"httpApiServerPort,omitempty"`
 
+	// EnableHTTPAPIServer indicates whether to enable the dedicated HTTP API server of the greptimedb.
+	// +kubebuilder:default=true
+	// +optional
+	EnableHTTPAPIServer *bool `json:"enableHttpApiServer,omitempty"`
+
 	// RPCPort is the port of the greptimedb rpc service.
 	// +kubebuilder:validation:Minimum=0
 	// +kubebuilder:validation:Maximum=65535
@@ -175,6 +180,12 @@ func (in *GreptimeDBStandalone) GetConfig() string {
 		return in.Spec.Config
 	}
 	return ""
+}
+
+// IsEnableHTTPAPIServer returns whether the dedicated HTTP API server is enabled.
+// It defaults to true when the field is not set.
+func (in *GreptimeDBStandaloneSpec) IsEnableHTTPAPIServer() bool {
+	return in == nil || in.EnableHTTPAPIServer == nil || *in.EnableHTTPAPIServer
 }
 
 func (in *GreptimeDBStandalone) GetBaseMainContainer() *MainContainerSpec {
