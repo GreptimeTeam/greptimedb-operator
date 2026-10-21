@@ -84,9 +84,16 @@ func (h *Helper) RunSQLTest(ctx context.Context, addr string, sqlFile string) er
 		return err
 	}
 
-	_, err = conn.Exec(context.Background(), string(data))
-	if err != nil {
-		return err
+	// Run statements one by one: GreptimeDB v1.2.1 fails a multi-statement batch that
+	// reads a table and then drops it (GreptimeTeam/greptimedb#9618).
+	// The test SQL files don't contain ';' inside literals or comments.
+	for _, stmt := range strings.Split(string(data), ";") {
+		if strings.TrimSpace(stmt) == "" {
+			continue
+		}
+		if _, err := conn.Exec(context.Background(), stmt); err != nil {
+			return fmt.Errorf("failed to execute %q: %w", strings.TrimSpace(stmt), err)
+		}
 	}
 
 	return nil
