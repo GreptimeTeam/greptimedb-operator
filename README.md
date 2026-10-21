@@ -39,7 +39,7 @@ The GreptimeDB Operator requires at least Kubernetes `1.18.0`.
 | GreptimeDB Operator | API group/version      | Supported GreptimeDB version |
 |---------------------|------------------------|------------------------------|
 | < v0.2.0            | `greptime.io/v1alpha1` | < v0.12.0                    |
-| ≥ v0.2.0, < v0.6.2  | `greptime.io/v1alpha1` | ≥ v0.12.0, < v1.2.1          |
+| ≥ v0.2.0, < v0.6.2  | `greptime.io/v1alpha1` | ≥ v0.12.0                    |
 | ≥ v0.6.2            | `greptime.io/v1alpha1` | ≥ v1.2.1                     |
 
 > **Note**: The dedicated HTTP API server (the `http` service forwarding to `httpApiServerPort`, enabled by default via `enableHttpApiServer`) requires GreptimeDB `>= v1.2.1`.
