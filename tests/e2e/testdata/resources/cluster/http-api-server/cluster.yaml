@@ -16,8 +16,8 @@ spec:
     replicas: 1
     backendStorage:
       etcd:
-        storeKeyPrefix: e2e-cluster-http-api-server
         endpoints:
           - "etcd.etcd-cluster.svc.cluster.local:2379"
+        storeKeyPrefix: "e2e-cluster-http-api-server"
   datanode:
     replicas: 3
