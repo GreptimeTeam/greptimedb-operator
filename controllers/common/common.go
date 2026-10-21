@@ -307,6 +307,11 @@ func MonitoringServiceName(name string) string {
 	return name + "-monitor"
 }
 
+// VectorConfigName returns the per-cluster vector config configmap name.
+func VectorConfigName(name string) string {
+	return strings.Join([]string{name, constant.DefaultVectorConfigName}, "-")
+}
+
 func LogsPipelineName(namespace, name string) string {
 	return strings.Join([]string{namespace, name, "logs"}, "-")
 }

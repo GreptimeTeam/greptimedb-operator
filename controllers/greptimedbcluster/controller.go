@@ -34,7 +34,6 @@ import (
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
 	"github.com/GreptimeTeam/greptimedb-operator/cmd/operator/app/options"
 	"github.com/GreptimeTeam/greptimedb-operator/controllers/common"
-	"github.com/GreptimeTeam/greptimedb-operator/controllers/constant"
 	"github.com/GreptimeTeam/greptimedb-operator/controllers/greptimedbcluster/deployers"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/deployer"
 	"github.com/GreptimeTeam/greptimedb-operator/pkg/metrics"
@@ -342,7 +341,7 @@ func (r *Reconciler) setObservedGeneration(cluster *v1alpha1.GreptimeDBCluster) 
 func (r *Reconciler) removeMonitoringDB(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster) error {
 	objects := map[string]client.Object{
 		common.MonitoringServiceName(cluster.Name): new(v1alpha1.GreptimeDBStandalone),
-		constant.DefaultVectorConfigName:           new(corev1.ConfigMap),
+		common.VectorConfigName(cluster.Name):      new(corev1.ConfigMap),
 	}
 
 	for name, obj := range objects {

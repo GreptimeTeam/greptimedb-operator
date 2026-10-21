@@ -160,13 +160,18 @@ func (c *CommonBuilder) AddAuditLogsVolumeForVector(template *corev1.PodTemplate
 	})
 }
 
+func (c *CommonBuilder) VectorConfigName() string {
+	return common.VectorConfigName(c.Cluster.Name)
+}
+
 func (c *CommonBuilder) AddVectorConfigVolume(template *corev1.PodTemplateSpec) {
+	configMapName := c.VectorConfigName()
 	template.Spec.Volumes = append(template.Spec.Volumes, corev1.Volume{
 		Name: constant.DefaultVectorConfigName,
 		VolumeSource: corev1.VolumeSource{
 			ConfigMap: &corev1.ConfigMapVolumeSource{
 				LocalObjectReference: corev1.LocalObjectReference{
-					Name: constant.DefaultVectorConfigName,
+					Name: configMapName,
 				},
 			},
 		},
@@ -251,7 +256,7 @@ func (c *CommonBuilder) GenerateVectorConfigMap() (*corev1.ConfigMap, error) {
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      constant.DefaultVectorConfigName,
+			Name:      c.VectorConfigName(),
 			Namespace: c.Cluster.Namespace,
 		},
 		Data: map[string]string{
