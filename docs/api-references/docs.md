@@ -706,8 +706,10 @@ _Appears in:_
 | `filters` _string array_ | Filters is the filters of the logging.<br />User can use [EnvFilter](https://docs.rs/tracing-subscriber/latest/tracing_subscriber/filter/struct.EnvFilter.html) to filter the logging.<br />We can use `target[span\{field=value\}]=level` to filter the logging by target and span field.<br />For example, "mito2=debug" will filter the logging of target `mito2` to `debug` level. |  |  |
 | `logsDir` _string_ | LogsDir is the directory path of the logs. |  |  |
 | `persistentWithData` _boolean_ | PersistentWithData indicates whether to persist the log with the datanode data storage. It **ONLY** works for the datanode component.<br />If false, the log will be stored in ephemeral storage. |  |  |
-| `onlyLogToStdout` _boolean_ | OnlyLogToStdout indicates whether to only log to stdout. If true, the log will not be stored in the storage even if the storage is configured. |  |  |
+| `onlyLogToStdout` _boolean_ | OnlyLogToStdout indicates whether to only log to stdout. If true, file logging is<br />disabled (mapped to `enable_file_logging = false`) even if logsDir/storage is configured. |  |  |
 | `format` _[LogFormat](#logformat)_ | Format is the format of the logging. |  | Enum: [json text] <br /> |
+| `maxLogFiles` _integer_ | MaxLogFiles is the maximum number of log files to retain. |  |  |
+| `maxLogDirSize` _string_ | MaxLogDirSize is the maximum total size of managed log files in the log directory.<br />Old closed log files are removed before writing when necessary. Set to `0B` to disable. |  |  |
 
 
 #### LogsCollectionSpec
@@ -1187,6 +1189,7 @@ _Appears in:_
 | `endpoint` _string_ | Endpoint it the OTLP tracing endpoint. |  |  |
 | `sampleRatio` _string_ | SampleRatio is the percentage of tracing will be sampled and exported.<br />Valid range `[0, 1]`, 1 means all traces are sampled, 0 means all traces are not sampled, the default value is 1. |  |  |
 | `headers` _object (keys:string, values:string)_ | Headers are additional HTTP headers to add to OTLP HTTP requests.<br />Only used when protocol is HTTP. |  |  |
+| `exportProtocol` _string_ | ExportProtocol is the OTLP tracing export protocol. Can be `grpc`/`http`. |  |  |
 
 
 #### VectorSpec
