@@ -576,6 +576,7 @@ key2 = 'value2'
 
 [logging]
   dir = "/data/greptimedb/logs"
+  enable_file_logging = true
   level = "info"
   log_format = "json"
 

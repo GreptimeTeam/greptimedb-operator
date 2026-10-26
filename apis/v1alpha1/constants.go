@@ -76,6 +76,16 @@ const (
 	// DefaultLoggingLevel is the default logging level for the GreptimeDB.
 	DefaultLoggingLevel = LoggingLevelInfo
 
+	// DefaultMaxLogFiles is the default maximum number of log files to retain.
+	DefaultMaxLogFiles = int32(720)
+
+	// DefaultMaxLogDirSize is the default maximum total size of managed log files.
+	// `0B` disables the size limit.
+	DefaultMaxLogDirSize = "0B"
+
+	// DefaultOTLPExportProtocol is the default OTLP tracing export protocol.
+	DefaultOTLPExportProtocol = "http"
+
 	// DefaultVectorImage is the default image for the vector.
 	DefaultVectorImage = "timberio/vector:0.49.0-debian"
 

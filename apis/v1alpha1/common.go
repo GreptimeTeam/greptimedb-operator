@@ -609,7 +609,8 @@ type LoggingSpec struct {
 	// +optional
 	PersistentWithData *bool `json:"persistentWithData,omitempty"`
 
-	// OnlyLogToStdout indicates whether to only log to stdout. If true, the log will not be stored in the storage even if the storage is configured.
+	// OnlyLogToStdout indicates whether to only log to stdout. If true, file logging is
+	// disabled (mapped to `enable_file_logging = false`) even if logsDir/storage is configured.
 	// +optional
 	OnlyLogToStdout *bool `json:"onlyLogToStdout,omitempty"`
 
@@ -617,6 +618,15 @@ type LoggingSpec struct {
 	// +optional
 	// +kubebuilder:validation:Enum:={"json", "text"}
 	Format LogFormat `json:"format,omitempty"`
+
+	// MaxLogFiles is the maximum number of log files to retain.
+	// +optional
+	MaxLogFiles *int32 `json:"maxLogFiles,omitempty"`
+
+	// MaxLogDirSize is the maximum total size of managed log files in the log directory.
+	// Old closed log files are removed before writing when necessary. Set to `0B` to disable.
+	// +optional
+	MaxLogDirSize string `json:"maxLogDirSize,omitempty"`
 }
 
 func (in *LoggingSpec) GetLevel() LoggingLevel {
@@ -641,6 +651,20 @@ func (in *LoggingSpec) IsOnlyLogToStdout() bool {
 	return in != nil && in.OnlyLogToStdout != nil && *in.OnlyLogToStdout
 }
 
+func (in *LoggingSpec) GetMaxLogFiles() *int32 {
+	if in != nil {
+		return in.MaxLogFiles
+	}
+	return nil
+}
+
+func (in *LoggingSpec) GetMaxLogDirSize() string {
+	if in != nil {
+		return in.MaxLogDirSize
+	}
+	return ""
+}
+
 // TracingSpec defines the tracing configuration for the component.
 type TracingSpec struct {
 	// Enabled indicates whether to enable OTLP tracing.
@@ -659,6 +683,11 @@ type TracingSpec struct {
 	// Only used when protocol is HTTP.
 	// +optional
 	Headers map[string]string `json:"headers,omitempty"`
+
+	// ExportProtocol is the OTLP tracing export protocol. Can be `grpc`/`http`.
+	// +optional
+	// +kubebuilder:validation:Enum:{"grpc", "http"}
+	ExportProtocol string `json:"exportProtocol,omitempty"`
 }
 
 // AuditLogSpec defines the configuration for audit logging

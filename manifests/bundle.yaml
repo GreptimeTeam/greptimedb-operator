@@ -3407,6 +3407,11 @@ spec:
                         type: string
                       logsDir:
                         type: string
+                      maxLogDirSize:
+                        type: string
+                      maxLogFiles:
+                        format: int32
+                        type: integer
                       onlyLogToStdout:
                         type: boolean
                       persistentWithData:
@@ -6795,6 +6800,8 @@ spec:
                         type: boolean
                       endpoint:
                         type: string
+                      exportProtocol:
+                        type: string
                       headers:
                         additionalProperties:
                           type: string
@@ -6833,6 +6840,11 @@ spec:
                           type: string
                         logsDir:
                           type: string
+                        maxLogDirSize:
+                          type: string
+                        maxLogFiles:
+                          format: int32
+                          type: integer
                         onlyLogToStdout:
                           type: boolean
                         persistentWithData:
@@ -10221,6 +10233,8 @@ spec:
                           type: boolean
                         endpoint:
                           type: string
+                        exportProtocol:
+                          type: string
                         headers:
                           additionalProperties:
                             type: string
@@ -10262,6 +10276,11 @@ spec:
                         type: string
                       logsDir:
                         type: string
+                      maxLogDirSize:
+                        type: string
+                      maxLogFiles:
+                        format: int32
+                        type: integer
                       onlyLogToStdout:
                         type: boolean
                       persistentWithData:
@@ -13616,6 +13635,8 @@ spec:
                         type: boolean
                       endpoint:
                         type: string
+                      exportProtocol:
+                        type: string
                       headers:
                         additionalProperties:
                           type: string
@@ -13686,6 +13707,11 @@ spec:
                         type: string
                       logsDir:
                         type: string
+                      maxLogDirSize:
+                        type: string
+                      maxLogFiles:
+                        format: int32
+                        type: integer
                       onlyLogToStdout:
                         type: boolean
                       persistentWithData:
@@ -17114,6 +17140,8 @@ spec:
                         type: boolean
                       endpoint:
                         type: string
+                      exportProtocol:
+                        type: string
                       headers:
                         additionalProperties:
                           type: string
@@ -17185,6 +17213,11 @@ spec:
                           type: string
                         logsDir:
                           type: string
+                        maxLogDirSize:
+                          type: string
+                        maxLogFiles:
+                          format: int32
+                          type: integer
                         onlyLogToStdout:
                           type: boolean
                         persistentWithData:
@@ -20613,6 +20646,8 @@ spec:
                           type: boolean
                         endpoint:
                           type: string
+                        exportProtocol:
+                          type: string
                         headers:
                           additionalProperties:
                             type: string
@@ -20652,6 +20687,11 @@ spec:
                     type: string
                   logsDir:
                     type: string
+                  maxLogDirSize:
+                    type: string
+                  maxLogFiles:
+                    format: int32
+                    type: integer
                   onlyLogToStdout:
                     type: boolean
                   persistentWithData:
@@ -20747,6 +20787,11 @@ spec:
                         type: string
                       logsDir:
                         type: string
+                      maxLogDirSize:
+                        type: string
+                      maxLogFiles:
+                        format: int32
+                        type: integer
                       onlyLogToStdout:
                         type: boolean
                       persistentWithData:
@@ -24099,6 +24144,8 @@ spec:
                       enabled:
                         type: boolean
                       endpoint:
+                        type: string
+                      exportProtocol:
                         type: string
                       headers:
                         additionalProperties:
@@ -27519,6 +27566,11 @@ spec:
                             type: string
                           logsDir:
                             type: string
+                          maxLogDirSize:
+                            type: string
+                          maxLogFiles:
+                            format: int32
+                            type: integer
                           onlyLogToStdout:
                             type: boolean
                           persistentWithData:
@@ -27738,6 +27790,8 @@ spec:
                           enabled:
                             type: boolean
                           endpoint:
+                            type: string
+                          exportProtocol:
                             type: string
                           headers:
                             additionalProperties:
@@ -28004,6 +28058,8 @@ spec:
                   enabled:
                     type: boolean
                   endpoint:
+                    type: string
+                  exportProtocol:
                     type: string
                   headers:
                     additionalProperties:
@@ -31625,6 +31681,11 @@ spec:
                     type: string
                   logsDir:
                     type: string
+                  maxLogDirSize:
+                    type: string
+                  maxLogFiles:
+                    format: int32
+                    type: integer
                   onlyLogToStdout:
                     type: boolean
                   persistentWithData:
@@ -31844,6 +31905,8 @@ spec:
                   enabled:
                     type: boolean
                   endpoint:
+                    type: string
+                  exportProtocol:
                     type: string
                   headers:
                     additionalProperties:
