@@ -576,8 +576,182 @@ key2 = 'value2'
 
 [logging]
   dir = "/data/greptimedb/logs"
+  enable_file_logging = true
   level = "info"
   log_format = "json"
+
+[storage]
+  bucket = "testbucket"
+  endpoint = "s3.amazonaws.com"
+  region = "us-west-2"
+  root = "testcluster"
+  type = "S3"
+`
+
+	data, err := FromCluster(testCluster, testCluster.GetDatanode())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !reflect.DeepEqual([]byte(testConfig), data) {
+		t.Errorf("generated config is not equal to wanted config:\n, want: %s\n, got: %s\n", testConfig, string(data))
+	}
+}
+
+func TestFromClusterForDatanodeConfigWithLoggingRetention(t *testing.T) {
+	testCluster := &v1alpha1.GreptimeDBCluster{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-cluster",
+			Namespace: "default",
+		},
+		Spec: v1alpha1.GreptimeDBClusterSpec{
+			ObjectStorageProvider: &v1alpha1.ObjectStorageProviderSpec{
+				S3: &v1alpha1.S3Storage{
+					Root:     "testcluster",
+					Bucket:   "testbucket",
+					Endpoint: "s3.amazonaws.com",
+					Region:   "us-west-2",
+				},
+			},
+			Datanode: &v1alpha1.DatanodeSpec{
+				ComponentSpec: v1alpha1.ComponentSpec{
+					Logging: &v1alpha1.LoggingSpec{
+						Level:         v1alpha1.LoggingLevelInfo,
+						LogsDir:       "/data/greptimedb/logs",
+						Format:        v1alpha1.LogFormatJSON,
+						MaxLogFiles:   ptr.To(int32(720)),
+						MaxLogDirSize: "1GB",
+					},
+				},
+			},
+		},
+	}
+
+	testConfig := `
+[logging]
+  dir = "/data/greptimedb/logs"
+  enable_file_logging = true
+  level = "info"
+  log_format = "json"
+  max_log_dir_size = "1GB"
+  max_log_files = 720
+
+[storage]
+  bucket = "testbucket"
+  endpoint = "s3.amazonaws.com"
+  region = "us-west-2"
+  root = "testcluster"
+  type = "S3"
+`
+
+	data, err := FromCluster(testCluster, testCluster.GetDatanode())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !reflect.DeepEqual([]byte(testConfig), data) {
+		t.Errorf("generated config is not equal to wanted config:\n, want: %s\n, got: %s\n", testConfig, string(data))
+	}
+}
+
+func TestFromClusterForDatanodeConfigWithOnlyLogToStdout(t *testing.T) {
+	testCluster := &v1alpha1.GreptimeDBCluster{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-cluster",
+			Namespace: "default",
+		},
+		Spec: v1alpha1.GreptimeDBClusterSpec{
+			ObjectStorageProvider: &v1alpha1.ObjectStorageProviderSpec{
+				S3: &v1alpha1.S3Storage{
+					Root:     "testcluster",
+					Bucket:   "testbucket",
+					Endpoint: "s3.amazonaws.com",
+					Region:   "us-west-2",
+				},
+			},
+			Datanode: &v1alpha1.DatanodeSpec{
+				ComponentSpec: v1alpha1.ComponentSpec{
+					Logging: &v1alpha1.LoggingSpec{
+						Level:           v1alpha1.LoggingLevelInfo,
+						LogsDir:         "/data/greptimedb/logs",
+						Format:          v1alpha1.LogFormatJSON,
+						OnlyLogToStdout: ptr.To(true),
+					},
+				},
+			},
+		},
+	}
+
+	testConfig := `
+[logging]
+  dir = ""
+  enable_file_logging = false
+  level = "info"
+  log_format = "json"
+
+[storage]
+  bucket = "testbucket"
+  endpoint = "s3.amazonaws.com"
+  region = "us-west-2"
+  root = "testcluster"
+  type = "S3"
+`
+
+	data, err := FromCluster(testCluster, testCluster.GetDatanode())
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !reflect.DeepEqual([]byte(testConfig), data) {
+		t.Errorf("generated config is not equal to wanted config:\n, want: %s\n, got: %s\n", testConfig, string(data))
+	}
+}
+
+func TestFromClusterForDatanodeConfigWithTracingExportProtocol(t *testing.T) {
+	testCluster := &v1alpha1.GreptimeDBCluster{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-cluster",
+			Namespace: "default",
+		},
+		Spec: v1alpha1.GreptimeDBClusterSpec{
+			ObjectStorageProvider: &v1alpha1.ObjectStorageProviderSpec{
+				S3: &v1alpha1.S3Storage{
+					Root:     "testcluster",
+					Bucket:   "testbucket",
+					Endpoint: "s3.amazonaws.com",
+					Region:   "us-west-2",
+				},
+			},
+			Datanode: &v1alpha1.DatanodeSpec{
+				ComponentSpec: v1alpha1.ComponentSpec{
+					Logging: &v1alpha1.LoggingSpec{
+						Level:   v1alpha1.LoggingLevelInfo,
+						LogsDir: "/data/greptimedb/logs",
+						Format:  v1alpha1.LogFormatJSON,
+					},
+					Tracing: &v1alpha1.TracingSpec{
+						Enabled:        ptr.To(true),
+						Endpoint:       "http://127.0.0.1:4317",
+						SampleRatio:    "1.0",
+						ExportProtocol: "grpc",
+					},
+				},
+			},
+		},
+	}
+
+	testConfig := `
+[logging]
+  dir = "/data/greptimedb/logs"
+  enable_file_logging = true
+  enable_otlp_tracing = true
+  level = "info"
+  log_format = "json"
+  otlp_endpoint = "http://127.0.0.1:4317"
+  otlp_export_protocol = "grpc"
+
+  [logging.tracing_sample_ratio]
+    default_ratio = 1.0
 
 [storage]
   bucket = "testbucket"

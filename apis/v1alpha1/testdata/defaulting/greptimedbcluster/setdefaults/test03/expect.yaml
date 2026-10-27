@@ -37,6 +37,7 @@ spec:
   tracing:
     headers:
       x-greptime-hint-ttl: 30d
+    exportProtocol: http
   objectStorage:
     s3:
       bucket: greptimedb
@@ -48,6 +49,8 @@ spec:
     format: json
     level: info
     logsDir: /data/greptimedb/logs
+    maxLogDirSize: 0B
+    maxLogFiles: 720
     onlyLogToStdout: false
     persistentWithData: false
   frontend:
@@ -145,6 +148,8 @@ spec:
         format: text
         level: info
         logsDir: /data/greptimedb/logs
+        maxLogDirSize: 0B
+        maxLogFiles: 720
         onlyLogToStdout: false
         persistentWithData: false
       mysqlPort: 4002

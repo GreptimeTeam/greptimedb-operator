@@ -3407,6 +3407,13 @@ spec:
                         type: string
                       logsDir:
                         type: string
+                      maxLogDirSize:
+                        pattern: ^[0-9]+(\.[0-9]+)?(B|[KMGTP](B|iB)?)?$
+                        type: string
+                      maxLogFiles:
+                        format: int32
+                        minimum: 0
+                        type: integer
                       onlyLogToStdout:
                         type: boolean
                       persistentWithData:
@@ -6795,6 +6802,11 @@ spec:
                         type: boolean
                       endpoint:
                         type: string
+                      exportProtocol:
+                        enum:
+                        - grpc
+                        - http
+                        type: string
                       headers:
                         additionalProperties:
                           type: string
@@ -6833,6 +6845,13 @@ spec:
                           type: string
                         logsDir:
                           type: string
+                        maxLogDirSize:
+                          pattern: ^[0-9]+(\.[0-9]+)?(B|[KMGTP](B|iB)?)?$
+                          type: string
+                        maxLogFiles:
+                          format: int32
+                          minimum: 0
+                          type: integer
                         onlyLogToStdout:
                           type: boolean
                         persistentWithData:
@@ -10221,6 +10240,11 @@ spec:
                           type: boolean
                         endpoint:
                           type: string
+                        exportProtocol:
+                          enum:
+                          - grpc
+                          - http
+                          type: string
                         headers:
                           additionalProperties:
                             type: string
@@ -10262,6 +10286,13 @@ spec:
                         type: string
                       logsDir:
                         type: string
+                      maxLogDirSize:
+                        pattern: ^[0-9]+(\.[0-9]+)?(B|[KMGTP](B|iB)?)?$
+                        type: string
+                      maxLogFiles:
+                        format: int32
+                        minimum: 0
+                        type: integer
                       onlyLogToStdout:
                         type: boolean
                       persistentWithData:
@@ -13616,6 +13647,11 @@ spec:
                         type: boolean
                       endpoint:
                         type: string
+                      exportProtocol:
+                        enum:
+                        - grpc
+                        - http
+                        type: string
                       headers:
                         additionalProperties:
                           type: string
@@ -13638,6 +13674,7 @@ spec:
                         type: boolean
                       maxLogFiles:
                         format: int32
+                        minimum: 0
                         type: integer
                       objectTypes:
                         type: string
@@ -13686,6 +13723,13 @@ spec:
                         type: string
                       logsDir:
                         type: string
+                      maxLogDirSize:
+                        pattern: ^[0-9]+(\.[0-9]+)?(B|[KMGTP](B|iB)?)?$
+                        type: string
+                      maxLogFiles:
+                        format: int32
+                        minimum: 0
+                        type: integer
                       onlyLogToStdout:
                         type: boolean
                       persistentWithData:
@@ -17114,6 +17158,11 @@ spec:
                         type: boolean
                       endpoint:
                         type: string
+                      exportProtocol:
+                        enum:
+                        - grpc
+                        - http
+                        type: string
                       headers:
                         additionalProperties:
                           type: string
@@ -17137,6 +17186,7 @@ spec:
                           type: boolean
                         maxLogFiles:
                           format: int32
+                          minimum: 0
                           type: integer
                         objectTypes:
                           type: string
@@ -17185,6 +17235,13 @@ spec:
                           type: string
                         logsDir:
                           type: string
+                        maxLogDirSize:
+                          pattern: ^[0-9]+(\.[0-9]+)?(B|[KMGTP](B|iB)?)?$
+                          type: string
+                        maxLogFiles:
+                          format: int32
+                          minimum: 0
+                          type: integer
                         onlyLogToStdout:
                           type: boolean
                         persistentWithData:
@@ -20613,6 +20670,11 @@ spec:
                           type: boolean
                         endpoint:
                           type: string
+                        exportProtocol:
+                          enum:
+                          - grpc
+                          - http
+                          type: string
                         headers:
                           additionalProperties:
                             type: string
@@ -20652,6 +20714,13 @@ spec:
                     type: string
                   logsDir:
                     type: string
+                  maxLogDirSize:
+                    pattern: ^[0-9]+(\.[0-9]+)?(B|[KMGTP](B|iB)?)?$
+                    type: string
+                  maxLogFiles:
+                    format: int32
+                    minimum: 0
+                    type: integer
                   onlyLogToStdout:
                     type: boolean
                   persistentWithData:
@@ -20747,6 +20816,13 @@ spec:
                         type: string
                       logsDir:
                         type: string
+                      maxLogDirSize:
+                        pattern: ^[0-9]+(\.[0-9]+)?(B|[KMGTP](B|iB)?)?$
+                        type: string
+                      maxLogFiles:
+                        format: int32
+                        minimum: 0
+                        type: integer
                       onlyLogToStdout:
                         type: boolean
                       persistentWithData:
@@ -24099,6 +24175,11 @@ spec:
                       enabled:
                         type: boolean
                       endpoint:
+                        type: string
+                      exportProtocol:
+                        enum:
+                        - grpc
+                        - http
                         type: string
                       headers:
                         additionalProperties:
@@ -27519,6 +27600,13 @@ spec:
                             type: string
                           logsDir:
                             type: string
+                          maxLogDirSize:
+                            pattern: ^[0-9]+(\.[0-9]+)?(B|[KMGTP](B|iB)?)?$
+                            type: string
+                          maxLogFiles:
+                            format: int32
+                            minimum: 0
+                            type: integer
                           onlyLogToStdout:
                             type: boolean
                           persistentWithData:
@@ -27738,6 +27826,11 @@ spec:
                           enabled:
                             type: boolean
                           endpoint:
+                            type: string
+                          exportProtocol:
+                            enum:
+                            - grpc
+                            - http
                             type: string
                           headers:
                             additionalProperties:
@@ -28004,6 +28097,11 @@ spec:
                   enabled:
                     type: boolean
                   endpoint:
+                    type: string
+                  exportProtocol:
+                    enum:
+                    - grpc
+                    - http
                     type: string
                   headers:
                     additionalProperties:
@@ -31625,6 +31723,13 @@ spec:
                     type: string
                   logsDir:
                     type: string
+                  maxLogDirSize:
+                    pattern: ^[0-9]+(\.[0-9]+)?(B|[KMGTP](B|iB)?)?$
+                    type: string
+                  maxLogFiles:
+                    format: int32
+                    minimum: 0
+                    type: integer
                   onlyLogToStdout:
                     type: boolean
                   persistentWithData:
@@ -31844,6 +31949,11 @@ spec:
                   enabled:
                     type: boolean
                   endpoint:
+                    type: string
+                  exportProtocol:
+                    enum:
+                    - grpc
+                    - http
                     type: string
                   headers:
                     additionalProperties:

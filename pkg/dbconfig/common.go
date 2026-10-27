@@ -299,6 +299,15 @@ type LoggingConfig struct {
 
 	// The log format. Can be `text`/`json`.
 	LogFormat *string `tomlmapping:"logging.log_format"`
+
+	// Whether to write logs to files in `Dir`.
+	EnableFileLogging *bool `tomlmapping:"logging.enable_file_logging"`
+
+	// The maximum amount of log files.
+	MaxLogFiles *int32 `tomlmapping:"logging.max_log_files"`
+
+	// The maximum total size of managed log files in `Dir`.
+	MaxLogDirSize *string `tomlmapping:"logging.max_log_dir_size"`
 }
 
 // ConfigureLogging configures the logging config with the given logging spec.
@@ -322,6 +331,15 @@ func (c *LoggingConfig) ConfigureLogging(spec *v1alpha1.LoggingSpec) {
 
 	c.Level = ptr.To(c.levelWithFilters(string(spec.Level), spec.Filters))
 	c.LogFormat = ptr.To(string(spec.Format))
+
+	// OnlyLogToStdout maps to `enable_file_logging = false`.
+	c.EnableFileLogging = ptr.To(!spec.IsOnlyLogToStdout())
+	if spec.GetMaxLogFiles() != nil {
+		c.MaxLogFiles = spec.GetMaxLogFiles()
+	}
+	if len(spec.GetMaxLogDirSize()) > 0 {
+		c.MaxLogDirSize = ptr.To(spec.GetMaxLogDirSize())
+	}
 }
 
 // levelWithFilters returns the level with filters. For example, it will output "info,mito2=debug" if the level is "info" and the filters are ["mito2=debug"].
@@ -360,6 +378,9 @@ type TracingConfig struct {
 
 	// The OTLP headers, only valid when using OTLP HTTP protocol.
 	Headers *map[string]string `tomlmapping:"logging.otlp_headers"`
+
+	// The OTLP tracing export protocol. Can be `grpc`/`http`.
+	ExportProtocol *string `tomlmapping:"logging.otlp_export_protocol"`
 }
 
 // ConfigureTracing configures the tracing config with the given tracing spec.
@@ -379,6 +400,9 @@ func (c *TracingConfig) ConfigureTracing(spec *v1alpha1.TracingSpec) {
 		c.SampleRatio = ptr.To(sampleRatio)
 		if len(spec.Headers) > 0 {
 			c.Headers = &spec.Headers
+		}
+		if len(spec.ExportProtocol) > 0 {
+			c.ExportProtocol = ptr.To(spec.ExportProtocol)
 		}
 	}
 }

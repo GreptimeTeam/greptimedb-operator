@@ -195,6 +195,7 @@ func (in *GreptimeDBCluster) defaultSpec() *GreptimeDBClusterSpec {
 			Headers: map[string]string{
 				"x-greptime-hint-ttl": ttl,
 			},
+			ExportProtocol: DefaultOTLPExportProtocol,
 		}
 	}
 
@@ -463,6 +464,8 @@ func defaultLogging() *LoggingSpec {
 		Format:             LogFormatText,
 		PersistentWithData: ptr.To(false),
 		OnlyLogToStdout:    ptr.To(false),
+		MaxLogFiles:        ptr.To(DefaultMaxLogFiles),
+		MaxLogDirSize:      DefaultMaxLogDirSize,
 	}
 }
 

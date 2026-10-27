@@ -39,6 +39,8 @@ spec:
       format: text
       level: info
       logsDir: /data/greptimedb/logs
+      maxLogDirSize: 0B
+      maxLogFiles: 720
       onlyLogToStdout: false
       persistentWithData: false
     tracing: {}
@@ -88,6 +90,8 @@ spec:
       format: text
       level: info
       logsDir: /data/greptimedb/logs
+      maxLogDirSize: 0B
+      maxLogFiles: 720
       onlyLogToStdout: false
       persistentWithData: false
     tracing: {}
@@ -139,6 +143,8 @@ spec:
       format: text
       level: info
       logsDir: /data/greptimedb/logs
+      maxLogDirSize: 0B
+      maxLogFiles: 720
       onlyLogToStdout: false
       persistentWithData: false
     tracing: {}
@@ -193,6 +199,8 @@ spec:
       format: text
       level: info
       logsDir: /data/greptimedb/logs
+      maxLogDirSize: 0B
+      maxLogFiles: 720
       onlyLogToStdout: false
       persistentWithData: false
     tracing: {}
@@ -247,6 +255,8 @@ spec:
     format: text
     level: info
     logsDir: /data/greptimedb/logs
+    maxLogDirSize: 0B
+    maxLogFiles: 720
     onlyLogToStdout: false
     persistentWithData: false
   meta:
@@ -260,6 +270,8 @@ spec:
       format: text
       level: info
       logsDir: /data/greptimedb/logs
+      maxLogDirSize: 0B
+      maxLogFiles: 720
       onlyLogToStdout: false
       persistentWithData: false
     tracing: {}
