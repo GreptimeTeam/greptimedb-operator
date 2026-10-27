@@ -44,7 +44,7 @@ The GreptimeDB Operator requires at least Kubernetes `1.18.0`.
 
 > **Note**: The dedicated HTTP API server (the `http` service forwarding to `httpApiServerPort`, enabled by default via `enableHttpApiServer`) requires GreptimeDB `>= v1.2.1`.
 >
-> **Note**: The logging fields `onlyLogToStdout` (rendered as `enable_file_logging`) and `maxLogDirSize` (rendered as `max_log_dir_size`) only take effect on GreptimeDB `>= v1.3.0`; the tracing field `exportProtocol` (rendered as `otlp_export_protocol`) only takes effect on GreptimeDB `>= v0.15.0`. These keys are silently ignored by older GreptimeDB versions.
+> **Note**: The logging fields `onlyLogToStdout` (rendered as `enable_file_logging`) and `maxLogDirSize` (rendered as `max_log_dir_size`) only take effect on GreptimeDB `>= v1.3.0`. These keys are silently ignored by older GreptimeDB versions.
 
 ## Quick Start
 
