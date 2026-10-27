@@ -621,11 +621,13 @@ type LoggingSpec struct {
 
 	// MaxLogFiles is the maximum number of log files to retain.
 	// +optional
+	// +kubebuilder:validation:Minimum=0
 	MaxLogFiles *int32 `json:"maxLogFiles,omitempty"`
 
 	// MaxLogDirSize is the maximum total size of managed log files in the log directory.
 	// Old closed log files are removed before writing when necessary. Set to `0B` to disable.
 	// +optional
+	// +kubebuilder:validation:Pattern=`^[0-9]+(\.[0-9]+)?(B|[KMGTP](B|iB)?)?$`
 	MaxLogDirSize string `json:"maxLogDirSize,omitempty"`
 }
 
@@ -686,7 +688,7 @@ type TracingSpec struct {
 
 	// ExportProtocol is the OTLP tracing export protocol. Can be `grpc`/`http`.
 	// +optional
-	// +kubebuilder:validation:Enum:{"grpc", "http"}
+	// +kubebuilder:validation:Enum:={"grpc", "http"}
 	ExportProtocol string `json:"exportProtocol,omitempty"`
 }
 
@@ -718,6 +720,7 @@ type AuditLogSpec struct {
 
 	// MaxLogFiles is the maximum number of audit log files to retain
 	// +optional
+	// +kubebuilder:validation:Minimum=0
 	MaxLogFiles *int32 `json:"maxLogFiles,omitempty"`
 }
 

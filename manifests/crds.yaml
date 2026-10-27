@@ -3401,9 +3401,11 @@ spec:
                       logsDir:
                         type: string
                       maxLogDirSize:
+                        pattern: ^[0-9]+(\.[0-9]+)?(B|[KMGTP](B|iB)?)?$
                         type: string
                       maxLogFiles:
                         format: int32
+                        minimum: 0
                         type: integer
                       onlyLogToStdout:
                         type: boolean
@@ -6794,6 +6796,9 @@ spec:
                       endpoint:
                         type: string
                       exportProtocol:
+                        enum:
+                        - grpc
+                        - http
                         type: string
                       headers:
                         additionalProperties:
@@ -6834,9 +6839,11 @@ spec:
                         logsDir:
                           type: string
                         maxLogDirSize:
+                          pattern: ^[0-9]+(\.[0-9]+)?(B|[KMGTP](B|iB)?)?$
                           type: string
                         maxLogFiles:
                           format: int32
+                          minimum: 0
                           type: integer
                         onlyLogToStdout:
                           type: boolean
@@ -10227,6 +10234,9 @@ spec:
                         endpoint:
                           type: string
                         exportProtocol:
+                          enum:
+                          - grpc
+                          - http
                           type: string
                         headers:
                           additionalProperties:
@@ -10270,9 +10280,11 @@ spec:
                       logsDir:
                         type: string
                       maxLogDirSize:
+                        pattern: ^[0-9]+(\.[0-9]+)?(B|[KMGTP](B|iB)?)?$
                         type: string
                       maxLogFiles:
                         format: int32
+                        minimum: 0
                         type: integer
                       onlyLogToStdout:
                         type: boolean
@@ -13629,6 +13641,9 @@ spec:
                       endpoint:
                         type: string
                       exportProtocol:
+                        enum:
+                        - grpc
+                        - http
                         type: string
                       headers:
                         additionalProperties:
@@ -13652,6 +13667,7 @@ spec:
                         type: boolean
                       maxLogFiles:
                         format: int32
+                        minimum: 0
                         type: integer
                       objectTypes:
                         type: string
@@ -13701,9 +13717,11 @@ spec:
                       logsDir:
                         type: string
                       maxLogDirSize:
+                        pattern: ^[0-9]+(\.[0-9]+)?(B|[KMGTP](B|iB)?)?$
                         type: string
                       maxLogFiles:
                         format: int32
+                        minimum: 0
                         type: integer
                       onlyLogToStdout:
                         type: boolean
@@ -17134,6 +17152,9 @@ spec:
                       endpoint:
                         type: string
                       exportProtocol:
+                        enum:
+                        - grpc
+                        - http
                         type: string
                       headers:
                         additionalProperties:
@@ -17158,6 +17179,7 @@ spec:
                           type: boolean
                         maxLogFiles:
                           format: int32
+                          minimum: 0
                           type: integer
                         objectTypes:
                           type: string
@@ -17207,9 +17229,11 @@ spec:
                         logsDir:
                           type: string
                         maxLogDirSize:
+                          pattern: ^[0-9]+(\.[0-9]+)?(B|[KMGTP](B|iB)?)?$
                           type: string
                         maxLogFiles:
                           format: int32
+                          minimum: 0
                           type: integer
                         onlyLogToStdout:
                           type: boolean
@@ -20640,6 +20664,9 @@ spec:
                         endpoint:
                           type: string
                         exportProtocol:
+                          enum:
+                          - grpc
+                          - http
                           type: string
                         headers:
                           additionalProperties:
@@ -20681,9 +20708,11 @@ spec:
                   logsDir:
                     type: string
                   maxLogDirSize:
+                    pattern: ^[0-9]+(\.[0-9]+)?(B|[KMGTP](B|iB)?)?$
                     type: string
                   maxLogFiles:
                     format: int32
+                    minimum: 0
                     type: integer
                   onlyLogToStdout:
                     type: boolean
@@ -20781,9 +20810,11 @@ spec:
                       logsDir:
                         type: string
                       maxLogDirSize:
+                        pattern: ^[0-9]+(\.[0-9]+)?(B|[KMGTP](B|iB)?)?$
                         type: string
                       maxLogFiles:
                         format: int32
+                        minimum: 0
                         type: integer
                       onlyLogToStdout:
                         type: boolean
@@ -24139,6 +24170,9 @@ spec:
                       endpoint:
                         type: string
                       exportProtocol:
+                        enum:
+                        - grpc
+                        - http
                         type: string
                       headers:
                         additionalProperties:
@@ -27560,9 +27594,11 @@ spec:
                           logsDir:
                             type: string
                           maxLogDirSize:
+                            pattern: ^[0-9]+(\.[0-9]+)?(B|[KMGTP](B|iB)?)?$
                             type: string
                           maxLogFiles:
                             format: int32
+                            minimum: 0
                             type: integer
                           onlyLogToStdout:
                             type: boolean
@@ -27785,6 +27821,9 @@ spec:
                           endpoint:
                             type: string
                           exportProtocol:
+                            enum:
+                            - grpc
+                            - http
                             type: string
                           headers:
                             additionalProperties:
@@ -28053,6 +28092,9 @@ spec:
                   endpoint:
                     type: string
                   exportProtocol:
+                    enum:
+                    - grpc
+                    - http
                     type: string
                   headers:
                     additionalProperties:
@@ -31675,9 +31717,11 @@ spec:
                   logsDir:
                     type: string
                   maxLogDirSize:
+                    pattern: ^[0-9]+(\.[0-9]+)?(B|[KMGTP](B|iB)?)?$
                     type: string
                   maxLogFiles:
                     format: int32
+                    minimum: 0
                     type: integer
                   onlyLogToStdout:
                     type: boolean
@@ -31900,6 +31944,9 @@ spec:
                   endpoint:
                     type: string
                   exportProtocol:
+                    enum:
+                    - grpc
+                    - http
                     type: string
                   headers:
                     additionalProperties:
