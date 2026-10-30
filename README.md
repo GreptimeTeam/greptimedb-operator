@@ -36,11 +36,14 @@ The GreptimeDB Operator requires at least Kubernetes `1.18.0`.
 
 ## Compatibility Matrix
 
-| GreptimeDB Operator | API group/version      | Supported GreptimeDB version                                     |
-|---------------------|------------------------|------------------------------------------------------------------|
-| < v0.2.0            | `greptime.io/v1alpha1` | < v0.12.0                                                        |
-| ≥ v0.2.0, < v0.7.0  | `greptime.io/v1alpha1` | ≥ v0.12.0                                                        |
-| ≥ v0.7.0            | `greptime.io/v1alpha1` | ≥ v1.2.1 by default; ≥ v0.12.0 with `enableHttpApiServer: false` |
+> **Note**: The `greptimedb-operator` version follows the GreptimeDB image version. For example, when the GreptimeDB image version is `v1.3.0`, the `greptimedb-operator` version should be `>= v1.3.0`.
+
+| GreptimeDB Operator | API group/version      | Supported GreptimeDB version                                               |
+|---------------------|------------------------|----------------------------------------------------------------------------|
+| < v0.2.0            | `greptime.io/v1alpha1` | < v0.12.0                                                                  |
+| ≥ v0.2.0, < v0.7.0  | `greptime.io/v1alpha1` | ≥ v0.12.0                                                                  |
+| = v0.7.0            | `greptime.io/v1alpha1` | = v1.2.1 by default; ≥ v0.12.0, < v1.2.1 with `enableHttpApiServer: false` |
+| ≥ v1.3.0            | `greptime.io/v1alpha1` | ≥ v1.3.0                                                                   |
 
 > **Note**: The dedicated HTTP API server (the `http` service forwarding to `httpApiServerPort`, enabled by default via `enableHttpApiServer`) requires GreptimeDB `>= v1.2.1`.
 >
