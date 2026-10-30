@@ -39,9 +39,6 @@ type FrontendConfig struct {
 	// PluginConfig is the configuration for the plugins.
 	PluginConfig `tomlmapping:",inline"`
 
-	// HTTPConfig is the configuration for the HTTP server.
-	HTTPConfig `tomlmapping:",inline"`
-
 	// InputConfig is from config field of cluster spec.
 	InputConfig string
 }
@@ -75,9 +72,6 @@ func (c *FrontendConfig) ConfigureByCluster(cluster *v1alpha1.GreptimeDBCluster,
 	c.ConfigureLogging(frontendSpec.GetLogging())
 	c.ConfigureSlowQuery(frontendSpec.GetSlowQuery())
 	c.ConfigureTracing(frontendSpec.GetTracing())
-	if frontendSpec.IsEnableHTTPAPIServer() {
-		c.ConfigureHTTPServer(cluster.Spec.EnableIPv6, frontendSpec.HTTPAPIServerPort)
-	}
 
 	return nil
 }
