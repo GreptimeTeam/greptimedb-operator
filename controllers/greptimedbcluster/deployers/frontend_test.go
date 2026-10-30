@@ -21,6 +21,7 @@ import (
 	"k8s.io/utils/ptr"
 
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
+	"github.com/GreptimeTeam/greptimedb-operator/tests/testutil"
 )
 
 func TestFrontendGenerateMainContainerArgsHTTPAPIServer(t *testing.T) {
@@ -51,11 +52,11 @@ func TestFrontendGenerateMainContainerArgsHTTPAPIServer(t *testing.T) {
 	}
 
 	// Enabled by default.
-	checkHTTPAPIServerArg(t, b.generateMainContainerArgs(cluster.Spec.Frontend), "0.0.0.0:4006")
+	testutil.CheckHTTPAPIServerArg(t, b.generateMainContainerArgs(cluster.Spec.Frontend), "0.0.0.0:4006")
 
 	// Disabled.
 	cluster.Spec.Frontend.EnableHTTPAPIServer = ptr.To(false)
-	checkHTTPAPIServerArgAbsent(t, b.generateMainContainerArgs(cluster.Spec.Frontend))
+	testutil.CheckHTTPAPIServerArgAbsent(t, b.generateMainContainerArgs(cluster.Spec.Frontend))
 }
 
 func TestFrontendGenerateMainContainerArgsHTTPAPIServerIPv6(t *testing.T) {
@@ -86,27 +87,5 @@ func TestFrontendGenerateMainContainerArgsHTTPAPIServerIPv6(t *testing.T) {
 		},
 	}
 
-	checkHTTPAPIServerArg(t, b.generateMainContainerArgs(cluster.Spec.Frontend), "[::]:4006")
-}
-
-func checkHTTPAPIServerArg(t *testing.T, args []string, wantAddr string) {
-	t.Helper()
-	for i := 0; i < len(args)-1; i++ {
-		if args[i] == "--http-api-server-addr" {
-			if args[i+1] != wantAddr {
-				t.Fatalf("--http-api-server-addr = %q, want %q (args: %v)", args[i+1], wantAddr, args)
-			}
-			return
-		}
-	}
-	t.Fatalf("--http-api-server-addr not found in args: %v", args)
-}
-
-func checkHTTPAPIServerArgAbsent(t *testing.T, args []string) {
-	t.Helper()
-	for i := range args {
-		if args[i] == "--http-api-server-addr" {
-			t.Fatalf("--http-api-server-addr should not be set when the HTTP API server is disabled, args: %v", args)
-		}
-	}
+	testutil.CheckHTTPAPIServerArg(t, b.generateMainContainerArgs(cluster.Spec.Frontend), "[::]:4006")
 }

@@ -40,9 +40,14 @@ func CheckHTTPAPIServerServicePort(svc *corev1.Service, httpPort, httpAPIServerP
 // CheckHTTPAPIServerArgs checks that the main container enables the HTTP API
 // server on httpApiServerPort via the --http-api-server-addr CLI flag.
 func CheckHTTPAPIServerArgs(args []string, httpAPIServerPort int32) {
-	Expect(args).To(ContainElement("--http-api-server-addr"), "main container should pass --http-api-server-addr")
 	addr := fmt.Sprintf("0.0.0.0:%d", httpAPIServerPort)
-	Expect(args).To(ContainElement(addr), "--http-api-server-addr value should be the bind address")
+	for i := 0; i < len(args)-1; i++ {
+		if args[i] == "--http-api-server-addr" {
+			Expect(args[i+1]).To(Equal(addr), "--http-api-server-addr value should be the bind address")
+			return
+		}
+	}
+	Expect(args).To(ContainElement("--http-api-server-addr"), "main container should pass --http-api-server-addr")
 }
 
 // CheckHTTPAPIServerContainerPorts checks that the container keeps the http port and exposes the http-api port.
