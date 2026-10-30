@@ -465,6 +465,10 @@ func (b *standaloneBuilder) generateMainContainerArgs() []string {
 		"--config-file", path.Join(constant.GreptimeDBConfigDir, constant.GreptimeDBConfigFileName),
 	}
 
+	if b.standalone.Spec.IsEnableHTTPAPIServer() {
+		args = append(args, "--http-api-server-addr", common.GetBindAddress(b.standalone.Spec.EnableIPv6, b.standalone.Spec.HTTPAPIServerPort))
+	}
+
 	if b.standalone.Spec.TLS != nil {
 		args = append(args, []string{
 			"--tls-mode", "require",

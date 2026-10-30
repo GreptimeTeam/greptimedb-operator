@@ -75,18 +75,17 @@ func TestStandaloneHTTPAPIServer(ctx context.Context, h *helper.Helper) {
 
 	helper.CheckHTTPAPIServerServicePort(svc, testStandalone.Spec.HTTPPort, testStandalone.Spec.HTTPAPIServerPort)
 
-	By("Check the standalone config enables the HTTP API server on httpApiServerPort")
-	cm := new(corev1.ConfigMap)
-	err = h.Get(ctx, resourceKey, cm)
-	Expect(err).NotTo(HaveOccurred(), "failed to get standalone configmap")
-
-	helper.CheckHTTPAPIServerConfig(cm, testStandalone.Spec.HTTPAPIServerPort)
-
-	By("Check the standalone container keeps http port and exposes http-api port")
+	By("Check the standalone container args enable the HTTP API server on httpApiServerPort")
 	sts := new(appsv1.StatefulSet)
 	err = h.Get(ctx, resourceKey, sts)
 	Expect(err).NotTo(HaveOccurred(), "failed to get standalone statefulset")
 
+	helper.CheckHTTPAPIServerArgs(
+		sts.Spec.Template.Spec.Containers[constant.MainContainerIndex].Args,
+		testStandalone.Spec.HTTPAPIServerPort,
+	)
+
+	By("Check the standalone container keeps http port and exposes http-api port")
 	helper.CheckHTTPAPIServerContainerPorts(
 		sts.Spec.Template.Spec.Containers[constant.MainContainerIndex].Ports,
 		testStandalone.Spec.HTTPPort,

@@ -21,8 +21,6 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-
-	"github.com/GreptimeTeam/greptimedb-operator/controllers/constant"
 )
 
 // CheckHTTPAPIServerServicePort checks that the http service forwards to httpApiServerPort.
@@ -39,12 +37,17 @@ func CheckHTTPAPIServerServicePort(svc *corev1.Service, httpPort, httpAPIServerP
 	Expect(httpServicePort.TargetPort).To(Equal(intstr.FromInt32(httpAPIServerPort)), "http service targetPort should be httpApiServerPort")
 }
 
-// CheckHTTPAPIServerConfig checks that the config enables the HTTP API server on httpApiServerPort.
-func CheckHTTPAPIServerConfig(cm *corev1.ConfigMap, httpAPIServerPort int32) {
-	configData, ok := cm.Data[constant.GreptimeDBConfigFileName]
-	Expect(ok).To(BeTrue(), "configmap should contain config.toml")
-	Expect(configData).To(ContainSubstring("enable_api_server = true"))
-	Expect(configData).To(ContainSubstring(fmt.Sprintf("api_server_addr = \"0.0.0.0:%d\"", httpAPIServerPort)))
+// CheckHTTPAPIServerArgs checks that the main container enables the HTTP API
+// server on httpApiServerPort via the --http-api-server-addr CLI flag.
+func CheckHTTPAPIServerArgs(args []string, httpAPIServerPort int32) {
+	addr := fmt.Sprintf("0.0.0.0:%d", httpAPIServerPort)
+	for i := 0; i < len(args)-1; i++ {
+		if args[i] == "--http-api-server-addr" {
+			Expect(args[i+1]).To(Equal(addr), "--http-api-server-addr value should be the bind address")
+			return
+		}
+	}
+	Expect(args).To(ContainElement("--http-api-server-addr"), "main container should pass --http-api-server-addr")
 }
 
 // CheckHTTPAPIServerContainerPorts checks that the container keeps the http port and exposes the http-api port.

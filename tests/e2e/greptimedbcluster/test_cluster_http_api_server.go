@@ -75,18 +75,17 @@ func TestClusterHTTPAPIServer(ctx context.Context, h *helper.Helper) {
 
 	helper.CheckHTTPAPIServerServicePort(svc, testCluster.Spec.HTTPPort, testCluster.Spec.Frontend.HTTPAPIServerPort)
 
-	By("Check the frontend config enables the HTTP API server on httpApiServerPort")
-	cm := new(corev1.ConfigMap)
-	err = h.Get(ctx, frontendKey, cm)
-	Expect(err).NotTo(HaveOccurred(), "failed to get frontend configmap")
-
-	helper.CheckHTTPAPIServerConfig(cm, testCluster.Spec.Frontend.HTTPAPIServerPort)
-
-	By("Check the frontend container keeps http port and exposes http-api port")
+	By("Check the frontend container args enable the HTTP API server on httpApiServerPort")
 	deploy := new(appsv1.Deployment)
 	err = h.Get(ctx, frontendKey, deploy)
 	Expect(err).NotTo(HaveOccurred(), "failed to get frontend deployment")
 
+	helper.CheckHTTPAPIServerArgs(
+		deploy.Spec.Template.Spec.Containers[constant.MainContainerIndex].Args,
+		testCluster.Spec.Frontend.HTTPAPIServerPort,
+	)
+
+	By("Check the frontend container keeps http port and exposes http-api port")
 	helper.CheckHTTPAPIServerContainerPorts(
 		deploy.Spec.Template.Spec.Containers[constant.MainContainerIndex].Ports,
 		testCluster.Spec.Frontend.HTTPPort,

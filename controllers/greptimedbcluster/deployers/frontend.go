@@ -355,6 +355,10 @@ func (b *frontendBuilder) generateMainContainerArgs(frontend *v1alpha1.FrontendS
 		"--internal-rpc-server-addr", common.GetServerAddress(b.Cluster.Spec.EnableIPv6, fmt.Sprintf("$(%s)", deployer.EnvPodIP), frontend.InternalPort),
 	}
 
+	if frontend.IsEnableHTTPAPIServer() {
+		args = append(args, "--http-api-server-addr", common.GetBindAddress(b.Cluster.Spec.EnableIPv6, frontend.HTTPAPIServerPort))
+	}
+
 	if frontend.TLS != nil {
 		args = append(args, []string{
 			"--tls-mode", constant.DefaultTLSMode,
