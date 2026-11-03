@@ -384,6 +384,11 @@ func (b *flownodeBuilder) servicePorts() []corev1.ServicePort {
 			Protocol: corev1.ProtocolTCP,
 			Port:     b.Cluster.Spec.Flownode.RPCPort,
 		},
+		{
+			Name:     "http",
+			Protocol: corev1.ProtocolTCP,
+			Port:     b.Cluster.Spec.Flownode.HTTPPort,
+		},
 	}
 }
 
@@ -393,6 +398,11 @@ func (b *flownodeBuilder) containerPorts() []corev1.ContainerPort {
 			Name:          "grpc",
 			Protocol:      corev1.ProtocolTCP,
 			ContainerPort: b.Cluster.Spec.Flownode.RPCPort,
+		},
+		{
+			Name:          "http",
+			Protocol:      corev1.ProtocolTCP,
+			ContainerPort: b.Cluster.Spec.Flownode.HTTPPort,
 		},
 	}
 }
