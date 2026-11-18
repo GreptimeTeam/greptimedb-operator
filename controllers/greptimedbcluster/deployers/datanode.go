@@ -188,9 +188,12 @@ func (d *DatanodeDeployer) Apply(ctx context.Context, crdObject client.Object, o
 			// If the spec or labels is not equal, update the object.
 			if !specEqual || !labelsEqual {
 				if newSts, ok := newObject.(*appsv1.StatefulSet); ok {
-					oldSts, ok := oldObject.(*appsv1.StatefulSet)
-					if !ok {
-						return fmt.Errorf("old object for statefulset %s is not a statefulset", newSts.Name)
+					// oldObject is an *unstructured.Unstructured (see SourceObject), so
+					// re-fetch the existing StatefulSet as a typed object for the
+					// scale-safety checks below.
+					oldSts := new(appsv1.StatefulSet)
+					if err := d.Get(ctx, client.ObjectKeyFromObject(newSts), oldSts); err != nil {
+						return err
 					}
 					if err := d.ensureDatanodeScaleSafety(ctx, cluster, newSts, oldSts); err != nil {
 						return err
@@ -614,8 +617,7 @@ func (d *DatanodeDeployer) markScaleUpPodsSchedulable(ctx context.Context, clust
 
 	// Scaling up aborts any in-flight scale-down drain: the nodes being added
 	// back must not remain fenced. Clear the stale drain state.
-	d.clearDrainState(ctx, cluster)
-	return nil
+	return d.clearDrainState(ctx, cluster)
 }
 
 // clearDrainState drops the in-memory tracker and persisted Draining status for

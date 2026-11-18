@@ -105,58 +105,63 @@ type metasrvErrorBody struct {
 	Error string `json:"error"`
 }
 
+// httpResponse is the parts of an HTTP response the drain client needs after the
+// body has been fully read and closed.
+type httpResponse struct {
+	statusCode int
+	header     http.Header
+	body       []byte
+}
+
 // SubmitDatanodeDrain submits an asynchronous drain for the datanode identified by
 // nodeID and returns the procedure ID to poll. The drain fences the datanode and
 // migrates every leader region off it.
 func SubmitDatanodeDrain(metaHTTPServiceURL string, nodeID uint64) (string, error) {
-	rsp, err := postJSON(metaHTTPServiceURL, datanodeDrainEndpoint, drainDatanodeRequest{NodeID: nodeID})
+	resp, err := postJSON(metaHTTPServiceURL, datanodeDrainEndpoint, drainDatanodeRequest{NodeID: nodeID})
 	if err != nil {
 		return "", err
 	}
-	defer rsp.Body.Close()
 
-	if rsp.StatusCode != http.StatusOK {
-		return "", metasrvErrorFromResponse(rsp, "drain datanode")
+	if resp.statusCode != http.StatusOK {
+		return "", metasrvErrorFromResponse(resp, "drain datanode")
 	}
 
-	var resp drainDatanodeResponse
-	if err := json.NewDecoder(rsp.Body).Decode(&resp); err != nil {
+	var result drainDatanodeResponse
+	if err := json.Unmarshal(resp.body, &result); err != nil {
 		return "", err
 	}
-	return resp.ProcedureID, nil
+	return result.ProcedureID, nil
 }
 
 // ProcedureStatus returns the state of a submitted procedure.
 func ProcedureStatus(metaHTTPServiceURL, procedureID string) (string, error) {
 	query := url.Values{"procedure_id": []string{procedureID}}.Encode()
-	rsp, err := get(metaHTTPServiceURL + procedureStatusEndpoint + "?" + query)
+	resp, err := httpGet(metaHTTPServiceURL + procedureStatusEndpoint + "?" + query)
 	if err != nil {
 		return "", err
 	}
-	defer rsp.Body.Close()
 
-	if rsp.StatusCode != http.StatusOK {
-		return "", metasrvErrorFromResponse(rsp, "query procedure status")
+	if resp.statusCode != http.StatusOK {
+		return "", metasrvErrorFromResponse(resp, "query procedure status")
 	}
 
-	var resp procedureStatusResponse
-	if err := json.NewDecoder(rsp.Body).Decode(&resp); err != nil {
+	var result procedureStatusResponse
+	if err := json.Unmarshal(resp.body, &result); err != nil {
 		return "", err
 	}
-	return resp.Status, nil
+	return result.Status, nil
 }
 
 // MarkDatanodeSchedulable restores scheduling for the datanode identified by nodeID,
 // removing the fence written by a previous drain.
 func MarkDatanodeSchedulable(metaHTTPServiceURL string, nodeID uint64) error {
-	rsp, err := postJSON(metaHTTPServiceURL, datanodeMarkSchedulable, datanodeRequest{NodeID: nodeID})
+	resp, err := postJSON(metaHTTPServiceURL, datanodeMarkSchedulable, datanodeRequest{NodeID: nodeID})
 	if err != nil {
 		return err
 	}
-	defer rsp.Body.Close()
 
-	if rsp.StatusCode != http.StatusOK {
-		return metasrvErrorFromResponse(rsp, "mark datanode schedulable")
+	if resp.statusCode != http.StatusOK {
+		return metasrvErrorFromResponse(resp, "mark datanode schedulable")
 	}
 	return nil
 }
@@ -164,36 +169,43 @@ func MarkDatanodeSchedulable(metaHTTPServiceURL string, nodeID uint64) error {
 // DatanodeSchedulingStatus reports whether the datanode may receive new regions.
 func DatanodeSchedulingStatus(metaHTTPServiceURL string, nodeID uint64) (bool, error) {
 	query := url.Values{"node_id": []string{fmt.Sprintf("%d", nodeID)}}.Encode()
-	rsp, err := get(metaHTTPServiceURL + datanodeSchedulingStatus + "?" + query)
+	resp, err := httpGet(metaHTTPServiceURL + datanodeSchedulingStatus + "?" + query)
 	if err != nil {
 		return false, err
 	}
-	defer rsp.Body.Close()
 
-	if rsp.StatusCode != http.StatusOK {
-		return false, metasrvErrorFromResponse(rsp, "query datanode scheduling status")
+	if resp.statusCode != http.StatusOK {
+		return false, metasrvErrorFromResponse(resp, "query datanode scheduling status")
 	}
 
-	var resp datanodeSchedulingResponse
-	if err := json.NewDecoder(rsp.Body).Decode(&resp); err != nil {
+	var result datanodeSchedulingResponse
+	if err := json.Unmarshal(resp.body, &result); err != nil {
 		return false, err
 	}
-	return resp.Schedulable, nil
+	return result.Schedulable, nil
 }
 
 // postJSON posts the JSON-encoded payload and retries only transient network errors,
 // so a business rejection from metasrv is returned as-is instead of being retried.
-func postJSON(metaHTTPServiceURL, endpoint string, payload any) (*http.Response, error) {
+// The response body is fully read and closed before returning.
+func postJSON(metaHTTPServiceURL, endpoint string, payload any) (*httpResponse, error) {
 	body, err := json.Marshal(payload)
 	if err != nil {
 		return nil, err
 	}
 
-	var rsp *http.Response
+	var resp httpResponse
 	err = retry.Do(
 		func() error {
-			var err error
-			rsp, err = http.Post(metaHTTPServiceURL+endpoint, "application/json", bytes.NewReader(body))
+			rsp, err := http.Post(metaHTTPServiceURL+endpoint, "application/json", bytes.NewReader(body))
+			if err != nil {
+				return err
+			}
+			defer rsp.Body.Close()
+
+			resp.statusCode = rsp.StatusCode
+			resp.header = rsp.Header
+			resp.body, err = io.ReadAll(rsp.Body)
 			return err
 		},
 		retry.Attempts(5),
@@ -203,15 +215,24 @@ func postJSON(metaHTTPServiceURL, endpoint string, payload any) (*http.Response,
 	if err != nil {
 		return nil, err
 	}
-	return rsp, nil
+	return &resp, nil
 }
 
-func get(requestURL string) (*http.Response, error) {
-	var rsp *http.Response
+// httpGet fetches the given URL and retries only transient network errors. The
+// response body is fully read and closed before returning.
+func httpGet(requestURL string) (*httpResponse, error) {
+	var resp httpResponse
 	err := retry.Do(
 		func() error {
-			var err error
-			rsp, err = http.Get(requestURL)
+			rsp, err := http.Get(requestURL)
+			if err != nil {
+				return err
+			}
+			defer rsp.Body.Close()
+
+			resp.statusCode = rsp.StatusCode
+			resp.header = rsp.Header
+			resp.body, err = io.ReadAll(rsp.Body)
 			return err
 		},
 		retry.Attempts(5),
@@ -221,29 +242,28 @@ func get(requestURL string) (*http.Response, error) {
 	if err != nil {
 		return nil, err
 	}
-	return rsp, nil
+	return &resp, nil
 }
 
-func metasrvErrorFromResponse(rsp *http.Response, action string) error {
-	// The drain endpoint does not exist before GreptimeDB v1.4.0.
-	if rsp.StatusCode == http.StatusNotFound {
-		return fmt.Errorf("%w: %s (status %d)", ErrDatanodeDrainUnsupported, action, rsp.StatusCode)
+func metasrvErrorFromResponse(resp *httpResponse, action string) error {
+	// The drain endpoints do not exist before GreptimeDB v1.4.0.
+	if resp.statusCode == http.StatusNotFound {
+		return fmt.Errorf("%w: %s (status %d)", ErrDatanodeDrainUnsupported, action, resp.statusCode)
 	}
 
-	if rsp.Header.Get(greptimeDBErrCodeHeader) == greptimeDBErrCodeIllegalState {
+	if resp.header.Get(greptimeDBErrCodeHeader) == greptimeDBErrCodeIllegalState {
 		return fmt.Errorf("%w: %s", ErrDatanodeDrainRunning, action)
 	}
 
 	msg := ""
-	data, _ := io.ReadAll(io.LimitReader(rsp.Body, 4096))
 	var body metasrvErrorBody
-	if json.Unmarshal(data, &body) == nil && body.Error != "" {
+	if json.Unmarshal(resp.body, &body) == nil && body.Error != "" {
 		msg = body.Error
 	} else {
-		msg = strings.TrimSpace(string(data))
+		msg = strings.TrimSpace(string(resp.body))
 	}
 	if msg == "" {
-		msg = rsp.Status
+		msg = http.StatusText(resp.statusCode)
 	}
-	return fmt.Errorf("%s failed with status %d: %s", action, rsp.StatusCode, msg)
+	return fmt.Errorf("%s failed with status %d: %s", action, resp.statusCode, msg)
 }

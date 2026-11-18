@@ -15,10 +15,21 @@
 package deployers
 
 import (
+	"context"
+	"errors"
 	"reflect"
 	"testing"
 
+	appsv1 "k8s.io/api/apps/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/utils/ptr"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
+
 	"github.com/GreptimeTeam/greptimedb-operator/apis/v1alpha1"
+	"github.com/GreptimeTeam/greptimedb-operator/pkg/deployer"
 )
 
 func TestDrainTrackerResetKeepsOnlyCurrentNodes(t *testing.T) {
@@ -64,5 +75,63 @@ func TestDrainTrackerSnapshotSortedAndEmptyAfterReset(t *testing.T) {
 	tracker.reset(nil, nil)
 	if got := tracker.snapshot(); len(got) != 0 {
 		t.Fatalf("snapshot() after reset(nil, nil) = %#v, want empty", got)
+	}
+}
+
+// Regression test for the scale-safety path in Apply: CreateObjectIfNotExist
+// returns the existing object as an *unstructured.Unstructured, so the old
+// StatefulSet must be re-fetched as a typed object. Scaling must not fail with
+// "old object for statefulset ... is not a statefulset".
+func TestApplyScaleUpReFetchesTypedStatefulSet(t *testing.T) {
+	scheme := runtime.NewScheme()
+	_ = clientgoscheme.AddToScheme(scheme)
+	_ = v1alpha1.AddToScheme(scheme)
+
+	cluster := &v1alpha1.GreptimeDBCluster{
+		ObjectMeta: metav1.ObjectMeta{Name: "c", Namespace: "default"},
+		Spec: v1alpha1.GreptimeDBClusterSpec{
+			Datanode: &v1alpha1.DatanodeSpec{
+				ComponentSpec: v1alpha1.ComponentSpec{Replicas: ptr.To(int32(2))},
+			},
+		},
+	}
+
+	oldSts := &appsv1.StatefulSet{
+		TypeMeta: metav1.TypeMeta{Kind: "StatefulSet", APIVersion: "apps/v1"},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        "c-datanode",
+			Namespace:   "default",
+			Annotations: map[string]string{deployer.LastAppliedResourceSpec: `{"replicas":1}`},
+		},
+		Spec: appsv1.StatefulSetSpec{Replicas: ptr.To(int32(1))},
+	}
+
+	newSts := &appsv1.StatefulSet{
+		TypeMeta: metav1.TypeMeta{Kind: "StatefulSet", APIVersion: "apps/v1"},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:        "c-datanode",
+			Namespace:   "default",
+			Annotations: map[string]string{deployer.LastAppliedResourceSpec: `{"replicas":2}`},
+		},
+		Spec: appsv1.StatefulSetSpec{Replicas: ptr.To(int32(2))},
+	}
+
+	fakeClient := fake.NewClientBuilder().
+		WithScheme(scheme).
+		WithObjects(cluster, oldSts).
+		Build()
+	d := &DatanodeDeployer{CommonDeployer: &CommonDeployer{Scheme: scheme, Client: fakeClient}}
+
+	err := d.Apply(context.Background(), cluster, []client.Object{newSts})
+	if !errors.Is(err, deployer.ErrSyncNotReady) {
+		t.Fatalf("Apply() error = %v, want ErrSyncNotReady", err)
+	}
+
+	got := new(appsv1.StatefulSet)
+	if err := fakeClient.Get(context.Background(), client.ObjectKeyFromObject(newSts), got); err != nil {
+		t.Fatalf("get statefulset: %v", err)
+	}
+	if got.Spec.Replicas == nil || *got.Spec.Replicas != 2 {
+		t.Fatalf("statefulset replicas = %v, want 2", got.Spec.Replicas)
 	}
 }
