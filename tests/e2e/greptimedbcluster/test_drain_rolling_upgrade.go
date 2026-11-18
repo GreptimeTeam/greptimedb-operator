@@ -61,7 +61,7 @@ func runDrainRollingUpgrade(ctx context.Context, h *helper.Helper, crFile string
 			return fmt.Errorf("cluster is not running")
 		}
 		return nil
-	}, helper.DefaultTimeout, time.Second).ShouldNot(HaveOccurred())
+	}, 5*time.Minute, time.Second).ShouldNot(HaveOccurred())
 
 	err = h.Get(ctx, client.ObjectKey{Name: testCluster.Name, Namespace: testCluster.Namespace}, testCluster)
 	Expect(err).NotTo(HaveOccurred(), "failed to get cluster")

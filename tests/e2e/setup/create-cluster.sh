@@ -63,7 +63,9 @@ S3_CREDENTIALS_SECRET=s3-credentials
 DEFAULT_TIMEOUT=300s
 
 # We always use the latest released greptimedb image for testing.
-GREPTIMEDB_IMAGE=greptime/greptimedb:latest
+# GREPTIMEDB_IMAGE=greptime/greptimedb:latest
+# The greptimedb dev image that supports datanode draining (>= v1.4.0).
+GREPTIMEDB_IMAGE=greptime/greptimedb-dev:dev-20261118-1794989414-63d369e9
 
 # We always use the latest released vector image for testing.
 VECTOR_IMAGE=timberio/vector:0.49.0-debian
