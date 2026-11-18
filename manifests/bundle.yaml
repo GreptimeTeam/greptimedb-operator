@@ -35,6 +35,9 @@ spec:
     - jsonPath: .status.flownode.readyReplicas
       name: FLOWNODE
       type: integer
+    - jsonPath: .status.datanode.draining[*].nodeId
+      name: DRAINING
+      type: string
     - jsonPath: .status.clusterPhase
       name: PHASE
       type: string
@@ -3382,6 +3385,23 @@ spec:
                 properties:
                   config:
                     type: string
+                  drain:
+                    properties:
+                      enabled:
+                        type: boolean
+                      policy:
+                        enum:
+                        - Scatter
+                        - Rotate
+                        type: string
+                      tempGroup:
+                        properties:
+                          replicas:
+                            format: int32
+                            minimum: 1
+                            type: integer
+                        type: object
+                    type: object
                   httpPort:
                     format: int32
                     maximum: 65535
@@ -6820,6 +6840,23 @@ spec:
                   properties:
                     config:
                       type: string
+                    drain:
+                      properties:
+                        enabled:
+                          type: boolean
+                        policy:
+                          enum:
+                          - Scatter
+                          - Rotate
+                          type: string
+                        tempGroup:
+                          properties:
+                            replicas:
+                              format: int32
+                              minimum: 1
+                              type: integer
+                          type: object
+                      type: object
                     httpPort:
                       format: int32
                       maximum: 65535
@@ -28218,12 +28255,41 @@ spec:
                 type: array
               datanode:
                 properties:
+                  draining:
+                    items:
+                      properties:
+                        nodeId:
+                          format: int64
+                          type: integer
+                        procedureId:
+                          type: string
+                        status:
+                          type: string
+                      required:
+                      - nodeId
+                      type: object
+                    type: array
+                  pendingSchedulable:
+                    items:
+                      format: int64
+                      type: integer
+                    type: array
                   readyReplicas:
                     format: int32
                     type: integer
                   replicas:
                     format: int32
                     type: integer
+                  rollingUpgrade:
+                    properties:
+                      ordinal:
+                        format: int32
+                        type: integer
+                      phase:
+                        type: string
+                    required:
+                    - ordinal
+                    type: object
                 required:
                 - readyReplicas
                 - replicas

@@ -25,6 +25,11 @@ import (
 
 var (
 	ErrSyncNotReady = fmt.Errorf("the sync process is not ready")
+
+	// ErrDrainInProgress is returned by a deployer when a long-running operation
+	// (such as draining a datanode) has not finished yet. The controller requeues
+	// after a short delay without marking the cluster as errored.
+	ErrDrainInProgress = fmt.Errorf("drain is in progress")
 )
 
 // Deployer is the interface that abstracts the deployment of a component.

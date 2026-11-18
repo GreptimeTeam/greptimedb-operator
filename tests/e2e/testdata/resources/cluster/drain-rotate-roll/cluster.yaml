@@ -1,0 +1,37 @@
+apiVersion: greptime.io/v1alpha1
+kind: GreptimeDBCluster
+metadata:
+  name: e2e-cluster-drain-rotate-roll
+  namespace: default
+spec:
+  initializer:
+    image: localhost:5001/greptime/greptimedb-initializer:latest
+  base:
+    main:
+      image: localhost:5001/greptime/greptimedb:latest
+  frontend:
+    replicas: 1
+  meta:
+    replicas: 1
+    backendStorage:
+      etcd:
+        endpoints:
+          - "etcd.etcd-cluster.svc.cluster.local:2379"
+        storeKeyPrefix: "e2e-cluster-drain-rotate-roll"
+  datanode:
+    replicas: 3
+    drain:
+      enabled: true
+      policy: Rotate
+      tempGroup:
+        replicas: 1
+    storage:
+      fs:
+        storageRetainPolicy: Delete
+  objectStorage:
+    s3:
+      bucket: greptimedb-bucket
+      root: e2e-cluster-drain-rotate-roll
+      region: ap-southeast-1
+      endpoint: http://rustfs-svc.rustfs.svc.cluster.local:9000
+      secretName: s3-credentials

@@ -1,0 +1,29 @@
+apiVersion: greptime.io/v1alpha1
+kind: GreptimeDBCluster
+metadata:
+  name: cluster-with-drain-scatter
+spec:
+  base:
+    main:
+      # Datanode draining requires GreptimeDB >= v1.4.0.
+      image: greptime/greptimedb:latest
+  frontend:
+    replicas: 1
+  meta:
+    replicas: 1
+    backendStorage:
+      etcd:
+        endpoints:
+          - "etcd.etcd-cluster.svc.cluster.local:2379"
+  datanode:
+    replicas: 3
+    drain:
+      enabled: true
+      # policy defaults to Scatter: metasrv scatters the drained leader regions
+      # to any available datanode before a pod is restarted or removed.
+  objectStorage:
+    s3:
+      bucket: "greptimedb"
+      region: "ap-southeast-1"
+      secretName: "s3-credentials"
+      root: "cluster-with-drain-scatter-data"

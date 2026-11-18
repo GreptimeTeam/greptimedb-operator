@@ -62,3 +62,24 @@ func TestServiceSpecGetPorts(t *testing.T) {
 		})
 	}
 }
+
+func TestDatanodeSpecIsEnableDrain(t *testing.T) {
+	tests := []struct {
+		name string
+		spec *DatanodeSpec
+		want bool
+	}{
+		{name: "nil spec", spec: nil, want: false},
+		{name: "nil drain", spec: &DatanodeSpec{}, want: false},
+		{name: "explicit false", spec: &DatanodeSpec{Drain: &DatanodeDrainSpec{Enabled: false}}, want: false},
+		{name: "explicit true", spec: &DatanodeSpec{Drain: &DatanodeDrainSpec{Enabled: true}}, want: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.spec.IsEnableDrain(); got != tt.want {
+				t.Fatalf("IsEnableDrain() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
