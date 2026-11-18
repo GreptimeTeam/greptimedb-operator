@@ -29,15 +29,15 @@ spec:
     - jsonPath: .status.datanode.readyReplicas
       name: DATANODE
       type: integer
-    - jsonPath: .status.datanode.draining[*].nodeId
-      name: DRAINING
-      type: string
     - jsonPath: .status.meta.readyReplicas
       name: META
       type: integer
     - jsonPath: .status.flownode.readyReplicas
       name: FLOWNODE
       type: integer
+    - jsonPath: .status.datanode.draining[*].nodeId
+      name: DRAINING
+      type: string
     - jsonPath: .status.clusterPhase
       name: PHASE
       type: string
@@ -3385,8 +3385,23 @@ spec:
                 properties:
                   config:
                     type: string
-                  enableDrain:
-                    type: boolean
+                  drain:
+                    properties:
+                      enabled:
+                        type: boolean
+                      policy:
+                        enum:
+                        - Scatter
+                        - Rotate
+                        type: string
+                      tempGroup:
+                        properties:
+                          replicas:
+                            format: int32
+                            minimum: 1
+                            type: integer
+                        type: object
+                    type: object
                   httpPort:
                     format: int32
                     maximum: 65535
@@ -6825,8 +6840,23 @@ spec:
                   properties:
                     config:
                       type: string
-                    enableDrain:
-                      type: boolean
+                    drain:
+                      properties:
+                        enabled:
+                          type: boolean
+                        policy:
+                          enum:
+                          - Scatter
+                          - Rotate
+                          type: string
+                        tempGroup:
+                          properties:
+                            replicas:
+                              format: int32
+                              minimum: 1
+                              type: integer
+                          type: object
+                      type: object
                     httpPort:
                       format: int32
                       maximum: 65535
@@ -28250,6 +28280,16 @@ spec:
                   replicas:
                     format: int32
                     type: integer
+                  rollingUpgrade:
+                    properties:
+                      ordinal:
+                        format: int32
+                        type: integer
+                      phase:
+                        type: string
+                    required:
+                    - ordinal
+                    type: object
                 required:
                 - readyReplicas
                 - replicas

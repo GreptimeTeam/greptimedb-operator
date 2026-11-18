@@ -49,8 +49,12 @@ var _ = Describe("Test GreptimeDBCluster", func() {
 		greptimedbcluster.TestScaleCluster(ctx, h)
 	})
 
-	It("Test draining a datanode on scale down", func() {
-		greptimedbcluster.TestDrainCluster(ctx, h)
+	It("Test drain scatter rolling upgrade", func() {
+		greptimedbcluster.TestDrainScatterRollingUpgrade(ctx, h)
+	})
+
+	It("Test drain rotate rolling upgrade", func() {
+		greptimedbcluster.TestDrainRotateRollingUpgrade(ctx, h)
 	})
 
 	It("Test a cluster with dedicated WAL", func() {

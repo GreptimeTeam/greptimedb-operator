@@ -91,7 +91,6 @@ spec:
       maxSurge: 25%
       maxUnavailable: 25%
   datanode:
-    enableDrain: true
     httpPort: 4000
     rpcPort: 4001
     replicas: 1

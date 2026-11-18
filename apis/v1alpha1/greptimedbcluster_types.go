@@ -433,6 +433,50 @@ func (in *FrontendSpec) GetAuditLog() *AuditLogSpec {
 	return nil
 }
 
+// DrainPolicy defines how leader regions are placed when draining a datanode.
+type DrainPolicy string
+
+const (
+	// DrainPolicyScatter lets metasrv scatter the drained regions to any
+	// available datanode. This is the default policy.
+	DrainPolicyScatter DrainPolicy = "Scatter"
+
+	// DrainPolicyRotate pins the drained regions to the temp datanode group so
+	// they can be rotated across nodes during a rolling upgrade.
+	DrainPolicyRotate DrainPolicy = "Rotate"
+)
+
+// DatanodeDrainSpec configures datanode draining.
+type DatanodeDrainSpec struct {
+	// Enabled indicates whether to drain a datanode before it is removed by a
+	// scale-down or before its pod is restarted by a rolling update. It requires
+	// GreptimeDB >= v1.4.0 and is disabled by default.
+	// +optional
+	Enabled bool `json:"enabled,omitempty"`
+
+	// Policy defines how leader regions are placed when draining. Scatter (default)
+	// lets metasrv scatter regions to any available node; Rotate pins regions to
+	// the temp datanode group for a rolling upgrade.
+	// +kubebuilder:validation:Enum=Scatter;Rotate
+	// +optional
+	Policy DrainPolicy `json:"policy,omitempty"`
+
+	// TempGroup configures the temporary datanode group used by the Rotate policy.
+	// When set, the operator creates and manages the temp group automatically and
+	// there is no need to add it to datanodeGroups.
+	// +optional
+	TempGroup *TempDatanodeGroupSpec `json:"tempGroup,omitempty"`
+}
+
+// TempDatanodeGroupSpec configures the temporary datanode group used by the
+// Rotate drain policy.
+type TempDatanodeGroupSpec struct {
+	// Replicas is the number of temporary datanodes. Defaults to 1.
+	// +kubebuilder:validation:Minimum=1
+	// +optional
+	Replicas *int32 `json:"replicas,omitempty"`
+}
+
 // DatanodeSpec is the specification for datanode component.
 type DatanodeSpec struct {
 	ComponentSpec `json:",inline"`
@@ -465,12 +509,9 @@ type DatanodeSpec struct {
 	// +optional
 	StartNodeID *int32 `json:"startNodeID,omitempty"`
 
-	// EnableDrain indicates whether to drain a datanode before it is removed by
-	// a scale-down or before its pod is restarted by a rolling update. Draining
-	// migrates every leader region off the datanode first. It requires
-	// GreptimeDB >= v1.4.0 and is disabled by default.
+	// Drain configures datanode draining.
 	// +optional
-	EnableDrain *bool `json:"enableDrain,omitempty"`
+	Drain *DatanodeDrainSpec `json:"drain,omitempty"`
 }
 
 var _ RoleSpec = &DatanodeSpec{}
@@ -539,7 +580,16 @@ func (in *DatanodeSpec) GetStartNodeID() *int32 {
 // IsEnableDrain returns whether to drain the datanode before scale-down or
 // rolling update.
 func (in *DatanodeSpec) IsEnableDrain() bool {
-	return in != nil && in.EnableDrain != nil && *in.EnableDrain
+	return in != nil && in.Drain != nil && in.Drain.Enabled
+}
+
+// GetDrainPolicy returns the drain policy of the datanode. It defaults to
+// DrainPolicyScatter.
+func (in *DatanodeSpec) GetDrainPolicy() DrainPolicy {
+	if in != nil && in.Drain != nil && in.Drain.Policy != "" {
+		return in.Drain.Policy
+	}
+	return DrainPolicyScatter
 }
 
 // FlownodeSpec is the specification for flownode component.
@@ -1059,6 +1109,31 @@ type DatanodeDrainStatus struct {
 	Status string `json:"status,omitempty"`
 }
 
+// RollingUpgradePhase is the phase of a Rotate-policy rolling upgrade.
+type RollingUpgradePhase string
+
+const (
+	// RollingUpgradePhaseDrain means the current datanode's leader regions are
+	// being migrated to the next node.
+	RollingUpgradePhaseDrain RollingUpgradePhase = "Drain"
+
+	// RollingUpgradePhaseUpgrade means the current datanode has been drained and
+	// is being restarted with the new version.
+	RollingUpgradePhaseUpgrade RollingUpgradePhase = "Upgrade"
+)
+
+// DatanodeRollingUpgrade tracks the progress of a Rotate-policy rolling upgrade.
+type DatanodeRollingUpgrade struct {
+	// Ordinal is the formal datanode ordinal being processed, counted from
+	// replicas-1 down to 0. -1 means the temp group is being drained to the last
+	// formal node.
+	Ordinal int32 `json:"ordinal"`
+
+	// Phase is the current phase of the rolling upgrade.
+	// +optional
+	Phase RollingUpgradePhase `json:"phase,omitempty"`
+}
+
 // DatanodeStatus is the status of datanode node.
 type DatanodeStatus struct {
 	// Replicas is the number of replicas of the datanode.
@@ -1076,6 +1151,11 @@ type DatanodeStatus struct {
 	// schedulable again once their pods are ready (e.g. after a rolling update).
 	// +optional
 	PendingSchedulable []uint64 `json:"pendingSchedulable,omitempty"`
+
+	// RollingUpgrade is the progress of a Rotate-policy rolling upgrade. It is
+	// set while a rolling upgrade with a temp datanode group is in progress.
+	// +optional
+	RollingUpgrade *DatanodeRollingUpgrade `json:"rollingUpgrade,omitempty"`
 }
 
 // FlownodeStatus is the status of flownode node.
@@ -1108,9 +1188,9 @@ func (in *GreptimeDBClusterStatus) SetCondition(condition Condition) {
 // +kubebuilder:resource:shortName=gtc
 // +kubebuilder:printcolumn:name="FRONTEND",type="integer",JSONPath=".status.frontend.readyReplicas"
 // +kubebuilder:printcolumn:name="DATANODE",type="integer",JSONPath=".status.datanode.readyReplicas"
-// +kubebuilder:printcolumn:name="DRAINING",type="string",JSONPath=".status.datanode.draining[*].nodeId"
 // +kubebuilder:printcolumn:name="META",type="integer",JSONPath=".status.meta.readyReplicas"
 // +kubebuilder:printcolumn:name="FLOWNODE",type="integer",JSONPath=".status.flownode.readyReplicas"
+// +kubebuilder:printcolumn:name="DRAINING",type="string",JSONPath=".status.datanode.draining[*].nodeId"
 // +kubebuilder:printcolumn:name="PHASE",type=string,JSONPath=".status.clusterPhase"
 // +kubebuilder:printcolumn:name="VERSION",type=string,JSONPath=".status.version"
 // +kubebuilder:printcolumn:name="AGE",type=date,JSONPath=".metadata.creationTimestamp"

@@ -39,7 +39,7 @@ func TestSubmitDatanodeDrain(t *testing.T) {
 		}))
 		defer srv.Close()
 
-		id, err := SubmitDatanodeDrain(srv.URL, 7)
+		id, err := SubmitDatanodeDrain(srv.URL, 7, nil)
 		if err != nil {
 			t.Fatalf("SubmitDatanodeDrain() error: %v", err)
 		}
@@ -54,7 +54,7 @@ func TestSubmitDatanodeDrain(t *testing.T) {
 		}))
 		defer srv.Close()
 
-		_, err := SubmitDatanodeDrain(srv.URL, 7)
+		_, err := SubmitDatanodeDrain(srv.URL, 7, nil)
 		if !errors.Is(err, ErrDatanodeDrainUnsupported) {
 			t.Fatalf("SubmitDatanodeDrain() error = %v, want ErrDatanodeDrainUnsupported", err)
 		}
@@ -68,7 +68,7 @@ func TestSubmitDatanodeDrain(t *testing.T) {
 		}))
 		defer srv.Close()
 
-		_, err := SubmitDatanodeDrain(srv.URL, 7)
+		_, err := SubmitDatanodeDrain(srv.URL, 7, nil)
 		if !errors.Is(err, ErrDatanodeDrainRunning) {
 			t.Fatalf("SubmitDatanodeDrain() error = %v, want ErrDatanodeDrainRunning", err)
 		}
@@ -84,12 +84,15 @@ func TestProcedureStatus(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	status, err := ProcedureStatus(srv.URL, "proc-1")
+	status, procErr, err := ProcedureStatus(srv.URL, "proc-1")
 	if err != nil {
 		t.Fatalf("ProcedureStatus() error: %v", err)
 	}
 	if status != ProcedureStateDone {
 		t.Fatalf("ProcedureStatus() = %q, want %q", status, ProcedureStateDone)
+	}
+	if procErr != "" {
+		t.Fatalf("ProcedureStatus() error = %q, want empty", procErr)
 	}
 }
 

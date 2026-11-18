@@ -49,6 +49,16 @@ MYSQL_CHART_VERSION=13.0.0
 MYSQL_ROOT_PASSWORD=gt-operator-e2e
 MYSQL_DATABASE=metasrv
 
+# The argument for deploying rustfs (object storage).
+RUSTFS_NAMESPACE=rustfs
+# The access key and secret key are both the rustfs console credentials and the
+# S3 ak/sk (also the root account).
+RUSTFS_ACCESS_KEY=i64B5YSzqNtytZhaTfNf
+RUSTFS_SECRET_KEY=yEz2hebkc1rvhx8RK6XAXQk2JW1vBCpGjLHSs7ki
+RUSTFS_BUCKET=greptimedb-bucket
+RUSTFS_REGION=ap-southeast-1
+S3_CREDENTIALS_SECRET=s3-credentials
+
 # The default timeout for waiting for resources to be ready.
 DEFAULT_TIMEOUT=300s
 
@@ -252,6 +262,74 @@ function deploy_mysql() {
     --from-literal=password="$MYSQL_ROOT_PASSWORD"
 }
 
+# Deploy RustFS that is used as object storage for the datanode drain e2e test.
+function deploy_rustfs() {
+  echo -e "${GREEN}=> Deploy rustfs...${RESET}"
+
+  helm repo add rustfs https://charts.rustfs.com --force-update >/dev/null 2>&1 || true
+  helm repo update rustfs >/dev/null
+
+  helm upgrade --install rustfs rustfs/rustfs \
+    --namespace "$RUSTFS_NAMESPACE" \
+    --create-namespace \
+    --version 1.0.4 \
+    --set replicaCount=3 \
+    --set image.rustfs.repository=rustfs/rustfs \
+    --set image.rustfs.tag=1.0.4 \
+    --set image.initImage.repository=busybox \
+    --set image.initImage.tag=stable \
+    --set config.rustfs.region="$RUSTFS_REGION" \
+    --set config.rustfs.obs_log_directory="" \
+    --set storageclass.name=null \
+    --set storageclass.dataStorageSize=5Gi \
+    --set secret.rustfs.access_key="$RUSTFS_ACCESS_KEY" \
+    --set secret.rustfs.secret_key="$RUSTFS_SECRET_KEY" \
+    --set ingress.enabled=false
+
+  # Create the S3 credentials secret used by the test cluster.
+  kubectl create secret generic "$S3_CREDENTIALS_SECRET" \
+    --namespace "$TEST_NAMESPACE" \
+    --from-literal=access-key-id="$RUSTFS_ACCESS_KEY" \
+    --from-literal=secret-access-key="$RUSTFS_SECRET_KEY"
+
+  echo -e "${GREEN}<= rustfs is deployed.${RESET}"
+}
+
+# Create the bucket used by the drain e2e test. RustFS does not auto-create
+# buckets, so a one-shot job uses the mc client against the rustfs S3 endpoint.
+function create_rustfs_bucket() {
+  echo -e "${GREEN}=> Create rustfs bucket...${RESET}"
+
+  kubectl delete job create-rustfs-bucket -n "$RUSTFS_NAMESPACE" --ignore-not-found >/dev/null 2>&1
+
+  cat <<EOF | kubectl apply -f -
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: create-rustfs-bucket
+  namespace: $RUSTFS_NAMESPACE
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: mc
+          image: minio/mc:RELEASE.2025-08-13T08-35-41Z
+          command:
+            - /bin/sh
+            - -c
+            - |
+              mc alias set local http://rustfs-svc.$RUSTFS_NAMESPACE.svc.cluster.local:9000 $RUSTFS_ACCESS_KEY $RUSTFS_SECRET_KEY
+              mc mb -p --region "$RUSTFS_REGION" "local/$RUSTFS_BUCKET"
+EOF
+
+  kubectl wait --for=condition=Complete job/create-rustfs-bucket -n "$RUSTFS_NAMESPACE" --timeout="$DEFAULT_TIMEOUT"
+
+  kubectl delete job create-rustfs-bucket -n "$RUSTFS_NAMESPACE" --ignore-not-found >/dev/null 2>&1
+
+  echo -e "${GREEN}<= rustfs bucket is created.${RESET}"
+}
+
 # Deploy Kafka cluster used for remote WAL testing.
 function deploy_kafka_cluster() {
   echo -e "${GREEN}=> Deploy Kafka cluster...${RESET}"
@@ -363,6 +441,13 @@ function wait_all_service_ready() {
       -n "$KAFKA_NAMESPACE" \
       --timeout="$DEFAULT_TIMEOUT"
 
+  # Wait for rustfs to be ready.
+  kubectl wait \
+    --for=condition=Ready \
+    pod -l app.kubernetes.io/name=rustfs \
+    -n "$RUSTFS_NAMESPACE" \
+    --timeout="$DEFAULT_TIMEOUT"
+
   # Wait for greptimedb-operator to be ready.
   kubectl rollout \
     status deployment/greptimedb-operator \
@@ -391,7 +476,9 @@ function main() {
   deploy_postgresql
   deploy_mysql
   deploy_kafka_cluster
+  deploy_rustfs
   wait_all_service_ready
+  create_rustfs_bucket
 }
 
 main "$@"

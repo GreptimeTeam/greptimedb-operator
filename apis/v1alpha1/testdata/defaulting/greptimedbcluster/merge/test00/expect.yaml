@@ -155,7 +155,6 @@ spec:
             cpu: 50m
             memory: 64Mi
   datanode:
-    enableDrain: false
     httpPort: 4000
     rpcPort: 4001
     replicas: 3

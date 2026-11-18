@@ -135,3 +135,69 @@ func TestApplyScaleUpReFetchesTypedStatefulSet(t *testing.T) {
 		t.Fatalf("statefulset replicas = %v, want 2", got.Spec.Replicas)
 	}
 }
+
+func TestAutoTempGroupSpec(t *testing.T) {
+	withRotate := &v1alpha1.GreptimeDBCluster{
+		Spec: v1alpha1.GreptimeDBClusterSpec{
+			Datanode: &v1alpha1.DatanodeSpec{
+				ComponentSpec: v1alpha1.ComponentSpec{Replicas: ptr.To(int32(3))},
+				Drain: &v1alpha1.DatanodeDrainSpec{
+					Enabled:   true,
+					Policy:    v1alpha1.DrainPolicyRotate,
+					TempGroup: &v1alpha1.TempDatanodeGroupSpec{Replicas: ptr.To(int32(1))},
+				},
+			},
+		},
+	}
+	withScatter := &v1alpha1.GreptimeDBCluster{
+		Spec: v1alpha1.GreptimeDBClusterSpec{
+			Datanode: &v1alpha1.DatanodeSpec{Drain: &v1alpha1.DatanodeDrainSpec{Enabled: true}},
+		},
+	}
+
+	temp := autoTempGroupSpec(withRotate)
+	if temp == nil {
+		t.Fatal("autoTempGroupSpec() = nil, want temp group")
+	}
+	if temp.GetName() != "temp" {
+		t.Fatalf("temp group name = %q, want temp", temp.GetName())
+	}
+	if temp.GetReplicas() == nil || *temp.GetReplicas() != 1 {
+		t.Fatalf("temp group replicas = %v, want 1", temp.GetReplicas())
+	}
+
+	if got := autoTempGroupSpec(withScatter); got != nil {
+		t.Fatalf("autoTempGroupSpec(scatter) = %v, want nil", got)
+	}
+}
+
+func TestRollingUpgradePartition(t *testing.T) {
+	tests := []struct {
+		name string
+		ru   *v1alpha1.DatanodeRollingUpgrade
+		want *int32
+	}{
+		{name: "no rotation", ru: nil, want: nil},
+		{name: "drain highest ordinal 2", ru: &v1alpha1.DatanodeRollingUpgrade{Ordinal: 2, Phase: v1alpha1.RollingUpgradePhaseDrain}, want: ptr.To(int32(3))},
+		{name: "upgrade ordinal 2", ru: &v1alpha1.DatanodeRollingUpgrade{Ordinal: 2, Phase: v1alpha1.RollingUpgradePhaseUpgrade}, want: ptr.To(int32(2))},
+		{name: "drain ordinal 0", ru: &v1alpha1.DatanodeRollingUpgrade{Ordinal: 0, Phase: v1alpha1.RollingUpgradePhaseDrain}, want: ptr.To(int32(1))},
+		{name: "temp phase", ru: &v1alpha1.DatanodeRollingUpgrade{Ordinal: -1, Phase: v1alpha1.RollingUpgradePhaseDrain}, want: ptr.To(int32(0))},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cluster := &v1alpha1.GreptimeDBCluster{}
+			cluster.Status.Datanode.RollingUpgrade = tt.ru
+			got := rollingUpgradePartition(cluster)
+			if tt.want == nil {
+				if got != nil {
+					t.Fatalf("rollingUpgradePartition() = %v, want nil", *got)
+				}
+				return
+			}
+			if got == nil || *got != *tt.want {
+				t.Fatalf("rollingUpgradePartition() = %v, want %v", got, *tt.want)
+			}
+		})
+	}
+}

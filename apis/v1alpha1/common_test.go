@@ -20,7 +20,6 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
-	"k8s.io/utils/ptr"
 )
 
 func TestServiceSpecGetPorts(t *testing.T) {
@@ -71,9 +70,9 @@ func TestDatanodeSpecIsEnableDrain(t *testing.T) {
 		want bool
 	}{
 		{name: "nil spec", spec: nil, want: false},
-		{name: "nil flag", spec: &DatanodeSpec{}, want: false},
-		{name: "explicit false", spec: &DatanodeSpec{EnableDrain: ptr.To(false)}, want: false},
-		{name: "explicit true", spec: &DatanodeSpec{EnableDrain: ptr.To(true)}, want: true},
+		{name: "nil drain", spec: &DatanodeSpec{}, want: false},
+		{name: "explicit false", spec: &DatanodeSpec{Drain: &DatanodeDrainSpec{Enabled: false}}, want: false},
+		{name: "explicit true", spec: &DatanodeSpec{Drain: &DatanodeDrainSpec{Enabled: true}}, want: true},
 	}
 
 	for _, tt := range tests {

@@ -29,6 +29,7 @@ import (
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/klog/v2"
+	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
@@ -178,6 +179,24 @@ func (d *DatanodeDeployer) Apply(ctx context.Context, crdObject client.Object, o
 		}
 
 		if oldObject != nil {
+			// Drain orchestration runs on every reconcile (not only on spec
+			// changes) so the Rotate rolling upgrade can advance its partition and
+			// drain one datanode at a time.
+			if newSts, ok := newObject.(*appsv1.StatefulSet); ok {
+				// oldObject is an *unstructured.Unstructured (see SourceObject), so
+				// re-fetch the existing StatefulSet as a typed object.
+				oldSts := new(appsv1.StatefulSet)
+				if err := d.Get(ctx, client.ObjectKeyFromObject(newSts), oldSts); err != nil {
+					return err
+				}
+				if err := d.ensureDatanodeScaleSafety(ctx, cluster, newSts, oldSts); err != nil {
+					return err
+				}
+				if err := d.ensureRollingUpgradeDrain(ctx, cluster, newSts, oldSts); err != nil {
+					return err
+				}
+			}
+
 			specEqual, err := k8sutils.IsObjectSpecEqual(oldObject, newObject, deployer.LastAppliedResourceSpec)
 			if err != nil {
 				return err
@@ -187,22 +206,6 @@ func (d *DatanodeDeployer) Apply(ctx context.Context, crdObject client.Object, o
 
 			// If the spec or labels is not equal, update the object.
 			if !specEqual || !labelsEqual {
-				if newSts, ok := newObject.(*appsv1.StatefulSet); ok {
-					// oldObject is an *unstructured.Unstructured (see SourceObject), so
-					// re-fetch the existing StatefulSet as a typed object for the
-					// scale-safety checks below.
-					oldSts := new(appsv1.StatefulSet)
-					if err := d.Get(ctx, client.ObjectKeyFromObject(newSts), oldSts); err != nil {
-						return err
-					}
-					if err := d.ensureDatanodeScaleSafety(ctx, cluster, newSts, oldSts); err != nil {
-						return err
-					}
-					if err := d.ensureRollingUpdateDrain(ctx, cluster, newSts, oldSts); err != nil {
-						return err
-					}
-				}
-
 				if sts, ok := newObject.(*appsv1.StatefulSet); ok && d.shouldUseMaintenanceMode(cluster) {
 					if err := d.turnOnMaintenanceMode(ctx, sts, cluster); err != nil {
 						return err
@@ -373,8 +376,9 @@ func (d *DatanodeDeployer) drainScaleDownPods(ctx context.Context, cluster *v1al
 
 	allDrained := true
 	for _, nodeID := range nodeIDs {
-		drained, err := d.drainNode(ctx, metaURL, tracker, nodeID)
+		drained, err := d.drainNode(ctx, metaURL, tracker, nodeID, nil)
 		if stderrors.Is(err, common.ErrDatanodeDrainUnsupported) {
+			klog.Warningf("metasrv %q does not support datanode drain; skipping drain and falling back to direct scale-down", metaURL)
 			d.markDrainUnsupported(cluster)
 			return true, nil
 		}
@@ -396,10 +400,10 @@ func (d *DatanodeDeployer) drainScaleDownPods(ctx context.Context, cluster *v1al
 //   - (true, nil) when the node is drained,
 //   - (false, nil) when a drain is still in progress,
 //   - (false, err) on failure.
-func (d *DatanodeDeployer) drainNode(ctx context.Context, metaURL string, tracker *drainTracker, nodeID uint64) (bool, error) {
+func (d *DatanodeDeployer) drainNode(ctx context.Context, metaURL string, tracker *drainTracker, nodeID uint64, targetNodeID *uint64) (bool, error) {
 	proc, ok := tracker.get(nodeID)
 	if !ok || proc.procedureID == "" {
-		id, err := common.SubmitDatanodeDrain(metaURL, nodeID)
+		id, err := common.SubmitDatanodeDrain(metaURL, nodeID, targetNodeID)
 		if err != nil {
 			if stderrors.Is(err, common.ErrDatanodeDrainUnsupported) {
 				return false, fmt.Errorf("%w: node %d", common.ErrDatanodeDrainUnsupported, nodeID)
@@ -416,7 +420,7 @@ func (d *DatanodeDeployer) drainNode(ctx context.Context, metaURL string, tracke
 		tracker.put(nodeID, proc)
 	}
 
-	status, err := common.ProcedureStatus(metaURL, proc.procedureID)
+	status, procError, err := common.ProcedureStatus(metaURL, proc.procedureID)
 	if err != nil {
 		return false, err
 	}
@@ -429,7 +433,11 @@ func (d *DatanodeDeployer) drainNode(ctx context.Context, metaURL string, tracke
 		return true, nil
 	case common.ProcedureStateFailed, common.ProcedureStatePoisoned:
 		tracker.delete(nodeID)
-		return false, fmt.Errorf("drain procedure %s for datanode %d ended in state %s", proc.procedureID, nodeID, status)
+		msg := fmt.Sprintf("drain procedure %s for datanode %d ended in state %s", proc.procedureID, nodeID, status)
+		if procError != "" {
+			msg = fmt.Sprintf("%s: %s", msg, procError)
+		}
+		return false, stderrors.New(msg)
 	default:
 		// Running, Retrying, PrepareRollback, or RollingBack.
 		tracker.put(nodeID, proc)
@@ -452,13 +460,11 @@ func (d *DatanodeDeployer) persistDrainStatus(ctx context.Context, cluster *v1al
 	return nil
 }
 
-// ensureRollingUpdateDrain drains every datanode before a pod-restarting update
-// (e.g. an image or config change) so leader regions are migrated away before the
-// StatefulSet controller rolls the pods. The drained nodes are recorded in
-// DatanodeStatus.PendingSchedulable and marked schedulable again once the rollout
-// completes. It only runs when region failover is enabled, matching the existing
-// maintenance-mode behavior.
-func (d *DatanodeDeployer) ensureRollingUpdateDrain(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster, newSts, oldSts *appsv1.StatefulSet) error {
+// ensureRollingUpgradeDrain drains datanodes before a pod-restarting update (an
+// image or config change) so leader regions are migrated away before the
+// StatefulSet controller rolls the pods. It dispatches to the Scatter or Rotate
+// policy based on the datanode's drainPolicy.
+func (d *DatanodeDeployer) ensureRollingUpgradeDrain(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster, newSts, oldSts *appsv1.StatefulSet) error {
 	if newSts.Spec.Replicas == nil || oldSts.Spec.Replicas == nil {
 		return nil
 	}
@@ -474,17 +480,30 @@ func (d *DatanodeDeployer) ensureRollingUpdateDrain(ctx context.Context, cluster
 	if !spec.IsEnableDrain() {
 		return nil
 	}
-
-	if !d.shouldUseMaintenanceMode(cluster) {
-		return nil
-	}
-	if !d.isOldPodRestart(*newSts, *oldSts) {
-		return nil
-	}
 	if d.isDrainUnsupported(cluster) {
 		return nil
 	}
 
+	if spec.GetDrainPolicy() == v1alpha1.DrainPolicyRotate {
+		// Continue an in-progress rotation, or start a new one on a pod restart.
+		if cluster.Status.Datanode.RollingUpgrade == nil && !d.isOldPodRestart(*newSts, *oldSts) {
+			return nil
+		}
+		return d.ensureRotateRollingUpgrade(ctx, cluster, newSts, oldSts)
+	}
+
+	if !d.isOldPodRestart(*newSts, *oldSts) {
+		return nil
+	}
+	return d.ensureScatterRollingUpgradeDrain(ctx, cluster, newSts, oldSts)
+}
+
+// ensureScatterRollingUpgradeDrain drains every datanode before a rolling update
+// and lets metasrv scatter the regions. The drained nodes are recorded in
+// DatanodeStatus.PendingSchedulable and marked schedulable again once the rollout
+// completes. It only runs when region failover is enabled, matching the existing
+// maintenance-mode behavior.
+func (d *DatanodeDeployer) ensureScatterRollingUpgradeDrain(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster, newSts, oldSts *appsv1.StatefulSet) error {
 	groupID, startNodeID, err := d.datanodeNodeIDParams(cluster, newSts.Name)
 	if err != nil {
 		return err
@@ -502,7 +521,7 @@ func (d *DatanodeDeployer) ensureRollingUpdateDrain(ctx context.Context, cluster
 
 	allDrained := true
 	for _, nodeID := range nodeIDs {
-		drained, err := d.drainNode(ctx, metaURL, tracker, nodeID)
+		drained, err := d.drainNode(ctx, metaURL, tracker, nodeID, nil)
 		if stderrors.Is(err, common.ErrDatanodeDrainUnsupported) {
 			d.markDrainUnsupported(cluster)
 			return nil
@@ -524,6 +543,224 @@ func (d *DatanodeDeployer) ensureRollingUpdateDrain(ctx context.Context, cluster
 	}
 
 	return d.persistPendingSchedulable(ctx, cluster, nodeIDs)
+}
+
+// ensureRotateRollingUpgrade implements the Rotate drain policy: it drains one
+// formal datanode at a time into a temp datanode group, lowers the StatefulSet
+// partition to restart that pod with the new version, and rotates the regions
+// across the nodes (N+1 rounds).
+func (d *DatanodeDeployer) ensureRotateRollingUpgrade(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster, newSts, oldSts *appsv1.StatefulSet) error {
+	groupID, startNodeID, err := d.datanodeNodeIDParams(cluster, newSts.Name)
+	if err != nil {
+		return err
+	}
+	replicas := *oldSts.Spec.Replicas
+
+	ru := cluster.Status.Datanode.RollingUpgrade
+	if ru == nil {
+		ru = &v1alpha1.DatanodeRollingUpgrade{
+			Ordinal: replicas - 1,
+			Phase:   v1alpha1.RollingUpgradePhaseDrain,
+		}
+		cluster.Status.Datanode.RollingUpgrade = ru
+	}
+
+	if ru.Ordinal < 0 {
+		return d.rotateDrainTempGroup(ctx, cluster, newSts, groupID, startNodeID)
+	}
+
+	switch ru.Phase {
+	case v1alpha1.RollingUpgradePhaseDrain:
+		return d.rotateDrainFormalNode(ctx, cluster, newSts, groupID, startNodeID, replicas)
+	case v1alpha1.RollingUpgradePhaseUpgrade:
+		return d.rotateUpgradeFormalNode(ctx, cluster, newSts, groupID, startNodeID, replicas)
+	}
+	return nil
+}
+
+// rotateDrainFormalNode drains the current formal datanode into its rotation
+// target, then lowers the StatefulSet partition so the pod restarts with the new
+// version.
+func (d *DatanodeDeployer) rotateDrainFormalNode(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster, newSts *appsv1.StatefulSet, groupID, startNodeID, replicas int32) error {
+	ru := cluster.Status.Datanode.RollingUpgrade
+
+	_ = newSts // The partition is set by the builder from the rotation state.
+
+	target, err := d.rotateTargetNodeID(cluster, ru.Ordinal, replicas, groupID, startNodeID)
+	if err != nil {
+		return err
+	}
+
+	nodeID := common.DatanodeNodeID(ru.Ordinal, groupID, startNodeID)
+	metaURL := common.GetMetaHTTPServiceURL(cluster)
+	tracker := d.getDrainTracker(cluster)
+	tracker.reset(cluster.Status.Datanode.Draining, []uint64{nodeID})
+
+	drained, err := d.drainNode(ctx, metaURL, tracker, nodeID, target)
+	if stderrors.Is(err, common.ErrDatanodeDrainUnsupported) {
+		d.markDrainUnsupported(cluster)
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+
+	if err := d.persistDrainStatus(ctx, cluster, tracker); err != nil {
+		return err
+	}
+
+	if !drained {
+		return d.persistRollingUpgrade(ctx, cluster, deployer.ErrDrainInProgress)
+	}
+
+	// Drained: the builder lowers the partition from the rotation state so the
+	// current pod is restarted.
+	ru.Phase = v1alpha1.RollingUpgradePhaseUpgrade
+	return d.persistRollingUpgrade(ctx, cluster, nil)
+}
+
+// rotateUpgradeFormalNode waits for the current pod to be restarted with the new
+// revision, marks it schedulable, and advances to the next node.
+func (d *DatanodeDeployer) rotateUpgradeFormalNode(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster, newSts *appsv1.StatefulSet, groupID, startNodeID, replicas int32) error {
+	ru := cluster.Status.Datanode.RollingUpgrade
+
+	upgraded, err := d.isPodUpgraded(ctx, newSts, ru.Ordinal)
+	if err != nil {
+		return err
+	}
+	if !upgraded {
+		return deployer.ErrSyncNotReady
+	}
+
+	// Mark the upgraded node schedulable so the next node can drain into it.
+	nodeID := common.DatanodeNodeID(ru.Ordinal, groupID, startNodeID)
+	if err := common.MarkDatanodeSchedulable(common.GetMetaHTTPServiceURL(cluster), nodeID); err != nil {
+		if stderrors.Is(err, common.ErrDatanodeDrainUnsupported) {
+			d.markDrainUnsupported(cluster)
+			return nil
+		}
+		return err
+	}
+
+	if ru.Ordinal == 0 {
+		ru.Ordinal = -1
+	} else {
+		ru.Ordinal--
+	}
+	ru.Phase = v1alpha1.RollingUpgradePhaseDrain
+	return d.persistRollingUpgrade(ctx, cluster, nil)
+}
+
+// rotateDrainTempGroup drains the temp group to the last formal node and finishes
+// the rotation.
+func (d *DatanodeDeployer) rotateDrainTempGroup(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster, newSts *appsv1.StatefulSet, groupID, startNodeID int32) error {
+	_ = newSts // The partition is set by the builder from the rotation state.
+
+	tempNodeID, err := d.tempDatanodeNodeID(cluster)
+	if err != nil {
+		return err
+	}
+
+	target := common.DatanodeNodeID(0, groupID, startNodeID)
+	metaURL := common.GetMetaHTTPServiceURL(cluster)
+	tracker := d.getDrainTracker(cluster)
+	tracker.reset(cluster.Status.Datanode.Draining, []uint64{tempNodeID})
+
+	drained, err := d.drainNode(ctx, metaURL, tracker, tempNodeID, &target)
+	if stderrors.Is(err, common.ErrDatanodeDrainUnsupported) {
+		d.markDrainUnsupported(cluster)
+		return nil
+	}
+	if err != nil {
+		return err
+	}
+
+	if err := d.persistDrainStatus(ctx, cluster, tracker); err != nil {
+		return err
+	}
+
+	if !drained {
+		return d.persistRollingUpgrade(ctx, cluster, deployer.ErrDrainInProgress)
+	}
+
+	// Rotation complete.
+	cluster.Status.Datanode.RollingUpgrade = nil
+	return d.persistRollingUpgrade(ctx, cluster, nil)
+}
+
+// rotateTargetNodeID returns the drain target for the given formal ordinal. The
+// highest ordinal drains to the temp group; every other ordinal drains to the
+// next, already-upgraded, formal node.
+func (d *DatanodeDeployer) rotateTargetNodeID(cluster *v1alpha1.GreptimeDBCluster, ordinal, replicas, groupID, startNodeID int32) (*uint64, error) {
+	if ordinal == replicas-1 {
+		id, err := d.tempDatanodeNodeID(cluster)
+		if err != nil {
+			return nil, err
+		}
+		return &id, nil
+	}
+	id := common.DatanodeNodeID(ordinal+1, groupID, startNodeID)
+	return &id, nil
+}
+
+// isPodUpgraded reports whether the pod at the given ordinal has been restarted
+// with the StatefulSet's current update revision and is ready.
+func (d *DatanodeDeployer) isPodUpgraded(ctx context.Context, sts *appsv1.StatefulSet, ordinal int32) (bool, error) {
+	current := new(appsv1.StatefulSet)
+	if err := d.Get(ctx, client.ObjectKeyFromObject(sts), current); err != nil {
+		return false, err
+	}
+	if current.Status.UpdateRevision == "" {
+		return false, nil
+	}
+
+	pod := new(corev1.Pod)
+	podName := fmt.Sprintf("%s-%d", sts.Name, ordinal)
+	if err := d.Get(ctx, client.ObjectKey{Namespace: sts.Namespace, Name: podName}, pod); err != nil {
+		if errors.IsNotFound(err) {
+			return false, nil
+		}
+		return false, err
+	}
+
+	if pod.Labels[appsv1.StatefulSetRevisionLabel] != current.Status.UpdateRevision {
+		return false, nil
+	}
+	for _, cond := range pod.Status.Conditions {
+		if cond.Type == corev1.PodReady && cond.Status == corev1.ConditionTrue {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+// rollingUpgradePartition returns the StatefulSet partition for the Rotate
+// rolling upgrade, or nil when no rotation is in progress. During the Drain phase
+// the current pod is kept from updating (partition = ordinal+1); during the
+// Upgrade phase the current pod is being restarted (partition = ordinal).
+func rollingUpgradePartition(cluster *v1alpha1.GreptimeDBCluster) *int32 {
+	ru := cluster.Status.Datanode.RollingUpgrade
+	if ru == nil {
+		return nil
+	}
+	if ru.Ordinal < 0 {
+		// The temp group phase: the formal StatefulSet is fully upgraded.
+		return ptr.To(int32(0))
+	}
+	if ru.Phase == v1alpha1.RollingUpgradePhaseDrain {
+		return ptr.To(ru.Ordinal + 1)
+	}
+	return ptr.To(ru.Ordinal)
+}
+
+// persistRollingUpgrade persists the rolling upgrade progress to the cluster
+// status and returns the given result (if any).
+func (d *DatanodeDeployer) persistRollingUpgrade(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster, result error) error {
+	if err := UpdateStatus(ctx, cluster, d.Client); err != nil {
+		klog.Errorf("Failed to update rolling upgrade status: %s", err)
+		return err
+	}
+	return result
 }
 
 // persistPendingSchedulable records the node IDs that must be marked schedulable
@@ -650,12 +887,23 @@ func (d *DatanodeDeployer) datanodeNodeIDParams(cluster *v1alpha1.GreptimeDBClus
 	return groupID, startNodeID, nil
 }
 
+// tempGroupID is the fixed datanode group ID assigned to the auto-generated temp
+// group. The formal datanode uses group ID -1 (the low 32 bits of the node ID),
+// so group ID 1 keeps the temp node ID in the high 32 bits and avoids collisions.
+const tempGroupID int32 = 1
+
 // datanodeSpecForStatefulSet resolves the datanode spec and group ID that a
-// StatefulSet was generated from. The single datanode has group ID -1; each
-// datanode group uses its index in DatanodeGroups.
+// StatefulSet was generated from. The single datanode has group ID -1, the
+// auto-generated temp group has group ID tempGroupID, and each datanode group
+// uses its index in DatanodeGroups.
 func datanodeSpecForStatefulSet(cluster *v1alpha1.GreptimeDBCluster, stsName string) (*v1alpha1.DatanodeSpec, int32, error) {
 	if cluster.GetDatanode() != nil {
-		return cluster.GetDatanode(), -1, nil
+		if common.ResourceName(cluster.Name, v1alpha1.DatanodeRoleKind, cluster.GetDatanode().GetName()) == stsName {
+			return cluster.GetDatanode(), -1, nil
+		}
+		if spec := autoTempGroupSpec(cluster); spec != nil && common.ResourceName(cluster.Name, v1alpha1.DatanodeRoleKind, spec.GetName()) == stsName {
+			return spec, tempGroupID, nil
+		}
 	}
 
 	for i, group := range cluster.GetDatanodeGroups() {
@@ -665,6 +913,36 @@ func datanodeSpecForStatefulSet(cluster *v1alpha1.GreptimeDBCluster, stsName str
 	}
 
 	return nil, 0, fmt.Errorf("no datanode spec matches statefulset %s", stsName)
+}
+
+// autoTempGroupSpec returns the spec of the auto-generated temp datanode group,
+// or nil when the Rotate policy with a temp group is not configured. It derives
+// the temp group from the formal datanode spec.
+func autoTempGroupSpec(cluster *v1alpha1.GreptimeDBCluster) *v1alpha1.DatanodeSpec {
+	dn := cluster.GetDatanode()
+	if dn == nil || dn.Drain == nil || dn.Drain.Policy != v1alpha1.DrainPolicyRotate || dn.Drain.TempGroup == nil {
+		return nil
+	}
+
+	spec := dn.DeepCopy()
+	spec.Name = "temp"
+	spec.Replicas = dn.Drain.TempGroup.Replicas
+	if spec.Replicas == nil {
+		spec.Replicas = ptr.To(int32(1))
+	}
+	// The temp group does not drain itself and uses the group ID for its node ID.
+	spec.Drain = nil
+	spec.StartNodeID = nil
+	return spec
+}
+
+// tempDatanodeNodeID returns the node ID of the first datanode in the
+// auto-generated temp group, used as the drain target for the Rotate policy.
+func (d *DatanodeDeployer) tempDatanodeNodeID(cluster *v1alpha1.GreptimeDBCluster) (uint64, error) {
+	if autoTempGroupSpec(cluster) == nil {
+		return 0, fmt.Errorf("no temp datanode group configured")
+	}
+	return common.DatanodeNodeID(0, tempGroupID, 0), nil
 }
 
 func (d *DatanodeDeployer) PostSyncHooks() []deployer.Hook {
@@ -868,12 +1146,18 @@ func (b *datanodeBuilder) BuildService() deployer.Builder {
 	}
 
 	if b.Cluster.GetDatanode() != nil {
-		svc, err := b.generateDatanodeService(b.Cluster.GetDatanode())
-		if err != nil {
-			b.Err = err
-			return b
+		specs := []*v1alpha1.DatanodeSpec{b.Cluster.GetDatanode()}
+		if temp := autoTempGroupSpec(b.Cluster); temp != nil {
+			specs = append(specs, temp)
 		}
-		b.Objects = append(b.Objects, svc)
+		for _, spec := range specs {
+			svc, err := b.generateDatanodeService(spec)
+			if err != nil {
+				b.Err = err
+				return b
+			}
+			b.Objects = append(b.Objects, svc)
+		}
 		return b
 	}
 
@@ -899,12 +1183,19 @@ func (b *datanodeBuilder) BuildConfigMap() deployer.Builder {
 	}
 
 	if b.Cluster.GetDatanode() != nil {
-		cm, err := b.GenerateConfigMap(b.Cluster.GetDatanode())
-		if err != nil {
-			b.Err = err
-			return b
+		specs := []*v1alpha1.DatanodeSpec{b.Cluster.GetDatanode()}
+		if temp := autoTempGroupSpec(b.Cluster); temp != nil {
+			specs = append(specs, temp)
 		}
-		b.Objects = append(b.Objects, cm)
+		for _, spec := range specs {
+			cm, err := b.GenerateConfigMap(spec)
+			if err != nil {
+				b.Err = err
+				return b
+			}
+			b.Objects = append(b.Objects, cm)
+		}
+		return b
 	}
 
 	for _, datanodeSpec := range b.Cluster.GetDatanodeGroups() {
@@ -944,6 +1235,16 @@ func (b *datanodeBuilder) BuildStatefulSet() deployer.Builder {
 			return b
 		}
 		b.Objects = append(b.Objects, sts)
+
+		if temp := autoTempGroupSpec(b.Cluster); temp != nil {
+			groupID := tempGroupID
+			sts, err := b.generateDatanodeStatefulSet(&groupID, temp)
+			if err != nil {
+				b.Err = err
+				return b
+			}
+			b.Objects = append(b.Objects, sts)
+		}
 		return b
 	}
 
@@ -974,13 +1275,18 @@ func (b *datanodeBuilder) BuildPodMonitor() deployer.Builder {
 	}
 
 	if b.Cluster.GetDatanode() != nil {
-		pm, err := b.GeneratePodMonitor(b.Cluster.Namespace, common.ResourceName(b.Cluster.Name, b.RoleKind))
-		if err != nil {
-			b.Err = err
-			return b
+		names := []string{common.ResourceName(b.Cluster.Name, b.RoleKind)}
+		if temp := autoTempGroupSpec(b.Cluster); temp != nil {
+			names = append(names, common.ResourceName(b.Cluster.Name, b.RoleKind, temp.GetName()))
 		}
-		b.Objects = append(b.Objects, pm)
-
+		for _, name := range names {
+			pm, err := b.GeneratePodMonitor(b.Cluster.Namespace, name)
+			if err != nil {
+				b.Err = err
+				return b
+			}
+			b.Objects = append(b.Objects, pm)
+		}
 		return b
 	}
 
@@ -1030,6 +1336,17 @@ func (b *datanodeBuilder) generateDatanodeStatefulSet(groupID *int32, spec *v1al
 
 	if !spec.GetFileStorage().IsUseEmptyDir() {
 		sts.Spec.VolumeClaimTemplates = b.generatePVCs(spec)
+	}
+
+	// During a Rotate rolling upgrade, the formal StatefulSet partition is driven
+	// by the rolling upgrade progress so one pod is restarted at a time.
+	if groupID == nil {
+		if partition := rollingUpgradePartition(b.Cluster); partition != nil {
+			if sts.Spec.UpdateStrategy.RollingUpdate == nil {
+				sts.Spec.UpdateStrategy.RollingUpdate = &appsv1.RollingUpdateStatefulSetStrategy{}
+			}
+			sts.Spec.UpdateStrategy.RollingUpdate.Partition = partition
+		}
 	}
 
 	configData, err := dbconfig.FromCluster(b.Cluster, spec)

@@ -159,6 +159,10 @@ func (in *GreptimeDBCluster) validateDatanodeGroups() error {
 			return fmt.Errorf("the datanode group name must be specified")
 		}
 
+		if datanode.IsEnableDrain() && !in.hasObjectStorage() {
+			return fmt.Errorf("datanode group %q: drain.enabled requires object storage (spec.objectStorage) to migrate regions", datanode.GetName())
+		}
+
 		if err := validateTomlConfig(datanode.GetConfig()); err != nil {
 			return fmt.Errorf("invalid datanode toml config: '%v'", err)
 		}
@@ -200,10 +204,34 @@ func (in *GreptimeDBCluster) validateDatanode() error {
 		}
 	}
 
+	if in.GetDatanode().IsEnableDrain() && !in.hasObjectStorage() {
+		return fmt.Errorf("datanode.drain.enabled requires object storage (spec.objectStorage) to migrate regions")
+	}
+
+	if in.GetDatanode().GetDrainPolicy() == DrainPolicyRotate {
+		if !in.GetDatanode().IsEnableDrain() {
+			return fmt.Errorf("datanode.drain.policy Rotate requires drain.enabled to be true")
+		}
+		if !in.hasObjectStorage() {
+			return fmt.Errorf("datanode.drain.policy Rotate requires object storage (spec.objectStorage) to migrate regions")
+		}
+		if in.GetDatanode().Drain == nil || in.GetDatanode().Drain.TempGroup == nil {
+			return fmt.Errorf("datanode.drain.policy Rotate requires drain.tempGroup to be configured")
+		}
+	}
+
 	if err := validateTomlConfig(in.GetDatanode().GetConfig()); err != nil {
 		return fmt.Errorf("invalid datanode toml config: '%v'", err)
 	}
 	return nil
+}
+
+// hasObjectStorage reports whether the cluster is configured with an object
+// storage provider (S3/OSS/GCS/AZBlob). Region migration, and therefore datanode
+// drain, requires object storage so the target datanode can access region data.
+func (in *GreptimeDBCluster) hasObjectStorage() bool {
+	osp := in.GetObjectStorageProvider()
+	return osp != nil && osp.getSetObjectStorageCount() > 0
 }
 
 func (in *GreptimeDBCluster) validateFlownode() error {

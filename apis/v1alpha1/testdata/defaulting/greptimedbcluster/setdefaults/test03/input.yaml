@@ -17,7 +17,6 @@ spec:
           - etcd.etcd-cluster.svc.cluster.local:2379
     enableRegionFailover: true
   datanode:
-    enableDrain: true
     replicas: 1
   enableIPv6: true
   objectStorage:

@@ -20,6 +20,7 @@ import (
 	"strings"
 	"testing"
 
+	"k8s.io/utils/ptr"
 	"sigs.k8s.io/yaml"
 )
 
@@ -90,4 +91,105 @@ func TestStandaloneValidation(t *testing.T) {
 // If the resource name contains the word "error", we expect an error in the validation.
 func expectError(name string) bool {
 	return strings.Contains(name, "error")
+}
+
+func TestDatanodeDrainRequiresObjectStorage(t *testing.T) {
+	newCluster := func(datanode *DatanodeSpec, objectStorage *ObjectStorageProviderSpec) *GreptimeDBCluster {
+		return &GreptimeDBCluster{
+			Spec: GreptimeDBClusterSpec{
+				Datanode:              datanode,
+				ObjectStorageProvider: objectStorage,
+			},
+		}
+	}
+	objectStorage := &ObjectStorageProviderSpec{
+		S3: &S3Storage{Bucket: "bucket", Region: "region", Root: "/"},
+	}
+
+	t.Run("single datanode without object storage", func(t *testing.T) {
+		cluster := newCluster(&DatanodeSpec{
+			ComponentSpec: ComponentSpec{Replicas: ptr.To(int32(3))},
+			Drain:         &DatanodeDrainSpec{Enabled: true},
+		}, nil)
+		if err := cluster.Validate(); err == nil {
+			t.Fatal("expected validation error, got nil")
+		}
+	})
+
+	t.Run("single datanode with object storage", func(t *testing.T) {
+		cluster := newCluster(&DatanodeSpec{
+			ComponentSpec: ComponentSpec{Replicas: ptr.To(int32(3))},
+			Drain:         &DatanodeDrainSpec{Enabled: true},
+		}, objectStorage)
+		if err := cluster.Validate(); err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+	})
+
+	t.Run("datanode group without object storage", func(t *testing.T) {
+		cluster := newCluster(nil, nil)
+		cluster.Spec.DatanodeGroups = []*DatanodeSpec{
+			{
+				Name:          "read",
+				ComponentSpec: ComponentSpec{Replicas: ptr.To(int32(3))},
+				Drain:         &DatanodeDrainSpec{Enabled: true},
+			},
+		}
+		if err := cluster.Validate(); err == nil {
+			t.Fatal("expected validation error, got nil")
+		}
+	})
+
+	t.Run("drain disabled without object storage is allowed", func(t *testing.T) {
+		cluster := newCluster(&DatanodeSpec{
+			ComponentSpec: ComponentSpec{Replicas: ptr.To(int32(3))},
+		}, nil)
+		if err := cluster.Validate(); err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+	})
+}
+
+func TestDatanodeDrainPolicyRotate(t *testing.T) {
+	objectStorage := &ObjectStorageProviderSpec{
+		S3: &S3Storage{Bucket: "bucket", Region: "region", Root: "/"},
+	}
+
+	base := func() *GreptimeDBCluster {
+		return &GreptimeDBCluster{
+			Spec: GreptimeDBClusterSpec{
+				ObjectStorageProvider: objectStorage,
+				Datanode: &DatanodeSpec{
+					ComponentSpec: ComponentSpec{Replicas: ptr.To(int32(3))},
+					Drain: &DatanodeDrainSpec{
+						Enabled:   true,
+						Policy:    DrainPolicyRotate,
+						TempGroup: &TempDatanodeGroupSpec{Replicas: ptr.To(int32(1))},
+					},
+				},
+			},
+		}
+	}
+
+	t.Run("rotate with temp group and object storage", func(t *testing.T) {
+		if err := base().Validate(); err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+	})
+
+	t.Run("rotate without temp group", func(t *testing.T) {
+		cluster := base()
+		cluster.Spec.Datanode.Drain.TempGroup = nil
+		if err := cluster.Validate(); err == nil {
+			t.Fatal("expected validation error, got nil")
+		}
+	})
+
+	t.Run("rotate without enableDrain", func(t *testing.T) {
+		cluster := base()
+		cluster.Spec.Datanode.Drain.Enabled = false
+		if err := cluster.Validate(); err == nil {
+			t.Fatal("expected validation error, got nil")
+		}
+	})
 }

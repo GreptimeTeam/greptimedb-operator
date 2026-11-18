@@ -115,9 +115,10 @@ type httpResponse struct {
 
 // SubmitDatanodeDrain submits an asynchronous drain for the datanode identified by
 // nodeID and returns the procedure ID to poll. The drain fences the datanode and
-// migrates every leader region off it.
-func SubmitDatanodeDrain(metaHTTPServiceURL string, nodeID uint64) (string, error) {
-	resp, err := postJSON(metaHTTPServiceURL, datanodeDrainEndpoint, drainDatanodeRequest{NodeID: nodeID})
+// migrates every leader region off it. If targetNodeID is non-nil, metasrv pins
+// the migrated leader regions to that datanode instead of scattering them.
+func SubmitDatanodeDrain(metaHTTPServiceURL string, nodeID uint64, targetNodeID *uint64) (string, error) {
+	resp, err := postJSON(metaHTTPServiceURL, datanodeDrainEndpoint, drainDatanodeRequest{NodeID: nodeID, TargetNodeID: targetNodeID})
 	if err != nil {
 		return "", err
 	}
@@ -133,23 +134,24 @@ func SubmitDatanodeDrain(metaHTTPServiceURL string, nodeID uint64) (string, erro
 	return result.ProcedureID, nil
 }
 
-// ProcedureStatus returns the state of a submitted procedure.
-func ProcedureStatus(metaHTTPServiceURL, procedureID string) (string, error) {
+// ProcedureStatus returns the state of a submitted procedure and, for failed
+// procedures, the error message reported by metasrv.
+func ProcedureStatus(metaHTTPServiceURL, procedureID string) (status, procError string, err error) {
 	query := url.Values{"procedure_id": []string{procedureID}}.Encode()
 	resp, err := httpGet(metaHTTPServiceURL + procedureStatusEndpoint + "?" + query)
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
 
 	if resp.statusCode != http.StatusOK {
-		return "", metasrvErrorFromResponse(resp, "query procedure status")
+		return "", "", metasrvErrorFromResponse(resp, "query procedure status")
 	}
 
 	var result procedureStatusResponse
 	if err := json.Unmarshal(resp.body, &result); err != nil {
-		return "", err
+		return "", "", err
 	}
-	return result.Status, nil
+	return result.Status, result.Error, nil
 }
 
 // MarkDatanodeSchedulable restores scheduling for the datanode identified by nodeID,
