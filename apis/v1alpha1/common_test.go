@@ -20,6 +20,7 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	"k8s.io/utils/ptr"
 )
 
 func TestServiceSpecGetPorts(t *testing.T) {
@@ -58,6 +59,27 @@ func TestServiceSpecGetPorts(t *testing.T) {
 			got := tt.spec.GetPorts(defaultPorts)
 			if !reflect.DeepEqual(got, tt.expected) {
 				t.Fatalf("expected %+v, got %+v", tt.expected, got)
+			}
+		})
+	}
+}
+
+func TestDatanodeSpecIsEnableDrain(t *testing.T) {
+	tests := []struct {
+		name string
+		spec *DatanodeSpec
+		want bool
+	}{
+		{name: "nil spec", spec: nil, want: false},
+		{name: "nil flag", spec: &DatanodeSpec{}, want: false},
+		{name: "explicit false", spec: &DatanodeSpec{EnableDrain: ptr.To(false)}, want: false},
+		{name: "explicit true", spec: &DatanodeSpec{EnableDrain: ptr.To(true)}, want: true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.spec.IsEnableDrain(); got != tt.want {
+				t.Fatalf("IsEnableDrain() = %v, want %v", got, tt.want)
 			}
 		})
 	}

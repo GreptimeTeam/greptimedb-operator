@@ -317,6 +317,14 @@ func (d *DatanodeDeployer) ensureDatanodeScaleSafety(ctx context.Context, cluste
 		return nil
 	}
 
+	spec, _, err := datanodeSpecForStatefulSet(cluster, newSts.Name)
+	if err != nil {
+		return err
+	}
+	if !spec.IsEnableDrain() {
+		return nil
+	}
+
 	newReplicas := *newSts.Spec.Replicas
 	oldReplicas := *oldSts.Spec.Replicas
 
@@ -455,6 +463,15 @@ func (d *DatanodeDeployer) ensureRollingUpdateDrain(ctx context.Context, cluster
 		// Scale changes are handled by ensureDatanodeScaleSafety.
 		return nil
 	}
+
+	spec, _, err := datanodeSpecForStatefulSet(cluster, newSts.Name)
+	if err != nil {
+		return err
+	}
+	if !spec.IsEnableDrain() {
+		return nil
+	}
+
 	if !d.shouldUseMaintenanceMode(cluster) {
 		return nil
 	}
@@ -621,23 +638,31 @@ func (d *DatanodeDeployer) clearDrainState(ctx context.Context, cluster *v1alpha
 // datanodeNodeIDParams resolves the group ID and start node ID used to compute
 // datanode node IDs for the given StatefulSet.
 func (d *DatanodeDeployer) datanodeNodeIDParams(cluster *v1alpha1.GreptimeDBCluster, stsName string) (groupID, startNodeID int32, err error) {
+	spec, groupID, err := datanodeSpecForStatefulSet(cluster, stsName)
+	if err != nil {
+		return 0, 0, err
+	}
+	if snid := spec.GetStartNodeID(); snid != nil {
+		startNodeID = *snid
+	}
+	return groupID, startNodeID, nil
+}
+
+// datanodeSpecForStatefulSet resolves the datanode spec and group ID that a
+// StatefulSet was generated from. The single datanode has group ID -1; each
+// datanode group uses its index in DatanodeGroups.
+func datanodeSpecForStatefulSet(cluster *v1alpha1.GreptimeDBCluster, stsName string) (*v1alpha1.DatanodeSpec, int32, error) {
 	if cluster.GetDatanode() != nil {
-		if snid := cluster.GetDatanode().GetStartNodeID(); snid != nil {
-			startNodeID = *snid
-		}
-		return -1, startNodeID, nil
+		return cluster.GetDatanode(), -1, nil
 	}
 
 	for i, group := range cluster.GetDatanodeGroups() {
 		if common.ResourceName(cluster.Name, v1alpha1.DatanodeRoleKind, group.GetName()) == stsName {
-			if snid := group.GetStartNodeID(); snid != nil {
-				startNodeID = *snid
-			}
-			return int32(i), startNodeID, nil
+			return group, int32(i), nil
 		}
 	}
 
-	return 0, 0, fmt.Errorf("no datanode spec matches statefulset %s", stsName)
+	return nil, 0, fmt.Errorf("no datanode spec matches statefulset %s", stsName)
 }
 
 func (d *DatanodeDeployer) PostSyncHooks() []deployer.Hook {

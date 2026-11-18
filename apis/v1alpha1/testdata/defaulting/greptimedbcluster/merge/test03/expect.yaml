@@ -34,6 +34,7 @@ spec:
         periodSeconds: 5
   datanodeGroups:
   - name: read
+    enableDrain: false
     httpPort: 4000
     logging:
       format: text
@@ -88,6 +89,7 @@ spec:
             port: 4000
           periodSeconds: 5
   - name: write
+    enableDrain: false
     httpPort: 4000
     logging:
       format: text

@@ -3379,6 +3379,8 @@ spec:
                 properties:
                   config:
                     type: string
+                  enableDrain:
+                    type: boolean
                   httpPort:
                     format: int32
                     maximum: 65535
@@ -6817,6 +6819,8 @@ spec:
                   properties:
                     config:
                       type: string
+                    enableDrain:
+                      type: boolean
                     httpPort:
                       format: int32
                       maximum: 65535

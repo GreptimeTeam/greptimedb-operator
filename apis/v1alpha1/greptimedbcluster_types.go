@@ -464,6 +464,13 @@ type DatanodeSpec struct {
 	// StartNodeID is the start node id of the datanode.
 	// +optional
 	StartNodeID *int32 `json:"startNodeID,omitempty"`
+
+	// EnableDrain indicates whether to drain a datanode before it is removed by
+	// a scale-down or before its pod is restarted by a rolling update. Draining
+	// migrates every leader region off the datanode first. It requires
+	// GreptimeDB >= v1.4.0 and is disabled by default.
+	// +optional
+	EnableDrain *bool `json:"enableDrain,omitempty"`
 }
 
 var _ RoleSpec = &DatanodeSpec{}
@@ -527,6 +534,12 @@ func (in *DatanodeSpec) GetStartNodeID() *int32 {
 		return in.StartNodeID
 	}
 	return nil
+}
+
+// IsEnableDrain returns whether to drain the datanode before scale-down or
+// rolling update.
+func (in *DatanodeSpec) IsEnableDrain() bool {
+	return in != nil && in.EnableDrain != nil && *in.EnableDrain
 }
 
 // FlownodeSpec is the specification for flownode component.

@@ -264,6 +264,7 @@ func (in *GreptimeDBCluster) defaultDatanode() *DatanodeSpec {
 		HTTPPort:      DefaultHTTPPort,
 		Storage:       defaultDatanodeStorage(),
 		RollingUpdate: defaultRollingUpdateForStatefulSet(),
+		EnableDrain:   ptr.To(false),
 	}
 
 	if in.GetDatanode().GetReplicas() == nil {
