@@ -22,6 +22,8 @@ The following examples suppose that you have installed the etcd cluster in the `
 - [MySQL Meta Backend](./cluster/mysql-meta-backend/cluster.yaml): Create a GreptimeDB cluster with MySQL as the meta backend.
 - [PostgreSQL Meta Backend](./cluster/postgresql-meta-backend/cluster.yaml): Create a GreptimeDB cluster with PostgreSQL as the meta backend.
 - [Datanode Groups](./cluster/datanode-groups/cluster.yaml): Create a GreptimeDB cluster with datanode groups.
+- [Datanode Drain (Scatter)](./cluster/drain-scatter/cluster.yaml): Create a GreptimeDB cluster with datanode draining enabled (Scatter policy) so leader regions are migrated before a datanode is removed or restarted.
+- [Datanode Drain (Rotate)](./cluster/drain-rotate/cluster.yaml): Create a GreptimeDB cluster with datanode draining enabled (Rotate policy) so leader regions are rotated through an auto-generated temp datanode group during a rolling upgrade.
 - [Dedicated Cache Volume](./cluster/dedicated-cache-volume/cluster.yaml): Create a GreptimeDB cluster with dedicated cache volume.
 - [Configure Tracing](./cluster/configure-tracing/cluster.yaml): Create a GreptimeDB cluster with custom tracing configuration.
 - [Enable IPv6](./cluster/enable-ipv6/cluster.yaml): Create a GreptimeDB cluster with IPv6 support enabled.

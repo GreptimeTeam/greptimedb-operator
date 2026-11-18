@@ -22,7 +22,7 @@ spec:
     replicas: 3
     drain:
       enabled: true
-      # policy defaults to Scatter (Plan A)
+      # policy defaults to Scatter
     storage:
       fs:
         storageRetainPolicy: Delete

@@ -1,0 +1,34 @@
+apiVersion: greptime.io/v1alpha1
+kind: GreptimeDBCluster
+metadata:
+  name: cluster-with-drain-rotate
+spec:
+  base:
+    main:
+      # Datanode draining requires GreptimeDB >= v1.4.0.
+      image: greptime/greptimedb:latest
+  frontend:
+    replicas: 1
+  meta:
+    replicas: 1
+    backendStorage:
+      etcd:
+        endpoints:
+          - "etcd.etcd-cluster.svc.cluster.local:2379"
+  datanode:
+    replicas: 3
+    drain:
+      enabled: true
+      # Rotate drains one datanode at a time into a temporary datanode group and
+      # rotates the regions across the nodes (N+1 rounds) during a rolling upgrade.
+      policy: Rotate
+      tempGroup:
+        # The operator creates this temporary datanode group automatically; there
+        # is no need to list it in datanodeGroups.
+        replicas: 1
+  objectStorage:
+    s3:
+      bucket: "greptimedb"
+      region: "ap-southeast-1"
+      secretName: "s3-credentials"
+      root: "cluster-with-drain-rotate-data"

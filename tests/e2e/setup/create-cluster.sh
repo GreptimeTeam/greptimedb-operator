@@ -296,7 +296,8 @@ function deploy_rustfs() {
 }
 
 # Create the bucket used by the drain e2e test. RustFS does not auto-create
-# buckets, so a one-shot job uses the mc client against the rustfs S3 endpoint.
+# buckets, so a one-shot job uses the aws-cli client against the rustfs S3
+# endpoint.
 function create_rustfs_bucket() {
   echo -e "${GREEN}=> Create rustfs bucket...${RESET}"
 
@@ -330,9 +331,8 @@ spec:
             - /bin/sh
             - -c
             - |
-              endpoint=http://rustfs-svc.$RUSTFS_NAMESPACE.svc.cluster.local:9000
-              if ! aws --endpoint-url "$endpoint" s3api head-bucket --bucket "$RUSTFS_BUCKET" 2>/dev/null; then
-                aws --endpoint-url "$endpoint" s3 mb "s3://$RUSTFS_BUCKET" --region "$RUSTFS_REGION"
+              if ! aws --endpoint-url "http://rustfs-svc.$RUSTFS_NAMESPACE.svc.cluster.local:9000" s3api head-bucket --bucket "$RUSTFS_BUCKET" 2>/dev/null; then
+                aws --endpoint-url "http://rustfs-svc.$RUSTFS_NAMESPACE.svc.cluster.local:9000" s3 mb "s3://$RUSTFS_BUCKET" --region "$RUSTFS_REGION"
               fi
 EOF
 
