@@ -203,6 +203,12 @@ func (r *Reconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Resu
 func (r *Reconciler) sync(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster) (ctrl.Result, error) {
 	for _, d := range r.Deployers {
 		err := d.Sync(ctx, cluster, d)
+		if errors.Is(err, deployer.ErrDrainInProgress) {
+			// A long-running operation (e.g. datanode drain) is still in flight.
+			// Requeue to poll its progress without flipping the cluster to Error.
+			return ctrl.Result{RequeueAfter: defaultRequeueAfter}, nil
+		}
+
 		if errors.Is(err, deployer.ErrSyncNotReady) {
 			var (
 				currentPhase = cluster.Status.ClusterPhase

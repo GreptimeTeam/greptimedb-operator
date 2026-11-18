@@ -16,9 +16,11 @@ package deployers
 
 import (
 	"context"
+	stderrors "errors"
 	"fmt"
 	"path"
 	"reflect"
+	"sort"
 	"sync"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -51,6 +53,19 @@ type DatanodeDeployer struct {
 	// in progress, leaving the actually-rolling cluster in maintenance mode
 	// (region failover + GC disabled) with no self-heal.
 	maintenanceMode sync.Map
+
+	// drainTrackers tracks in-flight drain procedure IDs per cluster and per
+	// datanode ID. It is keyed by the cluster's NamespacedName and maps to the
+	// cluster's drainTracker. The state is intentionally in-memory: a drain
+	// submission is idempotent, so losing it on an operator restart only causes
+	// a re-submit (which metasrv either rejects while a drain is running or
+	// turns into a quick no-op once the node has no leader regions left).
+	drainTrackers sync.Map
+
+	// drainUnsupported remembers, per cluster, that the metasrv does not expose
+	// the drain API (GreptimeDB < v1.4.0). Once observed, the drain orchestration
+	// is skipped for that cluster instead of repeatedly hitting 404 endpoints.
+	drainUnsupported sync.Map
 }
 
 var _ deployer.Deployer = &DatanodeDeployer{}
@@ -172,6 +187,19 @@ func (d *DatanodeDeployer) Apply(ctx context.Context, crdObject client.Object, o
 
 			// If the spec or labels is not equal, update the object.
 			if !specEqual || !labelsEqual {
+				if newSts, ok := newObject.(*appsv1.StatefulSet); ok {
+					oldSts, ok := oldObject.(*appsv1.StatefulSet)
+					if !ok {
+						return fmt.Errorf("old object for statefulset %s is not a statefulset", newSts.Name)
+					}
+					if err := d.ensureDatanodeScaleSafety(ctx, cluster, newSts, oldSts); err != nil {
+						return err
+					}
+					if err := d.ensureRollingUpdateDrain(ctx, cluster, newSts, oldSts); err != nil {
+						return err
+					}
+				}
+
 				if sts, ok := newObject.(*appsv1.StatefulSet); ok && d.shouldUseMaintenanceMode(cluster) {
 					if err := d.turnOnMaintenanceMode(ctx, sts, cluster); err != nil {
 						return err
@@ -194,8 +222,427 @@ func (d *DatanodeDeployer) Apply(ctx context.Context, crdObject client.Object, o
 	return nil
 }
 
+// drainTracker tracks in-flight drain procedures per datanode node ID for a
+// single cluster. The state is mirrored to the cluster's DatanodeStatus.Draining
+// so a restarted operator can resume polling the same procedure IDs.
+type drainTracker struct {
+	mu   sync.Mutex
+	proc map[uint64]drainProc
+}
+
+type drainProc struct {
+	procedureID string
+	status      string
+}
+
+func (t *drainTracker) get(nodeID uint64) (drainProc, bool) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	p, ok := t.proc[nodeID]
+	return p, ok
+}
+
+func (t *drainTracker) put(nodeID uint64, p drainProc) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	t.proc[nodeID] = p
+}
+
+func (t *drainTracker) delete(nodeID uint64) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+	delete(t.proc, nodeID)
+}
+
+// snapshot returns a copy of the tracked drains, sorted by node ID for a stable
+// status output.
+func (t *drainTracker) snapshot() []v1alpha1.DatanodeDrainStatus {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
+	out := make([]v1alpha1.DatanodeDrainStatus, 0, len(t.proc))
+	for nodeID, p := range t.proc {
+		out = append(out, v1alpha1.DatanodeDrainStatus{
+			NodeID:      nodeID,
+			ProcedureID: p.procedureID,
+			Status:      p.status,
+		})
+	}
+	sort.Slice(out, func(i, j int) bool { return out[i].NodeID < out[j].NodeID })
+	return out
+}
+
+// reset rebuilds the tracker from persisted drain state, keeping only the given
+// node IDs. This scopes the tracker to the current drain operation and drops
+// stale entries left by an aborted previous operation.
+func (t *drainTracker) reset(draining []v1alpha1.DatanodeDrainStatus, keep []uint64) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
+	keepSet := make(map[uint64]struct{}, len(keep))
+	for _, id := range keep {
+		keepSet[id] = struct{}{}
+	}
+
+	t.proc = make(map[uint64]drainProc)
+	for _, s := range draining {
+		if s.ProcedureID == "" {
+			continue
+		}
+		if _, ok := keepSet[s.NodeID]; ok {
+			t.proc[s.NodeID] = drainProc{procedureID: s.ProcedureID, status: s.Status}
+		}
+	}
+}
+
+func (d *DatanodeDeployer) getDrainTracker(cluster *v1alpha1.GreptimeDBCluster) *drainTracker {
+	key := client.ObjectKeyFromObject(cluster)
+	value, _ := d.drainTrackers.LoadOrStore(key, &drainTracker{proc: map[uint64]drainProc{}})
+	return value.(*drainTracker)
+}
+
+func (d *DatanodeDeployer) isDrainUnsupported(cluster *v1alpha1.GreptimeDBCluster) bool {
+	_, ok := d.drainUnsupported.Load(client.ObjectKeyFromObject(cluster))
+	return ok
+}
+
+func (d *DatanodeDeployer) markDrainUnsupported(cluster *v1alpha1.GreptimeDBCluster) {
+	d.drainUnsupported.Store(client.ObjectKeyFromObject(cluster), struct{}{})
+}
+
+// ensureDatanodeScaleSafety drains datanodes before they are removed by a
+// scale-down and restores scheduling for datanodes added by a scale-up.
+func (d *DatanodeDeployer) ensureDatanodeScaleSafety(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster, newSts, oldSts *appsv1.StatefulSet) error {
+	if newSts.Spec.Replicas == nil || oldSts.Spec.Replicas == nil {
+		return nil
+	}
+
+	newReplicas := *newSts.Spec.Replicas
+	oldReplicas := *oldSts.Spec.Replicas
+
+	switch {
+	case newReplicas < oldReplicas:
+		drained, err := d.drainScaleDownPods(ctx, cluster, newSts, newReplicas, oldReplicas)
+		if err != nil {
+			return err
+		}
+		if !drained {
+			return deployer.ErrDrainInProgress
+		}
+	case newReplicas > oldReplicas:
+		return d.markScaleUpPodsSchedulable(ctx, cluster, newSts, oldReplicas, newReplicas)
+	}
+
+	return nil
+}
+
+// drainScaleDownPods drains the datanodes whose StatefulSet ordinals fall in
+// [newReplicas, oldReplicas). It returns true only when every node is fully drained.
+func (d *DatanodeDeployer) drainScaleDownPods(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster, sts *appsv1.StatefulSet, newReplicas, oldReplicas int32) (bool, error) {
+	groupID, startNodeID, err := d.datanodeNodeIDParams(cluster, sts.Name)
+	if err != nil {
+		return false, err
+	}
+
+	metaURL := common.GetMetaHTTPServiceURL(cluster)
+
+	if d.isDrainUnsupported(cluster) {
+		// Older metasrv without the drain API: fall back to the previous
+		// scale-down behavior (rely on region failover).
+		return true, nil
+	}
+
+	tracker := d.getDrainTracker(cluster)
+
+	nodeIDs := make([]uint64, 0, oldReplicas-newReplicas)
+	for ordinal := newReplicas; ordinal < oldReplicas; ordinal++ {
+		nodeIDs = append(nodeIDs, common.DatanodeNodeID(ordinal, groupID, startNodeID))
+	}
+	tracker.reset(cluster.Status.Datanode.Draining, nodeIDs)
+
+	allDrained := true
+	for _, nodeID := range nodeIDs {
+		drained, err := d.drainNode(ctx, metaURL, tracker, nodeID)
+		if stderrors.Is(err, common.ErrDatanodeDrainUnsupported) {
+			d.markDrainUnsupported(cluster)
+			return true, nil
+		}
+		if err != nil {
+			return false, err
+		}
+		if !drained {
+			allDrained = false
+		}
+	}
+
+	if err := d.persistDrainStatus(ctx, cluster, tracker); err != nil {
+		return false, err
+	}
+	return allDrained, nil
+}
+
+// drainNode ensures the given datanode has no leader regions left. It returns:
+//   - (true, nil) when the node is drained,
+//   - (false, nil) when a drain is still in progress,
+//   - (false, err) on failure.
+func (d *DatanodeDeployer) drainNode(ctx context.Context, metaURL string, tracker *drainTracker, nodeID uint64) (bool, error) {
+	proc, ok := tracker.get(nodeID)
+	if !ok || proc.procedureID == "" {
+		id, err := common.SubmitDatanodeDrain(metaURL, nodeID)
+		if err != nil {
+			if stderrors.Is(err, common.ErrDatanodeDrainUnsupported) {
+				return false, fmt.Errorf("%w: node %d", common.ErrDatanodeDrainUnsupported, nodeID)
+			}
+			if stderrors.Is(err, common.ErrDatanodeDrainRunning) {
+				// A drain submitted by a previous operator instance or a concurrent
+				// reconcile is still running; wait and resubmit once it settles.
+				klog.V(2).Infof("datanode %d is already being drained; waiting for it to finish", nodeID)
+				return false, nil
+			}
+			return false, err
+		}
+		proc = drainProc{procedureID: id, status: common.ProcedureStateRunning}
+		tracker.put(nodeID, proc)
+	}
+
+	status, err := common.ProcedureStatus(metaURL, proc.procedureID)
+	if err != nil {
+		return false, err
+	}
+	proc.status = status
+
+	switch status {
+	case common.ProcedureStateDone:
+		tracker.delete(nodeID)
+		klog.Infof("Drained datanode %d", nodeID)
+		return true, nil
+	case common.ProcedureStateFailed, common.ProcedureStatePoisoned:
+		tracker.delete(nodeID)
+		return false, fmt.Errorf("drain procedure %s for datanode %d ended in state %s", proc.procedureID, nodeID, status)
+	default:
+		// Running, Retrying, PrepareRollback, or RollingBack.
+		tracker.put(nodeID, proc)
+		return false, nil
+	}
+}
+
+// persistDrainStatus mirrors the tracker into the cluster's DatanodeStatus.Draining.
+func (d *DatanodeDeployer) persistDrainStatus(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster, tracker *drainTracker) error {
+	draining := tracker.snapshot()
+	if reflect.DeepEqual(cluster.Status.Datanode.Draining, draining) {
+		return nil
+	}
+
+	cluster.Status.Datanode.Draining = draining
+	if err := UpdateStatus(ctx, cluster, d.Client); err != nil {
+		klog.Errorf("Failed to update drain status: %s", err)
+		return err
+	}
+	return nil
+}
+
+// ensureRollingUpdateDrain drains every datanode before a pod-restarting update
+// (e.g. an image or config change) so leader regions are migrated away before the
+// StatefulSet controller rolls the pods. The drained nodes are recorded in
+// DatanodeStatus.PendingSchedulable and marked schedulable again once the rollout
+// completes. It only runs when region failover is enabled, matching the existing
+// maintenance-mode behavior.
+func (d *DatanodeDeployer) ensureRollingUpdateDrain(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster, newSts, oldSts *appsv1.StatefulSet) error {
+	if newSts.Spec.Replicas == nil || oldSts.Spec.Replicas == nil {
+		return nil
+	}
+	if *newSts.Spec.Replicas != *oldSts.Spec.Replicas {
+		// Scale changes are handled by ensureDatanodeScaleSafety.
+		return nil
+	}
+	if !d.shouldUseMaintenanceMode(cluster) {
+		return nil
+	}
+	if !d.isOldPodRestart(*newSts, *oldSts) {
+		return nil
+	}
+	if d.isDrainUnsupported(cluster) {
+		return nil
+	}
+
+	groupID, startNodeID, err := d.datanodeNodeIDParams(cluster, newSts.Name)
+	if err != nil {
+		return err
+	}
+
+	metaURL := common.GetMetaHTTPServiceURL(cluster)
+	tracker := d.getDrainTracker(cluster)
+
+	replicas := *oldSts.Spec.Replicas
+	nodeIDs := make([]uint64, 0, replicas)
+	for ordinal := replicas - 1; ordinal >= 0; ordinal-- {
+		nodeIDs = append(nodeIDs, common.DatanodeNodeID(ordinal, groupID, startNodeID))
+	}
+	tracker.reset(cluster.Status.Datanode.Draining, nodeIDs)
+
+	allDrained := true
+	for _, nodeID := range nodeIDs {
+		drained, err := d.drainNode(ctx, metaURL, tracker, nodeID)
+		if stderrors.Is(err, common.ErrDatanodeDrainUnsupported) {
+			d.markDrainUnsupported(cluster)
+			return nil
+		}
+		if err != nil {
+			return err
+		}
+		if !drained {
+			allDrained = false
+		}
+	}
+
+	if err := d.persistDrainStatus(ctx, cluster, tracker); err != nil {
+		return err
+	}
+
+	if !allDrained {
+		return deployer.ErrDrainInProgress
+	}
+
+	return d.persistPendingSchedulable(ctx, cluster, nodeIDs)
+}
+
+// persistPendingSchedulable records the node IDs that must be marked schedulable
+// after the rollout completes.
+func (d *DatanodeDeployer) persistPendingSchedulable(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster, pending []uint64) error {
+	sort.Slice(pending, func(i, j int) bool { return pending[i] < pending[j] })
+	if reflect.DeepEqual(cluster.Status.Datanode.PendingSchedulable, pending) {
+		return nil
+	}
+
+	cluster.Status.Datanode.PendingSchedulable = pending
+	if err := UpdateStatus(ctx, cluster, d.Client); err != nil {
+		klog.Errorf("Failed to update pending schedulable status: %s", err)
+		return err
+	}
+	return nil
+}
+
+// markPendingSchedulable restores scheduling for datanodes that were drained for
+// a rolling update. It runs as a post-sync hook, i.e. after the rolled pods are
+// ready again.
+func (d *DatanodeDeployer) markPendingSchedulable(ctx context.Context, crdObject client.Object) error {
+	cluster, err := d.GetCluster(crdObject)
+	if err != nil {
+		return err
+	}
+
+	pending := cluster.Status.Datanode.PendingSchedulable
+	if len(pending) == 0 {
+		return nil
+	}
+
+	if d.isDrainUnsupported(cluster) {
+		cluster.Status.Datanode.PendingSchedulable = nil
+		if err := UpdateStatus(ctx, cluster, d.Client); err != nil {
+			klog.Errorf("Failed to clear pending schedulable status: %s", err)
+			return err
+		}
+		return nil
+	}
+
+	metaURL := common.GetMetaHTTPServiceURL(cluster)
+	for _, nodeID := range pending {
+		if err := common.MarkDatanodeSchedulable(metaURL, nodeID); err != nil {
+			if stderrors.Is(err, common.ErrDatanodeDrainUnsupported) {
+				d.markDrainUnsupported(cluster)
+				cluster.Status.Datanode.PendingSchedulable = nil
+				if err := UpdateStatus(ctx, cluster, d.Client); err != nil {
+					klog.Errorf("Failed to clear pending schedulable status: %s", err)
+					return err
+				}
+				return nil
+			}
+			return err
+		}
+		klog.Infof("Marked datanode %d schedulable after rolling update", nodeID)
+	}
+
+	cluster.Status.Datanode.PendingSchedulable = nil
+	if err := UpdateStatus(ctx, cluster, d.Client); err != nil {
+		klog.Errorf("Failed to clear pending schedulable status: %s", err)
+		return err
+	}
+	return nil
+}
+
+// markScaleUpPodsSchedulable restores scheduling for datanodes whose ordinals fall
+// in [oldReplicas, newReplicas), removing any fence left by a previous drain.
+func (d *DatanodeDeployer) markScaleUpPodsSchedulable(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster, sts *appsv1.StatefulSet, oldReplicas, newReplicas int32) error {
+	if d.isDrainUnsupported(cluster) {
+		return nil
+	}
+
+	groupID, startNodeID, err := d.datanodeNodeIDParams(cluster, sts.Name)
+	if err != nil {
+		return err
+	}
+
+	metaURL := common.GetMetaHTTPServiceURL(cluster)
+	for ordinal := oldReplicas; ordinal < newReplicas; ordinal++ {
+		nodeID := common.DatanodeNodeID(ordinal, groupID, startNodeID)
+		if err := common.MarkDatanodeSchedulable(metaURL, nodeID); err != nil {
+			if stderrors.Is(err, common.ErrDatanodeDrainUnsupported) {
+				d.markDrainUnsupported(cluster)
+				return nil
+			}
+			return err
+		}
+		klog.Infof("Marked datanode %d schedulable after scale-up", nodeID)
+	}
+
+	// Scaling up aborts any in-flight scale-down drain: the nodes being added
+	// back must not remain fenced. Clear the stale drain state.
+	d.clearDrainState(ctx, cluster)
+	return nil
+}
+
+// clearDrainState drops the in-memory tracker and persisted Draining status for
+// the cluster.
+func (d *DatanodeDeployer) clearDrainState(ctx context.Context, cluster *v1alpha1.GreptimeDBCluster) error {
+	tracker := d.getDrainTracker(cluster)
+	tracker.reset(nil, nil)
+
+	if len(cluster.Status.Datanode.Draining) == 0 {
+		return nil
+	}
+	cluster.Status.Datanode.Draining = nil
+	if err := UpdateStatus(ctx, cluster, d.Client); err != nil {
+		klog.Errorf("Failed to clear drain status: %s", err)
+		return err
+	}
+	return nil
+}
+
+// datanodeNodeIDParams resolves the group ID and start node ID used to compute
+// datanode node IDs for the given StatefulSet.
+func (d *DatanodeDeployer) datanodeNodeIDParams(cluster *v1alpha1.GreptimeDBCluster, stsName string) (groupID, startNodeID int32, err error) {
+	if cluster.GetDatanode() != nil {
+		if snid := cluster.GetDatanode().GetStartNodeID(); snid != nil {
+			startNodeID = *snid
+		}
+		return -1, startNodeID, nil
+	}
+
+	for i, group := range cluster.GetDatanodeGroups() {
+		if common.ResourceName(cluster.Name, v1alpha1.DatanodeRoleKind, group.GetName()) == stsName {
+			if snid := group.GetStartNodeID(); snid != nil {
+				startNodeID = *snid
+			}
+			return int32(i), startNodeID, nil
+		}
+	}
+
+	return 0, 0, fmt.Errorf("no datanode spec matches statefulset %s", stsName)
+}
+
 func (d *DatanodeDeployer) PostSyncHooks() []deployer.Hook {
 	return []deployer.Hook{
+		d.markPendingSchedulable,
 		d.turnOffMaintenanceMode,
 	}
 }

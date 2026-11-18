@@ -22,6 +22,9 @@ spec:
     - jsonPath: .status.datanode.readyReplicas
       name: DATANODE
       type: integer
+    - jsonPath: .status.datanode.draining[*].nodeId
+      name: DRAINING
+      type: string
     - jsonPath: .status.meta.readyReplicas
       name: META
       type: integer
@@ -28211,6 +28214,25 @@ spec:
                 type: array
               datanode:
                 properties:
+                  draining:
+                    items:
+                      properties:
+                        nodeId:
+                          format: int64
+                          type: integer
+                        procedureId:
+                          type: string
+                        status:
+                          type: string
+                      required:
+                      - nodeId
+                      type: object
+                    type: array
+                  pendingSchedulable:
+                    items:
+                      format: int64
+                      type: integer
+                    type: array
                   readyReplicas:
                     format: int32
                     type: integer

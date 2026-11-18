@@ -1032,6 +1032,20 @@ type MetaStatus struct {
 	MaintenanceMode bool `json:"maintenanceMode"`
 }
 
+// DatanodeDrainStatus is the status of draining a datanode.
+type DatanodeDrainStatus struct {
+	// NodeID is the GreptimeDB datanode node ID being drained.
+	NodeID uint64 `json:"nodeId"`
+
+	// ProcedureID is the ID of the drain procedure submitted to metasrv.
+	// +optional
+	ProcedureID string `json:"procedureId,omitempty"`
+
+	// Status is the current state of the drain procedure, e.g. Running, Done, Failed.
+	// +optional
+	Status string `json:"status,omitempty"`
+}
+
 // DatanodeStatus is the status of datanode node.
 type DatanodeStatus struct {
 	// Replicas is the number of replicas of the datanode.
@@ -1039,6 +1053,16 @@ type DatanodeStatus struct {
 
 	// ReadyReplicas is the number of ready replicas of the datanode.
 	ReadyReplicas int32 `json:"readyReplicas"`
+
+	// Draining lists the datanodes that are currently being drained to be
+	// removed from the cluster.
+	// +optional
+	Draining []DatanodeDrainStatus `json:"draining,omitempty"`
+
+	// PendingSchedulable lists the datanode node IDs that must be marked
+	// schedulable again once their pods are ready (e.g. after a rolling update).
+	// +optional
+	PendingSchedulable []uint64 `json:"pendingSchedulable,omitempty"`
 }
 
 // FlownodeStatus is the status of flownode node.
@@ -1071,6 +1095,7 @@ func (in *GreptimeDBClusterStatus) SetCondition(condition Condition) {
 // +kubebuilder:resource:shortName=gtc
 // +kubebuilder:printcolumn:name="FRONTEND",type="integer",JSONPath=".status.frontend.readyReplicas"
 // +kubebuilder:printcolumn:name="DATANODE",type="integer",JSONPath=".status.datanode.readyReplicas"
+// +kubebuilder:printcolumn:name="DRAINING",type="string",JSONPath=".status.datanode.draining[*].nodeId"
 // +kubebuilder:printcolumn:name="META",type="integer",JSONPath=".status.meta.readyReplicas"
 // +kubebuilder:printcolumn:name="FLOWNODE",type="integer",JSONPath=".status.flownode.readyReplicas"
 // +kubebuilder:printcolumn:name="PHASE",type=string,JSONPath=".status.clusterPhase"
