@@ -313,14 +313,27 @@ spec:
     spec:
       restartPolicy: Never
       containers:
-        - name: mc
-          image: minio/mc:RELEASE.2025-08-13T08-35-41Z
+        - name: aws-cli
+          image: amazon/aws-cli:2.24.0
+          env:
+            - name: AWS_ACCESS_KEY_ID
+              value: "$RUSTFS_ACCESS_KEY"
+            - name: AWS_SECRET_ACCESS_KEY
+              value: "$RUSTFS_SECRET_KEY"
+            - name: AWS_DEFAULT_REGION
+              value: "$RUSTFS_REGION"
+            - name: AWS_EC2_METADATA_DISABLED
+              value: "true"
+            - name: AWS_MAX_ATTEMPTS
+              value: "3"
           command:
             - /bin/sh
             - -c
             - |
-              mc alias set local http://rustfs-svc.$RUSTFS_NAMESPACE.svc.cluster.local:9000 $RUSTFS_ACCESS_KEY $RUSTFS_SECRET_KEY
-              mc mb -p --region "$RUSTFS_REGION" "local/$RUSTFS_BUCKET"
+              endpoint=http://rustfs-svc.$RUSTFS_NAMESPACE.svc.cluster.local:9000
+              if ! aws --endpoint-url "$endpoint" s3api head-bucket --bucket "$RUSTFS_BUCKET" 2>/dev/null; then
+                aws --endpoint-url "$endpoint" s3 mb "s3://$RUSTFS_BUCKET" --region "$RUSTFS_REGION"
+              fi
 EOF
 
   kubectl wait --for=condition=Complete job/create-rustfs-bucket -n "$RUSTFS_NAMESPACE" --timeout="$DEFAULT_TIMEOUT"
